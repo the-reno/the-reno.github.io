@@ -1,108 +1,466 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Borges Family Map</title>
-  <meta name="theme-color" content="#10b981" />
-  <style>
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:#f8fafc;color:#0f172a;line-height:1.5}
-    header{position:sticky;top:0;background:white;padding:12px 16px;border-bottom:1px solid #e2e8f0;z-index:10;display:flex;align-items:center;gap:12px}
-    h1{font-size:20px;margin:0}
-    main{padding:16px;max-width:900px;margin:auto}
-    details{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;overflow:hidden}
-    summary{padding:14px 16px;font-weight:600;cursor:pointer;background:linear-gradient(#f9fafb,#f3f4f6);display:flex;align-items:center;gap:8px;list-style:none}
-    summary::-webkit-details-marker{display:none}
-    .inmemoriam{background:#fee2e2;color:#991b1b;font-size:12px;padding:2px 6px;border-radius:8px;font-weight:700;border:1px solid #fecaca}
-    .member{padding:8px 16px;border-top:1px dashed #e2e8f0}
-    .child{margin-left:16px;color:#475569;font-size:15px}
-    .spouse{color:#0d9488;font-weight:600}
-    .highlight{background:#fefce8}
-    input{flex:1;padding:8px 12px;border-radius:20px;border:1px solid #e2e8f0}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Família Borges – Álbum de Memórias</title>
+<meta name="theme-color" content="#0b7f5f">
+<style>
+  :root{
+    --bg:#f7fafc; --card:#ffffff; --ink:#0f172a; --muted:#334155;
+    --line:#e2e8f0; --accent:#0ea5a0; --mem:#991b1b; --membg:#fee2e2;
+    --radius:18px; --base:18px; --lg:20px; --xl:22px;
+  }
+  [data-contrast="high"]{
+    --bg:#ffffff; --card:#ffffff; --ink:#000; --muted:#111; --line:#00000033; --accent:#000;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font: var(--base)/1.6 "Segoe UI", system-ui, -apple-system, Roboto, Arial;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* Top bar */
+  .top{
+    position:sticky; top:0; z-index:10;
+    background:#fff; border-bottom:1px solid var(--line);
+    padding:12px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .brand{display:flex; gap:10px; align-items:center}
+  .logo{width:40px;height:40px;border-radius:12px;background:#d1fae5;color:#065f46;
+        display:grid;place-items:center;font-weight:800}
+  .title{font-weight:900; font-size:var(--xl)}
+  .hint{font-size:14px;color:var(--muted)}
+
+  .controls{display:flex; gap:8px; flex:1; flex-wrap:wrap; justify-content:flex-end}
+  .btn{border:1px solid var(--line); background:#fff; padding:10px 12px; border-radius:12px;
+       font-weight:700; cursor:pointer}
+  .btn:active{transform:scale(.98)}
+  .search{flex:1; min-width:220px}
+  .search input{width:100%; padding:10px 14px; border:1px solid var(--line);
+                border-radius:999px; font-size:18px}
+
+  /* A–Z index */
+  .az{position:sticky; top:70px; background:#fff; z-index:5; padding:8px 14px;
+      border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:6px}
+  .chip{background:#eef2ff; color:#1e293b; border:1px solid #c7d2fe; padding:6px 10px;
+        border-radius:999px; font-weight:700; font-size:16px; text-decoration:none}
+  .chip:active{transform:scale(.98)}
+
+  /* Sections */
+  .wrap{max-width:980px; margin:12px auto 80px; padding:0 14px}
+  details.section{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    overflow:hidden; margin:12px 0;
+  }
+  .section[open] summary{border-bottom:1px solid var(--line)}
+  summary{
+    list-style:none; cursor:pointer; padding:16px; display:flex; gap:10px; align-items:center;
+    background:linear-gradient(#f9fafb,#f3f4f6); font-weight:900; font-size:var(--lg);
+  }
+  summary::-webkit-details-marker{display:none}
+  .mem{background:var(--membg); color:var(--mem); border:1px solid #fecaca;
+       padding:2px 8px; border-radius:999px; font-weight:900; font-size:14px}
+  .meta{margin-left:auto; color:var(--muted); font-weight:700}
+
+  .body{padding:12px}
+  .household{border:1px dashed var(--line); border-radius:14px; padding:12px; margin:10px 0; background:#fff}
+  .who{font-weight:900}
+  .sp{color:#0d9488}
+  .children{margin:8px 0 0 0; color:var(--muted)}
+  .gkids{margin:6px 0 0 16px}
+  .bullet{display:inline-block; width:10px; height:10px; border-radius:999px; background:var(--accent); margin-right:8px}
+
+  /* Foot */
+  footer{position:sticky; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 14px; text-align:center}
+  .small{font-size:14px; color:var(--muted)}
+
+  /* Print */
+  @media print{
+    .top, .az, footer{display:none}
+    body{background:#fff}
+    .wrap{max-width:none}
+    .household{page-break-inside:avoid}
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1>👨‍👩‍👧 Borges Family Map</h1>
-    <input id="search" placeholder="Search a name..." />
-  </header>
 
-  <main id="root"></main>
+<!-- Top bar -->
+<div class="top">
+  <div class="brand">
+    <div class="logo">FB</div>
+    <div>
+      <div class="title">Família Borges</div>
+      <div class="hint">Álbum de memórias e contatos</div>
+    </div>
+  </div>
 
-  <script>
-    const data = [
-      {
-        name:"Tia Maria & Abercio", inMemoriam:true,
-        children:[
-          {name:"Henrique & Lucila",children:[
-            {name:"Natalia & Marcio",children:["Rodolfo","Joao Pedro","Eduardo"]},
-            {name:"Rafaela & Thiago",children:["Antonio","Joaquim"]},
-            "Antonio Henrique","Lucas"
+  <div class="controls">
+    <div class="search"><input id="q" placeholder="🔎 Buscar nome (ex.: Rafaela, Paulo, Keyla)"></div>
+    <button class="btn" id="bPlus">A+</button>
+    <button class="btn" id="bMinus">A−</button>
+    <button class="btn" id="bContrast">Alto contraste</button>
+    <button class="btn" id="bOpen">Expandir tudo</button>
+    <button class="btn" id="bClose">Fechar tudo</button>
+  </div>
+</div>
+
+<!-- A-Z index -->
+<nav class="az" id="az"></nav>
+
+<!-- Content -->
+<main class="wrap" id="root" aria-live="polite"></main>
+
+<footer><div class="small">Dica: no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”.</div></footer>
+
+<script>
+/** -------------------- DADOS (Família Borges) -------------------- **/
+const FAMILY = {
+  id:'root', name:'Borges', children:[
+    { id:'b1', name:'Tio Osorio', children:[] },
+    { id:'b2', name:'Tio Omar', children:[] },
+    { id:'b3', name:'Tio Mario', children:[] },
+    {
+      id:'b4', name:'Tia Sebastiana', spouse:'Mario De Santi',
+      status:'in memoriam', spouseStatus:'in memoriam',
+      children:[
+        { id:'b4-c1', name:'Ozana', spouse:'Anezio', spouseStatus:'in memoriam', children:[
+          { id:'b4-c1-g1', name:'Wesley', spouse:'Maria Teresa', children:[
+            { id:'b4-c1-g1-gg1', name:'Isabela' },
+            { id:'b4-c1-g1-gg2', name:'Breno' },
+            { id:'b4-c1-g1-gg3', name:'Miguel' }
           ]},
-          {name:"Paulo",children:[
-            {name:"Paula",children:["Manu"]},
-            {name:"Bia",children:["Artur","Eric"]},
-            "Gabi"
+          { id:'b4-c1-g2', name:'Wedler', spouse:'Luciana', children:[] },
+          { id:'b4-c1-g3', name:'Werner', spouse:'Patricia', children:[{ id:'b4-c1-g3-gg1', name:'Gabriel' }]},
+          { id:'b4-c1-g4', name:'Welka', children:[] }
+        ]},
+        { id:'b4-c2', name:'Omar', status:'in memoriam', spouse:'Elena', children:[
+          { id:'b4-c2-g1', name:'Alan', spouse:'Cristine', children:[
+            { id:'b4-c2-g1-gg1', name:'Ana Flavia' },
+            { id:'b4-c2-g1-gg2', name:'Leandro' }
           ]},
-          {name:"Selma",children:["Mariana","Hiago","Angelina"]},
-          {name:"Solange & Ricardo",children:[
-            {name:"Milena & Sandro",children:["Heitor"]},
-            {name:"Alexandre & Talita",children:["Maria Sofia","Gregorio"]},
-            {name:"Mirella & Vinicius",children:["Otavio","Lavinia"]}
+          { id:'b4-c2-g2', name:'Aline', spouse:'Fabiano', children:[] }
+        ]},
+        { id:'b4-c3', name:'Homero', status:'in memoriam', spouse:'Maria das Gracas', children:[
+          { id:'b4-c3-g1', name:'Gutemberg', children:[
+            { id:'b4-c3-g1-gg1', name:'Joao Vitor' }, { id:'b4-c3-g1-gg2', name:'Ana Luisa' }
+          ]},
+          { id:'b4-c3-g2', name:'Graciela', spouse:'Cristiano', children:[
+            { id:'b4-c3-g2-gg1', name:'Luiz Guilherme' }, { id:'b4-c3-g2-gg2', name:'Manuela' }
+          ]},
+          { id:'b4-c3-g3', name:'Giselle', spouse:'Willer', children:[
+            { id:'b4-c3-g3-gg1', name:'Felipe' }, { id:'b4-c3-g3-gg2', name:'Cecilia' }
           ]}
-        ]
-      },
-      {
-        name:"Tia Geralda & Jose Reno",inMemoriam:true,
-        children:[
-          "Hebe & Sergio","Hebert & Shirley","Cleber & Zilda","Jose Teofilo & Dulce","Clayton & Carmen"
-        ]
-      }
-    ];
+        ]},
+        { id:'b4-c4', name:'Rosangela', spouse:'Mauricio', children:[
+          { id:'b4-c4-g1', name:'Bruno', spouse:'Nayara', children:[{ id:'b4-c4-g1-gg1', name:'Pedro' }]},
+          { id:'b4-c4-g2', name:'Bianca', spouse:'Thiago', children:[{ id:'b4-c4-g2-gg1', name:'Larissa' }]}
+        ]},
+        { id:'b4-c5', name:'Ragines', spouse:'Samira', children:[
+          { id:'b4-c5-g1', name:'Thales', spouse:'Maraine', children:[
+            { id:'b4-c5-g1-gg1', name:'Thomas' }, { id:'b4-c5-g1-gg2', name:'Florenca' }
+          ]},
+          { id:'b4-c5-g2', name:'Jessica', spouse:'Lucas', children:[
+            { id:'b4-c5-g2-gg1', name:'Analice' }, { id:'b4-c5-g2-gg2', name:'Irmao/Irma' }
+          ]}
+        ]}
+      ]
+    },
+    {
+      id:'b5', name:'Tia Geralda', spouse:'Jose Reno', spouseStatus:'in memoriam',
+      children:[
+        { id:'b5-c1', name:'Hebe', spouse:'Sergio', children:[
+          { id:'b5-c1-g1', name:'Karina', children:[
+            { id:'b5-c1-g1-gg1', name:'Helena' }, { id:'b5-c1-g1-gg2', name:'Olivia' }
+          ]},
+          { id:'b5-c1-g2', name:'Gustavo', spouse:'Carol', children:[{ id:'b5-c1-g2-gg1', name:'Rafaela' }]},
+          { id:'b5-c1-g3', name:'Keyla', spouse:'Hendrik', children:[
+            { id:'b5-c1-g3-gg1', name:'Maria Luiza' }, { id:'b5-c1-g3-gg2', name:'Joao Gabriel' }
+          ]}
+        ]},
+        { id:'b5-c2', name:'Hebert', spouse:'Shirley', children:[
+          { id:'b5-c2-g1', name:'Tatiany', spouse:'Henrique', children:[{ id:'b5-c2-g1-gg1', name:'Lorena' }]},
+          { id:'b5-c2-g2', name:'Rafael', spouse:'Adriana', children:[{ id:'b5-c2-g2-gg1', name:'Sofia' }]}
+        ]},
+        { id:'b5-c3', name:'Cleber', spouse:'Zilda', children:[
+          { id:'b5-c3-g1', name:'Brenda', spouse:'Pedro', children:[{ id:'b5-c3-g1-gg1', name:'Helena' }]},
+          { id:'b5-c3-g2', name:'Loraine', children:[{ id:'b5-c3-g2-gg1', name:'Maria Vitoria' }]},
+          { id:'b5-c3-g3', name:'Monike', spouse:'Bruno', children:[
+            { id:'b5-c3-g3-gg1', name:'Guilherme' }, { id:'b5-c3-g3-gg2', name:'Lucas' }, { id:'b5-c3-g3-gg3', name:'Olivia' }
+          ]}
+        ]},
+        { id:'b5-c4', name:'Jose Teofilo', spouse:'Dulce', children:[
+          { id:'b5-c4-g1', name:'Alex' },
+          { id:'b5-c4-g2', name:'Lucas', children:[{ id:'b5-c4-g2-gg1', name:'Antonio' }]}
+        ]},
+        { id:'b5-c5', name:'Clayton', spouse:'Carmen', children:[{ id:'b5-c5-g1', name:'Michele' }]}
+      ]
+    },
+    {
+      id:'b6', name:'Tia Maria', spouse:'Abercio', spouseStatus:'in memoriam',
+      children:[
+        { id:'b6-c1', name:'Henrique', spouse:'Lucila', children:[
+          { id:'b6-c1-g1', name:'Natalia', spouse:'Marcio', children:[
+            { id:'b6-c1-g1-gg1', name:'Rodolfo' }, { id:'b6-c1-g1-gg2', name:'Joao Pedro' }, { id:'b6-c1-g1-gg3', name:'Eduardo' }
+          ]},
+          { id:'b6-c1-g2', name:'Rafaela', spouse:'Thiago', children:[
+            { id:'b6-c1-g2-gg1', name:'Antonio' }, { id:'b6-c1-g2-gg2', name:'Joaquim' }
+          ]},
+          { id:'b6-c1-g3', name:'Antonio Henrique' },
+          { id:'b6-c1-g4', name:'Lucas' }
+        ]},
+        { id:'b6-c2', name:'Paulo', children:[
+          { id:'b6-c2-g1', name:'Paula', children:[{ id:'b6-c2-g1-gg1', name:'Manu' }]},
+          { id:'b6-c2-g2', name:'Bia', children:[
+            { id:'b6-c2-g2-gg1', name:'Artur' }, { id:'b6-c2-g2-gg2', name:'Eric' }
+          ]},
+          { id:'b6-c2-g3', name:'Gabi' }
+        ]},
+        { id:'b6-c3', name:'Selma', children:[
+          { id:'b6-c3-g1', name:'Mariana' }, { id:'b6-c3-g2', name:'Hiago' }, { id:'b6-c3-g3', name:'Angelina' }
+        ]},
+        { id:'b6-c4', name:'Solange', spouse:'Ricardo', children:[
+          { id:'b6-c4-g1', name:'Milena', spouse:'Sandro', children:[{ id:'b6-c4-g1-gg1', name:'Heitor' }]},
+          { id:'b6-c4-g2', name:'Alexandre', spouse:'Talita', children:[
+            { id:'b6-c4-g2-gg1', name:'Maria Sofia' }, { id:'b6-c4-g2-gg2', name:'Gregorio' }
+          ]},
+          { id:'b6-c4-g3', name:'Mirella', spouse:'Vinicius', children:[
+            { id:'b6-c4-g3-gg1', name:'Otavio' }, { id:'b6-c4-g3-gg2', name:'Lavinia' }
+          ]}
+        ]}
+      ]
+    },
+    {
+      id:'b7', name:'Tio Hermann', status:'in memoriam', spouse:'Tia Ida',
+      children:[
+        { id:'b7-c1', name:'Wania', children:[
+          { id:'b7-c1-g1', name:'Marcela', children:[{ id:'b7-c1-g1-gg1', name:'Orion' }]},
+          { id:'b7-c1-g2', name:'Bruna' }
+        ]},
+        { id:'b7-c2', name:'Waner', children:[
+          { id:'b7-c2-g1', name:'Julia' }, { id:'b7-c2-g2', name:'Matheus' }
+        ]},
+        { id:'b7-c3', name:"Wagner 'Guinho'", status:'in memoriam', children:[
+          { id:'b7-c3-g1', name:'Tamiris' }, { id:'b7-c3-g2', name:'Beatriz' }
+        ]},
+        { id:'b7-c4', name:'Mara (Wanice)', children:[{ id:'b7-c4-g1', name:'Jaqueline' }]}
+      ]
+    },
+    {
+      id:'b8', name:'Tia Cida', spouse:'Orlando Mariano', spouseStatus:'in memoriam',
+      children:[
+        { id:'b8-c1', name:'Luiz Orlando', spouse:'Eliana', children:[
+          { id:'b8-c1-g1', name:'Otavio' }, { id:'b8-c1-g2', name:'Olivia' }
+        ]},
+        { id:'b8-c2', name:'Zeina', status:'in memoriam', children:[] },
+        { id:'b8-c3', name:"Marco Tulio 'Barrinha'", spouse:'Maria', children:[
+          { id:'b8-c3-g1', name:'Rafael' },
+          { id:'b8-c3-g2', name:'Pricila', spouse:'Vicente', children:[{ id:'b8-c3-g2-gg1', name:'Neto Bernardo' }]}
+        ]},
+        { id:'b8-c4', name:"Carlo 'Branco' Nyranon", children:[
+          { id:'b8-c4-g1', name:'Rafael' }, { id:'b8-c4-g2', name:'Flavia' }
+        ]}
+      ]
+    },
+    {
+      id:'b9', name:'Tia Odete', spouse:'Daercio Maximiano', spouseStatus:'in memoriam',
+      children:[
+        { id:'b9-c1', name:'Marco Antonio Maximiano', spouse:'Aparecida Fuzo Maximiano', children:[
+          { id:'b9-c1-g1', name:'Rodrigo Fuzo Maximiano', spouse:'Ana Flavia Santana F da Silva', children:[] },
+          { id:'b9-c1-g2', name:'Giovanna Fuzo Maximiano', spouse:'Andre Filipe Viera Marques', children:[
+            { id:'b9-c1-g2-gg1', name:'Gabriel Fuzo Maximiano' }
+          ]},
+          { id:'b9-c1-g3', name:'Saulo Fuzo Maximiano', spouse:'Raquel Fernandes Coelho', children:[
+            { id:'b9-c1-g3-gg1', name:'Ester Coelho Fuzo' }
+          ]}
+        ]},
+        { id:'b9-c2', name:'Adelcio Jose Maximiano', status:'in memoriam', children:[] },
+        { id:'b9-c3', name:'Daercio Maximiano', status:'in memoriam', children:[
+          { id:'b9-c3-sub1', name:'Isabel Benedita de Abreu Maximiano', type:'partner-group', children:[
+            { id:'b9-c3-g1', name:'Juliana de Abreu Maximiano', spouse:'Juliano de Angelis Thomazini', children:[
+              { id:'b9-c3-g1-gg1', name:'Maria Julia' }
+            ]}
+          ]},
+          { id:'b9-c3-sub2', name:'Roseni Meirelles Silveira', type:'partner-group', children:[
+            { id:'b9-c3-g2', name:'Barbara Maximiano de Souza', children:[
+              { id:'b9-c3-g2-gg1', name:'Eliezer Chaves de Souza', children:[
+                { id:'b9-c3-g2-gg1-ggg1', name:'Davi Maximiano de Souza' },
+                { id:'b9-c3-g2-gg1-ggg2', name:'Miguel Maximiano de Souza' }
+              ]},
+              { id:'b9-c3-g2-gg2', name:'Marcos Machado de Oliveira', children:[
+                { id:'b9-c3-g2-gg2-ggg1', name:'Agata Meirelles de Oliveira' }
+              ]}
+            ]}
+          ]}
+        ]}
+      ]
+    },
+    { id:'b10', name:'Tia Cleuza', children:[] },
+    {
+      id:'b11', name:'Tio Sandoval', status:'in memoriam', spouse:'Tia Leida',
+      children:[
+        { id:'b11-c1', name:'Keila', children:[
+          { id:'b11-c1-g1', name:'Rodrigo' }, { id:'b11-c1-g2', name:'Frederico' }, { id:'b11-c1-g3', name:'Natalia' }
+        ]},
+        { id:'b11-c2', name:'Kenya', spouse:'Marcio', children:[
+          { id:'b11-c2-g1', name:'Isadora' }, { id:'b11-c2-g2', name:'Ana Luisa' }, { id:'b11-c2-g3', name:'Joao Pedro' }
+        ]},
+        { id:'b11-c3', name:'Kelly', children:[
+          { id:'b11-c3-g1', name:'Aleksei' }, { id:'b11-c3-g2', name:'Patrick Filho' }
+        ]}
+      ]
+    }
+  ]
+};
 
-    const root=document.getElementById('root');
-    function render(){
-      root.innerHTML='';
-      data.forEach(f=>{
-        const d=document.createElement('details');
-        d.open=false;
-        const s=document.createElement('summary');
-        s.innerHTML=`${f.name}${f.inMemoriam?` <span class='inmemoriam'>IN MEMORIAM</span>`:''}`;
-        d.appendChild(s);
-        (f.children||[]).forEach(c=>{
-          const div=document.createElement('div');
-          div.className='member';
-          if(typeof c==='string'){div.textContent=c;}
-          else{
-            div.innerHTML=`<div><b>${c.name}</b></div>`;
-            if(c.children){
-              c.children.forEach(ch=>{
-                const p=document.createElement('div');
-                p.className='child';
-                p.textContent=(typeof ch==='string')?ch:(ch.name+(ch.children?` — ${ch.children.join(', ')}`:''));
-                div.appendChild(p);
-              });
-            }
+/** -------------------- RENDER -------------------- **/
+const root = document.getElementById('root');
+
+function h(tag, attrs={}, ...kids){
+  const e=document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k==='class') e.className=v;
+    else if (k==='html') e.innerHTML=v;
+    else e.setAttribute(k,v);
+  }
+  kids.flat().forEach(k => e.append(k?.nodeType? k : document.createTextNode(k)));
+  return e;
+}
+
+function household(node){
+  const who = h('div', {class:'who'},
+    h('span',{class:'bullet'}), h('span',{class:'whoTxt'}, ''),
+  );
+  const titleParts = [node.name];
+  if (node.spouse) titleParts[0] = `${node.name} & ${node.spouse}`;
+  const title = titleParts.join('');
+  who.querySelector('.whoTxt').textContent = title;
+
+  const badges = [];
+  if (node.status==='in memoriam') badges.push(h('span',{class:'mem'},'IN MEMORIAM'));
+  if (node.spouseStatus==='in memoriam') badges.push(h('span',{class:'mem'},'CÔNJUGE (in memoriam)'));
+
+  const top = h('div',{},
+    h('div',{class:'who'}, who, ...badges)
+  );
+
+  const body = h('div',{class:'children'});
+  if (node.children?.length){
+    // immediate children (2ª geração a partir do casal)
+    node.children.forEach(ch=>{
+      const line = [];
+      if (ch.spouse) line.push(`${ch.name} & ${ch.spouse}`);
+      else line.push(ch.name);
+      // grandchildren list
+      if (ch.children?.length){
+        const g = ch.children.map(gc => {
+          if (gc.children?.length){
+            const gg = gc.children.map(x=>x.name).join(', ');
+            return gc.spouse ? `${gc.name} & ${gc.spouse} — ${gg}` : `${gc.name} — ${gg}`;
+          } else {
+            return gc.spouse ? `${gc.name} & ${gc.spouse}` : gc.name;
           }
-          d.appendChild(div);
-        });
-        root.appendChild(d);
+        }).join('; ');
+        body.append(h('div',{class:'gkids'}, '• ', line.join(''), ' — ', g));
+      } else {
+        body.append(h('div',{class:'gkids'}, '• ', line.join('')));
+      }
+    });
+  } else {
+    body.append(h('div',{class:'gkids'}, '• Sem registros'));
+  }
+
+  return h('div',{class:'household'}, top, body);
+}
+
+function section(branch){
+  const s = h('details',{class:'section', id:`sec-${slug(branch.name)}`});
+  const sum = h('summary',{}, branch.name,
+    branch.spouse? h('span',{class:'sp'}, ' & ', branch.spouse) : '',
+    branch.status==='in memoriam'? h('span',{class:'mem'},'IN MEMORIAM'): '',
+    branch.spouseStatus==='in memoriam'? h('span',{class:'mem'},'CÔNJUGE (in memoriam)'): '',
+    h('span',{class:'meta'}, `${branch.children?.length||0} filhos`)
+  );
+  const body = h('div',{class:'body'});
+  (branch.children||[]).forEach(ch => body.append(household(ch)));
+  s.append(sum, body);
+  return s;
+}
+
+function slug(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function render(){
+  root.innerHTML='';
+  FAMILY.children.forEach(b => root.append(section(b)));
+  // open first two for convenience
+  const ds = root.querySelectorAll('details.section');
+  if (ds[0]) ds[0].open = true;
+  if (ds[1]) ds[1].open = true;
+}
+render();
+
+/** -------------------- A–Z INDEX -------------------- **/
+const az = document.getElementById('az');
+const letters = [...new Set(
+  FAMILY.children
+    .flatMap(b => [b.name, ...(b.children?.map(c => c.name)||[])])
+    .map(n => n.trim()[0]?.toUpperCase())
+)].filter(Boolean).sort();
+
+letters.forEach(L=>{
+  const a = h('a',{class:'chip',href:'#'},L);
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    // find first section containing a name with this initial
+    const sec = [...root.querySelectorAll('.section')].find(s => s.textContent.trim().toUpperCase().includes(L));
+    if (sec){ sec.open = true; sec.scrollIntoView({behavior:'smooth', block:'start'}); }
+  });
+  az.append(a);
+});
+
+/** -------------------- SEARCH & CONTROLS -------------------- **/
+const q = document.getElementById('q');
+q.addEventListener('input', ()=>{
+  const term = q.value.toLowerCase();
+  root.querySelectorAll('.section').forEach(sec=>{
+    sec.open = false;
+    sec.querySelectorAll('.household, summary, .gkids').forEach(el => el.style.background = '');
+    if (!term) return;
+    if (sec.textContent.toLowerCase().includes(term)){
+      sec.open = true;
+      sec.querySelectorAll('.household, summary, .gkids').forEach(el=>{
+        if (el.textContent.toLowerCase().includes(term)) el.style.background = '#fefce8';
       });
     }
-    render();
+  });
+});
 
-    // search
-    const search=document.getElementById('search');
-    search.addEventListener('input',()=>{
-      const t=search.value.toLowerCase();
-      document.querySelectorAll('details').forEach(sec=>{
-        const has=sec.textContent.toLowerCase().includes(t);
-        sec.open=!!t && has;
-        sec.querySelectorAll('.member,.child,summary').forEach(el=>{
-          el.classList.toggle('highlight',t && el.textContent.toLowerCase().includes(t));
-        });
-      });
-    });
-  </script>
+document.getElementById('bOpen').onclick = ()=>root.querySelectorAll('.section').forEach(s=>s.open=true);
+document.getElementById('bClose').onclick = ()=>root.querySelectorAll('.section').forEach(s=>s.open=false);
+
+let size = 0;
+const sizes = [
+  {base:18, lg:20, xl:22},
+  {base:20, lg:22, xl:24},
+  {base:22, lg:24, xl:26}
+];
+function applySize(){ const s=sizes[Math.min(Math.max(size,0),sizes.length-1)];
+  document.documentElement.style.setProperty('--base', s.base+'px');
+  document.documentElement.style.setProperty('--lg', s.lg+'px');
+  document.documentElement.style.setProperty('--xl', s.xl+'px');
+}
+applySize();
+document.getElementById('bPlus').onclick = ()=>{ size=Math.min(size+1,sizes.length-1); applySize(); };
+document.getElementById('bMinus').onclick = ()=>{ size=Math.max(size-1,0); applySize(); };
+
+document.getElementById('bContrast').onclick = ()=>{
+  const hc = document.body.getAttribute('data-contrast')==='high';
+  document.body.setAttribute('data-contrast', hc? 'normal':'high');
+};
+</script>
 </body>
 </html>
