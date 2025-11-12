@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Borges Family Map</title>
+  <meta name="theme-color" content="#10b981" />
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+      --accent:#10b981; --line:#e2e8f0; --chip:#eafaf4; --danger:#ef4444;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+      color:var(--ink); background:var(--bg);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Top bar */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(180deg,#ffffff 0,#ffffff 85%,rgba(255,255,255,.85));
+      border-bottom:1px solid var(--line); padding:12px 16px;
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      backdrop-filter: blur(6px);
+    }
+    .brand{display:flex; gap:10px; align-items:center}
+    .logo{width:34px; height:34px; border-radius:10px; background:var(--chip);
+      display:grid; place-items:center; color:var(--accent); font-weight:700}
+    .title{font-weight:800; letter-spacing:.2px}
+    .subtitle{font-size:12px; color:var(--muted)}
+
+    .search{
+      position:relative; flex:1; max-width:520px; margin-left:auto;
+    }
+    .search input{
+      appearance:none; width:100%; border:1px solid var(--line);
+      background:#fff; padding:10px 14px 10px 36px; border-radius:999px;
+      outline:none; font:inherit;
+    }
+    .search svg{position:absolute; left:12px; top:10px; width:18px; height:18px; color:var(--muted)}
+
+    /* Info bar */
+    .infobar{
+      display:flex; gap:8px; align-items:center; justify-content:flex-start;
+      padding:10px 16px; color:var(--muted); font-size:12px;
+    }
+    .chip{display:inline-flex; align-items:center; gap:6px;
+      background:var(--chip); color:#065f46; border:1px solid #bbf7d0;
+      padding:6px 10px; border-radius:999px; white-space:nowrap}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      background:#fff; border:1px solid var(--line); padding:.1rem .4rem; border-radius:6px}
+
+    /* Layout */
+    .container{padding:10px 16px 80px}
+    .section{
+      background:var(--card); border:1px solid var(--line);
+      border-radius:var(--radius); overflow:hidden; margin-bottom:14px;
+    }
+    .section summary{
+      list-style:none; cursor:pointer; user-select:none; outline:none;
+      padding:14px 16px; font-weight:700; display:flex; align-items:center; gap:10px;
+      background:linear-gradient(180deg,#f9fafb, #f3f4f6);
+    }
+    .section summary::-webkit-details-marker{display:none}
+    .section summary .meta{font-weight:600; color:var(--muted); font-size:12px; margin-left:auto}
+    .section .body{padding:10px 12px 14px}
+
+    /* Person rows */
+    .person{border-left:3px solid var(--line); margin-left:6px; padding-left:10px; margin-top:8px}
+    .who{display:flex; align-items:center; gap:8px}
+    .bullet{width:8px; height:8px; border-radius:999px; background:var(--accent); opacity:.9}
+    .name{font-weight:700}
+    .spouse{font-weight:600; color:#0d9488}
+    .memoriam{color:#991b1b; font-size:12px; font-weight:700; padding:2px 6px; border-radius:999px; background:#fee2e2; border:1px solid #fecaca}
+    .kids{color:var(--muted)}
+    .row{padding:8px 10px; border:1px dashed var(--line); border-radius:10px; margin-top:8px; background:#fff}
+    .indent{margin-left:18px}
+    .partner{display:inline-block; font-size:12px; color:#334155; background:#e2e8f0; border:1px solid #cbd5e1; border-radius:999px; padding:2px 8px; margin:4px 0}
+
+    /* Utility */
+    .hidden{display:none}
+    .highlight{background:#fefce8; box-shadow:0 0 0 2px #fde68a inset}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+
+    @media (min-width:760px){
+      .row{display:grid; grid-template-columns:1.2fr 1fr; gap:10px}
+      .indent{margin-left:28px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Top -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">BF</div>
+      <div>
+        <div class="title">Borges Family Map</div>
+        <div class="subtitle">Interactive mobile view</div>
+      </div>
+    </div>
+    <label class="search" aria-label="Search member">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+      </svg>
+      <input id="search" placeholder="Find a name… (e.g., Rafaela, Paulo)" />
+    </label>
+  </div>
+
+  <!-- Hints -->
+  <div class="infobar">
+    <span class="chip">Tap sections to expand</span>
+    <span class="chip">Search opens matching branches</span>
+    <span class="chip">Add to Home Screen in Safari</span>
+  </div>
+
+  <main class="container" id="root"></main>
+
+  <script>
+    // ------------------ DATA (BORGES) ------------------
+    // Corrected: Paulo (not Paula) under Tia Maria & Abercio; Mario De Santi spouseStatus in memoriam.
+    const FAMILY_DATA = {
+      id: 'root',
+      name: 'Borges Family',
+      type: 'root',
+      children: [
+        { id: 'b1', name: 'Tio Osorio', children: [] },
+        { id: 'b2', name: 'Tio Omar', children: [] },
+        { id: 'b3', name: 'Tio Mario', children: [] },
+
+        {
+          id: 'b4', name: 'Tia Sebastiana', spouse: 'Mario De Santi',
+          status: 'in memoriam', spouseStatus: 'in memoriam',
+          children: [
+            {
+              id: 'b4-c1', name: 'Ozana', spouse: 'Anezio', spouseStatus:'in memoriam',
+              children: [
+                {
+                  id: 'b4-c1-g1', name: 'Wesley', spouse: 'Maria Teresa',
+                  children: [
+                    { id: 'b4-c1-g1-gg1', name: 'Isabela' },
+                    { id: 'b4-c1-g1-gg2', name: 'Breno' },
+                    { id: 'b4-c1-g1-gg3', name: 'Miguel' }
+                  ]
+                },
+                { id: 'b4-c1-g2', name: 'Wedler', spouse: 'Luciana', children: [] },
+                { id: 'b4-c1-g3', name: 'Werner', spouse: 'Patricia', children: [{ id: 'b4-c1-g3-gg1', name: 'Gabriel' }] },
+                { id: 'b4-c1-g4', name: 'Welka', children: [] }
+              ]
+            },
+            {
+              id:'b4-c2', name:'Omar', status:'in memoriam', spouse:'Elena',
+              children:[
+                { id:'b4-c2-g1', name:'Alan', spouse:'Cristine', children:[
+                  { id:'b4-c2-g1-gg1', name:'Ana Flavia' }, { id:'b4-c2-g1-gg2', name:'Leandro' }
+                ]},
+                { id:'b4-c2-g2', name:'Aline', spouse:'Fabiano', children:[] }
+              ]
+            },
+            {
+              id:'b4-c3', name:'Homero', status:'in memoriam', spouse:'Maria das Gracas',
+              children:[
+                { id:'b4-c3-g1', name:'Gutemberg', children:[
+                  { id:'b4-c3-g1-gg1', name:'Joao Vitor' }, { id:'b4-c3-g1-gg2', name:'Ana Luisa' }
+                ]},
+                { id:'b4-c3-g2', name:'Graciela', spouse:'Cristiano', children:[
+                  { id:'b4-c3-g2-gg1', name:'Luiz Guilherme' }, { id:'b4-c3-g2-gg2', name:'Manuela' }
+                ]},
+                { id:'b4-c3-g3', name:'Giselle', spouse:'Willer', children:[
+                  { id:'b4-c3-g3-gg1', name:'Felipe' }, { id:'b4-c3-g3-gg2', name:'Cecilia' }
+                ]}
+              ]
+            },
+            {
+              id:'b4-c4', name:'Rosangela', spouse:'Mauricio',
+              children:[
+                { id:'b4-c4-g1', name:'Bruno', spouse:'Nayara', children:[{ id:'b4-c4-g1-gg1', name:'Pedro' }]},
+                { id:'b4-c4-g2', name:'Bianca', spouse:'Thiago', children:[{ id:'b4-c4-g2-gg1', name:'Larissa' }]}
+              ]
+            },
+            {
+              id:'b4-c5', name:'Ragines', spouse:'Samira',
+              children:[
+                { id:'b4-c5-g1', name:'Thales', spouse:'Maraine', children:[
+                  { id:'b4-c5-g1-gg1', name:'Thomas' }, { id:'b4-c5-g1-gg2', name:'Florenca' }
+                ]},
+                { id:'b4-c5-g2', name:'Jessica', spouse:'Lucas', children:[
+                  { id:'b4-c5-g2-gg1', name:'Analice' }, { id:'b4-c5-g2-gg2', name:'Irmao/Irma' }
+                ]}
+              ]
+            }
+          ]
+        },
+
+        {
+          id: 'b5', name:'Tia Geralda', spouse:'Jose Reno', spouseStatus:'in memoriam',
+          children:[
+            {
+              id:'b5-c1', name:'Hebe', spouse:'Sergio', children:[
+                { id:'b5-c1-g1', name:'Karina', children:[
+                  { id:'b5-c1-g1-gg1', name:'Helena' }, { id:'b5-c1-g1-gg2', name:'Olivia' }
+                ]},
+                { id:'b5-c1-g2', name:'Gustavo', spouse:'Carol', children:[{ id:'b5-c1-g2-gg1', name:'Rafaela' }]},
+                { id:'b5-c1-g3', name:'Keyla', spouse:'Hendrik', children:[
+                  { id:'b5-c1-g3-gg1', name:'Maria Luiza' }, { id:'b5-c1-g3-gg2', name:'Joao Gabriel' }
+                ]}
+              ]
+            },
+            {
+              id:'b5-c2', name:'Hebert', spouse:'Shirley', children:[
+                { id:'b5-c2-g1', name:'Tatiany', spouse:'Henrique', children:[{ id:'b5-c2-g1-gg1', name:'Lorena' }]},
+                { id:'b5-c2-g2', name:'Rafael', spouse:'Adriana', children:[{ id:'b5-c2-g2-gg1', name:'Sofia' }]}
+              ]
+            },
+            {
+              id:'b5-c3', name:'Cleber', spouse:'Zilda', children:[
+                { id:'b5-c3-g1', name:'Brenda', spouse:'Pedro', children:[{ id:'b5-c3-g1-gg1', name:'Helena' }]},
+                { id:'b5-c3-g2', name:'Loraine', children:[{ id:'b5-c3-g2-gg1', name:'Maria Vitoria' }]},
+                { id:'b5-c3-g3', name:'Monike', spouse:'Bruno', children:[
+                  { id:'b5-c3-g3-gg1', name:'Guilherme' }, { id:'b5-c3-g3-gg2', name:'Lucas' }, { id:'b5-c3-g3-gg3', name:'Olivia' }
+                ]}
+              ]
+            },
+            {
+              id:'b5-c4', name:'Jose Teofilo', spouse:'Dulce', children:[
+                { id:'b5-c4-g1', name:'Alex' },
+                { id:'b5-c4-g2', name:'Lucas', children:[{ id:'b5-c4-g2-gg1', name:'Antonio' }]}
+              ]
+            },
+            { id:'b5-c5', name:'Clayton', spouse:'Carmen', children:[{ id:'b5-c5-g1', name:'Michele' }]}
+          ]
+        },
+
+        {
+          id:'b6', name:'Tia Maria', spouse:'Abercio', spouseStatus:'in memoriam',
+          children:[
+            {
+              id:'b6-c1', name:'Henrique', spouse:'Lucila', children:[
+                { id:'b6-c1-g1', name:'Natalia', spouse:'Marcio', children:[
+                  { id:'b6-c1-g1-gg1', name:'Rodolfo' }, { id:'b6-c1-g1-gg2', name:'Joao Pedro' }, { id:'b6-c1-g1-gg3', name:'Eduardo' }
+                ]},
+                { id:'b6-c1-g2', name:'Rafaela', spouse:'Thiago', children:[
+                  { id:'b6-c1-g2-gg1', name:'Antonio' }, { id:'b6-c1-g2-gg2', name:'Joaquim' }
+                ]},
+                { id:'b6-c1-g3', name:'Antonio Henrique' },
+                { id:'b6-c1-g4', name:'Lucas' }
+              ]
+            },
+            {
+              id:'b6-c2', name:'Paulo', // corrected
+              children:[
+                { id:'b6-c2-g1', name:'Paula', children:[{ id:'b6-c2-g1-gg1', name:'Manu' }]},
+                { id:'b6-c2-g2', name:'Bia', children:[
+                  { id:'b6-c2-g2-gg1', name:'Artur' }, { id:'b6-c2-g2-gg2', name:'Eric' }
+                ]},
+                { id:'b6-c2-g3', name:'Gabi' }
+              ]
+            },
+            { id:'b6-c3', name:'Selma', children:[
+              { id:'b6-c3-g1', name:'Mariana' }, { id:'b6-c3-g2', name:'Hiago' }, { id:'b6-c3-g3', name:'Angelina' }
+            ]},
+            { id:'b6-c4', name:'Solange', spouse:'Ricardo', children:[
+              { id:'b6-c4-g1', name:'Milena', spouse:'Sandro', children:[{ id:'b6-c4-g1-gg1', name:'Heitor' }]},
+              { id:'b6-c4-g2', name:'Alexandre', spouse:'Talita', children:[
+                { id:'b6-c4-g2-gg1', name:'Maria Sofia' }, { id:'b6-c4-g2-gg2', name:'Gregorio' }
+              ]},
+              { id:'b6-c4-g3', name:'Mirella', spouse:'Vinicius', children:[
+                { id:'b6-c4-g3-gg1', name:'Otavio' }, { id:'b6-c4-g3-gg2', name:'Lavinia' }
+              ]}
+            ]}
+          ]
+        },
+
+        {
+          id:'b7', name:'Tio Hermann', status:'in memoriam', spouse:'Tia Ida',
+          children:[
+            { id:'b7-c1', name:'Wania', children:[
+              { id:'b7-c1-g1', name:'Marcela', children:[{ id:'b7-c1-g1-gg1', name:'Orion' }]},
+              { id:'b7-c1-g2', name:'Bruna' }
+            ]},
+            { id:'b7-c2', name:'Waner', children:[{ id:'b7-c2-g1', name:'Julia' },{ id:'b7-c2-g2', name:'Matheus' }]},
+            { id:'b7-c3', name:\"Wagner 'Guinho'\", status:'in memoriam', children:[
+              { id:'b7-c3-g1', name:'Tamiris' }, { id:'b7-c3-g2', name:'Beatriz' }
+            ]},
+            { id:'b7-c4', name:'Mara (Wanice)', children:[{ id:'b7-c4-g1', name:'Jaqueline' }]}
+          ]
+        },
+
+        {
+          id:'b8', name:'Tia Cida', spouse:'Orlando Mariano', spouseStatus:'in memoriam',
+          children:[
+            { id:'b8-c1', name:'Luiz Orlando', spouse:'Eliana', children:[
+              { id:'b8-c1-g1', name:'Otavio' }, { id:'b8-c1-g2', name:'Olivia' }
+            ]},
+            { id:'b8-c2', name:'Zeina', status:'in memoriam', children:[] },
+            { id:'b8-c3', name:\"Marco Tulio 'Barrinha'\", spouse:'Maria', children:[
+              { id:'b8-c3-g1', name:'Rafael' },
+              { id:'b8-c3-g2', name:'Pricila', spouse:'Vicente', children:[{ id:'b8-c3-g2-gg1', name:'Neto Bernardo' }]}
+            ]},
+            { id:'b8-c4', name:\"Carlo 'Branco' Nyranon\", children:[
+              { id:'b8-c4-g1', name:'Rafael' }, { id:'b8-c4-g2', name:'Flavia' }
+            ]}
+          ]
+        },
+
+        {
+          id:'b9', name:'Tia Odete', spouse:'Daercio Maximiano', spouseStatus:'in memoriam',
+          children:[
+            {
+              id:'b9-c1', name:'Marco Antonio Maximiano', spouse:'Aparecida Fuzo Maximiano',
+              children:[
+                { id:'b9-c1-g1', name:'Rodrigo Fuzo Maximiano', spouse:'Ana Flavia Santana F da Silva', children:[] },
+                { id:'b9-c1-g2', name:'Giovanna Fuzo Maximiano', spouse:'Andre Filipe Viera Marques',
+                  children:[{ id:'b9-c1-g2-gg1', name:'Gabriel Fuzo Maximiano' }] },
+                { id:'b9-c1-g3', name:'Saulo Fuzo Maximiano', spouse:'Raquel Fernandes Coelho',
+                  children:[{ id:'b9-c1-g3-gg1', name:'Ester Coelho Fuzo' }] }
+              ]
+            },
+            { id:'b9-c2', name:'Adelcio Jose Maximiano', status:'in memoriam', children:[] },
+            {
+              id:'b9-c3', name:'Daercio Maximiano', status:'in memoriam',
+              children:[
+                {
+                  id:'b9-c3-sub1', name:'Isabel Benedita de Abreu Maximiano', type:'partner-group',
+                  children:[
+                    { id:'b9-c3-g1', name:'Juliana de Abreu Maximiano', spouse:'Juliano de Angelis Thomazini',
+                      children:[{ id:'b9-c3-g1-gg1', name:'Maria Julia' }] }
+                  ]
+                },
+                {
+                  id:'b9-c3-sub2', name:'Roseni Meirelles Silveira', type:'partner-group',
+                  children:[
+                    {
+                      id:'b9-c3-g2', name:'Barbara Maximiano de Souza',
+                      children:[
+                        { id:'b9-c3-g2-gg1', name:'Eliezer Chaves de Souza', children:[
+                          { id:'b9-c3-g2-gg1-ggg1', name:'Davi Maximiano de Souza' },
+                          { id:'b9-c3-g2-gg1-ggg2', name:'Miguel Maximiano de Souza' }
+                        ]},
+                        { id:'b9-c3-g2-gg2', name:'Marcos Machado de Oliveira', children:[
+                          { id:'b9-c3-g2-gg2-ggg1', name:'Agata Meirelles de Oliveira' }
+                        ]}
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+
+        { id:'b10', name:'Tia Cleuza', children:[] },
+
+        {
+          id:'b11', name:'Tio Sandoval', status:'in memoriam', spouse:'Tia Leida',
+          children:[
+            { id:'b11-c1', name:'Keila', children:[
+              { id:'b11-c1-g1', name:'Rodrigo' }, { id:'b11-c1-g2', name:'Frederico' }, { id:'b11-c1-g3', name:'Natalia' }
+            ]},
+            { id:'b11-c2', name:'Kenya', spouse:'Marcio', children:[
+              { id:'b11-c2-g1', name:'Isadora' }, { id:'b11-c2-g2', name:'Ana Luisa' }, { id:'b11-c2-g3', name:'Joao Pedro' }
+            ]},
+            { id:'b11-c3', name:'Kelly', children:[
+              { id:'b11-c3-g1', name:'Aleksei' }, { id:'b11-c3-g2', name:'Patrick Filho' }
+            ]}
+          ]
+        }
+      ]
+    };
+
+    // ------------------ RENDERING ------------------
+    const root = document.getElementById('root');
+
+    // Utility: make an element
+    const el = (tag, attrs = {}, children = []) => {
+      const e = document.createElement(tag);
+      for (const [k,v] of Object.entries(attrs)) {
+        if (k === 'class') e.className = v;
+        else if (k === 'html') e.innerHTML = v;
+        else e.setAttribute(k,v);
+      }
+      for (const c of [].concat(children)) {
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else if (c) e.appendChild(c);
+      }
+      return e;
+    };
+
+    const badgeMemoriam = () => el('span', {class:'memoriam'}, 'IN MEMORIAM');
+
+    function personRow(node){
+      const row = el('div', {class:'row'});
+      const left = el('div');
+
+      const who = el('div', {class:'who'});
+      who.append(
+        el('span', {class:'bullet'}),
+        el('span', {class:'name'}, node.name)
+      );
+      if (node.spouse) {
+        who.append(el('span', {class:'spouse'}, ' & ' + node.spouse));
+      }
+      if (node.status === 'in memoriam') who.append(badgeMemoriam());
+      if (node.spouseStatus === 'in memoriam') {
+        who.append(el('span', {class:'memoriam', style:'margin-left:6px'}, '(cônjuge)'));
+      }
+      left.append(who);
+
+      const right = el('div');
+      // grandchildren list (if this node has children -> show as comma list)
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        const kidsNames = [];
+        node.children.forEach(c => {
+          if (c.spouse) kidsNames.push(`${c.name} & ${c.spouse}`);
+          else kidsNames.push(c.name);
+        });
+        right.append(el('div', {class:'kids'}, kidsNames.join(', ')));
+      } else {
+        right.append(el('div', {class:'muted small'}, '—'));
+      }
+
+      row.append(left, right);
+
+      // deeper levels
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        const indent = el('div', {class:'indent'});
+        node.children.forEach(c => {
+          // render child “leaf” with their children listed on right
+          indent.appendChild(personRowLeaf(c));
+        });
+        row.appendChild(indent);
+      }
+
+      return row;
+    }
+
+    function personRowLeaf(node){
+      const row = el('div', {class:'row'});
+      const left = el('div');
+
+      const who = el('div', {class:'who'});
+      who.append(el('span', {class:'bullet'}), el('span', {class:'name'}, node.name));
+      if (node.spouse) who.append(el('span', {class:'spouse'}, ' & ' + node.spouse));
+      if (node.type === 'partner-group') who.append(el('span', {class:'partner'}, 'Partner line'));
+      if (node.status === 'in memoriam') who.append(badgeMemoriam());
+      if (node.spouseStatus === 'in memoriam') {
+        who.append(el('span', {class:'memoriam', style:'margin-left:6px'}, '(cônjuge)'));
+      }
+      left.append(who);
+
+      const right = el('div');
+      if (Array.isArray(node.children) && node.children.length > 0) {
+        const gkids = [];
+        node.children.forEach(gc => {
+          if (gc.children && gc.children.length > 0){
+            const gg = gc.children.map(x => x.name).join(', ');
+            if (gc.spouse) gkids.push(`${gc.name} & ${gc.spouse} — ${gg}`);
+            else gkids.push(`${gc.name} — ${gg}`);
+          } else {
+            if (gc.spouse) gkids.push(`${gc.name} & ${gc.spouse}`);
+            else gkids.push(gc.name);
+          }
+        });
+        right.append(el('div', {class:'kids'}, gkids.join('; ')));
+      } else {
+        right.append(el('div', {class:'muted small'}, '—'));
+      }
+
+      row.append(left, right);
+      return row;
+    }
+
+    function sectionFor(branch){
+      const d = el('details', {class:'section'});
+      const s = el('summary', {}, [
+        branch.name,
+        branch.spouse ? el('span',{class:'spouse'}, ' & ' + branch.spouse) : null,
+        (branch.status === 'in memoriam') ? badgeMemoriam() : null,
+        (branch.spouseStatus === 'in memoriam') ? el('span',{class:'memoriam',style:'margin-left:6px'},'(cônjuge)') : null,
+        el('span', {class:'meta'}, Array.isArray(branch.children) ? `${branch.children.length} filhos` : '0 filhos')
+      ]);
+      const body = el('div', {class:'body'});
+
+      if (Array.isArray(branch.children) && branch.children.length > 0) {
+        branch.children.forEach(ch => body.appendChild(personRow(ch)));
+      } else {
+        body.append(el('div', {class:'muted'}, 'Sem registros de filhos.'));
+      }
+
+      d.append(s, body);
+      return d;
+    }
+
+    function render(){
+      root.innerHTML = '';
+      // Show each top-level branch as a collapsible section
+      FAMILY_DATA.children.forEach(b => root.appendChild(sectionFor(b)));
+    }
+
+    render();
+
+    // ------------------ SEARCH ------------------
+    const search = document.getElementById('search');
+
+    function normalize(s){ return (s||'').toLowerCase(); }
+
+    function searchOpen(term){
+      const t = normalize(term);
+      const sections = [...root.querySelectorAll('.section')];
+      sections.forEach(sec => {
+        // close by default
+        sec.open = false;
+        sec.classList.remove('highlight');
+        // remove previous highlights
+        sec.querySelectorAll('.row,.who').forEach(n => n.classList.remove('highlight'));
+      });
+      if (!t) return;
+
+      // simple text match: if a section contains the text, open and highlight matches
+      sections.forEach(sec => {
+        const has = normalize(sec.innerText).includes(t);
+        if (has){
+          sec.open = true;
+          // highlight rows containing the match
+          sec.querySelectorAll('.row,.who').forEach(n => {
+            if (normalize(n.innerText).includes(t)) n.classList.add('highlight');
+          });
+          // slight section highlight
+          sec.classList.add('highlight');
+        }
+      });
+    }
+
+    search.addEventListener('input', e => searchOpen(e.target.value));
+
+    // Open first two sections by default for quicker mobile view
+    const first = root.querySelectorAll('.section');
+    if (first[0]) first[0].open = true;
+    if (first[1]) first[1].open = true;
+
+    // Small iOS hint for install
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent)){
+      console.log('Tip: In Safari, Share → Add to Home Screen for an app-like icon.');
+    }
+  </script>
+</body>
+</html>
