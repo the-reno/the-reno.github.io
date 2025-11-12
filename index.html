@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Family Map</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        body {
+            overscroll-behavior: none; /* Prevent bounce on Mac/iOS */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen w-screen overflow-hidden">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- ICONS (Inline SVGs for standalone compatibility) ---
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const Search = (props) => <IconWrapper {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></IconWrapper>;
+        const ZoomIn = (props) => <IconWrapper {...props}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></IconWrapper>;
+        const ZoomOut = (props) => <IconWrapper {...props}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></IconWrapper>;
+        const Maximize = (props) => <IconWrapper {...props}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></IconWrapper>;
+        const Users = (props) => <IconWrapper {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconWrapper>;
+        const Heart = (props) => <IconWrapper {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></IconWrapper>;
+        const ChevronDown = (props) => <IconWrapper {...props}><path d="m6 9 6 6 6-6"/></IconWrapper>;
+        const ChevronUp = (props) => <IconWrapper {...props}><path d="m18 15-6-6-6 6"/></IconWrapper>;
+        const MousePointer2 = (props) => <IconWrapper {...props}><path d="m12 6 4 13-2.29-2.29a2 2 0 0 0-2.17-.43l-5.24 2.62"/><path d="M22 2 2 22l3.23-8.07a2 2 0 0 1 1.15-1.15L14.5 9.5"/></IconWrapper>;
+        const Move = (props) => <IconWrapper {...props}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></IconWrapper>;
+
+        // --- DATA ---
+        const FAMILY_DATA = {
+            id: 'root',
+            name: 'Family Roots',
+            spouse: '',
+            type: 'root',
+            children: [
+                { id: 'b1', name: 'Tio Osorio', children: [] },
+                { id: 'b2', name: 'Tio Omar', children: [] },
+                { id: 'b3', name: 'Tio Mario', children: [] },
+                {
+                    id: 'b4',
+                    name: 'Tia Sebastiana',
+                    spouse: 'Mario De Santi',
+                    status: 'in memoriam',
+                    children: [
+                        {
+                            id: 'b4-c1',
+                            name: 'Ozana',
+                            spouse: 'Anezio',
+                            spouseStatus: 'in memoriam',
+                            children: [
+                                {
+                                    id: 'b4-c1-g1',
+                                    name: 'Wesley',
+                                    spouse: 'Maria Teresa',
+                                    children: [
+                                        { id: 'b4-c1-g1-gg1', name: 'Isabela' },
+                                        { id: 'b4-c1-g1-gg2', name: 'Breno' },
+                                        { id: 'b4-c1-g1-gg3', name: 'Miguel' }
+                                    ]
+                                },
+                                { id: 'b4-c1-g2', name: 'Wedler', spouse: 'Luciana', children: [] },
+                                {
+                                    id: 'b4-c1-g3',
+                                    name: 'Werner',
+                                    spouse: 'Patricia',
+                                    children: [{ id: 'b4-c1-g3-gg1', name: 'Gabriel' }]
+                                },
+                                { id: 'b4-c1-g4', name: 'Welka', children: [] }
+                            ]
+                        },
+                        {
+                            id: 'b4-c2',
+                            name: 'Omar',
+                            status: 'in memoriam',
+                            spouse: 'Elena',
+                            children: [
+                                {
+                                    id: 'b4-c2-g1',
+                                    name: 'Alan',
+                                    spouse: 'Cristine',
+                                    children: [
+                                        { id: 'b4-c2-g1-gg1', name: 'Ana Flavia' },
+                                        { id: 'b4-c2-g1-gg2', name: 'Leandro' }
+                                    ]
+                                },
+                                { id: 'b4-c2-g2', name: 'Aline', spouse: 'Fabiano', children: [] }
+                            ]
+                        },
+                        {
+                            id: 'b4-c3',
+                            name: 'Homero',
+                            status: 'in memoriam',
+                            spouse: 'Maria das Gracas',
+                            children: [
+                                {
+                                    id: 'b4-c3-g1',
+                                    name: 'Gutemberg',
+                                    children: [
+                                        { id: 'b4-c3-g1-gg1', name: 'Joao Vitor' },
+                                        { id: 'b4-c3-g1-gg2', name: 'Ana Luisa' }
+                                    ]
+                                },
+                                {
+                                    id: 'b4-c3-g2',
+                                    name: 'Graciela',
+                                    spouse: 'Cristiano',
+                                    children: [
+                                        { id: 'b4-c3-g2-gg1', name: 'Luiz Guilherme' },
+                                        { id: 'b4-c3-g2-gg2', name: 'Manuela' }
+                                    ]
+                                },
+                                {
+                                    id: 'b4-c3-g3',
+                                    name: 'Giselle',
+                                    spouse: 'Willer',
+                                    children: [
+                                        { id: 'b4-c3-g3-gg1', name: 'Felipe' },
+                                        { id: 'b4-c3-g3-gg2', name: 'Cecilia' }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b4-c4',
+                            name: 'Rosangela',
+                            spouse: 'Mauricio',
+                            children: [
+                                {
+                                    id: 'b4-c4-g1',
+                                    name: 'Bruno',
+                                    spouse: 'Nayara',
+                                    children: [{ id: 'b4-c4-g1-gg1', name: 'Pedro' }]
+                                },
+                                {
+                                    id: 'b4-c4-g2',
+                                    name: 'Bianca',
+                                    spouse: 'Thiago',
+                                    children: [{ id: 'b4-c4-g2-gg1', name: 'Larissa' }]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b4-c5',
+                            name: 'Ragines',
+                            spouse: 'Samira',
+                            children: [
+                                {
+                                    id: 'b4-c5-g1',
+                                    name: 'Thales',
+                                    spouse: 'Maraine',
+                                    children: [
+                                        { id: 'b4-c5-g1-gg1', name: 'Thomas' },
+                                        { id: 'b4-c5-g1-gg2', name: 'Florenca' }
+                                    ]
+                                },
+                                {
+                                    id: 'b4-c5-g2',
+                                    name: 'Jessica',
+                                    spouse: 'Lucas',
+                                    children: [
+                                        { id: 'b4-c5-g2-gg1', name: 'Analice' },
+                                        { id: 'b4-c5-g2-gg2', name: 'Irmao/Irma' }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'b5',
+                    name: 'Tia Geralda',
+                    spouse: 'Jose Reno',
+                    spouseStatus: 'in memoriam',
+                    children: [
+                        {
+                            id: 'b5-c1',
+                            name: 'Hebe',
+                            spouse: 'Sergio',
+                            children: [
+                                {
+                                    id: 'b5-c1-g1',
+                                    name: 'Karina',
+                                    children: [
+                                        { id: 'b5-c1-g1-gg1', name: 'Helena' },
+                                        { id: 'b5-c1-g1-gg2', name: 'Olivia' }
+                                    ]
+                                },
+                                {
+                                    id: 'b5-c1-g2',
+                                    name: 'Gustavo',
+                                    spouse: 'Carol',
+                                    children: [{ id: 'b5-c1-g2-gg1', name: 'Rafaela' }]
+                                },
+                                {
+                                    id: 'b5-c1-g3',
+                                    name: 'Keyla',
+                                    spouse: 'Hendrik',
+                                    children: [
+                                        { id: 'b5-c1-g3-gg1', name: 'Maria Luiza' },
+                                        { id: 'b5-c1-g3-gg2', name: 'Joao Gabriel' }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b5-c2',
+                            name: 'Hebert',
+                            spouse: 'Shirley',
+                            children: [
+                                {
+                                    id: 'b5-c2-g1',
+                                    name: 'Tatiany',
+                                    spouse: 'Henrique',
+                                    children: [{ id: 'b5-c2-g1-gg1', name: 'Lorena' }]
+                                },
+                                {
+                                    id: 'b5-c2-g2',
+                                    name: 'Rafael',
+                                    spouse: 'Adriana',
+                                    children: [{ id: 'b5-c2-g2-gg1', name: 'Sofia' }]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b5-c3',
+                            name: 'Cleber',
+                            spouse: 'Zilda',
+                            children: [
+                                {
+                                    id: 'b5-c3-g1',
+                                    name: 'Brenda',
+                                    spouse: 'Pedro',
+                                    children: [{ id: 'b5-c3-g1-gg1', name: 'Helena' }]
+                                },
+                                {
+                                    id: 'b5-c3-g2',
+                                    name: 'Loraine',
+                                    children: [{ id: 'b5-c3-g2-gg1', name: 'Maria Vitoria' }]
+                                },
+                                {
+                                    id: 'b5-c3-g3',
+                                    name: 'Monike',
+                                    spouse: 'Bruno',
+                                    children: [
+                                        { id: 'b5-c3-g3-gg1', name: 'Guilherme' },
+                                        { id: 'b5-c3-g3-gg2', name: 'Lucas' },
+                                        { id: 'b5-c3-g3-gg3', name: 'Olivia' }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b5-c4',
+                            name: 'Jose Teofilo',
+                            spouse: 'Dulce',
+                            children: [
+                                { id: 'b5-c4-g1', name: 'Alex' },
+                                {
+                                    id: 'b5-c4-g2',
+                                    name: 'Lucas',
+                                    children: [{ id: 'b5-c4-g2-gg1', name: 'Antonio' }]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b5-c5',
+                            name: 'Clayton',
+                            spouse: 'Carmen',
+                            children: [{ id: 'b5-c5-g1', name: 'Michele' }]
+                        }
+                    ]
+                },
+                {
+                    id: 'b6',
+                    name: 'Tia Maria',
+                    spouse: 'Abercio',
+                    spouseStatus: 'in memoriam',
+                    children: [
+                        {
+                            id: 'b6-c1',
+                            name: 'Henrique',
+                            spouse: 'Lucila',
+                            children: [
+                                {
+                                    id: 'b6-c1-g1',
+                                    name: 'Natalia',
+                                    spouse: 'Marcio',
+                                    children: [
+                                        { id: 'b6-c1-g1-gg1', name: 'Rodolfo' },
+                                        { id: 'b6-c1-g1-gg2', name: 'Joao Pedro' },
+                                        { id: 'b6-c1-g1-gg3', name: 'Eduardo' }
+                                    ]
+                                },
+                                {
+                                    id: 'b6-c1-g2',
+                                    name: 'Rafaela',
+                                    spouse: 'Thiago',
+                                    children: [
+                                        { id: 'b6-c1-g2-gg1', name: 'Antonio' },
+                                        { id: 'b6-c1-g2-gg2', name: 'Joaquim' }
+                                    ]
+                                },
+                                { id: 'b6-c1-g3', name: 'Antonio Henrique' },
+                                { id: 'b6-c1-g4', name: 'Lucas' }
+                            ]
+                        },
+                        {
+                            id: 'b6-c2',
+                            name: 'Paula',
+                            children: [
+                                {
+                                    id: 'b6-c2-g1',
+                                    name: 'Paula',
+                                    children: [{ id: 'b6-c2-g1-gg1', name: 'Manu' }]
+                                },
+                                {
+                                    id: 'b6-c2-g2',
+                                    name: 'Bia',
+                                    children: [
+                                        { id: 'b6-c2-g2-gg1', name: 'Artur' },
+                                        { id: 'b6-c2-g2-gg2', name: 'Eric' }
+                                    ]
+                                },
+                                { id: 'b6-c2-g3', name: 'Gabi' }
+                            ]
+                        },
+                        {
+                            id: 'b6-c3',
+                            name: 'Selma',
+                            children: [
+                                { id: 'b6-c3-g1', name: 'Mariana' },
+                                { id: 'b6-c3-g2', name: 'Hiago' },
+                                { id: 'b6-c3-g3', name: 'Angelina' }
+                            ]
+                        },
+                        {
+                            id: 'b6-c4',
+                            name: 'Solange',
+                            spouse: 'Ricardo',
+                            children: [
+                                {
+                                    id: 'b6-c4-g1',
+                                    name: 'Milena',
+                                    spouse: 'Sandro',
+                                    children: [{ id: 'b6-c4-g1-gg1', name: 'Heitor' }]
+                                },
+                                {
+                                    id: 'b6-c4-g2',
+                                    name: 'Alexandre',
+                                    spouse: 'Talita',
+                                    children: [
+                                        { id: 'b6-c4-g2-gg1', name: 'Maria Sofia' },
+                                        { id: 'b6-c4-g2-gg2', name: 'Gregorio' }
+                                    ]
+                                },
+                                {
+                                    id: 'b6-c4-g3',
+                                    name: 'Mirella',
+                                    spouse: 'Vinicius',
+                                    children: [
+                                        { id: 'b6-c4-g3-gg1', name: 'Otavio' },
+                                        { id: 'b6-c4-g3-gg2', name: 'Lavinia' }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'b7',
+                    name: 'Tio Hermann',
+                    status: 'in memoriam',
+                    spouse: 'Tia Ida',
+                    children: [
+                        {
+                            id: 'b7-c1',
+                            name: 'Wania',
+                            children: [
+                                {
+                                    id: 'b7-c1-g1',
+                                    name: 'Marcela',
+                                    children: [{ id: 'b7-c1-g1-gg1', name: 'Orion' }]
+                                },
+                                { id: 'b7-c1-g2', name: 'Bruna' }
+                            ]
+                        },
+                        {
+                            id: 'b7-c2',
+                            name: 'Waner',
+                            children: [
+                                { id: 'b7-c2-g1', name: 'Julia' },
+                                { id: 'b7-c2-g2', name: 'Matheus' }
+                            ]
+                        },
+                        {
+                            id: 'b7-c3',
+                            name: "Wagner 'Guinho'",
+                            status: 'in memoriam',
+                            children: [
+                                { id: 'b7-c3-g1', name: 'Tamiris' },
+                                { id: 'b7-c3-g2', name: 'Beatriz' }
+                            ]
+                        },
+                        {
+                            id: 'b7-c4',
+                            name: 'Mara (Wanice)',
+                            children: [{ id: 'b7-c4-g1', name: 'Jaqueline' }]
+                        }
+                    ]
+                },
+                {
+                    id: 'b8',
+                    name: 'Tia Cida',
+                    spouse: 'Orlando Mariano',
+                    spouseStatus: 'in memoriam',
+                    children: [
+                        {
+                            id: 'b8-c1',
+                            name: 'Luiz Orlando',
+                            spouse: 'Eliana',
+                            children: [
+                                { id: 'b8-c1-g1', name: 'Otavio' },
+                                { id: 'b8-c1-g2', name: 'Olivia' }
+                            ]
+                        },
+                        { id: 'b8-c2', name: 'Zeina', status: 'in memoriam', children: [] },
+                        {
+                            id: 'b8-c3',
+                            name: "Marco Tulio 'Barrinha'",
+                            spouse: 'Maria',
+                            children: [
+                                { id: 'b8-c3-g1', name: 'Rafael' },
+                                {
+                                    id: 'b8-c3-g2',
+                                    name: 'Pricila',
+                                    spouse: 'Vicente',
+                                    children: [{ id: 'b8-c3-g2-gg1', name: 'Neto Bernardo' }]
+                                }
+                            ]
+                        },
+                        {
+                            id: 'b8-c4',
+                            name: "Carlo 'Branco' Nyranon",
+                            children: [
+                                { id: 'b8-c4-g1', name: 'Rafael' },
+                                { id: 'b8-c4-g2', name: 'Flavia' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'b9',
+                    name: 'Tia Odete',
+                    spouse: 'Daercio Maximiano',
+                    spouseStatus: 'in memoriam',
+                    children: [
+                        {
+                            id: 'b9-c1',
+                            name: 'Marco Antonio Maximiano',
+                            spouse: 'Aparecida Fuzo Maximiano',
+                            children: [
+                                {
+                                    id: 'b9-c1-g1',
+                                    name: 'Rodrigo Fuzo Maximiano',
+                                    spouse: 'Ana Flavia Santana F da Silva',
+                                    children: []
+                                },
+                                {
+                                    id: 'b9-c1-g2',
+                                    name: 'Giovanna Fuzo Maximiano',
+                                    spouse: 'Andre Filipe Viera Marques',
+                                    children: [
+                                        { id: 'b9-c1-g2-gg1', name: 'Gabriel Fuzo Maximiano' }
+                                    ]
+                                },
+                                {
+                                    id: 'b9-c1-g3',
+                                    name: 'Saulo Fuzo Maximiano',
+                                    spouse: 'Raquel Fernandes Coelho',
+                                    children: [{ id: 'b9-c1-g3-gg1', name: 'Ester Coelho Fuzo' }]
+                                }
+                            ]
+                        },
+                        { id: 'b9-c2', name: 'Adelcio Jose Maximiano', status: 'in memoriam', children: [] },
+                        {
+                            id: 'b9-c3',
+                            name: 'Daercio Maximiano',
+                            status: 'in memoriam',
+                            children: [
+                                {
+                                    id: 'b9-c3-sub1',
+                                    name: 'Isabel Benedita de Abreu Maximiano',
+                                    type: 'partner-group',
+                                    children: [
+                                        {
+                                            id: 'b9-c3-g1',
+                                            name: 'Juliana de Abreu Maximiano',
+                                            spouse: 'Juliano de Angelis Thomazini',
+                                            children: [{ id: 'b9-c3-g1-gg1', name: 'Maria Julia' }]
+                                        }
+                                    ]
+                                },
+                                {
+                                    id: 'b9-c3-sub2',
+                                    name: 'Roseni Meirelles Silveira',
+                                    type: 'partner-group',
+                                    children: [
+                                        {
+                                            id: 'b9-c3-g2',
+                                            name: 'Barbara Maximiano de Souza',
+                                            children: [
+                                                {
+                                                    id: 'b9-c3-g2-gg1',
+                                                    name: 'Eliezer Chaves de Souza',
+                                                    children: [
+                                                        {
+                                                            id: 'b9-c3-g2-gg1-ggg1',
+                                                            name: 'Davi Maximiano de Souza'
+                                                        },
+                                                        {
+                                                            id: 'b9-c3-g2-gg1-ggg2',
+                                                            name: 'Miguel Maximiano de Souza'
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    id: 'b9-c3-g2-gg2',
+                                                    name: 'Marcos Machado de Oliveira',
+                                                    children: [
+                                                        {
+                                                            id: 'b9-c3-g2-gg2-ggg1',
+                                                            name: 'Agata Meirelles de Oliveira'
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                { id: 'b10', name: 'Tia Cleuza', children: [] },
+                {
+                    id: 'b11',
+                    name: 'Tio Sandoval',
+                    status: 'in memoriam',
+                    spouse: 'Tia Leida',
+                    children: [
+                        {
+                            id: 'b11-c1',
+                            name: 'Keila',
+                            children: [
+                                { id: 'b11-c1-g1', name: 'Rodrigo' },
+                                { id: 'b11-c1-g2', name: 'Frederico' },
+                                { id: 'b11-c1-g3', name: 'Natalia' }
+                            ]
+                        },
+                        {
+                            id: 'b11-c2',
+                            name: 'Kenya',
+                            spouse: 'Marcio',
+                            children: [
+                                { id: 'b11-c2-g1', name: 'Isadora' },
+                                { id: 'b11-c2-g2', name: 'Ana Luisa' },
+                                { id: 'b11-c2-g3', name: 'Joao Pedro' }
+                            ]
+                        },
+                        {
+                            id: 'b11-c3',
+                            name: 'Kelly',
+                            children: [
+                                { id: 'b11-c3-g1', name: 'Aleksei' },
+                                { id: 'b11-c3-g2', name: 'Patrick Filho' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // --- CONSTANTS ---
+        const NODE_WIDTH = 220;
+        const NODE_HEIGHT = 110;
+        const X_GAP = 40;
+        const Y_GAP = 180;
+
+        // --- LAYOUT LOGIC ---
+        const calculateLayout = (root, maxLevel = 100) => {
+            const nodes = [];
+            const edges = [];
+            let leafCounter = 0;
+            
+            let minX = Infinity;
+            let maxX = -Infinity;
+            let maxY = 0;
+
+            const traverse = (node, depth = 0, parentId = null) => {
+                if (depth > maxLevel) return null;
+
+                const currentId = node.id;
+                const processedNode = { ...node, depth };
+                
+                let children = [];
+
+                if (node.children && node.children.length > 0 && depth < maxLevel) {
+                    children = node.children.map(child => traverse(child, depth + 1, currentId)).filter(Boolean);
+                }
+
+                if (children.length > 0) {
+                    const firstChild = children[0];
+                    const lastChild = children[children.length - 1];
+                    processedNode.x = (firstChild.x + lastChild.x) / 2;
+                } else {
+                    processedNode.x = leafCounter * (NODE_WIDTH + X_GAP);
+                    leafCounter++;
+                }
+
+                processedNode.y = depth * Y_GAP;
+
+                minX = Math.min(minX, processedNode.x);
+                maxX = Math.max(maxX, processedNode.x);
+                maxY = Math.max(maxY, processedNode.y);
+
+                nodes.push(processedNode);
+
+                if (parentId) {
+                    edges.push({ from: parentId, to: currentId });
+                }
+
+                return processedNode;
+            };
+
+            traverse(root);
+
+            const PADDING = 100;
+            const width = (maxX - minX) + NODE_WIDTH + (PADDING * 2);
+            const height = maxY + NODE_HEIGHT + (PADDING * 2);
+
+            const xOffset = PADDING - minX;
+            const yOffset = PADDING;
+
+            const shiftedNodes = nodes.map(n => ({
+                ...n,
+                x: n.x + xOffset,
+                y: n.y + yOffset
+            }));
+
+            return { nodes: shiftedNodes, edges, width, height };
+        };
+
+        // --- COMPONENTS ---
+
+        const FamilyCard = ({ node, onClick, isSelected, scale }) => {
+            const getInitials = (name) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            
+            const getBorderColor = (depth) => {
+                const colors = [
+                    'border-emerald-500', 'border-blue-500', 'border-purple-500', 
+                    'border-pink-500', 'border-amber-500', 'border-cyan-500'
+                ];
+                return colors[depth % colors.length] || 'border-gray-400';
+            };
+
+            const getBgColor = (depth) => {
+                const colors = [
+                    'bg-emerald-50', 'bg-blue-50', 'bg-purple-50', 
+                    'bg-pink-50', 'bg-amber-50', 'bg-cyan-50'
+                ];
+                return colors[depth % colors.length] || 'bg-gray-50';
+            };
+
+            return (
+                <div 
+                    onClick={(e) => { e.stopPropagation(); onClick(node); }}
+                    className={`
+                        absolute flex flex-col items-center p-3 rounded-xl shadow-md cursor-pointer 
+                        border-b-4 hover:shadow-xl transition-shadow duration-200
+                        ${getBorderColor(node.depth)}
+                        ${isSelected ? 'ring-4 ring-yellow-300 z-20 bg-white' : 'bg-white'}
+                    `}
+                    style={{
+                        width: NODE_WIDTH * scale,
+                        minHeight: NODE_HEIGHT * scale,
+                        left: node.x * scale,
+                        top: node.y * scale,
+                        transform: 'translate(-50%, 0)',
+                        fontSize: `${scale}rem`
+                    }}
+                >
+                    <div className="flex items-center w-full mb-[0.5em]">
+                        <div className={`
+                            rounded-full flex items-center justify-center font-bold mr-[0.5em] shadow-sm shrink-0
+                            ${getBgColor(node.depth)} text-slate-700
+                        `}
+                        style={{ width: `${2.5 * scale}rem`, height: `${2.5 * scale}rem`, fontSize: `${0.9 * scale}rem`}}
+                        >
+                            {getInitials(node.name)}
+                        </div>
+                        <div className="flex-grow min-w-0">
+                            <h3 className="font-bold text-slate-800 truncate leading-tight" style={{ fontSize: `${0.95 * scale}rem` }} title={node.name}>
+                                {node.name}
+                            </h3>
+                            {node.status === 'in memoriam' && (
+                                <span className="uppercase tracking-wider text-slate-400 font-semibold block" style={{ fontSize: `${0.6 * scale}rem` }}>In Memoriam</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {node.spouse && (
+                        <div className="w-full bg-slate-50 rounded-lg p-[0.4em] flex items-center border border-slate-100">
+                            <Heart className="text-rose-400 mr-[0.4em] shrink-0" style={{ width: `${12 * scale}px`, height: `${12 * scale}px` }} />
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-medium text-slate-700 truncate leading-tight" style={{ fontSize: `${0.8 * scale}rem` }} title={node.spouse}>{node.spouse}</span>
+                                {node.spouseStatus === 'in memoriam' && (
+                                    <span className="text-slate-400 leading-none" style={{ fontSize: `${0.6 * scale}rem` }}>In Memoriam</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Connection = ({ from, to, scale }) => {
+            const startX = from.x * scale;
+            const startY = (from.y * scale) + (NODE_HEIGHT * scale); 
+            const endX = to.x * scale;
+            const endY = to.y * scale;
+
+            const c1x = startX;
+            const c1y = startY + ((Y_GAP * scale) / 2);
+            const c2x = endX;
+            const c2y = endY - ((Y_GAP * scale) / 2);
+
+            const path = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`;
+
+            return (
+                <path 
+                    d={path} 
+                    fill="none" 
+                    stroke="#cbd5e1" 
+                    strokeWidth={2 * scale} 
+                />
+            );
+        };
+
+        function App() {
+            const [zoom, setZoom] = useState(0.8);
+            const [maxLevel, setMaxLevel] = useState(4);
+            const [selectedNode, setSelectedNode] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [isDragging, setIsDragging] = useState(false);
+            const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+            const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
+
+            const containerRef = useRef(null);
+
+            const { nodes, edges, width, height } = useMemo(() => calculateLayout(FAMILY_DATA, maxLevel), [maxLevel]);
+
+            // Search
+            useEffect(() => {
+                if(searchTerm && containerRef.current) {
+                    const found = nodes.find(n => n.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                    if(found) {
+                        setSelectedNode(found);
+                        const container = containerRef.current;
+                        const centerX = (found.x * zoom) - (container.clientWidth / 2);
+                        const centerY = (found.y * zoom) - (container.clientHeight / 2);
+                        
+                        container.scrollTo({
+                            left: centerX,
+                            top: centerY,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }, [searchTerm, nodes, zoom]);
+
+            // Drag Logic
+            const handleMouseDown = (e) => {
+                if (e.target === containerRef.current || e.target.tagName === 'svg') {
+                    setIsDragging(true);
+                    setDragStart({ x: e.clientX, y: e.clientY });
+                    setScrollStart({ 
+                        x: containerRef.current.scrollLeft, 
+                        y: containerRef.current.scrollTop 
+                    });
+                }
+            };
+
+            const handleMouseMove = (e) => {
+                if (isDragging && containerRef.current) {
+                    const dx = e.clientX - dragStart.x;
+                    const dy = e.clientY - dragStart.y;
+                    containerRef.current.scrollLeft = scrollStart.x - dx;
+                    containerRef.current.scrollTop = scrollStart.y - dy;
+                }
+            };
+
+            const handleMouseUp = () => setIsDragging(false);
+
+            // Init
+            useEffect(() => {
+                if (nodes.length > 0 && containerRef.current) {
+                    const root = nodes[0];
+                    const container = containerRef.current;
+                    container.scrollLeft = (root.x * zoom) - (container.clientWidth / 2);
+                    container.scrollTop = 0;
+                }
+            }, []);
+
+            return (
+                <div className="flex flex-col h-screen bg-slate-50 font-sans overflow-hidden text-slate-800 select-none">
+                    
+                    {/* Toolbar */}
+                    <div className="bg-white shadow-sm p-4 z-30 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-200 relative">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                                <Users size={24} />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-slate-800">Family Map</h1>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            <div className="relative group flex-grow md:flex-grow-0">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500" size={18} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Find family member..." 
+                                    className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full w-full md:w-64 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="hidden md:flex flex-col items-center w-32">
+                                <div className="flex justify-between w-full text-[10px] text-slate-500 uppercase font-bold mb-1">
+                                    <span>Depth</span>
+                                    <span>{maxLevel + 1}</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="5" 
+                                    step="1"
+                                    value={maxLevel}
+                                    onChange={(e) => setMaxLevel(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setZoom(z => Math.max(z * 0.8, 0.2))} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"><ZoomOut size={20}/></button>
+                            <span className="text-xs font-mono text-slate-400 w-12 text-center">{Math.round(zoom * 100)}%</span>
+                            <button onClick={() => setZoom(z => Math.min(z * 1.2, 2.0))} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"><ZoomIn size={20}/></button>
+                            <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                            <button onClick={() => { setZoom(0.8); containerRef.current.scrollTo(0,0); }} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors" title="Reset View"><Maximize size={20}/></button>
+                        </div>
+                    </div>
+
+                    {/* Canvas */}
+                    <div 
+                        ref={containerRef}
+                        className={`
+                            flex-grow overflow-auto relative bg-[radial-gradient(#e2e8f0_1px,transparent_1px)]
+                            ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+                        `}
+                        style={{ backgroundSize: '20px 20px' }}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                        onTouchStart={handleMouseDown} // Basic touch support mapping
+                        onTouchMove={handleMouseMove}
+                        onTouchEnd={handleMouseUp}
+                    >
+                        <div 
+                            className="relative transform-gpu origin-top-left transition-all duration-100 ease-out"
+                            style={{ 
+                                width: width * zoom, 
+                                height: height * zoom,
+                                minWidth: '100%',
+                                minHeight: '100%'
+                            }}
+                        >
+                            <svg 
+                                className="absolute top-0 left-0 w-full h-full pointer-events-none" 
+                                style={{ width: '100%', height: '100%' }}
+                            >
+                                {edges.map((edge) => {
+                                    const fromNode = nodes.find(n => n.id === edge.from);
+                                    const toNode = nodes.find(n => n.id === edge.to);
+                                    if (!fromNode || !toNode) return null;
+                                    return <Connection key={`${edge.from}-${edge.to}`} from={fromNode} to={toNode} scale={zoom} />;
+                                })}
+                            </svg>
+
+                            {nodes.map(node => (
+                                <FamilyCard 
+                                    key={node.id} 
+                                    node={node} 
+                                    onClick={setSelectedNode}
+                                    isSelected={selectedNode && selectedNode.id === node.id}
+                                    scale={zoom}
+                                />
+                            ))}
+                        </div>
+
+                        <div className="fixed bottom-8 right-8 bg-white/90 backdrop-blur border border-slate-200 shadow-lg rounded-xl p-4 hidden md:block pointer-events-none">
+                            <div className="flex items-center gap-3 text-sm text-slate-600 mb-2">
+                                <MousePointer2 size={16} /> <span>Scroll to Pan</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                                <Move size={16} /> <span>Drag to Move</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Controls */}
+                    <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white shadow-xl rounded-2xl p-3 flex items-center gap-4 border border-slate-100 z-40">
+                        <span className="text-xs font-bold text-slate-400">LEVELS</span>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setMaxLevel(m => Math.max(0, m - 1))} 
+                                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-90 transition-transform"
+                            >
+                                <ChevronUp size={16} />
+                            </button>
+                            <span className="font-bold text-emerald-600">{maxLevel + 1}</span>
+                            <button 
+                                onClick={() => setMaxLevel(m => m + 1)} 
+                                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-90 transition-transform"
+                            >
+                                <ChevronDown size={16} />
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+
