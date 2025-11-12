@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Borges Family Map</title>
+  <meta name="theme-color" content="#10b981" />
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:#f8fafc;color:#0f172a;line-height:1.5}
+    header{position:sticky;top:0;background:white;padding:12px 16px;border-bottom:1px solid #e2e8f0;z-index:10;display:flex;align-items:center;gap:12px}
+    h1{font-size:20px;margin:0}
+    main{padding:16px;max-width:900px;margin:auto}
+    details{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;overflow:hidden}
+    summary{padding:14px 16px;font-weight:600;cursor:pointer;background:linear-gradient(#f9fafb,#f3f4f6);display:flex;align-items:center;gap:8px;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .inmemoriam{background:#fee2e2;color:#991b1b;font-size:12px;padding:2px 6px;border-radius:8px;font-weight:700;border:1px solid #fecaca}
+    .member{padding:8px 16px;border-top:1px dashed #e2e8f0}
+    .child{margin-left:16px;color:#475569;font-size:15px}
+    .spouse{color:#0d9488;font-weight:600}
+    .highlight{background:#fefce8}
+    input{flex:1;padding:8px 12px;border-radius:20px;border:1px solid #e2e8f0}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>👨‍👩‍👧 Borges Family Map</h1>
+    <input id="search" placeholder="Search a name..." />
+  </header>
+
+  <main id="root"></main>
+
+  <script>
+    const data = [
+      {
+        name:"Tia Maria & Abercio", inMemoriam:true,
+        children:[
+          {name:"Henrique & Lucila",children:[
+            {name:"Natalia & Marcio",children:["Rodolfo","Joao Pedro","Eduardo"]},
+            {name:"Rafaela & Thiago",children:["Antonio","Joaquim"]},
+            "Antonio Henrique","Lucas"
+          ]},
+          {name:"Paulo",children:[
+            {name:"Paula",children:["Manu"]},
+            {name:"Bia",children:["Artur","Eric"]},
+            "Gabi"
+          ]},
+          {name:"Selma",children:["Mariana","Hiago","Angelina"]},
+          {name:"Solange & Ricardo",children:[
+            {name:"Milena & Sandro",children:["Heitor"]},
+            {name:"Alexandre & Talita",children:["Maria Sofia","Gregorio"]},
+            {name:"Mirella & Vinicius",children:["Otavio","Lavinia"]}
+          ]}
+        ]
+      },
+      {
+        name:"Tia Geralda & Jose Reno",inMemoriam:true,
+        children:[
+          "Hebe & Sergio","Hebert & Shirley","Cleber & Zilda","Jose Teofilo & Dulce","Clayton & Carmen"
+        ]
+      }
+    ];
+
+    const root=document.getElementById('root');
+    function render(){
+      root.innerHTML='';
+      data.forEach(f=>{
+        const d=document.createElement('details');
+        d.open=false;
+        const s=document.createElement('summary');
+        s.innerHTML=`${f.name}${f.inMemoriam?` <span class='inmemoriam'>IN MEMORIAM</span>`:''}`;
+        d.appendChild(s);
+        (f.children||[]).forEach(c=>{
+          const div=document.createElement('div');
+          div.className='member';
+          if(typeof c==='string'){div.textContent=c;}
+          else{
+            div.innerHTML=`<div><b>${c.name}</b></div>`;
+            if(c.children){
+              c.children.forEach(ch=>{
+                const p=document.createElement('div');
+                p.className='child';
+                p.textContent=(typeof ch==='string')?ch:(ch.name+(ch.children?` — ${ch.children.join(', ')}`:''));
+                div.appendChild(p);
+              });
+            }
+          }
+          d.appendChild(div);
+        });
+        root.appendChild(d);
+      });
+    }
+    render();
+
+    // search
+    const search=document.getElementById('search');
+    search.addEventListener('input',()=>{
+      const t=search.value.toLowerCase();
+      document.querySelectorAll('details').forEach(sec=>{
+        const has=sec.textContent.toLowerCase().includes(t);
+        sec.open=!!t && has;
+        sec.querySelectorAll('.member,.child,summary').forEach(el=>{
+          el.classList.toggle('highlight',t && el.textContent.toLowerCase().includes(t));
+        });
+      });
+    });
+  </script>
+</body>
+</html>
