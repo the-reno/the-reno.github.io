@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ronu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      color: #a8a8a8;
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .card {
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 3rem 2.5rem;
+      background: #111;
+      animation: fadeIn 0.8s ease forwards;
+    }
+    .greeting {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 3rem;
+      font-weight: 400;
+      color: #efefef;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+    h1 em { font-style: italic; color: #555; }
+    p {
+      font-size: 13px;
+      line-height: 1.9;
+      color: #888;
+      margin-bottom: 2rem;
+    }
+    .links { display: flex; gap: 0.75rem; }
+    a {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+    .a-primary { background: #efefef; color: #0a0a0a; border: 1px solid #efefef; }
+    .a-primary:hover { background: transparent; color: #efefef; }
+    .a-ghost { color: #555; border: 1px solid #1f1f1f; }
+    .a-ghost:hover { border-color: #444; color: #efefef; }
+    .divider { height: 1px; background: #1f1f1f; margin: 2rem 0; }
+    .stack { font-size: 11px; color: #444; letter-spacing: 0.05em; }
+    .stack span { color: #555; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <p class="greeting">// hello, world</p>
+    <h1>I'm <em>Ronu.</em></h1>
+    <p>
+      A developer with a love for Python and clean code.
+      I build useful things, explore open-source, and learn something new every day.
+    </p>
+    <div class="links">
+      <a href="https://github.com/the-reno" target="_blank" class="a-primary">GitHub ↗</a>
+      <a href="mailto:" class="a-ghost">Contact</a>
+    </div>
+    <div class="divider"></div>
+    <p class="stack">Interested in <span>Python · Web · Open Source</span></p>
+  </div>
+</body>
+</html>
