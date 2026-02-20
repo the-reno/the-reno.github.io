@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>NJT Live – NY to Newark</title>
+  <style>
+    body { font-family: Arial; background:#0f172a; color:white; padding:20px; }
+    input, button { padding:8px; margin:5px 0; }
+    table { width:100%; border-collapse: collapse; margin-top:15px; }
+    th, td { padding:8px; border-bottom:1px solid #334155; text-align:left; }
+    th { background:#1e293b; }
+    .muted { color:#94a3b8; }
+  </style>
+</head>
+<body>
+
+<h2>NY Penn → Newark Penn (Next 3 Hours)</h2>
+
+<label>NJT Token (24h)</label><br>
+<input id="token" style="width:400px;" placeholder="Paste token here" />
+<br>
+<button onclick="loadTrains()">Refresh</button>
+
+<div id="status" class="muted"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Departure</th>
+      <th>Train</th>
+      <th>Line</th>
+      <th>Track</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+
+<script>
+async function loadTrains() {
+  const token = document.getElementById("token").value.trim();
+  const status = document.getElementById("status");
+  const tbody = document.getElementById("tableBody");
+
+  if (!token) {
+    alert("Token required");
+    return;
+  }
+
+  status.textContent = "Loading...";
+  tbody.innerHTML = "";
+
+  try {
+    const form = new FormData();
+    form.append("token", token);
+    form.append("station", "NY");
+
+    const res = await fetch(
+      "https://raildata.njtransit.com/api/TrainData/getTrainSchedule",
+      { method: "POST", headers: { accept: "text/plain" }, body: form }
+    );
+
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    const now = new Date();
+    const cutoff = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+
+    const trains = (data.ITEMS || [])
+      .filter(t => Array.isArray(t.STOPS) &&
+        t.STOPS.some(s => s.STATION_2CHAR === "NP"))
+      .filter(t => {
+        const d = new Date(t.SCHED_DEP_DATE);
+        return d >= now && d <= cutoff;
+      })
+      .sort((a,b)=> new Date(a.SCHED_DEP_DATE)-new Date(b.SCHED_DEP_DATE));
+
+    if (!trains.length) {
+      tbody.innerHTML =
+        "<tr><td colspan='5' class='muted'>No trains found.</td></tr>";
+    }
+
+    trains.forEach(t => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${t.SCHED_DEP_DATE}</td>
+        <td>${t.TRAIN_ID}</td>
+        <td>${t.LINE}</td>
+        <td>${t.TRACK || "-"}</td>
+        <td>${t.STATUS || ""}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    status.textContent = "Updated: " + new Date().toLocaleTimeString();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+  }
+}
+</script>
+
+</body>
+</html>
