@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NJ Transit – Live Departures</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>NJ Transit – Live Departures (next 3 hours)</h1>
+
+    <section class="card">
+      <h2>Config</h2>
+
+      <div class="grid">
+        <label>
+          Mode
+          <select id="mode">
+            <option value="token">Direct (paste token)</option>
+            <option value="proxy">Proxy (recommended)</option>
+          </select>
+        </label>
+
+        <label>
+          NJT Token (24h)
+          <input id="token" placeholder="Paste token here (mode: Direct)" />
+        </label>
+
+        <label>
+          Proxy Base URL
+          <input id="proxyBase" placeholder="https://your-proxy.example.com" />
+        </label>
+
+        <label>
+          Refresh (seconds)
+          <input id="refreshSec" type="number" min="10" step="5" value="30" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnRefresh">Refresh now</button>
+        <span id="status" class="muted"></span>
+      </div>
+
+      <p class="muted small">
+        Notes: “Gate” is shown as NJT <b>TRACK</b>. This page filters to departures within the next 3 hours.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>NY Penn → Newark Penn</h2>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Departs</th>
+              <th>Train</th>
+              <th>Line</th>
+              <th>Track</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ny_np_body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Newark Penn → Westfield</h2>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Departs</th>
+              <th>Train</th>
+              <th>Line</th>
+              <th>Track</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="np_wf_body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="muted small">
+      Data source: NJ TRANSIT Rail Real-time Data API. Use responsibly; avoid excessive polling.
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
