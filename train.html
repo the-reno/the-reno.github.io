@@ -1,74 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>NJT Live – NY to Newark</title>
-  <style>
-    body { font-family: Arial; background:#0f172a; color:white; padding:20px; }
-    input, button { padding:8px; margin:5px 0; }
-    table { width:100%; border-collapse: collapse; margin-top:15px; }
-    th, td { padding:8px; border-bottom:1px solid #334155; text-align:left; }
-    th { background:#1e293b; }
-    .muted { color:#94a3b8; }
-  </style>
+<meta charset="utf-8" />
+<title>NJT Live – NY to Newark</title>
+<style>
+body { font-family: Arial; background:#0f172a; color:white; padding:20px; }
+input, button { padding:8px; margin:5px 0; }
+table { width:100%; border-collapse: collapse; margin-top:15px; }
+th, td { padding:8px; border-bottom:1px solid #334155; text-align:left; }
+th { background:#1e293b; }
+.muted { color:#94a3b8; }
+</style>
 </head>
 <body>
 
 <h2>NY Penn → Newark Penn (Next 3 Hours)</h2>
 
-<label>NJT Token (24h)</label><br>
-<input id="token" style="width:400px;" placeholder="Paste token here" />
-<br>
-<button onclick="loadTrains()">Refresh</button>
+<h3>Step 1 — Generate Daily Token</h3>
+
+<input id="username" placeholder="NJT Username" style="width:250px;" />
+<input id="password" type="password" placeholder="NJT Password" style="width:250px;" />
+<button onclick="generateToken()">Generate Token</button>
+
+<div id="tokenDisplay" class="muted"></div>
+
+<hr>
+
+<h3>Step 2 — Load Trains</h3>
+<button onclick="loadTrains()">Refresh Trains</button>
 
 <div id="status" class="muted"></div>
 
 <table>
-  <thead>
-    <tr>
-      <th>Departure</th>
-      <th>Train</th>
-      <th>Line</th>
-      <th>Track</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="tableBody"></tbody>
+<thead>
+<tr>
+<th>Departure</th>
+<th>Train</th>
+<th>Line</th>
+<th>Track</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
 </table>
 
 <script>
-async function loadTrains() {
-  const token = document.getElementById("token").value.trim();
-  const status = document.getElementById("status");
-  const tbody = document.getElementById("tableBody");
+let dailyToken = "";
 
-  if (!token) {
-    alert("Token required");
+async function generateToken() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!username || !password) {
+    alert("Username and password required");
     return;
   }
+
+  const form = new FormData();
+  form.append("username", username);
+  form.append("password", password);
+
+  try {
+    const res = await fetch(
+      "https://raildata.njtransit.com/api/TrainData/getToken",
+      { method: "POST", headers: { accept: "text/plain" }, body: form }
+    );
+
+    const data = await res.json();
+
+    if (data.Authenticated === "True") {
+      dailyToken = data.UserToken;
+      document.getElementById("tokenDisplay").textContent =
+        "Token generated (valid 24h)";
+    } else {
+      alert("Authentication failed");
+    }
+
+  } catch (err) {
+    alert("Error generating token: " + err.message);
+  }
+}
+
+async function loadTrains() {
+  if (!dailyToken) {
+    alert("Generate token first");
+    return;
+  }
+
+  const status = document.getElementById("status");
+  const tbody = document.getElementById("tableBody");
 
   status.textContent = "Loading...";
   tbody.innerHTML = "";
 
-  try {
-    const form = new FormData();
-    form.append("token", token);
-    form.append("station", "NY");
+  const form = new FormData();
+  form.append("token", dailyToken);
+  form.append("station", "NY");
 
+  try {
     const res = await fetch(
       "https://raildata.njtransit.com/api/TrainData/getTrainSchedule",
       { method: "POST", headers: { accept: "text/plain" }, body: form }
     );
 
-    if (!res.ok) throw new Error("HTTP " + res.status);
-
     const data = await res.json();
+
     const now = new Date();
     const cutoff = new Date(now.getTime() + 3 * 60 * 60 * 1000);
 
     const trains = (data.ITEMS || [])
-      .filter(t => Array.isArray(t.STOPS) &&
-        t.STOPS.some(s => s.STATION_2CHAR === "NP"))
+      .filter(t =>
+        Array.isArray(t.STOPS) &&
+        t.STOPS.some(s => s.STATION_2CHAR === "NP")
+      )
       .filter(t => {
         const d = new Date(t.SCHED_DEP_DATE);
         return d >= now && d <= cutoff;
@@ -93,8 +137,9 @@ async function loadTrains() {
     });
 
     status.textContent = "Updated: " + new Date().toLocaleTimeString();
+
   } catch (err) {
-    status.textContent = "Error: " + err.message;
+    status.textContent = "Error loading trains: " + err.message;
   }
 }
 </script>
