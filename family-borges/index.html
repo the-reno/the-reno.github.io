@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ronu</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
 
   <style>
@@ -20,19 +19,37 @@
       flex-direction: column;
       align-items: center;
 
-      /* IMPORTANT: keep flex-start so it doesn't re-center */
-      justify-content: flex-start;
+      /* was: justify-content:center (your current file) */
+      justify-content: flex-start; /* makes the page static + lets us place the panel lower */
+      padding: 2rem;
 
-      /* "float lower": this is the only thing you tune */
-      padding-top: clamp(120px, 28vh, 320px);
-
-      padding-left: 2rem;
-      padding-right: 2rem;
-      padding-bottom: 2rem;
+      /* FLOAT LOWER (tune this) */
+      padding-top: clamp(120px, 26vh, 320px);
     }
 
-    .card {
+    /* ===== Slider wrapper (same size as your old .card) ===== */
+    .panel {
+      position: relative;
       max-width: 480px;
+      width: 100%;
+    }
+
+    /* The ONLY moving thing: track inside the panel */
+    .panel-track {
+      display: flex;
+      width: 100%;
+      transform: translateX(0%);
+      transition: transform 520ms cubic-bezier(.2,.9,.2,1);
+      will-change: transform;
+    }
+
+    /* Each slide is a full "card" width */
+    .slide {
+      min-width: 100%;
+    }
+
+    /* Your original card styling */
+    .card {
       width: 100%;
       border: 1px solid #1f1f1f;
       border-radius: 8px;
@@ -58,7 +75,6 @@
       letter-spacing: -0.02em;
       margin-bottom: 1.5rem;
     }
-
     h1 em { font-style: italic; color: #555; }
 
     p {
@@ -68,31 +84,190 @@
       margin-bottom: 2rem;
     }
 
+    .links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    a {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .a-primary { background: #efefef; color: #0a0a0a; border: 1px solid #efefef; }
+    .a-primary:hover { background: transparent; color: #efefef; }
+
+    .a-ghost { color: #555; border: 1px solid #1f1f1f; }
+    .a-ghost:hover { border-color: #444; color: #efefef; }
+
     .divider { height: 1px; background: #1f1f1f; margin: 2rem 0; }
 
     .stack { font-size: 11px; color: #444; letter-spacing: 0.05em; }
     .stack span { color: #555; }
+
+    /* ===== Slider controls (inside the panel only) ===== */
+    .nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid #1f1f1f;
+      background: rgba(0,0,0,0.35);
+      color: #888;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      font-size: 18px;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .nav:hover { border-color: #444; color: #efefef; background: rgba(0,0,0,0.5); }
+    .nav:disabled { opacity: 0.35; cursor: default; }
+    .nav.left { left: -54px; }
+    .nav.right { right: -54px; }
+
+    /* Keep buttons reachable on small screens */
+    @media (max-width: 560px) {
+      .nav.left { left: 8px; }
+      .nav.right { right: 8px; }
+      .card { padding: 2.5rem 2rem; }
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      border: 1px solid #333;
+      background: #111;
+      cursor: pointer;
+      padding: 0;
+    }
+    .dot[aria-current="true"] {
+      background: #777;
+      border-color: #777;
+    }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* If you're testing on a very small screen, avoid pushing too low */
-    @media (max-height: 650px) {
-      body { padding-top: 120px; }
-      .card { padding: 2.25rem 2rem; }
+    @media (prefers-reduced-motion: reduce){
+      .panel-track { transition: none; }
+      .card { animation: none; }
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <p class="greeting">// hello, world</p>
-    <h1>I'm <em>Ronu.</em></h1>
-    <p>Welcome to my lab.</p>
-    <div class="divider"></div>
-    <p class="stack"><span>triathlon · science · markets</span></p>
-  </div>
+
+  <!-- ONLY THIS PANEL AREA MOVES -->
+  <section class="panel" aria-label="Floating panels">
+    <div class="panel-track" id="panelTrack">
+
+      <!-- Slide 1 (your current content) -->
+      <div class="slide">
+        <div class="card">
+          <p class="greeting">// hello, world</p>
+          <h1>I'm <em>Ronu.</em></h1>
+          <p>Welcome to my lab.</p>
+          <div class="divider"></div>
+          <p class="stack"><span>triathlon · science · markets</span></p>
+        </div>
+      </div>
+
+      <!-- Slide 2 (new panel, same layout) -->
+      <div class="slide">
+        <div class="card">
+          <p class="greeting">// incoming</p>
+          <h1>More <em>soon.</em></h1>
+          <p>
+            Experiments in markets, code, and design.<br />
+            Dashboards, tools, notes — shipping.
+          </p>
+
+          <div class="links">
+            <a class="a-primary" href="train.html">Trains</a>
+            <a class="a-ghost" href="prime.html">Primes</a>
+          </div>
+
+          <div class="divider"></div>
+          <p class="stack"><span>build · test · iterate</span></p>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="nav left" id="prevBtn" type="button" aria-label="Previous panel">‹</button>
+    <button class="nav right" id="nextBtn" type="button" aria-label="Next panel">›</button>
+
+    <div class="dots" role="tablist" aria-label="Panel selector">
+      <button class="dot" type="button" data-go="0" aria-label="Go to panel 1" aria-current="true"></button>
+      <button class="dot" type="button" data-go="1" aria-label="Go to panel 2"></button>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      const track = document.getElementById('panelTrack');
+      const prev = document.getElementById('prevBtn');
+      const next = document.getElementById('nextBtn');
+      const dots = Array.from(document.querySelectorAll('.dot'));
+      const slides = Array.from(track.children);
+
+      let index = 0;
+      const clamp = (i) => Math.max(0, Math.min(i, slides.length - 1));
+
+      function render(){
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((d, i) => d.setAttribute('aria-current', i === index ? 'true' : 'false'));
+        prev.disabled = index === 0;
+        next.disabled = index === slides.length - 1;
+      }
+
+      function go(i){
+        index = clamp(i);
+        render();
+      }
+
+      prev.addEventListener('click', () => go(index - 1));
+      next.addEventListener('click', () => go(index + 1));
+      dots.forEach(d => d.addEventListener('click', () => go(Number(d.dataset.go))));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') go(index - 1);
+        if (e.key === 'ArrowRight') go(index + 1);
+      });
+
+      // swipe support on the moving area only
+      let startX = null;
+      track.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
+      track.addEventListener('touchend', (e) => {
+        if (startX === null) return;
+        const endX = e.changedTouches[0].clientX;
+        const dx = endX - startX;
+        startX = null;
+        if (Math.abs(dx) < 40) return;
+        if (dx > 0) go(index - 1);
+        else go(index + 1);
+      }, {passive:true});
+
+      render();
+    })();
+  </script>
+
 </body>
 </html>
