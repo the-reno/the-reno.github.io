@@ -1,273 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ronu</title>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ronu.one | 3D Perspective</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --accent: #38bdf8;
+        }
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            perspective: 1200px; /* Crucial for 3D depth */
+        }
 
-    body {
-      min-height: 100vh;
-      background: #0a0a0a;
-      color: #a8a8a8;
-      font-family: 'DM Mono', monospace;
+        /* The 3D Container */
+        .scene {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            transform-style: preserve-3d;
+            transform: rotateX(50deg) rotateZ(-25deg); /* The "Isometric" angle */
+            transition: transform 0.8s ease-out;
+        }
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+        .scene:hover {
+            transform: rotateX(45deg) rotateZ(-15deg);
+        }
 
-      /* was: justify-content:center (your current file) */
-      justify-content: flex-start; /* makes the page static + lets us place the panel lower */
-      padding: 2rem;
+        /* Base Panel Style */
+        .panel {
+            position: absolute;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: 15px 15px 30px rgba(0,0,0,0.5);
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
 
-      /* FLOAT LOWER (tune this) */
-      padding-top: clamp(120px, 26vh, 320px);
-    }
+        .panel:hover {
+            transform: translateZ(20px);
+            box-shadow: 25px 25px 50px rgba(0,0,0,0.6);
+            border-color: var(--accent);
+        }
 
-    /* ===== Slider wrapper (same size as your old .card) ===== */
-    .panel {
-      position: relative;
-      max-width: 480px;
-      width: 100%;
-    }
+        /* Main Center Page */
+        .main-page {
+            width: 300px;
+            height: 400px;
+            top: 100px;
+            left: 250px;
+            z-index: 10;
+            background: linear-gradient(135deg, #ffffff, #f1f5f9);
+            text-align: center;
+        }
 
-    /* The ONLY moving thing: track inside the panel */
-    .panel-track {
-      display: flex;
-      width: 100%;
-      transform: translateX(0%);
-      transition: transform 520ms cubic-bezier(.2,.9,.2,1);
-      will-change: transform;
-    }
+        /* Surrounding Menus */
+        .menu-top { width: 180px; height: 220px; top: -120px; left: 310px; }
+        .menu-left { width: 180px; height: 250px; top: 150px; left: 20px; }
+        .menu-right { width: 180px; height: 250px; top: 150px; left: 580px; }
+        .menu-bottom { width: 400px; height: 120px; top: 520px; left: 200px; }
 
-    /* Each slide is a full "card" width */
-    .slide {
-      min-width: 100%;
-    }
+        h2 { color: #1e293b; margin-top: 0; font-size: 1.2rem; }
+        p { font-size: 0.85rem; color: #64748b; line-height: 1.4; }
+        
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--accent);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-bottom: 10px;
+        }
 
-    /* Your original card styling */
-    .card {
-      width: 100%;
-      border: 1px solid #1f1f1f;
-      border-radius: 8px;
-      padding: 3rem 2.5rem;
-      background: #111;
-      animation: fadeIn 0.8s ease forwards;
-    }
+        .nav-item {
+            display: block;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover { color: var(--accent); }
 
-    .greeting {
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: #444;
-      margin-bottom: 1.25rem;
-    }
-
-    h1 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 3rem;
-      font-weight: 400;
-      color: #efefef;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      margin-bottom: 1.5rem;
-    }
-    h1 em { font-style: italic; color: #555; }
-
-    p {
-      font-size: 13px;
-      line-height: 1.9;
-      color: #888;
-      margin-bottom: 2rem;
-    }
-
-    .links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-    a {
-      display: inline-block;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      text-decoration: none;
-      padding: 0.55rem 1.2rem;
-      border-radius: 3px;
-      transition: all 0.2s;
-    }
-
-    .a-primary { background: #efefef; color: #0a0a0a; border: 1px solid #efefef; }
-    .a-primary:hover { background: transparent; color: #efefef; }
-
-    .a-ghost { color: #555; border: 1px solid #1f1f1f; }
-    .a-ghost:hover { border-color: #444; color: #efefef; }
-
-    .divider { height: 1px; background: #1f1f1f; margin: 2rem 0; }
-
-    .stack { font-size: 11px; color: #444; letter-spacing: 0.05em; }
-    .stack span { color: #555; }
-
-    /* ===== Slider controls (inside the panel only) ===== */
-    .nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 38px;
-      height: 38px;
-      border-radius: 999px;
-      border: 1px solid #1f1f1f;
-      background: rgba(0,0,0,0.35);
-      color: #888;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      line-height: 1;
-      font-size: 18px;
-      transition: all 0.2s;
-      user-select: none;
-    }
-    .nav:hover { border-color: #444; color: #efefef; background: rgba(0,0,0,0.5); }
-    .nav:disabled { opacity: 0.35; cursor: default; }
-    .nav.left { left: -54px; }
-    .nav.right { right: -54px; }
-
-    /* Keep buttons reachable on small screens */
-    @media (max-width: 560px) {
-      .nav.left { left: 8px; }
-      .nav.right { right: 8px; }
-      .card { padding: 2.5rem 2rem; }
-    }
-
-    .dots {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      border: 1px solid #333;
-      background: #111;
-      cursor: pointer;
-      padding: 0;
-    }
-    .dot[aria-current="true"] {
-      background: #777;
-      border-color: #777;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      .panel-track { transition: none; }
-      .card { animation: none; }
-    }
-  </style>
+    </style>
 </head>
-
 <body>
 
-  <!-- ONLY THIS PANEL AREA MOVES -->
-  <section class="panel" aria-label="Floating panels">
-    <div class="panel-track" id="panelTrack">
-
-      <!-- Slide 1 (your current content) -->
-      <div class="slide">
-        <div class="card">
-          <p class="greeting">// hello, world</p>
-          <h1>I'm <em>Ronu.</em></h1>
-          <p>Welcome to my lab.</p>
-          <div class="divider"></div>
-          <p class="stack"><span>triathlon · science · markets</span></p>
+    <div class="scene">
+        <div class="panel main-page">
+            <div class="pill">LOGBOOK</div>
+            <h2>ronu.one</h2>
+            <p>Quantitative Finance<br>Quantum Mechanics<br>Ironman Training</p>
+            <div style="margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px;">
+                <small>Current Focus: FX Treasury & Game Theory</small>
+            </div>
         </div>
-      </div>
 
-      <!-- Slide 2 (new panel, same layout) -->
-      <div class="slide">
-        <div class="card">
-          <p class="greeting">// incoming</p>
-          <h1>More <em>soon.</em></h1>
-          <p>
-            Experiments in markets, code, and design.<br />
-            Dashboards, tools, notes — shipping.
-          </p>
-
-          <div class="links">
-            <a class="a-primary" href="train.html">Trains</a>
-            <a class="a-ghost" href="prime.html">Primes</a>
-          </div>
-
-          <div class="divider"></div>
-          <p class="stack"><span>build · test · iterate</span></p>
+        <div class="panel menu-top">
+            <h2>Markets</h2>
+            <a href="#" class="nav-item">FX Treasury</a>
+            <a href="#" class="nav-item">Game Theory</a>
+            <a href="#" class="nav-item">Options Pricing</a>
         </div>
-      </div>
 
+        <div class="panel menu-left">
+            <h2>Science</h2>
+            <a href="#" class="nav-item">Quantum Mech</a>
+            <a href="#" class="nav-item">Fluid Dynamics</a>
+            <a href="#" class="nav-item">Universe</a>
+        </div>
+
+        <div class="panel menu-right">
+            <h2>Sports</h2>
+            <a href="#" class="nav-item">Ironman Prep</a>
+            <a href="#" class="nav-item">Triathlon</a>
+            <a href="#" class="nav-item">Samurai Mindset</a>
+        </div>
+
+        <div class="panel menu-bottom">
+            <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
+                <div><strong>Sketches</strong><br><small>Recent Rabiscos</small></div>
+                <div><strong>Expeditions</strong><br><small>Sailing Logs</small></div>
+                <div><strong>Code</strong><br><small>NJ Transit API</small></div>
+            </div>
+        </div>
     </div>
-
-    <button class="nav left" id="prevBtn" type="button" aria-label="Previous panel">‹</button>
-    <button class="nav right" id="nextBtn" type="button" aria-label="Next panel">›</button>
-
-    <div class="dots" role="tablist" aria-label="Panel selector">
-      <button class="dot" type="button" data-go="0" aria-label="Go to panel 1" aria-current="true"></button>
-      <button class="dot" type="button" data-go="1" aria-label="Go to panel 2"></button>
-    </div>
-  </section>
-
-  <script>
-    (() => {
-      const track = document.getElementById('panelTrack');
-      const prev = document.getElementById('prevBtn');
-      const next = document.getElementById('nextBtn');
-      const dots = Array.from(document.querySelectorAll('.dot'));
-      const slides = Array.from(track.children);
-
-      let index = 0;
-      const clamp = (i) => Math.max(0, Math.min(i, slides.length - 1));
-
-      function render(){
-        track.style.transform = `translateX(-${index * 100}%)`;
-        dots.forEach((d, i) => d.setAttribute('aria-current', i === index ? 'true' : 'false'));
-        prev.disabled = index === 0;
-        next.disabled = index === slides.length - 1;
-      }
-
-      function go(i){
-        index = clamp(i);
-        render();
-      }
-
-      prev.addEventListener('click', () => go(index - 1));
-      next.addEventListener('click', () => go(index + 1));
-      dots.forEach(d => d.addEventListener('click', () => go(Number(d.dataset.go))));
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') go(index - 1);
-        if (e.key === 'ArrowRight') go(index + 1);
-      });
-
-      // swipe support on the moving area only
-      let startX = null;
-      track.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
-      track.addEventListener('touchend', (e) => {
-        if (startX === null) return;
-        const endX = e.changedTouches[0].clientX;
-        const dx = endX - startX;
-        startX = null;
-        if (Math.abs(dx) < 40) return;
-        if (dx > 0) go(index - 1);
-        else go(index + 1);
-      }, {passive:true});
-
-      render();
-    })();
-  </script>
 
 </body>
 </html>
