@@ -1,144 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ronu.one | 3D Perspective</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --panel-bg: rgba(255, 255, 255, 0.95);
-            --accent: #38bdf8;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ronu | 3D Workspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      color: #a8a8a8;
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      perspective: 2000px; /* Depth intensity */
+    }
 
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--bg-color);
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-            perspective: 1200px; /* Crucial for 3D depth */
-        }
+    /* 3D Scene Wrapper */
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      transform: rotateX(20deg) rotateY(-10deg); /* Slight tilt for depth */
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
 
-        /* The 3D Container */
-        .scene {
-            position: relative;
-            width: 800px;
-            height: 600px;
-            transform-style: preserve-3d;
-            transform: rotateX(50deg) rotateZ(-25deg); /* The "Isometric" angle */
-            transition: transform 0.8s ease-out;
-        }
+    .scene:hover {
+      transform: rotateX(15deg) rotateY(-5deg);
+    }
 
-        .scene:hover {
-            transform: rotateX(45deg) rotateZ(-15deg);
-        }
+    /* Common Card Styling */
+    .card {
+      position: absolute;
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      background: #111;
+      padding: 2.5rem;
+      box-shadow: 20px 20px 60px rgba(0,0,0,0.8);
+      transition: all 0.5s ease;
+      text-decoration: none;
+    }
 
-        /* Base Panel Style */
-        .panel {
-            position: absolute;
-            background: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 15px 15px 30px rgba(0,0,0,0.5);
-            padding: 20px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
+    /* Main Focus Card */
+    .card-main {
+      width: 480px;
+      z-index: 10;
+      transform: translateZ(100px); /* Brings it forward */
+      border-color: #333;
+    }
 
-        .panel:hover {
-            transform: translateZ(20px);
-            box-shadow: 25px 25px 50px rgba(0,0,0,0.6);
-            border-color: var(--accent);
-        }
+    /* Smaller Satellite Panels */
+    .card-sub {
+      width: 280px;
+      padding: 1.5rem;
+      opacity: 0.4;
+      transform: translateZ(0);
+      filter: grayscale(1);
+    }
 
-        /* Main Center Page */
-        .main-page {
-            width: 300px;
-            height: 400px;
-            top: 100px;
-            left: 250px;
-            z-index: 10;
-            background: linear-gradient(135deg, #ffffff, #f1f5f9);
-            text-align: center;
-        }
+    .card-sub:hover {
+      opacity: 1;
+      filter: grayscale(0);
+      transform: translateZ(50px) translateY(-10px);
+      border-color: #efefef;
+    }
 
-        /* Surrounding Menus */
-        .menu-top { width: 180px; height: 220px; top: -120px; left: 310px; }
-        .menu-left { width: 180px; height: 250px; top: 150px; left: 20px; }
-        .menu-right { width: 180px; height: 250px; top: 150px; left: 580px; }
-        .menu-bottom { width: 400px; height: 120px; top: 520px; left: 200px; }
+    /* Positioning the satellites */
+    .markets { top: 10%; left: 15%; transform: rotateY(20deg) translateZ(-50px); }
+    .science { top: 55%; left: 10%; transform: rotateY(25deg) translateZ(-100px); }
+    .sports  { top: 15%; right: 15%; transform: rotateY(-20deg) translateZ(-50px); }
+    .logbook { top: 60%; right: 10%; transform: rotateY(-25deg) translateZ(-100px); }
 
-        h2 { color: #1e293b; margin-top: 0; font-size: 1.2rem; }
-        p { font-size: 0.85rem; color: #64748b; line-height: 1.4; }
-        
-        .pill {
-            display: inline-block;
-            padding: 4px 10px;
-            background: var(--accent);
-            color: white;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            margin-bottom: 10px;
-        }
+    /* Typography from your source */
+    .greeting {
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 1rem;
+    }
+    h1, h2 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      color: #efefef;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+    h1 { font-size: 3rem; }
+    h2 { font-size: 1.8rem; }
+    h1 em, h2 em { font-style: italic; color: #555; }
+    
+    p {
+      font-size: 11px;
+      line-height: 1.6;
+      color: #666;
+    }
 
-        .nav-item {
-            display: block;
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
-            color: #475569;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .nav-item:hover { color: var(--accent); }
+    .divider { height: 1px; background: #1f1f1f; margin: 1.5rem 0; }
+    .stack { font-size: 10px; color: #444; letter-spacing: 0.05em; text-transform: lowercase; }
 
-    </style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px) translateZ(50px); }
+      to   { opacity: 1; transform: translateY(0) translateZ(100px); }
+    }
+
+    .card-main { animation: fadeIn 1.2s ease forwards; }
+
+  </style>
 </head>
 <body>
 
-    <div class="scene">
-        <div class="panel main-page">
-            <div class="pill">LOGBOOK</div>
-            <h2>ronu.one</h2>
-            <p>Quantitative Finance<br>Quantum Mechanics<br>Ironman Training</p>
-            <div style="margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px;">
-                <small>Current Focus: FX Treasury & Game Theory</small>
-            </div>
-        </div>
+  <div class="scene">
+    
+    <a href="#markets" class="card card-sub markets">
+      <p class="greeting">// 01</p>
+      <h2><em>Markets</em></h2>
+      <p>Quant Finance & FX</p>
+    </a>
 
-        <div class="panel menu-top">
-            <h2>Markets</h2>
-            <a href="#" class="nav-item">FX Treasury</a>
-            <a href="#" class="nav-item">Game Theory</a>
-            <a href="#" class="nav-item">Options Pricing</a>
-        </div>
+    <a href="#science" class="card card-sub science">
+      <p class="greeting">// 02</p>
+      <h2>Science</h2>
+      <p>Quantum & Fluid Dynamics</p>
+    </a>
 
-        <div class="panel menu-left">
-            <h2>Science</h2>
-            <a href="#" class="nav-item">Quantum Mech</a>
-            <a href="#" class="nav-item">Fluid Dynamics</a>
-            <a href="#" class="nav-item">Universe</a>
-        </div>
-
-        <div class="panel menu-right">
-            <h2>Sports</h2>
-            <a href="#" class="nav-item">Ironman Prep</a>
-            <a href="#" class="nav-item">Triathlon</a>
-            <a href="#" class="nav-item">Samurai Mindset</a>
-        </div>
-
-        <div class="panel menu-bottom">
-            <div style="display: flex; justify-content: space-around; align-items: center; height: 100%;">
-                <div><strong>Sketches</strong><br><small>Recent Rabiscos</small></div>
-                <div><strong>Expeditions</strong><br><small>Sailing Logs</small></div>
-                <div><strong>Code</strong><br><small>NJ Transit API</small></div>
-            </div>
-        </div>
+    <div class="card card-main">
+      <p class="greeting">// hello, world</p>
+      <h1>I'm <em>Ronu.</em></h1>
+      <p>Welcome to my lab.</p>
+      <div class="divider"></div>
+      <p class="stack">triathlon · science · markets</p>
     </div>
+
+    <a href="#sports" class="card card-sub sports">
+      <p class="greeting">// 03</p>
+      <h2><em>Sports</em></h2>
+      <p>Ironman Training</p>
+    </a>
+
+    <a href="#logbook" class="card card-sub logbook">
+      <p class="greeting">// 04</p>
+      <h2>Logbook</h2>
+      <p>Sketches & Sailing</p>
+    </a>
+
+  </div>
 
 </body>
 </html>
