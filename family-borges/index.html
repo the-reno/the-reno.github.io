@@ -1,338 +1,166 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ronu — index_new</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ronu</title>
 
-  <style>
-    :root{
-      --void:#05040a;
-      --hard:rgba(255,255,255,0.92);
-      --soft:rgba(255,255,255,0.22);
-      --sub: rgba(255,255,255,0.38);
-      --line:rgba(255,255,255,0.14);
-      --line2:rgba(255,255,255,0.22);
-      --glass:rgba(0,0,0,0.35);
-      --glass2:rgba(0,0,0,0.45);
-    }
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:var(--void);
-      color:var(--hard);
-      overflow-x:hidden;
-    }
+<style>
 
-    /* ======= STATIC PAGE LAYOUT (everything else is static) ======= */
-    .page{
-      min-height:100vh;
-    }
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    /* This is the ONLY moving area (your hero strip). */
-    .hero-strip{
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      background: var(--void);
-      /* keep same vibe as your screenshot: dark, subtle glow */
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(255,255,255,0.06), transparent 55%),
-        linear-gradient(180deg, var(--void) 0%, var(--void) 100%);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
+body {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #a8a8a8;
+  font-family: 'DM Mono', monospace;
 
-    /* Track slides INSIDE hero-strip only */
-    .hero-track{
-      display:flex;
-      width:100%;
-      transform: translateX(0%);
-      transition: transform 520ms cubic-bezier(.2,.9,.2,1);
-      will-change: transform;
-    }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-    /* Panels are the height of your hero area only (not whole page) */
-    .hero-panel{
-      min-width:100%;
-      /* adjust this if your existing hero is taller/shorter */
-      height: 320px;
-      display:grid;
-      align-items:center;
-    }
+  /* floating slightly lower than center */
+  justify-content: flex-start;
+  padding-top: 28vh;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+}
 
-    /* Inner padding matches screenshot spacing */
-    .hero-inner{
-      width: min(980px, 86vw);
-      margin: 0 auto;
-      padding: 54px 0 44px;
-    }
+.card {
+  max-width: 480px;
+  width: 100%;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
+  padding: 3rem 2.5rem;
+  background: #111;
 
-    /* ======= HERO TYPOGRAPHY ======= */
-    .hero-title{
-      margin:0;
-      line-height:0.92;
-      letter-spacing:-0.02em;
-      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-      user-select:none;
-    }
-    .hero-title-strong{
-      font-size: clamp(56px, 7.5vw, 112px);
-      font-weight: 600;
-      color: rgba(255,255,255,0.95);
-    }
-    .hero-title-soft{
-      font-size: clamp(56px, 7.5vw, 112px);
-      font-weight: 600;
-      color: var(--soft);
-      font-style: italic;
-    }
+  animation: fadeIn 0.8s ease forwards;
+}
 
-    .hero-sub{
-      margin: 34px 0 0;
-      font-size: clamp(16px, 2vw, 26px);
-      color: var(--sub);
-      letter-spacing: 0.06em;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
+.greeting {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 1.25rem;
+}
 
-    /* ======= PANEL 2 LOOK ======= */
-    .panel-title{
-      margin:0;
-      font-size: clamp(28px, 3.2vw, 44px);
-      color: rgba(255,255,255,0.88);
-      letter-spacing:-0.01em;
-      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-      user-select:none;
-    }
-    .panel-copy{
-      margin: 14px 0 0;
-      font-size: clamp(14px, 1.6vw, 18px);
-      color: rgba(255,255,255,0.45);
-      line-height: 1.55;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      letter-spacing: 0.03em;
-    }
+h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 3rem;
+  font-weight: 400;
+  color: #efefef;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
 
-    .panel-actions{
-      display:flex;
-      gap:12px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
+h1 em {
+  font-style: italic;
+  color: #555;
+}
 
-    .btn-ghost{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding: 9px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      color: rgba(255,255,255,0.72);
-      text-decoration:none;
-      background: rgba(255,255,255,0.02);
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-    }
-    .btn-ghost:hover{
-      transform: translateY(-1px);
-      border-color: var(--line2);
-      background: rgba(255,255,255,0.04);
-    }
+p {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #888;
+  margin-bottom: 2rem;
+}
 
-    /* ======= NAV BUTTONS (only for hero-strip) ======= */
-    .hero-nav{
-      position:absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: var(--glass);
-      color: rgba(255,255,255,0.75);
-      cursor:pointer;
-      display:grid;
-      place-items:center;
-      font-size: 20px;
-      line-height: 1;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, opacity 140ms ease;
-    }
-    .hero-nav:hover{
-      transform: translateY(-50%) scale(1.03);
-      border-color: var(--line2);
-      background: var(--glass2);
-    }
-    .hero-nav.left{ left: 14px; }
-    .hero-nav.right{ right: 14px; }
-    .hero-nav:disabled{ cursor: default; }
+.links {
+  display: flex;
+  gap: 0.75rem;
+}
 
-    /* Dots */
-    .hero-dots{
-      position:absolute;
-      left: 50%;
-      bottom: 12px;
-      transform: translateX(-50%);
-      display:flex;
-      gap: 10px;
-    }
-    .dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.10);
-      cursor: pointer;
-      padding: 0;
-      outline: none;
-    }
-    .dot[aria-current="true"]{
-      background: rgba(255,255,255,0.50);
-      border-color: rgba(255,255,255,0.45);
-    }
+a {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.55rem 1.2rem;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
 
-    /* ======= STATIC CONTENT BELOW (does not move) ======= */
-    .content{
-      width: min(980px, 86vw);
-      margin: 0 auto;
-      padding: 52px 0 120px;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color: rgba(255,255,255,0.62);
-      line-height: 1.6;
-    }
-    .content h2{
-      margin: 0 0 14px;
-      color: rgba(255,255,255,0.80);
-      letter-spacing: -0.01em;
-      font-size: 22px;
-    }
-    .content .card{
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.02);
-      border-radius: 14px;
-      padding: 18px 18px;
-      margin-top: 14px;
-    }
+.a-primary {
+  background: #efefef;
+  color: #0a0a0a;
+  border: 1px solid #efefef;
+}
 
-    @media (prefers-reduced-motion: reduce){
-      .hero-track{ transition:none; }
-      .hero-nav,.btn-ghost{ transition:none; }
-    }
-  </style>
+.a-primary:hover {
+  background: transparent;
+  color: #efefef;
+}
+
+.a-ghost {
+  color: #555;
+  border: 1px solid #1f1f1f;
+}
+
+.a-ghost:hover {
+  border-color: #444;
+  color: #efefef;
+}
+
+.divider {
+  height: 1px;
+  background: #1f1f1f;
+  margin: 2rem 0;
+}
+
+.stack {
+  font-size: 11px;
+  color: #444;
+  letter-spacing: 0.05em;
+}
+
+.stack span {
+  color: #555;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+</style>
 </head>
 
 <body>
-  <div class="page">
 
-    <!-- ONLY THIS STRIP MOVES -->
-    <section class="hero-strip" aria-label="Hero panels">
-      <div class="hero-track" id="heroTrack">
-        <!-- Panel 1 -->
-        <article class="hero-panel">
-          <div class="hero-inner">
-            <h1 class="hero-title">
-              <span class="hero-title-strong">I'm</span>
-              <span class="hero-title-soft"> Ronu.</span>
-            </h1>
-            <p class="hero-sub">Welcome to my lab.</p>
-          </div>
-        </article>
+<div class="card">
 
-        <!-- Panel 2 -->
-        <article class="hero-panel">
-          <div class="hero-inner">
-            <h2 class="panel-title">More coming.</h2>
-            <p class="panel-copy">
-              Experiments in markets, code, and design.<br />
-              Dashboards, tools, and notes — shipping soon.
-            </p>
-            <div class="panel-actions">
-              <a class="btn-ghost" href="#work">EXPLORE</a>
-              <a class="btn-ghost" href="#contact">CONTACT</a>
-            </div>
-          </div>
-        </article>
-      </div>
+<p class="greeting">// hello, world</p>
 
-      <button class="hero-nav left" type="button" id="heroPrev" aria-label="Previous hero panel">‹</button>
-      <button class="hero-nav right" type="button" id="heroNext" aria-label="Next hero panel">›</button>
+<h1>I'm <em>Ronu.</em></h1>
 
-      <div class="hero-dots" role="tablist" aria-label="Hero panel selector">
-        <button class="dot" type="button" data-go="0" aria-label="Go to hero panel 1" aria-current="true"></button>
-        <button class="dot" type="button" data-go="1" aria-label="Go to hero panel 2"></button>
-      </div>
-    </section>
+<p>
+Welcome to my lab.
+</p>
 
-    <!-- EVERYTHING BELOW IS STATIC -->
-    <main class="content">
-      <h2 id="work">Work</h2>
-      <div class="card">
-        Static content section. Replace with your real content (projects, links, dashboards).
-      </div>
+<div class="divider"></div>
 
-      <h2 id="contact" style="margin-top:42px;">Contact</h2>
-      <div class="card">
-        Static content section. Replace with your email / socials.
-      </div>
-    </main>
+<p class="stack">
+<span>triathlon · science · markets</span>
+</p>
 
-  </div>
+</div>
 
-  <script>
-    (() => {
-      const track = document.getElementById('heroTrack');
-      const prev = document.getElementById('heroPrev');
-      const next = document.getElementById('heroNext');
-      const dots = Array.from(document.querySelectorAll('.hero-dots .dot'));
-      const panels = Array.from(track.children);
-
-      let index = 0;
-      const clamp = (i) => Math.max(0, Math.min(i, panels.length - 1));
-
-      function render(){
-        track.style.transform = `translateX(-${index * 100}%)`;
-        dots.forEach((d, i) => d.setAttribute('aria-current', i === index ? 'true' : 'false'));
-        prev.disabled = index === 0;
-        next.disabled = index === panels.length - 1;
-        prev.style.opacity = prev.disabled ? '0.45' : '1';
-        next.style.opacity = next.disabled ? '0.45' : '1';
-      }
-
-      function go(i){
-        index = clamp(i);
-        render();
-      }
-
-      prev.addEventListener('click', () => go(index - 1));
-      next.addEventListener('click', () => go(index + 1));
-      dots.forEach(d => d.addEventListener('click', () => go(Number(d.dataset.go))));
-
-      // Keyboard support (only affects the hero strip)
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') go(index - 1);
-        if (e.key === 'ArrowRight') go(index + 1);
-      });
-
-      // Basic swipe support on the hero strip
-      let startX = null;
-      track.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
-      track.addEventListener('touchend', (e) => {
-        if (startX === null) return;
-        const endX = e.changedTouches[0].clientX;
-        const dx = endX - startX;
-        startX = null;
-        if (Math.abs(dx) < 40) return;
-        if (dx > 0) go(index - 1);
-        else go(index + 1);
-      }, {passive:true});
-
-      render();
-    })();
-  </script>
 </body>
 </html>
