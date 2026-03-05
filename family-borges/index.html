@@ -4,20 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ronu — index_new</title>
-  <meta name="description" content="Ronu — welcome to my lab." />
 
   <style>
     :root{
       --void:#05040a;
-      --ink:#0d0b14;
-      --fog:rgba(255,255,255,0.45);
-      --mist:rgba(255,255,255,0.18);
-      --soft:rgba(255,255,255,0.28);
       --hard:rgba(255,255,255,0.92);
-      --glass:rgba(0,0,0,0.35);
-      --glass2:rgba(0,0,0,0.45);
+      --soft:rgba(255,255,255,0.22);
+      --sub: rgba(255,255,255,0.38);
       --line:rgba(255,255,255,0.14);
       --line2:rgba(255,255,255,0.22);
+      --glass:rgba(0,0,0,0.35);
+      --glass2:rgba(0,0,0,0.45);
     }
 
     *{box-sizing:border-box}
@@ -26,108 +23,119 @@
       margin:0;
       background:var(--void);
       color:var(--hard);
-      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
       overflow-x:hidden;
     }
 
-    a{color:inherit}
+    /* ======= STATIC PAGE LAYOUT (everything else is static) ======= */
+    .page{
+      min-height:100vh;
+    }
 
-    /* ======= PANEL SLIDER ======= */
-    .panel-slider{
+    /* This is the ONLY moving area (your hero strip). */
+    .hero-strip{
       position: relative;
       width: 100%;
       overflow: hidden;
       background: var(--void);
+      /* keep same vibe as your screenshot: dark, subtle glow */
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(255,255,255,0.06), transparent 55%),
+        linear-gradient(180deg, var(--void) 0%, var(--void) 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
-    .panel-track{
-      display: flex;
-      width: 100%;
+    /* Track slides INSIDE hero-strip only */
+    .hero-track{
+      display:flex;
+      width:100%;
       transform: translateX(0%);
       transition: transform 520ms cubic-bezier(.2,.9,.2,1);
       will-change: transform;
     }
 
-    .panel{
-      min-width: 100%;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(255,255,255,0.06), transparent 55%),
-        linear-gradient(180deg, var(--void) 0%, var(--void) 100%);
-      color: var(--hard);
+    /* Panels are the height of your hero area only (not whole page) */
+    .hero-panel{
+      min-width:100%;
+      /* adjust this if your existing hero is taller/shorter */
+      height: 320px;
+      display:grid;
+      align-items:center;
     }
 
-    .panel-inner{
+    /* Inner padding matches screenshot spacing */
+    .hero-inner{
       width: min(980px, 86vw);
-      padding: 10vh 0;
+      margin: 0 auto;
+      padding: 54px 0 44px;
     }
 
-    /* ======= PANEL 1 (hero) ======= */
+    /* ======= HERO TYPOGRAPHY ======= */
     .hero-title{
-      margin: 0;
-      line-height: 0.92;
-      letter-spacing: -0.02em;
+      margin:0;
+      line-height:0.92;
+      letter-spacing:-0.02em;
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
       user-select:none;
     }
     .hero-title-strong{
-      font-size: clamp(56px, 8vw, 112px);
+      font-size: clamp(56px, 7.5vw, 112px);
       font-weight: 600;
       color: rgba(255,255,255,0.95);
     }
     .hero-title-soft{
-      font-size: clamp(56px, 8vw, 112px);
+      font-size: clamp(56px, 7.5vw, 112px);
       font-weight: 600;
-      color: rgba(255,255,255,0.22);
+      color: var(--soft);
       font-style: italic;
     }
 
     .hero-sub{
       margin: 34px 0 0;
-      font-size: clamp(16px, 2.2vw, 26px);
-      color: rgba(255,255,255,0.38);
+      font-size: clamp(16px, 2vw, 26px);
+      color: var(--sub);
       letter-spacing: 0.06em;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
-    /* ======= PANEL 2 ======= */
+    /* ======= PANEL 2 LOOK ======= */
     .panel-title{
-      margin: 0;
-      font-size: clamp(34px, 4vw, 54px);
+      margin:0;
+      font-size: clamp(28px, 3.2vw, 44px);
       color: rgba(255,255,255,0.88);
-      letter-spacing: -0.01em;
+      letter-spacing:-0.01em;
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
       user-select:none;
     }
     .panel-copy{
-      margin: 18px 0 0;
-      font-size: clamp(16px, 2vw, 22px);
+      margin: 14px 0 0;
+      font-size: clamp(14px, 1.6vw, 18px);
       color: rgba(255,255,255,0.45);
       line-height: 1.55;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      letter-spacing: 0.03em;
     }
 
     .panel-actions{
-      display: flex;
+      display:flex;
+      gap:12px;
+      margin-top: 18px;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 26px;
     }
 
     .btn-ghost{
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 9px 12px;
       border-radius: 10px;
       border: 1px solid var(--line);
       color: rgba(255,255,255,0.72);
-      text-decoration: none;
+      text-decoration:none;
       background: rgba(255,255,255,0.02);
       transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 13px;
-      letter-spacing: 0.05em;
+      font-size: 12px;
+      letter-spacing: 0.08em;
     }
     .btn-ghost:hover{
       transform: translateY(-1px);
@@ -135,42 +143,42 @@
       background: rgba(255,255,255,0.04);
     }
 
-    /* ======= NAV BUTTONS ======= */
-    .panel-nav{
-      position: absolute;
+    /* ======= NAV BUTTONS (only for hero-strip) ======= */
+    .hero-nav{
+      position:absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border-radius: 999px;
       border: 1px solid var(--line);
       background: var(--glass);
       color: rgba(255,255,255,0.75);
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      font-size: 22px;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      font-size: 20px;
       line-height: 1;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, opacity 140ms ease;
     }
-    .panel-nav:hover{
+    .hero-nav:hover{
       transform: translateY(-50%) scale(1.03);
       border-color: var(--line2);
       background: var(--glass2);
     }
-    .panel-nav.left{ left: 16px; }
-    .panel-nav.right{ right: 16px; }
-    .panel-nav:disabled{ cursor: default; }
+    .hero-nav.left{ left: 14px; }
+    .hero-nav.right{ right: 14px; }
+    .hero-nav:disabled{ cursor: default; }
 
-    /* ======= DOTS ======= */
-    .panel-dots{
-      position: absolute;
+    /* Dots */
+    .hero-dots{
+      position:absolute;
       left: 50%;
-      bottom: 18px;
+      bottom: 12px;
       transform: translateX(-50%);
-      display: flex;
+      display:flex;
       gap: 10px;
     }
     .dot{
@@ -188,100 +196,102 @@
       border-color: rgba(255,255,255,0.45);
     }
 
-    /* ======= OPTIONAL SECTION ANCHORS ======= */
-    .anchor-section{
-      padding: 80px 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%);
-      border-top: 1px solid rgba(255,255,255,0.06);
-    }
-    .anchor-inner{
+    /* ======= STATIC CONTENT BELOW (does not move) ======= */
+    .content{
       width: min(980px, 86vw);
       margin: 0 auto;
-      color: rgba(255,255,255,0.55);
+      padding: 52px 0 120px;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: rgba(255,255,255,0.62);
       line-height: 1.6;
     }
-    .anchor-inner h3{
-      margin: 0 0 10px;
-      color: rgba(255,255,255,0.78);
+    .content h2{
+      margin: 0 0 14px;
+      color: rgba(255,255,255,0.80);
       letter-spacing: -0.01em;
+      font-size: 22px;
+    }
+    .content .card{
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      border-radius: 14px;
+      padding: 18px 18px;
+      margin-top: 14px;
     }
 
-    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
-      .panel-track{ transition: none; }
-      .panel-nav, .btn-ghost{ transition: none; }
+      .hero-track{ transition:none; }
+      .hero-nav,.btn-ghost{ transition:none; }
     }
   </style>
 </head>
 
 <body>
-  <!-- Page address: ronu.one/index_new (save as index_new.html and route accordingly) -->
+  <div class="page">
 
-  <section class="panel-slider" aria-label="Hero panels">
-    <div class="panel-track" id="panelTrack">
-      <!-- Panel 1 -->
-      <article class="panel panel-1">
-        <div class="panel-inner">
-          <h1 class="hero-title">
-            <span class="hero-title-strong">I'm</span>
-            <span class="hero-title-soft"> Ronu.</span>
-          </h1>
-          <p class="hero-sub">Welcome to my lab.</p>
-        </div>
-      </article>
-
-      <!-- Panel 2 -->
-      <article class="panel panel-2">
-        <div class="panel-inner">
-          <h2 class="panel-title">More coming.</h2>
-          <p class="panel-copy">
-            Experiments in markets, code, and design.<br />
-            Dashboards, tools, and notes — shipping soon.
-          </p>
-
-          <div class="panel-actions">
-            <a class="btn-ghost" href="#work">EXPLORE</a>
-            <a class="btn-ghost" href="#contact">CONTACT</a>
+    <!-- ONLY THIS STRIP MOVES -->
+    <section class="hero-strip" aria-label="Hero panels">
+      <div class="hero-track" id="heroTrack">
+        <!-- Panel 1 -->
+        <article class="hero-panel">
+          <div class="hero-inner">
+            <h1 class="hero-title">
+              <span class="hero-title-strong">I'm</span>
+              <span class="hero-title-soft"> Ronu.</span>
+            </h1>
+            <p class="hero-sub">Welcome to my lab.</p>
           </div>
-        </div>
-      </article>
-    </div>
+        </article>
 
-    <button class="panel-nav left" type="button" id="panelPrev" aria-label="Previous panel">‹</button>
-    <button class="panel-nav right" type="button" id="panelNext" aria-label="Next panel">›</button>
+        <!-- Panel 2 -->
+        <article class="hero-panel">
+          <div class="hero-inner">
+            <h2 class="panel-title">More coming.</h2>
+            <p class="panel-copy">
+              Experiments in markets, code, and design.<br />
+              Dashboards, tools, and notes — shipping soon.
+            </p>
+            <div class="panel-actions">
+              <a class="btn-ghost" href="#work">EXPLORE</a>
+              <a class="btn-ghost" href="#contact">CONTACT</a>
+            </div>
+          </div>
+        </article>
+      </div>
 
-    <div class="panel-dots" role="tablist" aria-label="Panel selector">
-      <button class="dot" type="button" data-go="0" aria-label="Go to panel 1" aria-current="true"></button>
-      <button class="dot" type="button" data-go="1" aria-label="Go to panel 2"></button>
-    </div>
-  </section>
+      <button class="hero-nav left" type="button" id="heroPrev" aria-label="Previous hero panel">‹</button>
+      <button class="hero-nav right" type="button" id="heroNext" aria-label="Next hero panel">›</button>
 
-  <!-- Optional anchor sections so the buttons have targets -->
-  <section id="work" class="anchor-section">
-    <div class="anchor-inner">
-      <h3>Work</h3>
-      <div>Placeholder section. Replace with your projects, links, dashboards, etc.</div>
-    </div>
-  </section>
+      <div class="hero-dots" role="tablist" aria-label="Hero panel selector">
+        <button class="dot" type="button" data-go="0" aria-label="Go to hero panel 1" aria-current="true"></button>
+        <button class="dot" type="button" data-go="1" aria-label="Go to hero panel 2"></button>
+      </div>
+    </section>
 
-  <section id="contact" class="anchor-section">
-    <div class="anchor-inner">
-      <h3>Contact</h3>
-      <div>Placeholder section. Replace with your email / socials.</div>
-    </div>
-  </section>
+    <!-- EVERYTHING BELOW IS STATIC -->
+    <main class="content">
+      <h2 id="work">Work</h2>
+      <div class="card">
+        Static content section. Replace with your real content (projects, links, dashboards).
+      </div>
+
+      <h2 id="contact" style="margin-top:42px;">Contact</h2>
+      <div class="card">
+        Static content section. Replace with your email / socials.
+      </div>
+    </main>
+
+  </div>
 
   <script>
     (() => {
-      const track = document.getElementById('panelTrack');
-      const prev = document.getElementById('panelPrev');
-      const next = document.getElementById('panelNext');
-      const dots = Array.from(document.querySelectorAll('.panel-dots .dot'));
+      const track = document.getElementById('heroTrack');
+      const prev = document.getElementById('heroPrev');
+      const next = document.getElementById('heroNext');
+      const dots = Array.from(document.querySelectorAll('.hero-dots .dot'));
       const panels = Array.from(track.children);
 
       let index = 0;
-
       const clamp = (i) => Math.max(0, Math.min(i, panels.length - 1));
 
       function render(){
@@ -300,15 +310,15 @@
 
       prev.addEventListener('click', () => go(index - 1));
       next.addEventListener('click', () => go(index + 1));
-
       dots.forEach(d => d.addEventListener('click', () => go(Number(d.dataset.go))));
 
+      // Keyboard support (only affects the hero strip)
       window.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') go(index - 1);
         if (e.key === 'ArrowRight') go(index + 1);
       });
 
-      // Basic swipe
+      // Basic swipe support on the hero strip
       let startX = null;
       track.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
       track.addEventListener('touchend', (e) => {
