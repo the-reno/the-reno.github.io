@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NJ Transit Train Monitor</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a2f;
+      --panel-2:#18223d;
+      --text:#edf2ff;
+      --muted:#9fb0d9;
+      --line:#2a3963;
+      --accent:#6ea8fe;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --chip:#223156;
+      --shadow:0 10px 28px rgba(0,0,0,.28);
+      --radius:16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(110,168,254,.12), transparent 28%),
+        linear-gradient(180deg, #09101d 0%, #0b1020 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .title h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill,
+    button,
+    select {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    button:hover { background: var(--panel-2); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -.01em;
+    }
+
+    .card-header .sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .next-list {
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .train-item {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 140px 1fr 140px 110px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .time-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .time-main {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -.03em;
+    }
+
+    .time-sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .route-main {
+      font-size: 18px;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      color: #d8e4ff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .status.ontime { background: rgba(34,197,94,.14); color: #8ef0ae; }
+    .status.late { background: rgba(245,158,11,.14); color: #ffd185; }
+    .status.cancelled { background: rgba(239,68,68,.14); color: #ff9b9b; }
+
+    .mins {
+      text-align: right;
+    }
+
+    .mins .num {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .mins .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .insights {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .insight-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+
+    .metric .value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+
+    .metric .small {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .history-wrap {
+      padding: 10px 12px 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,.02);
+    }
+
+    .delay-pos { color: #ffcf7a; font-weight: 700; }
+    .delay-zero { color: #9fe7b0; font-weight: 700; }
+    .delay-neg { color: #9ed0ff; font-weight: 700; }
+
+    .details {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .section-note {
+      padding: 0 18px 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .train-item {
+        grid-template-columns: 1fr;
+      }
+      .mins {
+        text-align: left;
+      }
+      .insight-row {
+        grid-template-columns: 1fr;
+      }
+      .wrap {
+        padding: 16px;
+      }
+      .title h1 {
+        font-size: 24px;
+      }
+      table {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Westfield → Newark Penn</h1>
+        <p>Next trains first. Historical departures below for delay pattern analysis.</p>
+      </div>
+
+      <div class="controls">
+        <span class="pill" id="serviceDate">Service Date: --</span>
+        <span class="pill" id="lastUpdated">Last Updated: --</span>
+        <select id="sortMode">
+          <option value="next">Sort next trains by departure</option>
+          <option value="delay">Sort next trains by delay</option>
+        </select>
+        <button id="refreshBtn">Refresh View</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Next Trains</h2>
+            <div class="sub">Focused view for immediate departures</div>
+          </div>
+          <div class="sub" id="nextCount">0 trains</div>
+        </div>
+        <div class="next-list" id="nextList"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>Quick Delay Insights</h2>
+            <div class="sub">Based on recent observed departures</div>
+          </div>
+        </div>
+        <div class="insights">
+          <div class="insight-row">
+            <div class="metric">
+              <div class="label">Average Delay</div>
+              <div class="value" id="avgDelay">--</div>
+              <div class="small">Recent departed trains</div>
+            </div>
+            <div class="metric">
+              <div class="label">On-Time Rate</div>
+              <div class="value" id="onTimeRate">--</div>
+              <div class="small">Delay ≤ 1 minute</div>
+            </div>
+            <div class="metric">
+              <div class="label">Express Delay</div>
+              <div class="value" id="expressAvgDelay">--</div>
+              <div class="small">Average for express only</div>
+            </div>
+          </div>
+
+          <div class="insight-row">
+            <div class="metric">
+              <div class="label">Worst Delay</div>
+              <div class="value" id="worstDelay">--</div>
+              <div class="small">Max recent delay</div>
+            </div>
+            <div class="metric">
+              <div class="label">Track Pattern</div>
+              <div class="value" id="trackPattern">--</div>
+              <div class="small">Most frequent track today</div>
+            </div>
+            <div class="metric">
+              <div class="label">Late Trains</div>
+              <div class="value" id="lateRate">--</div>
+              <div class="small">Share delayed > 1 minute</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:18px;">
+      <div class="card-header">
+        <div>
+          <h2>Previous Trains</h2>
+          <div class="sub">Detailed history to detect recurring slippage and track behavior</div>
+        </div>
+        <div class="sub" id="historyCount">0 rows</div>
+      </div>
+      <div class="section-note">
+        Suggested fields for your automated feed: train number, scheduled departure, actual departure, delay in minutes,
+        track, destination, express/local flag, downstream station times, and per-station deviation.
+      </div>
+      <div class="history-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Train</th>
+              <th>Type</th>
+              <th>Destination</th>
+              <th>Sched Dep</th>
+              <th>Actual Dep</th>
+              <th>Delay</th>
+              <th>Track</th>
+              <th>Observed Stops</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      This page is ready to connect to your automated JSON output. Replace the sample <code>trainData</code> object with your fetched data.
+    </div>
+  </div>
+
+  <script>
+    /*
+      Expected automated structure
+      ----------------------------
+      Replace this sample object with your live JSON from GitHub / API pipeline.
+    */
+    const trainData = {
+      route: {
+        origin: "Westfield",
+        destination: "Newark Penn",
+        serviceDate: "2026-03-08"
+      },
+      generatedAt: "2026-03-08T09:42:00-05:00",
+      nextTrains: [
+        {
+          trainNumber: "5432",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T09:47:00-05:00",
+          estimatedDeparture: "2026-03-08T09:47:00-05:00",
+          delayMinutes: 0,
+          track: "1",
+          status: "On time",
+          line: "Raritan Valley Line",
+          notes: "Normal pattern"
+        },
+        {
+          trainNumber: "5434",
+          type: "Express",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T10:05:00-05:00",
+          estimatedDeparture: "2026-03-08T10:09:00-05:00",
+          delayMinutes: 4,
+          track: "2",
+          status: "Delayed",
+          line: "Raritan Valley Line",
+          notes: "Skipping Roselle Park and Union"
+        },
+        {
+          trainNumber: "5436",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T10:21:00-05:00",
+          estimatedDeparture: "2026-03-08T10:21:00-05:00",
+          delayMinutes: 0,
+          track: "1",
+          status: "On time",
+          line: "Raritan Valley Line",
+          notes: "Normal pattern"
+        }
+      ],
+      previousTrains: [
+        {
+          trainNumber: "5420",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T07:12:00-05:00",
+          actualDeparture: "2026-03-08T07:13:00-05:00",
+          delayMinutes: 1,
+          track: "1",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "07:12", actual: "07:13" },
+            { station: "Cranford", sched: "07:17", actual: "07:18" },
+            { station: "Union", sched: "07:25", actual: "07:26" },
+            { station: "Newark Penn", sched: "07:37", actual: "07:39" }
+          ],
+          notes: "Minor rolling delay after Cranford"
+        },
+        {
+          trainNumber: "5422",
+          type: "Express",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T07:34:00-05:00",
+          actualDeparture: "2026-03-08T07:39:00-05:00",
+          delayMinutes: 5,
+          track: "2",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "07:34", actual: "07:39" },
+            { station: "Cranford", sched: "07:39", actual: "07:44" },
+            { station: "Newark Penn", sched: "07:55", actual: "08:00" }
+          ],
+          notes: "Express but left late from origin"
+        },
+        {
+          trainNumber: "5424",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T07:51:00-05:00",
+          actualDeparture: "2026-03-08T07:51:00-05:00",
+          delayMinutes: 0,
+          track: "1",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "07:51", actual: "07:51" },
+            { station: "Cranford", sched: "07:56", actual: "07:56" },
+            { station: "Union", sched: "08:04", actual: "08:04" },
+            { station: "Newark Penn", sched: "08:16", actual: "08:16" }
+          ],
+          notes: "On-time throughout"
+        },
+        {
+          trainNumber: "5426",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T08:08:00-05:00",
+          actualDeparture: "2026-03-08T08:11:00-05:00",
+          delayMinutes: 3,
+          track: "1",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "08:08", actual: "08:11" },
+            { station: "Cranford", sched: "08:13", actual: "08:16" },
+            { station: "Union", sched: "08:21", actual: "08:24" },
+            { station: "Newark Penn", sched: "08:33", actual: "08:36" }
+          ],
+          notes: "Consistent +3 min at all observed stops"
+        },
+        {
+          trainNumber: "5428",
+          type: "Express",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T08:28:00-05:00",
+          actualDeparture: "2026-03-08T08:35:00-05:00",
+          delayMinutes: 7,
+          track: "2",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "08:28", actual: "08:35" },
+            { station: "Cranford", sched: "08:33", actual: "08:40" },
+            { station: "Newark Penn", sched: "08:48", actual: "08:56" }
+          ],
+          notes: "Largest recent delay"
+        },
+        {
+          trainNumber: "5430",
+          type: "Local",
+          destination: "Newark Penn",
+          scheduledDeparture: "2026-03-08T08:51:00-05:00",
+          actualDeparture: "2026-03-08T08:52:00-05:00",
+          delayMinutes: 1,
+          track: "1",
+          status: "Departed",
+          stops: [
+            { station: "Westfield", sched: "08:51", actual: "08:52" },
+            { station: "Cranford", sched: "08:56", actual: "08:57" },
+            { station: "Union", sched: "09:04", actual: "09:05" },
+            { station: "Newark Penn", sched: "09:16", actual: "09:17" }
+          ],
+          notes: "Small delay only"
+        }
+      ]
+    };
+
+    const nextList = document.getElementById("nextList");
+    const historyBody = document.getElementById("historyBody");
+    const avgDelayEl = document.getElementById("avgDelay");
+    const onTimeRateEl = document.getElementById("onTimeRate");
+    const expressAvgDelayEl = document.getElementById("expressAvgDelay");
+    const worstDelayEl = document.getElementById("worstDelay");
+    const trackPatternEl = document.getElementById("trackPattern");
+    const lateRateEl = document.getElementById("lateRate");
+    const lastUpdatedEl = document.getElementById("lastUpdated");
+    const serviceDateEl = document.getElementById("serviceDate");
+    const nextCountEl = document.getElementById("nextCount");
+    const historyCountEl = document.getElementById("historyCount");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const sortMode = document.getElementById("sortMode");
+
+    function formatShortTime(dateString) {
+      const d = new Date(dateString);
+      return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function diffMinutes(fromDateString, toDateString) {
+      return Math.round((new Date(toDateString) - new Date(fromDateString)) / 60000);
+    }
+
+    function getStatusClass(status, delayMinutes) {
+      const s = (status || "").toLowerCase();
+      if (s.includes("cancel")) return "cancelled";
+      if ((delayMinutes || 0) > 0 || s.includes("delay")) return "late";
+      return "ontime";
+    }
+
+    function minutesUntil(dateString) {
+      const now = new Date(trainData.generatedAt);
+      return diffMinutes(now, dateString);
+    }
+
+    function renderNextTrains() {
+      let trains = [...trainData.nextTrains];
+
+      if (sortMode.value === "delay") {
+        trains.sort((a, b) => (b.delayMinutes || 0) - (a.delayMinutes || 0));
+      } else {
+        trains.sort((a, b) => new Date(a.estimatedDeparture) - new Date(b.estimatedDeparture));
+      }
+
+      nextList.innerHTML = "";
+      nextCountEl.textContent = `${trains.length} trains`;
+
+      trains.forEach(train => {
+        const item = document.createElement("div");
+        item.className = "train-item";
+
+        const mins = minutesUntil(train.estimatedDeparture);
+        const statusClass = getStatusClass(train.status, train.delayMinutes);
+
+        item.innerHTML = `
+          <div class="time-block">
+            <div class="time-main">${formatShortTime(train.estimatedDeparture)}</div>
+            <div class="time-sub">Scheduled ${formatShortTime(train.scheduledDeparture)}</div>
+          </div>
+
+          <div>
+            <div class="route-main">${train.destination}</div>
+            <div class="meta">
+              <span class="chip">Train ${train.trainNumber}</span>
+              <span class="chip">${train.type}</span>
+              <span class="chip">Track ${train.track || "--"}</span>
+              <span class="chip">${train.line}</span>
+            </div>
+            <div class="details" style="margin-top:8px;">
+              ${train.notes || ""}
+            </div>
+          </div>
+
+          <div>
+            <div class="status ${statusClass}">${train.status}</div>
+            <div class="details" style="margin-top:8px;">
+              Delay: ${train.delayMinutes || 0} min
+            </div>
+          </div>
+
+          <div class="mins">
+            <div class="num">${mins}</div>
+            <div class="label">min to go</div>
+          </div>
+        `;
+
+        nextList.appendChild(item);
+      });
+    }
+
+    function stopSummary(stops) {
+      if (!stops || !stops.length) return "--";
+      return stops
+        .map(s => `${s.station} ${s.actual || s.sched}`)
+        .join(" • ");
+    }
+
+    function delayClass(delay) {
+      if (delay > 0) return "delay-pos";
+      if (delay < 0) return "delay-neg";
+      return "delay-zero";
+    }
+
+    function renderHistory() {
+      const rows = [...trainData.previousTrains].sort(
+        (a, b) => new Date(b.actualDeparture) - new Date(a.actualDeparture)
+      );
+
+      historyBody.innerHTML = "";
+      historyCountEl.textContent = `${rows.length} rows`;
+
+      rows.forEach(train => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${train.trainNumber}</strong></td>
+          <td>${train.type}</td>
+          <td>${train.destination}</td>
+          <td>${formatShortTime(train.scheduledDeparture)}</td>
+          <td>${formatShortTime(train.actualDeparture)}</td>
+          <td class="${delayClass(train.delayMinutes)}">${train.delayMinutes} min</td>
+          <td>${train.track || "--"}</td>
+          <td class="details">${stopSummary(train.stops)}</td>
+          <td class="details">${train.notes || ""}</td>
+        `;
+        historyBody.appendChild(tr);
+      });
+    }
+
+    function renderInsights() {
+      const rows = trainData.previousTrains;
+      const delays = rows.map(x => x.delayMinutes || 0);
+      const expressRows = rows.filter(x => (x.type || "").toLowerCase() === "express");
+      const onTimeCount = rows.filter(x => (x.delayMinutes || 0) <= 1).length;
+      const lateCount = rows.filter(x => (x.delayMinutes || 0) > 1).length;
+
+      const avg = delays.length ? (delays.reduce((a, b) => a + b, 0) / delays.length) : 0;
+      const expressAvg = expressRows.length
+        ? (expressRows.reduce((a, b) => a + (b.delayMinutes || 0), 0) / expressRows.length)
+        : 0;
+      const worst = delays.length ? Math.max(...delays) : 0;
+
+      const trackCounts = rows.reduce((acc, row) => {
+        const key = row.track || "Unknown";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+      const topTrack = Object.entries(trackCounts).sort((a, b) => b[1] - a[1])[0];
+
+      avgDelayEl.textContent = `${avg.toFixed(1)}m`;
+      onTimeRateEl.textContent = rows.length ? `${Math.round((onTimeCount / rows.length) * 100)}%` : "--";
+      expressAvgDelayEl.textContent = `${expressAvg.toFixed(1)}m`;
+      worstDelayEl.textContent = `${worst}m`;
+      trackPatternEl.textContent = topTrack ? `Track ${topTrack[0]}` : "--";
+      lateRateEl.textContent = rows.length ? `${Math.round((lateCount / rows.length) * 100)}%` : "--";
+    }
+
+    function renderMeta() {
+      serviceDateEl.textContent = `Service Date: ${trainData.route.serviceDate}`;
+      const last = new Date(trainData.generatedAt);
+      lastUpdatedEl.textContent = `Last Updated: ${last.toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit"
+      })}`;
+    }
+
+    function renderAll() {
+      renderMeta();
+      renderNextTrains();
+      renderHistory();
+      renderInsights();
+    }
+
+    refreshBtn.addEventListener("click", renderAll);
+    sortMode.addEventListener("change", renderNextTrains);
+
+    renderAll();
+  </script>
+</body>
+</html>
