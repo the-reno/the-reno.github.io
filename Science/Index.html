@@ -3,291 +3,646 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Traffic Jam Theory Simulation</title>
+  <title>Why Traffic Suddenly Stops | Ronu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111;
+      --panel-soft: #141414;
+      --border: #1f1f1f;
+      --border-2: #2a2a2a;
+      --text: #efefef;
+      --muted: #9a9a9a;
+      --soft: #666;
+      --good: #9ad27a;
+      --warn: #e7c66b;
+      --bad: #d97777;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      background: #0b0b0b;
-      color: #eaeaea;
-      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      padding: 28px 20px 40px;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .topbar {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      padding: 20px;
+      margin-bottom: 22px;
+      gap: 16px;
+    }
+
+    .back {
+      color: #666;
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .back:hover {
+      color: var(--text);
+    }
+
+    .hero {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #111 0%, #0d0d0d 100%);
+      border-radius: 16px;
+      padding: 30px 24px;
+      margin-bottom: 18px;
+    }
+
+    .kicker {
+      color: #5d5d5d;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
     }
 
     h1 {
-      margin-bottom: 8px;
-      font-size: 28px;
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
     }
 
-    p {
-      color: #b0b0b0;
-      max-width: 800px;
-      text-align: center;
-      line-height: 1.5;
+    .intro {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #101010;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #676767;
+    }
+
+    .panel-body {
+      padding: 18px;
     }
 
     .controls {
-      margin: 16px 0 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      justify-content: center;
-      align-items: center;
+      display: grid;
+      gap: 18px;
     }
 
-    label {
-      font-size: 14px;
-      color: #d0d0d0;
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #cfcfcf;
+    }
+
+    .control .desc {
+      display: block;
+      color: #6f6f6f;
+      font-size: 11px;
+      line-height: 1.5;
+      margin-top: 8px;
     }
 
     input[type="range"] {
-      width: 180px;
+      width: 100%;
+      accent-color: #d9d9d9;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
     }
 
     button {
-      background: #eaeaea;
-      color: #111;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
+      border: 1px solid var(--border-2);
+      background: #171717;
+      color: #e7e7e7;
+      font: inherit;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-radius: 10px;
       cursor: pointer;
-      font-weight: bold;
+      transition: 0.2s ease;
     }
 
     button:hover {
-      opacity: 0.9;
+      border-color: #454545;
+      background: #1b1b1b;
     }
 
-    canvas {
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 12px;
-      max-width: 100%;
+    .primary {
+      background: #ececec;
+      color: #0a0a0a;
+      border-color: #ececec;
+    }
+
+    .primary:hover {
+      background: transparent;
+      color: #ececec;
     }
 
     .stats {
-      margin-top: 12px;
-      color: #a8a8a8;
-      font-size: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .stat .name {
+      color: #666;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .viz-wrap {
+      display: grid;
+      gap: 18px;
+    }
+
+    .canvas-wrap {
+      padding: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      background: radial-gradient(circle at center, #111 0%, #0b0b0b 75%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .explain {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+      padding: 0 18px 18px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      color: #7a7a7a;
+      padding: 0 18px 18px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: #666;
+      font-size: 11px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 940px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        padding: 18px 12px 28px;
+      }
+
+      .hero {
+        padding: 24px 16px;
+      }
+
+      .panel-body, .canvas-wrap {
+        padding: 14px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Traffic Jam Theory</h1>
-  <p>
-    Ring-road model showing how phantom traffic jams can appear from small speed fluctuations,
-    even without accidents or bottlenecks.
-  </p>
+  <div class="page">
+    <div class="topbar">
+      <a class="back" href="/science/">← Back to Science</a>
+    </div>
 
-  <div class="controls">
-    <label>
-      Cars:
-      <input id="carsSlider" type="range" min="10" max="80" value="35" />
-      <span id="carsValue">35</span>
-    </label>
+    <section class="hero">
+      <div class="kicker">Science / motion / daily systems</div>
+      <h1>Why traffic suddenly stops</h1>
+      <p class="intro">
+        You are moving, the road looks clear, and then everything slows down for no obvious reason.
+        This model shows how a tiny brake tap can ripple through traffic and grow into a stop-and-go wave.
+        No crash. No lane closure. Just reaction, spacing, and pressure building over time.
+      </p>
+    </section>
 
-    <label>
-      Reaction α:
-      <input id="alphaSlider" type="range" min="0.1" max="2.0" step="0.1" value="0.8" />
-      <span id="alphaValue">0.8</span>
-    </label>
+    <div class="grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Live controls</div>
+        </div>
+        <div class="panel-body">
+          <div class="controls">
+            <div class="control">
+              <label>
+                <span>Cars on the road</span>
+                <strong id="carsValue">32</strong>
+              </label>
+              <input id="carsSlider" type="range" min="12" max="70" value="32" />
+              <span class="desc">More cars means less breathing room. At some point, flow becomes fragile.</span>
+            </div>
 
-    <label>
-      Noise:
-      <input id="noiseSlider" type="range" min="0" max="0.3" step="0.01" value="0.04" />
-      <span id="noiseValue">0.04</span>
-    </label>
+            <div class="control">
+              <label>
+                <span>Driver calmness</span>
+                <strong id="calmValue">64%</strong>
+              </label>
+              <input id="calmSlider" type="range" min="10" max="100" value="64" />
+              <span class="desc">Higher calmness means smoother reactions and less over-braking.</span>
+            </div>
 
-    <button id="resetBtn">Reset</button>
+            <div class="control">
+              <label>
+                <span>Small brake taps</span>
+                <strong id="tapValue">18%</strong>
+              </label>
+              <input id="tapSlider" type="range" min="0" max="60" value="18" />
+              <span class="desc">Random little slowdowns. The kind of thing drivers do every day.</span>
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="restartBtn">Restart flow</button>
+              <button id="nudgeBtn">Trigger one brake tap</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="name">Road mood</div>
+              <div class="value" id="moodValue">Stable</div>
+            </div>
+            <div class="stat">
+              <div class="name">Traffic pressure</div>
+              <div class="value" id="pressureValue">Low</div>
+            </div>
+            <div class="stat">
+              <div class="name">Average speed</div>
+              <div class="value" id="speedValue">0</div>
+            </div>
+            <div class="stat">
+              <div class="name">Slowest pocket</div>
+              <div class="value" id="slowestValue">0</div>
+            </div>
+          </div>
+
+          <div class="footer-note">
+            Look for the moment when one small slowdown spreads backward around the loop.
+            That is the beginning of a phantom jam.
+          </div>
+        </div>
+      </aside>
+
+      <section class="viz-wrap">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Ring road</div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="ringCanvas" width="840" height="520"></canvas>
+          </div>
+          <div class="legend">
+            <span><span class="dot" style="background:#9ad27a"></span>flowing well</span>
+            <span><span class="dot" style="background:#e7c66b"></span>under pressure</span>
+            <span><span class="dot" style="background:#d97777"></span>jam forming</span>
+          </div>
+          <div class="explain">
+            Each point is a car moving around the same loop. Green means flowing,
+            amber means compressed, red means trapped in a stop-and-go cluster.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Jam timeline</div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="historyCanvas" width="840" height="260"></canvas>
+          </div>
+          <div class="explain">
+            This panel keeps a short memory of the road. Brighter red bands reveal where slow zones form,
+            stretch, and travel backward through traffic.
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <canvas id="canvas" width="900" height="520"></canvas>
-  <div class="stats" id="stats"></div>
-
   <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+    const ringCanvas = document.getElementById('ringCanvas');
+    const ringCtx = ringCanvas.getContext('2d');
 
-    const carsSlider = document.getElementById("carsSlider");
-    const alphaSlider = document.getElementById("alphaSlider");
-    const noiseSlider = document.getElementById("noiseSlider");
-    const carsValue = document.getElementById("carsValue");
-    const alphaValue = document.getElementById("alphaValue");
-    const noiseValue = document.getElementById("noiseValue");
-    const stats = document.getElementById("stats");
-    const resetBtn = document.getElementById("resetBtn");
+    const historyCanvas = document.getElementById('historyCanvas');
+    const historyCtx = historyCanvas.getContext('2d');
 
-    const W = canvas.width;
-    const H = canvas.height;
+    const carsSlider = document.getElementById('carsSlider');
+    const calmSlider = document.getElementById('calmSlider');
+    const tapSlider = document.getElementById('tapSlider');
 
+    const carsValue = document.getElementById('carsValue');
+    const calmValue = document.getElementById('calmValue');
+    const tapValue = document.getElementById('tapValue');
+
+    const moodValue = document.getElementById('moodValue');
+    const pressureValue = document.getElementById('pressureValue');
+    const speedValue = document.getElementById('speedValue');
+    const slowestValue = document.getElementById('slowestValue');
+
+    const restartBtn = document.getElementById('restartBtn');
+    const nudgeBtn = document.getElementById('nudgeBtn');
+
+    const W = ringCanvas.width;
+    const H = ringCanvas.height;
     const cx = W / 2;
     const cy = H / 2;
-    const R = 180;
+    const R = 170;
+    const roadLength = 2 * Math.PI * R;
 
-    const L = 2 * Math.PI * R; // ring circumference
-    const vmax = 2.6;
-    const g0 = 18;
+    const topSpeed = 2.9;
+    const safeGap = 20;
 
     let cars = [];
-    let alpha = parseFloat(alphaSlider.value);
-    let noise = parseFloat(noiseSlider.value);
-    let N = parseInt(carsSlider.value, 10);
+    let historyRows = [];
+    let carCount = 32;
+    let calmness = 0.64;
+    let brakeTap = 0.18;
 
-    function optimalVelocity(gap) {
-      return vmax * (Math.tanh((gap - g0) / 8) + 1) / 2;
+    function desiredSpeed(gap) {
+      const shaped = (Math.tanh((gap - safeGap) / 9) + 1) / 2;
+      return topSpeed * shaped;
     }
 
-    function initCars() {
-      cars = [];
-      N = parseInt(carsSlider.value, 10);
-      alpha = parseFloat(alphaSlider.value);
-      noise = parseFloat(noiseSlider.value);
+    function getGap(i) {
+      const a = cars[i];
+      const b = cars[(i + 1) % cars.length];
+      let gap = b.x - a.x;
+      if (gap < 0) gap += roadLength;
+      return gap;
+    }
 
-      for (let i = 0; i < N; i++) {
-        const x = (i * L) / N;
-        let v = optimalVelocity(L / N);
-        if (i === 0) v *= 0.75; // small perturbation to trigger waves
+    function resetModel() {
+      carCount = parseInt(carsSlider.value, 10);
+      calmness = parseInt(calmSlider.value, 10) / 100;
+      brakeTap = parseInt(tapSlider.value, 10) / 100;
+
+      cars = [];
+      historyRows = [];
+
+      for (let i = 0; i < carCount; i++) {
+        const x = (i * roadLength) / carCount;
+        let v = desiredSpeed(roadLength / carCount);
+        if (i === 0) v *= 0.72;
         cars.push({ x, v });
       }
     }
 
-    function ringGap(i) {
-      const a = cars[i];
-      const b = cars[(i + 1) % N];
-      let gap = b.x - a.x;
-      if (gap < 0) gap += L;
-      return gap;
+    function triggerBrakeTap() {
+      const pick = Math.floor(Math.random() * cars.length);
+      cars[pick].v *= 0.45;
     }
 
     function update(dt) {
-      const newV = new Array(N);
+      const nextSpeeds = new Array(cars.length);
 
-      for (let i = 0; i < N; i++) {
-        const gap = ringGap(i);
-        const desired = optimalVelocity(gap);
-        let dv = alpha * (desired - cars[i].v);
+      for (let i = 0; i < cars.length; i++) {
+        const gap = getGap(i);
+        const want = desiredSpeed(gap);
 
-        if (noise > 0) {
-          dv += (Math.random() - 0.5) * noise;
+        const reactionStrength = 0.55 + (1 - calmness) * 1.65;
+        let dv = reactionStrength * (want - cars[i].v);
+
+        if (Math.random() < brakeTap * 0.025) {
+          dv -= 0.7 * Math.random();
         }
 
-        newV[i] = Math.max(0, Math.min(vmax, cars[i].v + dv * dt));
+        if (gap < 10) {
+          dv -= 1.1 * (1 - gap / 10);
+        }
+
+        let nv = cars[i].v + dv * dt;
+        nv = Math.max(0, Math.min(topSpeed, nv));
+        nextSpeeds[i] = nv;
       }
 
-      for (let i = 0; i < N; i++) {
-        cars[i].v = newV[i];
-        cars[i].x = (cars[i].x + cars[i].v * 60 * dt) % L;
+      for (let i = 0; i < cars.length; i++) {
+        cars[i].v = nextSpeeds[i];
+        cars[i].x = (cars[i].x + cars[i].v * 58 * dt) % roadLength;
+      }
+
+      pushHistory();
+      updateReadout();
+    }
+
+    function pushHistory() {
+      const row = cars.map(c => c.v / topSpeed);
+      historyRows.push(row);
+      if (historyRows.length > historyCanvas.height) {
+        historyRows.shift();
       }
     }
 
-    function speedColor(v) {
-      const t = v / vmax;
-      const r = Math.floor(255 * (1 - t));
-      const g = Math.floor(200 * t);
-      return `rgb(${r},${g},120)`;
+    function speedColor(ratio) {
+      if (ratio > 0.72) return '#9ad27a';
+      if (ratio > 0.42) return '#e7c66b';
+      return '#d97777';
+    }
+
+    function speedRGB(ratio) {
+      if (ratio > 0.72) return [154, 210, 122];
+      if (ratio > 0.42) return [231, 198, 107];
+      return [217, 119, 119];
     }
 
     function drawRing() {
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 18;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.stroke();
+      ringCtx.clearRect(0, 0, W, H);
 
-      ctx.strokeStyle = "#1f1f1f";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+      ringCtx.strokeStyle = '#262626';
+      ringCtx.lineWidth = 26;
+      ringCtx.beginPath();
+      ringCtx.arc(cx, cy, R, 0, Math.PI * 2);
+      ringCtx.stroke();
 
-    function drawCars() {
-      for (const car of cars) {
-        const theta = (car.x / L) * Math.PI * 2 - Math.PI / 2;
-        const x = cx + R * Math.cos(theta);
-        const y = cy + R * Math.sin(theta);
+      ringCtx.strokeStyle = '#1a1a1a';
+      ringCtx.lineWidth = 2;
+      ringCtx.beginPath();
+      ringCtx.arc(cx, cy, R, 0, Math.PI * 2);
+      ringCtx.stroke();
 
-        ctx.fillStyle = speedColor(car.v);
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+      for (let i = 0; i < cars.length; i++) {
+        const c = cars[i];
+        const angle = (c.x / roadLength) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + R * Math.cos(angle);
+        const y = cy + R * Math.sin(angle);
+        const ratio = c.v / topSpeed;
 
-    function drawSpeedPanel() {
-      const panelX = 80;
-      const panelY = 410;
-      const panelW = 740;
-      const panelH = 70;
+        ringCtx.fillStyle = speedColor(ratio);
+        ringCtx.beginPath();
+        ringCtx.arc(x, y, 7, 0, Math.PI * 2);
+        ringCtx.fill();
 
-      ctx.fillStyle = "#101010";
-      ctx.fillRect(panelX, panelY, panelW, panelH);
-      ctx.strokeStyle = "#2a2a2a";
-      ctx.strokeRect(panelX, panelY, panelW, panelH);
-
-      for (let i = 0; i < N; i++) {
-        const x = panelX + (i / N) * panelW;
-        const barW = panelW / N - 1;
-        const barH = (cars[i].v / vmax) * (panelH - 10);
-
-        ctx.fillStyle = speedColor(cars[i].v);
-        ctx.fillRect(x, panelY + panelH - barH - 5, barW, barH);
+        if (ratio < 0.38) {
+          ringCtx.strokeStyle = 'rgba(217,119,119,0.35)';
+          ringCtx.lineWidth = 10;
+          ringCtx.beginPath();
+          ringCtx.arc(x, y, 11, 0, Math.PI * 2);
+          ringCtx.stroke();
+        }
       }
 
-      ctx.fillStyle = "#aaa";
-      ctx.font = "12px Arial";
-      ctx.fillText("Car speeds", panelX, panelY - 8);
+      ringCtx.fillStyle = '#6b6b6b';
+      ringCtx.font = '12px DM Mono';
+      ringCtx.fillText('Cars move forward. Jam waves move backward.', 24, H - 24);
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
+    function drawHistory() {
+      const hw = historyCanvas.width;
+      const hh = historyCanvas.height;
 
-      drawRing();
-      drawCars();
-      drawSpeedPanel();
+      historyCtx.fillStyle = '#0b0b0b';
+      historyCtx.fillRect(0, 0, hw, hh);
 
-      const avgSpeed = cars.reduce((s, c) => s + c.v, 0) / N;
-      const minSpeed = Math.min(...cars.map(c => c.v));
+      if (!historyRows.length) return;
 
-      stats.textContent =
-        `Average speed: ${avgSpeed.toFixed(2)} | Minimum speed: ${minSpeed.toFixed(2)} | Density: ${(N / L).toFixed(3)} cars/unit`;
+      const rowHeight = 1;
+      const colWidth = hw / carCount;
+
+      for (let y = 0; y < historyRows.length; y++) {
+        const row = historyRows[historyRows.length - 1 - y];
+        for (let x = 0; x < row.length; x++) {
+          const [r, g, b] = speedRGB(row[x]);
+          historyCtx.fillStyle = `rgb(${r},${g},${b})`;
+          historyCtx.fillRect(x * colWidth, y * rowHeight, Math.ceil(colWidth), rowHeight);
+        }
+      }
+
+      historyCtx.strokeStyle = '#1f1f1f';
+      historyCtx.strokeRect(0.5, 0.5, hw - 1, hh - 1);
     }
+
+    function updateReadout() {
+      const avg = cars.reduce((s, c) => s + c.v, 0) / cars.length;
+      const min = Math.min(...cars.map(c => c.v));
+      const density = cars.length / roadLength;
+
+      speedValue.textContent = (avg * 38).toFixed(0) + ' km/h';
+      slowestValue.textContent = (min * 38).toFixed(0) + ' km/h';
+
+      let pressure = 'Low';
+      if (density > 0.04) pressure = 'High';
+      else if (density > 0.028) pressure = 'Medium';
+      pressureValue.textContent = pressure;
+
+      let mood = 'Stable';
+      if (min < 0.5 && avg < 1.6) mood = 'Jam wave';
+      else if (min < 1.0 || avg < 1.9) mood = 'Fragile';
+      moodValue.textContent = mood;
+    }
+
+    function syncLabels() {
+      carsValue.textContent = carsSlider.value;
+      calmValue.textContent = calmSlider.value + '%';
+      tapValue.textContent = tapSlider.value + '%';
+    }
+
+    carsSlider.addEventListener('input', syncLabels);
+    calmSlider.addEventListener('input', syncLabels);
+    tapSlider.addEventListener('input', syncLabels);
+
+    restartBtn.addEventListener('click', () => {
+      resetModel();
+    });
+
+    nudgeBtn.addEventListener('click', () => {
+      triggerBrakeTap();
+    });
 
     let last = performance.now();
 
-    function animate(t) {
-      const dt = Math.min((t - last) / 1000, 0.03);
-      last = t;
+    function animate(now) {
+      const dt = Math.min((now - last) / 1000, 0.03);
+      last = now;
 
       update(dt);
-      draw();
+      drawRing();
+      drawHistory();
 
       requestAnimationFrame(animate);
     }
 
-    carsSlider.addEventListener("input", () => {
-      carsValue.textContent = carsSlider.value;
-    });
-
-    alphaSlider.addEventListener("input", () => {
-      alphaValue.textContent = alphaSlider.value;
-    });
-
-    noiseSlider.addEventListener("input", () => {
-      noiseValue.textContent = noiseSlider.value;
-    });
-
-    resetBtn.addEventListener("click", () => {
-      initCars();
-    });
-
-    carsValue.textContent = carsSlider.value;
-    alphaValue.textContent = alphaSlider.value;
-    noiseValue.textContent = noiseSlider.value;
-
-    initCars();
+    syncLabels();
+    resetModel();
     requestAnimationFrame(animate);
   </script>
 </body>
