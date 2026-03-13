@@ -1,508 +1,554 @@
-import { useState, useEffect, useRef, useCallback } from “react”;
-import * as THREE from “three”;
+<!DOCTYPE html>
 
-const INITIAL_CONTACTS = [
-{ id: 1, name: “Alex Chen”, role: “CTO”, company: “NeuralTech”, email: “alex@neuraltech.io”, phone: “+1 212 555 0101”, color: “#00f5d4”, x: 0, y: 0, z: 0 },
-{ id: 2, name: “Maya Patel”, role: “Product Lead”, company: “NeuralTech”, email: “maya@neuraltech.io”, phone: “+1 646 555 0102”, color: “#f72585”, x: 3, y: 1, z: -2 },
-{ id: 3, name: “Jordan Lee”, role: “Investor”, company: “Apex Capital”, email: “jordan@apex.vc”, phone: “+1 917 555 0103”, color: “#ffd60a”, x: -3, y: 2, z: 1 },
-{ id: 4, name: “Sam Rivera”, role: “Engineer”, company: “NeuralTech”, email: “sam@neuraltech.io”, phone: “+1 718 555 0104”, color: “#4cc9f0”, x: 2, y: -2, z: 3 },
-{ id: 5, name: “Priya Nair”, role: “Designer”, company: “StudioX”, email: “priya@studiox.com”, phone: “+1 347 555 0105”, color: “#7b2d8b”, x: -2, y: -1, z: -3 },
-{ id: 6, name: “Daniel Wu”, role: “CEO”, company: “Apex Capital”, email: “dwu@apex.vc”, phone: “+1 212 555 0106”, color: “#ff6b35”, x: -4, y: 3, z: 2 },
-{ id: 7, name: “Luna Torres”, role: “Marketing”, company: “StudioX”, email: “luna@studiox.com”, phone: “+1 929 555 0107”, color: “#06d6a0”, x: 4, y: -3, z: -1 },
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NETWORK — 3D Contact Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050813; font-family: 'DM Mono', monospace; overflow: hidden; width: 100vw; height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
+
+#canvas-wrap {
+position: absolute; inset: 52px 300px 0 0;
+}
+#canvas-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
+
+/* TOP BAR */
+#topbar {
+position: absolute; top: 0; left: 0; right: 0; height: 52px;
+border-bottom: 1px solid #0f2d4a;
+background: rgba(5,8,19,0.9); backdrop-filter: blur(12px);
+display: flex; align-items: center; padding: 0 20px; gap: 16px; z-index: 20;
+}
+#topbar .logo { color: #00f5d4; font-family: ‘Syne’, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: .02em; }
+#topbar .logo span { color: #f72585; }
+#topbar .divider { width: 1px; height: 24px; background: #0f2d4a; }
+#topbar .stats { color: #334155; font-size: 11px; letter-spacing: .1em; }
+#topbar .spacer { margin-left: auto; }
+#topbar .hint { color: #1e3a5f; font-size: 10px; letter-spacing: .1em; }
+.topbtn {
+cursor: pointer; border: none; outline: none; padding: 6px 14px; border-radius: 6px;
+font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+font-family: ‘DM Mono’, monospace; transition: filter .2s; font-weight: 500;
+}
+.topbtn:hover { filter: brightness(1.25); }
+#btn-add { color: #00f5d4; border: 1px solid rgba(0,245,212,.4); background: rgba(0,245,212,.08); }
+#btn-link { color: #f72585; border: 1px solid rgba(247,37,133,.4); background: rgba(247,37,133,.08); }
+
+/* SIDE PANEL */
+#panel {
+position: absolute; top: 52px; right: 0; bottom: 0; width: 300px;
+background: rgba(5,8,19,0.92); backdrop-filter: blur(16px);
+border-left: 1px solid #0f2d4a; display: flex; flex-direction: column;
+overflow-y: auto; z-index: 20;
+}
+
+/* SEARCH */
+#search-wrap { padding: 14px 14px 10px; border-bottom: 1px solid #0f2d4a; }
+#search {
+width: 100%; background: #0a1628; border: 1px solid #1e3a5f; color: #94b5d4;
+padding: 8px 12px; border-radius: 6px; font-family: ‘DM Mono’, monospace; font-size: 12px;
+outline: none; transition: border .2s;
+}
+#search:focus { border-color: #00f5d4; }
+#search::placeholder { color: #1e3a5f; }
+
+/* CONTACT LIST */
+#contact-list { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.contact-row {
+cursor: pointer; padding: 10px 12px; border-radius: 8px;
+border: 1px solid transparent; background: rgba(10,22,40,0.6);
+transition: background .2s, border-color .2s; display: flex; align-items: center; gap: 10px;
+}
+.contact-row:hover { filter: brightness(1.1); }
+.avatar {
+width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Syne’, sans-serif; font-size: 13px; font-weight: 700; color: #000;
+}
+.contact-name { color: #c8ddf0; font-size: 13px; font-weight: 500; font-family: ‘Syne’, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-sub { color: #334155; font-size: 10px; letter-spacing: .05em; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-left: auto; }
+
+/* DETAIL PANEL */
+#detail-panel { flex: 1; overflow-y: auto; padding: 16px; display: none; flex-direction: column; gap: 0; }
+.back-btn {
+background: none; border: none; cursor: pointer; color: #334155; font-family: ‘DM Mono’, monospace;
+font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 0; transition: color .2s;
+}
+.back-btn:hover { color: #94b5d4; }
+.del-btn {
+background: none; border: 1px solid rgba(230,57,70,.3); cursor: pointer; color: #e63946;
+font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+padding: 5px 10px; border-radius: 6px; margin-left: auto; transition: filter .2s;
+}
+.del-btn:hover { filter: brightness(1.3); }
+.detail-avatar {
+width: 64px; height: 64px; border-radius: 50%; margin: 16px auto 10px;
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Syne’, sans-serif; font-size: 26px; font-weight: 800; color: #000;
+}
+.detail-name { color: #e0f0ff; font-size: 18px; font-weight: 700; font-family: ‘Syne’, sans-serif; text-align: center; }
+.detail-role { color: #334155; font-size: 11px; letter-spacing: .1em; text-align: center; margin-top: 4px; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 500; letter-spacing: .05em; margin-top: 6px; }
+.info-card { background: linear-gradient(135deg,rgba(10,22,40,0.95),rgba(5,12,30,0.98)); border: 1px solid #0f2d4a; border-radius: 10px; padding: 12px; margin-top: 14px; }
+.info-row { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #0f2d4a; align-items: flex-start; }
+.info-row:last-child { border-bottom: none; }
+.info-icon { font-size: 12px; margin-top: 1px; }
+.info-val { color: #6b8aa8; font-size: 12px; word-break: break-all; }
+.section-label { color: #334155; font-size: 10px; letter-spacing: .12em; margin-top: 16px; margin-bottom: 8px; }
+.conn-row {
+display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+background: rgba(10,22,40,0.6); border-radius: 7px; margin-bottom: 5px;
+cursor: pointer; border: 1px solid transparent; transition: border-color .2s;
+}
+.conn-row:hover { border-color: #1e3a5f; }
+.conn-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #000; flex-shrink: 0; }
+.conn-name { color: #94b5d4; font-size: 12px; }
+.conn-label { color: #334155; font-size: 10px; }
+
+/* ADD / CONNECT FORMS */
+#form-panel { flex: 1; overflow-y: auto; padding: 16px; display: none; flex-direction: column; gap: 10px; }
+.form-title { font-family: ‘Syne’, sans-serif; font-weight: 700; font-size: 14px; }
+.field-label { color: #334155; font-size: 10px; letter-spacing: .1em; margin-bottom: 4px; }
+.field-wrap { display: flex; flex-direction: column; }
+.inp {
+background: #0a1628; border: 1px solid #1e3a5f; color: #94b5d4;
+padding: 8px 12px; border-radius: 6px; width: 100%;
+font-family: ‘DM Mono’, monospace; font-size: 12px; outline: none; transition: border .2s;
+}
+.inp:focus { border-color: #00f5d4; }
+.inp::placeholder { color: #1e3a5f; }
+select.inp { cursor: pointer; }
+.color-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.color-swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: box-shadow .2s; }
+.submit-btn {
+margin-top: 8px; padding: 10px; border-radius: 8px; border: none; cursor: pointer;
+font-family: ‘Syne’, sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .05em;
+transition: filter .2s;
+}
+.submit-btn:hover { filter: brightness(1.15); }
+
+/* HOVER LABEL */
+#hover-label {
+position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+pointer-events: none; background: rgba(5,8,19,0.9);
+border-radius: 8px; padding: 6px 14px; font-family: ‘Syne’, sans-serif;
+font-weight: 600; font-size: 13px; letter-spacing: .05em; display: none; z-index: 15;
+white-space: nowrap;
+}
+
+/* LEGEND */
+#legend {
+position: absolute; bottom: 20px; left: 20px;
+background: rgba(5,8,19,0.8); border: 1px solid #0f2d4a;
+border-radius: 8px; padding: 10px 14px; backdrop-filter: blur(8px); z-index: 15;
+}
+#legend .leg-title { color: #1e3a5f; font-size: 9px; letter-spacing: .15em; margin-bottom: 6px; }
+.leg-row { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.leg-row:last-child { margin-bottom: 0; }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+.leg-text { color: #334155; font-size: 10px; }
+</style>
+
+</head>
+<body>
+
+<!-- TOP BAR -->
+
+<div id="topbar">
+  <div class="logo">NET<span>WORK</span></div>
+  <div class="divider"></div>
+  <div class="stats" id="stats">0 NODES · 0 EDGES</div>
+  <div class="spacer"></div>
+  <button class="topbtn" id="btn-add">+ Contact</button>
+  <button class="topbtn" id="btn-link">+ Link</button>
+  <div class="hint">DRAG · SCROLL · CLICK</div>
+</div>
+
+<!-- 3D CANVAS -->
+
+<div id="canvas-wrap"></div>
+
+<!-- HOVER LABEL -->
+
+<div id="hover-label"></div>
+
+<!-- SIDE PANEL -->
+
+<div id="panel">
+  <!-- LIST VIEW -->
+  <div id="list-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <div id="search-wrap"><input id="search" type="text" placeholder="Search contacts…"/></div>
+    <div id="contact-list"></div>
+  </div>
+  <!-- DETAIL VIEW -->
+  <div id="detail-panel"></div>
+  <!-- FORM PANEL -->
+  <div id="form-panel"></div>
+</div>
+
+<!-- LEGEND -->
+
+<div id="legend">
+  <div class="leg-title">LEGEND</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#00f5d4"></div><span class="leg-text">Node / Contact</span></div>
+  <div class="leg-row"><div class="leg-dot" style="background:#334155;border-radius:2px;width:16px;height:3px;"></div><span class="leg-text">Connection edge</span></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const COLORS = ["#00f5d4","#f72585","#ffd60a","#4cc9f0","#7b2d8b","#ff6b35","#06d6a0","#a8dadc","#e63946","#457b9d"];
+const RELATIONS = ["Colleague","Friend","Investor","Partner","Client","Mentor","Reports To","Business","Family"];
+
+let contacts = [
+  {id:1,name:"Alex Chen",role:"CTO",company:"NeuralTech",email:"alex@neuraltech.io",phone:"+1 212 555 0101",color:"#00f5d4",x:0,y:0,z:0},
+  {id:2,name:"Maya Patel",role:"Product Lead",company:"NeuralTech",email:"maya@neuraltech.io",phone:"+1 646 555 0102",color:"#f72585",x:3,y:1,z:-2},
+  {id:3,name:"Jordan Lee",role:"Investor",company:"Apex Capital",email:"jordan@apex.vc",phone:"+1 917 555 0103",color:"#ffd60a",x:-3,y:2,z:1},
+  {id:4,name:"Sam Rivera",role:"Engineer",company:"NeuralTech",email:"sam@neuraltech.io",phone:"+1 718 555 0104",color:"#4cc9f0",x:2,y:-2,z:3},
+  {id:5,name:"Priya Nair",role:"Designer",company:"StudioX",email:"priya@studiox.com",phone:"+1 347 555 0105",color:"#7b2d8b",x:-2,y:-1,z:-3},
+  {id:6,name:"Daniel Wu",role:"CEO",company:"Apex Capital",email:"dwu@apex.vc",phone:"+1 212 555 0106",color:"#ff6b35",x:-4,y:3,z:2},
+  {id:7,name:"Luna Torres",role:"Marketing",company:"StudioX",email:"luna@studiox.com",phone:"+1 929 555 0107",color:"#06d6a0",x:4,y:-3,z:-1},
 ];
-
-const INITIAL_CONNECTIONS = [
-{ from: 1, to: 2, label: “Colleague” },
-{ from: 1, to: 3, label: “Investor” },
-{ from: 1, to: 4, label: “Reports To” },
-{ from: 2, to: 4, label: “Colleague” },
-{ from: 2, to: 5, label: “Partner” },
-{ from: 3, to: 6, label: “Colleague” },
-{ from: 5, to: 7, label: “Colleague” },
-{ from: 1, to: 6, label: “Business” },
-{ from: 4, to: 7, label: “Client” },
+let connections = [
+  {from:1,to:2,label:"Colleague"},{from:1,to:3,label:"Investor"},{from:1,to:4,label:"Reports To"},
+  {from:2,to:4,label:"Colleague"},{from:2,to:5,label:"Partner"},{from:3,to:6,label:"Colleague"},
+  {from:5,to:7,label:"Colleague"},{from:1,to:6,label:"Business"},{from:4,to:7,label:"Client"},
 ];
+let selectedId = null;
+let currentView = 'list'; // list | detail | add | connect
 
-const COLORS = [”#00f5d4”,”#f72585”,”#ffd60a”,”#4cc9f0”,”#7b2d8b”,”#ff6b35”,”#06d6a0”,”#a8dadc”,”#e63946”,”#457b9d”];
-const RELATION_TYPES = [“Colleague”,“Friend”,“Investor”,“Partner”,“Client”,“Mentor”,“Reports To”,“Business”,“Family”];
-
-export default function ContactNetwork3D() {
-const mountRef = useRef(null);
-const sceneRef = useRef(null);
-const rendererRef = useRef(null);
-const cameraRef = useRef(null);
-const frameRef = useRef(null);
-const meshesRef = useRef({});
-const linesRef = useRef([]);
-const raycasterRef = useRef(new THREE.Raycaster());
-const mouseRef = useRef(new THREE.Vector2());
-const isDraggingRef = useRef(false);
-const prevMouseRef = useRef({ x: 0, y: 0 });
-const sphericalRef = useRef({ theta: 0.4, phi: 1.1, radius: 14 });
-const targetSphericalRef = useRef({ theta: 0.4, phi: 1.1, radius: 14 });
-
-const [contacts, setContacts] = useState(INITIAL_CONTACTS);
-const [connections, setConnections] = useState(INITIAL_CONNECTIONS);
-const [selected, setSelected] = useState(null);
-const [panel, setPanel] = useState(“list”); // list | detail | add | connect
-const [search, setSearch] = useState(””);
-const [form, setForm] = useState({ name:””, role:””, company:””, email:””, phone:””, color: COLORS[0] });
-const [connForm, setConnForm] = useState({ from:””, to:””, label:“Colleague” });
-const [hoveredId, setHoveredId] = useState(null);
-
-const buildScene = useCallback((contacts, connections) => {
-const scene = sceneRef.current;
-// Clear old
-Object.values(meshesRef.current).forEach(m => scene.remove(m));
-linesRef.current.forEach(l => scene.remove(l));
-meshesRef.current = {};
-linesRef.current = [];
-
-```
-const spread = 5;
-contacts.forEach(c => {
-  const geo = new THREE.SphereGeometry(0.32, 32, 32);
-  const mat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(c.color),
-    emissive: new THREE.Color(c.color),
-    emissiveIntensity: 0.5,
-    roughness: 0.2,
-    metalness: 0.7,
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(c.x * spread / 5, c.y * spread / 5, c.z * spread / 5);
-  mesh.userData = { id: c.id };
-  scene.add(mesh);
-  meshesRef.current[c.id] = mesh;
-
-  // Glow ring
-  const ringGeo = new THREE.RingGeometry(0.35, 0.42, 32);
-  const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c.color), side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.userData = { isRing: true };
-  mesh.add(ring);
-});
-
-connections.forEach(conn => {
-  const a = meshesRef.current[conn.from];
-  const b = meshesRef.current[conn.to];
-  if (!a || !b) return;
-  const points = [a.position.clone(), b.position.clone()];
-  const geo = new THREE.BufferGeometry().setFromPoints(points);
-  const mat = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.5 });
-  const line = new THREE.Line(geo, mat);
-  line.userData = { conn };
-  scene.add(line);
-  linesRef.current.push(line);
-});
-```
-
-}, []);
-
-useEffect(() => {
-const el = mountRef.current;
-const w = el.clientWidth, h = el.clientHeight;
-
-```
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(w, h);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// ── THREE.JS SETUP ────────────────────────────────────────────────────────────
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setClearColor(0x000000, 0);
-el.appendChild(renderer.domElement);
-rendererRef.current = renderer;
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+wrap.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-sceneRef.current = scene;
-
-const camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 200);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
 camera.position.set(0, 0, 14);
-cameraRef.current = camera;
 
 // Lights
 scene.add(new THREE.AmbientLight(0x1a1a2e, 2));
-const pLight = new THREE.PointLight(0x00f5d4, 3, 40);
-pLight.position.set(5, 5, 5);
-scene.add(pLight);
-const pLight2 = new THREE.PointLight(0xf72585, 2, 40);
-pLight2.position.set(-5, -3, -5);
-scene.add(pLight2);
+const pl1 = new THREE.PointLight(0x00f5d4, 3, 40); pl1.position.set(5,5,5); scene.add(pl1);
+const pl2 = new THREE.PointLight(0xf72585, 2, 40); pl2.position.set(-5,-3,-5); scene.add(pl2);
 
 // Particle field
-const partGeo = new THREE.BufferGeometry();
-const partCount = 400;
-const positions = new Float32Array(partCount * 3);
-for (let i = 0; i < partCount * 3; i++) positions[i] = (Math.random() - 0.5) * 40;
-partGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-const partMat = new THREE.PointsMaterial({ color: 0x334155, size: 0.06, transparent: true, opacity: 0.8 });
-scene.add(new THREE.Points(partGeo, partMat));
+const pg = new THREE.BufferGeometry();
+const pp = new Float32Array(400*3);
+for(let i=0;i<1200;i++) pp[i]=(Math.random()-.5)*40;
+pg.setAttribute('position', new THREE.BufferAttribute(pp,3));
+scene.add(new THREE.Points(pg, new THREE.PointsMaterial({color:0x334155, size:.06, transparent:true, opacity:.8})));
 
-buildScene(contacts, connections);
+let nodeMeshes = {}; // id → mesh
+let edgeLines = [];
+const SPREAD = 5;
 
-let t = 0;
-const animate = () => {
-  frameRef.current = requestAnimationFrame(animate);
-  t += 0.008;
+function buildScene() {
+  Object.values(nodeMeshes).forEach(m => scene.remove(m));
+  edgeLines.forEach(l => scene.remove(l));
+  nodeMeshes = {}; edgeLines = [];
 
-  // Smooth camera orbit
-  const sp = sphericalRef.current;
-  const tp = targetSphericalRef.current;
-  sp.theta += (tp.theta - sp.theta) * 0.05;
-  sp.phi += (tp.phi - sp.phi) * 0.05;
-  sp.radius += (tp.radius - sp.radius) * 0.05;
-  sp.phi = Math.max(0.3, Math.min(Math.PI - 0.3, sp.phi));
-  camera.position.set(
-    sp.radius * Math.sin(sp.phi) * Math.sin(sp.theta),
-    sp.radius * Math.cos(sp.phi),
-    sp.radius * Math.sin(sp.phi) * Math.cos(sp.theta)
-  );
-  camera.lookAt(0, 0, 0);
-
-  // Animate nodes
-  Object.entries(meshesRef.current).forEach(([id, mesh]) => {
-    const numId = parseInt(id);
-    mesh.rotation.y = t * 0.5;
-    const ring = mesh.children[0];
-    if (ring) {
-      ring.rotation.x = t;
-      ring.rotation.z = t * 0.7;
-    }
-    const isSelected = selected?.id === numId;
-    const isHovered = hoveredId === numId;
-    const mat = mesh.material;
-    mat.emissiveIntensity = isSelected ? 1.2 : isHovered ? 0.9 : 0.45 + Math.sin(t * 2 + numId) * 0.15;
-    const scale = isSelected ? 1.5 : isHovered ? 1.25 : 1;
-    mesh.scale.setScalar(mesh.scale.x + (scale - mesh.scale.x) * 0.12);
+  contacts.forEach(c => {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.32, 32, 32),
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(c.color), emissive: new THREE.Color(c.color),
+        emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.7
+      })
+    );
+    mesh.position.set(c.x*SPREAD/5, c.y*SPREAD/5, c.z*SPREAD/5);
+    mesh.userData.id = c.id;
+    // Glow ring
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.35, 0.42, 32),
+      new THREE.MeshBasicMaterial({color: new THREE.Color(c.color), side: THREE.DoubleSide, transparent:true, opacity:.3})
+    );
+    ring.userData.isRing = true;
+    mesh.add(ring);
+    scene.add(mesh);
+    nodeMeshes[c.id] = mesh;
   });
 
+  connections.forEach(conn => {
+    const a = nodeMeshes[conn.from], b = nodeMeshes[conn.to];
+    if(!a||!b) return;
+    const geo = new THREE.BufferGeometry().setFromPoints([a.position.clone(), b.position.clone()]);
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color:0x334155, transparent:true, opacity:.5}));
+    scene.add(line);
+    edgeLines.push(line);
+  });
+
+  updateStats();
+  renderList();
+}
+
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── CAMERA ORBIT ──────────────────────────────────────────────────────────────
+let sp = {theta:.4, phi:1.1, radius:14};
+let tp = {theta:.4, phi:1.1, radius:14};
+let isDragging = false, prevMouse = {x:0,y:0};
+
+wrap.addEventListener('mousedown', e => { isDragging=true; prevMouse={x:e.clientX,y:e.clientY}; wrap.style.cursor='grabbing'; });
+window.addEventListener('mouseup', () => { isDragging=false; wrap.style.cursor='grab'; });
+wrap.style.cursor = 'grab';
+
+const raycaster = new THREE.Raycaster();
+const mouse2d = new THREE.Vector2();
+
+wrap.addEventListener('mousemove', e => {
+  const rect = wrap.getBoundingClientRect();
+  mouse2d.set(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
+
+  if(isDragging) {
+    tp.theta -= (e.clientX - prevMouse.x) * .005;
+    tp.phi   -= (e.clientY - prevMouse.y) * .005;
+    prevMouse = {x:e.clientX, y:e.clientY};
+    return;
+  }
+  // Hover detection
+  raycaster.setFromCamera(mouse2d, camera);
+  const hits = raycaster.intersectObjects(Object.values(nodeMeshes)).filter(h=>!h.object.userData.isRing);
+  const hl = document.getElementById('hover-label');
+  if(hits.length) {
+    const c = contacts.find(x=>x.id===hits[0].object.userData.id);
+    if(c) { hl.textContent=c.name; hl.style.display='block'; hl.style.color=c.color; hl.style.border=`1px solid ${c.color}40`; }
+    wrap.style.cursor='pointer';
+  } else { hl.style.display='none'; wrap.style.cursor= isDragging?'grabbing':'grab'; }
+});
+
+wrap.addEventListener('wheel', e => {
+  tp.radius = Math.max(5, Math.min(30, tp.radius + e.deltaY*.02));
+  e.preventDefault();
+}, {passive:false});
+
+let clickStart = {x:0,y:0};
+wrap.addEventListener('mousedown', e => { clickStart={x:e.clientX,y:e.clientY}; });
+wrap.addEventListener('click', e => {
+  if(Math.abs(e.clientX-clickStart.x)>4||Math.abs(e.clientY-clickStart.y)>4) return;
+  raycaster.setFromCamera(mouse2d, camera);
+  const hits = raycaster.intersectObjects(Object.values(nodeMeshes)).filter(h=>!h.object.userData.isRing);
+  if(hits.length) { selectContact(hits[0].object.userData.id); }
+});
+
+// ── ANIMATION LOOP ────────────────────────────────────────────────────────────
+let t = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  t += .008;
+  sp.theta += (tp.theta-sp.theta)*.05;
+  sp.phi   += (tp.phi-sp.phi)*.05;
+  sp.radius+= (tp.radius-sp.radius)*.05;
+  sp.phi = Math.max(.3, Math.min(Math.PI-.3, sp.phi));
+  camera.position.set(
+    sp.radius*Math.sin(sp.phi)*Math.sin(sp.theta),
+    sp.radius*Math.cos(sp.phi),
+    sp.radius*Math.sin(sp.phi)*Math.cos(sp.theta)
+  );
+  camera.lookAt(0,0,0);
+
+  Object.entries(nodeMeshes).forEach(([id, mesh]) => {
+    const nid = parseInt(id);
+    mesh.rotation.y = t*.5;
+    if(mesh.children[0]) { mesh.children[0].rotation.x=t; mesh.children[0].rotation.z=t*.7; }
+    const isSel = selectedId===nid;
+    mesh.material.emissiveIntensity = isSel?1.2:(.45+Math.sin(t*2+nid)*.15);
+    const target = isSel?1.5:1;
+    mesh.scale.setScalar(mesh.scale.x+(target-mesh.scale.x)*.12);
+  });
   renderer.render(scene, camera);
-};
+}
 animate();
 
-const onResize = () => {
-  const w = el.clientWidth, h = el.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-};
-window.addEventListener("resize", onResize);
-return () => {
-  cancelAnimationFrame(frameRef.current);
-  window.removeEventListener("resize", onResize);
-  renderer.dispose();
-  if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
-};
-```
-
-}, []);
-
-useEffect(() => {
-if (sceneRef.current) buildScene(contacts, connections);
-}, [contacts, connections, buildScene]);
-
-const handleMouseMove = useCallback((e) => {
-const el = mountRef.current;
-const rect = el.getBoundingClientRect();
-mouseRef.current.set(
-((e.clientX - rect.left) / rect.width) * 2 - 1,
--((e.clientY - rect.top) / rect.height) * 2 + 1
-);
-
-```
-if (isDraggingRef.current) {
-  const dx = e.clientX - prevMouseRef.current.x;
-  const dy = e.clientY - prevMouseRef.current.y;
-  targetSphericalRef.current.theta -= dx * 0.005;
-  targetSphericalRef.current.phi -= dy * 0.005;
-  prevMouseRef.current = { x: e.clientX, y: e.clientY };
-  return;
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stats').textContent = `${contacts.length} NODES · ${connections.length} EDGES`;
 }
 
-raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
-const meshArr = Object.values(meshesRef.current);
-const intersects = raycasterRef.current.intersectObjects(meshArr);
-const hit = intersects.find(i => !i.object.userData.isRing);
-setHoveredId(hit ? hit.object.userData.id : null);
-el.style.cursor = hit ? "pointer" : "grab";
-```
-
-}, []);
-
-const handleMouseDown = useCallback((e) => {
-isDraggingRef.current = true;
-prevMouseRef.current = { x: e.clientX, y: e.clientY };
-}, []);
-
-const handleMouseUp = useCallback(() => { isDraggingRef.current = false; }, []);
-
-const handleClick = useCallback((e) => {
-if (Math.abs(e.clientX - prevMouseRef.current.x) > 4) return;
-raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
-const intersects = raycasterRef.current.intersectObjects(Object.values(meshesRef.current));
-const hit = intersects.find(i => !i.object.userData.isRing);
-if (hit) {
-const c = contacts.find(c => c.id === hit.object.userData.id);
-setSelected(c);
-setPanel(“detail”);
+function showView(view) {
+  currentView = view;
+  document.getElementById('list-view').style.display  = view==='list'?'flex':'none';
+  document.getElementById('detail-panel').style.display= view==='detail'?'flex':'none';
+  document.getElementById('form-panel').style.display  = (view==='add'||view==='connect')?'flex':'none';
 }
-}, [contacts]);
 
-const handleWheel = useCallback((e) => {
-targetSphericalRef.current.radius = Math.max(5, Math.min(30, targetSphericalRef.current.radius + e.deltaY * 0.02));
-}, []);
-
-const addContact = () => {
-if (!form.name) return;
-const id = Date.now();
-const angle = Math.random() * Math.PI * 2;
-const newC = { …form, id, x: Math.cos(angle) * 4, y: (Math.random()-0.5)*3, z: Math.sin(angle)*4 };
-setContacts(prev => […prev, newC]);
-setForm({ name:””, role:””, company:””, email:””, phone:””, color: COLORS[0] });
-setPanel(“list”);
-};
-
-const addConnection = () => {
-if (!connForm.from || !connForm.to || connForm.from === connForm.to) return;
-setConnections(prev => […prev, { from: parseInt(connForm.from), to: parseInt(connForm.to), label: connForm.label }]);
-setConnForm({ from:””, to:””, label:“Colleague” });
-setPanel(“list”);
-};
-
-const deleteContact = (id) => {
-setContacts(prev => prev.filter(c => c.id !== id));
-setConnections(prev => prev.filter(c => c.from !== id && c.to !== id));
-if (selected?.id === id) { setSelected(null); setPanel(“list”); }
-};
-
-const getConnections = (id) => connections.filter(c => c.from === id || c.to === id)
-.map(c => {
-const otherId = c.from === id ? c.to : c.from;
-return { contact: contacts.find(x => x.id === otherId), label: c.label };
-}).filter(x => x.contact);
-
-const filtered = contacts.filter(c =>
-c.name.toLowerCase().includes(search.toLowerCase()) ||
-c.company?.toLowerCase().includes(search.toLowerCase()) ||
-c.role?.toLowerCase().includes(search.toLowerCase())
-);
-
-return (
-<div style={{ width:“100%”, height:“100vh”, display:“flex”, background:”#050813”, fontFamily:”‘DM Mono’, monospace”, overflow:“hidden”, position:“relative” }}>
-<style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap'); ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:2px} .btn{cursor:pointer;border:none;outline:none;transition:all .2s} .btn:hover{filter:brightness(1.2)} .input{background:#0a1628;border:1px solid #1e3a5f;color:#94b5d4;padding:8px 12px;border-radius:6px;width:100%;box-sizing:border-box;font-family:inherit;font-size:12px;outline:none;transition:border .2s} .input:focus{border-color:#00f5d4} .card{background:linear-gradient(135deg,rgba(10,22,40,0.95),rgba(5,12,30,0.98));border:1px solid #0f2d4a;border-radius:10px;padding:16px} .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;letter-spacing:.05em} .nav-btn{background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;transition:all .2s;font-family:inherit}`}</style>
-
-```
-  {/* 3D Canvas */}
-  <div ref={mountRef} style={{ flex:1, position:"relative" }}
-    onMouseMove={handleMouseMove} onMouseDown={handleMouseDown}
-    onMouseUp={handleMouseUp} onClick={handleClick} onWheel={handleWheel}
-  />
-
-  {/* Hover label */}
-  {hoveredId && (() => {
-    const c = contacts.find(x => x.id === hoveredId);
-    return c ? (
-      <div style={{ position:"absolute", top:20, left:"50%", transform:"translateX(-50%)", pointerEvents:"none",
-        background:"rgba(5,8,19,0.9)", border:`1px solid ${c.color}40`, borderRadius:8, padding:"6px 14px",
-        color: c.color, fontSize:13, fontFamily:"'Syne',sans-serif", fontWeight:600, letterSpacing:".05em" }}>
-        {c.name}
-      </div>
-    ) : null;
-  })()}
-
-  {/* Top bar */}
-  <div style={{ position:"absolute", top:0, left:0, right:0, height:52, borderBottom:"1px solid #0f2d4a",
-    background:"rgba(5,8,19,0.85)", backdropFilter:"blur(12px)", display:"flex", alignItems:"center",
-    padding:"0 20px", gap:16, zIndex:10 }}>
-    <div style={{ color:"#00f5d4", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, letterSpacing:".02em" }}>
-      NET<span style={{color:"#f72585"}}>WORK</span>
-    </div>
-    <div style={{ width:1, height:24, background:"#0f2d4a" }}/>
-    <div style={{ color:"#334155", fontSize:11, letterSpacing:".1em" }}>
-      {contacts.length} NODES · {connections.length} EDGES
-    </div>
-    <div style={{ marginLeft:"auto", display:"flex", gap:8 }}>
-      <button className="nav-btn btn" onClick={() => setPanel("add")}
-        style={{ color:"#00f5d4", border:"1px solid #00f5d440", background:"#00f5d410" }}>
-        + Contact
-      </button>
-      <button className="nav-btn btn" onClick={() => setPanel("connect")}
-        style={{ color:"#f72585", border:"1px solid #f7258540", background:"#f7258510" }}>
-        + Link
-      </button>
-    </div>
-    <div style={{ color:"#334155", fontSize:10, letterSpacing:".1em" }}>DRAG · SCROLL · CLICK</div>
-  </div>
-
-  {/* Side panel */}
-  <div style={{ position:"absolute", top:52, right:0, bottom:0, width:300, background:"rgba(5,8,19,0.9)",
-    backdropFilter:"blur(16px)", borderLeft:"1px solid #0f2d4a", display:"flex", flexDirection:"column",
-    overflowY:"auto", zIndex:10 }}>
-
-    {/* LIST */}
-    {panel === "list" && <>
-      <div style={{ padding:"16px 16px 10px", borderBottom:"1px solid #0f2d4a" }}>
-        <input className="input" placeholder="Search contacts..." value={search}
-          onChange={e => setSearch(e.target.value)} />
-      </div>
-      <div style={{ flex:1, overflowY:"auto", padding:"10px 12px", display:"flex", flexDirection:"column", gap:6 }}>
-        {filtered.map(c => (
-          <div key={c.id} onClick={() => { setSelected(c); setPanel("detail"); }}
-            style={{ cursor:"pointer", padding:"10px 12px", borderRadius:8, border:`1px solid ${c.color}22`,
-              background: selected?.id===c.id ? `${c.color}15` : "rgba(10,22,40,0.6)",
-              transition:"all .2s", display:"flex", alignItems:"center", gap:10 }}
-            onMouseEnter={e => e.currentTarget.style.background=`${c.color}18`}
-            onMouseLeave={e => e.currentTarget.style.background=selected?.id===c.id?`${c.color}15`:"rgba(10,22,40,0.6)"}>
-            <div style={{ width:32, height:32, borderRadius:"50%", background:c.color, flexShrink:0,
-              display:"flex", alignItems:"center", justifyContent:"center", color:"#000",
-              fontSize:13, fontWeight:700, fontFamily:"'Syne',sans-serif" }}>
-              {c.name[0]}
-            </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ color:"#c8ddf0", fontSize:13, fontWeight:500, fontFamily:"'Syne',sans-serif", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{c.name}</div>
-              <div style={{ color:"#334155", fontSize:10, letterSpacing:".05em" }}>{c.role}{c.company ? ` · ${c.company}` : ""}</div>
-            </div>
-            <div style={{ width:8, height:8, borderRadius:"50%", background:c.color, flexShrink:0 }}/>
-          </div>
-        ))}
-      </div>
-    </>}
-
-    {/* DETAIL */}
-    {panel === "detail" && selected && (() => {
-      const conns = getConnections(selected.id);
-      return (
-        <div style={{ flex:1, overflowY:"auto", padding:16 }}>
-          <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-            <button className="btn nav-btn" onClick={() => setPanel("list")} style={{ color:"#334155" }}>← Back</button>
-            <button className="btn nav-btn" onClick={() => deleteContact(selected.id)}
-              style={{ color:"#e63946", marginLeft:"auto", border:"1px solid #e6394430" }}>Delete</button>
-          </div>
-          <div style={{ textAlign:"center", marginBottom:20 }}>
-            <div style={{ width:64, height:64, borderRadius:"50%", background:selected.color, margin:"0 auto 12px",
-              display:"flex", alignItems:"center", justifyContent:"center", color:"#000",
-              fontSize:26, fontWeight:800, fontFamily:"'Syne',sans-serif",
-              boxShadow:`0 0 30px ${selected.color}60` }}>
-              {selected.name[0]}
-            </div>
-            <div style={{ color:"#e0f0ff", fontSize:18, fontWeight:700, fontFamily:"'Syne',sans-serif" }}>{selected.name}</div>
-            <div style={{ color:"#334155", fontSize:11, letterSpacing:".1em", marginTop:4 }}>{selected.role}</div>
-            {selected.company && <span className="tag" style={{ background:`${selected.color}20`, color:selected.color, marginTop:8 }}>{selected.company}</span>}
-          </div>
-          <div className="card" style={{ marginBottom:10 }}>
-            {[["📧", selected.email], ["📱", selected.phone]].map(([icon,val]) => val ? (
-              <div key={icon} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:"1px solid #0f2d4a" }}>
-                <span style={{ fontSize:12 }}>{icon}</span>
-                <span style={{ color:"#6b8aa8", fontSize:12, wordBreak:"break-all" }}>{val}</span>
-              </div>
-            ) : null)}
-          </div>
-          {conns.length > 0 && (
-            <div>
-              <div style={{ color:"#334155", fontSize:10, letterSpacing:".12em", marginBottom:8 }}>CONNECTIONS ({conns.length})</div>
-              <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                {conns.map(({contact:ct, label}) => (
-                  <div key={ct.id} onClick={() => { setSelected(ct); }}
-                    style={{ cursor:"pointer", display:"flex", alignItems:"center", gap:8, padding:"8px 10px",
-                      background:"rgba(10,22,40,0.6)", borderRadius:7, border:`1px solid ${ct.color}20` }}>
-                    <div style={{ width:24, height:24, borderRadius:"50%", background:ct.color, flexShrink:0,
-                      display:"flex", alignItems:"center", justifyContent:"center", color:"#000", fontSize:10, fontWeight:700 }}>
-                      {ct.name[0]}
-                    </div>
-                    <div>
-                      <div style={{ color:"#94b5d4", fontSize:12 }}>{ct.name}</div>
-                      <div style={{ color:"#334155", fontSize:10 }}>{label}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    })()}
-
-    {/* ADD CONTACT */}
-    {panel === "add" && (
-      <div style={{ flex:1, overflowY:"auto", padding:16 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:18 }}>
-          <button className="btn nav-btn" onClick={() => setPanel("list")} style={{ color:"#334155" }}>← Back</button>
-          <span style={{ color:"#00f5d4", fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14 }}>New Contact</span>
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          {[["Name *","name","text"],["Role","role","text"],["Company","company","text"],["Email","email","email"],["Phone","phone","tel"]].map(([label, key, type]) => (
-            <div key={key}>
-              <div style={{ color:"#334155", fontSize:10, letterSpacing:".1em", marginBottom:4 }}>{label}</div>
-              <input className="input" type={type} placeholder={label.replace(" *","")}
-                value={form[key]} onChange={e => setForm(f => ({...f, [key]: e.target.value}))} />
-            </div>
-          ))}
-          <div>
-            <div style={{ color:"#334155", fontSize:10, letterSpacing:".1em", marginBottom:6 }}>NODE COLOR</div>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-              {COLORS.map(col => (
-                <div key={col} onClick={() => setForm(f => ({...f, color: col}))}
-                  style={{ width:22, height:22, borderRadius:"50%", background:col, cursor:"pointer",
-                    boxShadow: form.color===col ? `0 0 10px ${col}, 0 0 0 2px ${col}` : "none",
-                    transition:"box-shadow .2s" }} />
-              ))}
-            </div>
-          </div>
-          <button className="btn" onClick={addContact}
-            style={{ marginTop:8, padding:"10px", borderRadius:8, background:"#00f5d4", color:"#050813",
-              fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, letterSpacing:".05em" }}>
-            ADD TO NETWORK
-          </button>
-        </div>
-      </div>
-    )}
-
-    {/* ADD CONNECTION */}
-    {panel === "connect" && (
-      <div style={{ flex:1, overflowY:"auto", padding:16 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:18 }}>
-          <button className="btn nav-btn" onClick={() => setPanel("list")} style={{ color:"#334155" }}>← Back</button>
-          <span style={{ color:"#f72585", fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14 }}>New Link</span>
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-          {[["FROM","from"],["TO","to"]].map(([label, key]) => (
-            <div key={key}>
-              <div style={{ color:"#334155", fontSize:10, letterSpacing:".1em", marginBottom:4 }}>{label}</div>
-              <select className="input" value={connForm[key]} onChange={e => setConnForm(f => ({...f, [key]: e.target.value}))}>
-                <option value="">Select contact...</option>
-                {contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          ))}
-          <div>
-            <div style={{ color:"#334155", fontSize:10, letterSpacing:".1em", marginBottom:4 }}>RELATIONSHIP</div>
-            <select className="input" value={connForm.label} onChange={e => setConnForm(f => ({...f, label: e.target.value}))}>
-              {RELATION_TYPES.map(r => <option key={r}>{r}</option>)}
-            </select>
-          </div>
-          <button className="btn" onClick={addConnection}
-            style={{ marginTop:8, padding:"10px", borderRadius:8, background:"#f72585", color:"#fff",
-              fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, letterSpacing:".05em" }}>
-            LINK CONTACTS
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-
-  {/* Legend */}
-  <div style={{ position:"absolute", bottom:20, left:20, background:"rgba(5,8,19,0.8)",
-    border:"1px solid #0f2d4a", borderRadius:8, padding:"10px 14px", backdropFilter:"blur(8px)" }}>
-    <div style={{ color:"#1e3a5f", fontSize:9, letterSpacing:".15em", marginBottom:6 }}>LEGEND</div>
-    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-      {[["#00f5d4","Node / Contact"],["#334155","Connection edge"]].map(([c,label]) => (
-        <div key={label} style={{ display:"flex", alignItems:"center", gap:7 }}>
-          <div style={{ width:8, height:8, borderRadius:"50%", background:c }}/>
-          <span style={{ color:"#334155", fontSize:10 }}>{label}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
-```
-
-);
+function selectContact(id) {
+  selectedId = id;
+  showDetail(id);
 }
+
+function showDetail(id) {
+  const c = contacts.find(x=>x.id===id);
+  if(!c) return;
+  const conns = getConns(id);
+  const dp = document.getElementById('detail-panel');
+  dp.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <button class="back-btn" onclick="goList()">← Back</button>
+      <button class="del-btn" onclick="deleteContact(${c.id})">Delete</button>
+    </div>
+    <div style="text-align:center;">
+      <div class="detail-avatar" style="background:${c.color};box-shadow:0 0 30px ${c.color}60;">${c.name[0]}</div>
+      <div class="detail-name">${c.name}</div>
+      <div class="detail-role">${c.role||''}</div>
+      ${c.company?`<span class="tag" style="background:${c.color}20;color:${c.color};">${c.company}</span>`:''}
+    </div>
+    <div class="info-card">
+      ${c.email?`<div class="info-row"><span class="info-icon">📧</span><span class="info-val">${c.email}</span></div>`:''}
+      ${c.phone?`<div class="info-row"><span class="info-icon">📱</span><span class="info-val">${c.phone}</span></div>`:''}
+    </div>
+    ${conns.length?`
+      <div class="section-label">CONNECTIONS (${conns.length})</div>
+      ${conns.map(({contact:ct,label})=>`
+        <div class="conn-row" onclick="selectContact(${ct.id})" style="border-color:${ct.color}20;">
+          <div class="conn-avatar" style="background:${ct.color};">${ct.name[0]}</div>
+          <div><div class="conn-name">${ct.name}</div><div class="conn-label">${label}</div></div>
+        </div>
+      `).join('')}
+    `:''}
+  `;
+  showView('detail');
+}
+
+function getConns(id) {
+  return connections.filter(c=>c.from===id||c.to===id).map(c=>{
+    const otherId = c.from===id?c.to:c.from;
+    return {contact:contacts.find(x=>x.id===otherId), label:c.label};
+  }).filter(x=>x.contact);
+}
+
+function goList() { selectedId=null; showView('list'); renderList(); }
+
+function renderList() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = contacts.filter(c=>
+    c.name.toLowerCase().includes(q)||(c.company||'').toLowerCase().includes(q)||(c.role||'').toLowerCase().includes(q)
+  );
+  document.getElementById('contact-list').innerHTML = filtered.map(c=>`
+    <div class="contact-row" onclick="selectContact(${c.id})"
+      style="border-color:${c.id===selectedId?c.color+'44':'transparent'};background:${c.id===selectedId?c.color+'15':'rgba(10,22,40,0.6)'};">
+      <div class="avatar" style="background:${c.color};">${c.name[0]}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="contact-name">${c.name}</div>
+        <div class="contact-sub">${c.role||''}${c.role&&c.company?' · ':''}${c.company||''}</div>
+      </div>
+      <div class="dot" style="background:${c.color};"></div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('search').addEventListener('input', renderList);
+
+function deleteContact(id) {
+  contacts = contacts.filter(c=>c.id!==id);
+  connections = connections.filter(c=>c.from!==id&&c.to!==id);
+  selectedId = null;
+  buildScene();
+  goList();
+}
+
+// ── ADD CONTACT FORM ──────────────────────────────────────────────────────────
+let formColor = COLORS[0];
+function showAddForm() {
+  formColor = COLORS[0];
+  const fp = document.getElementById('form-panel');
+  fp.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <button class="back-btn" onclick="goList()">← Back</button>
+      <span class="form-title" style="color:#00f5d4;">New Contact</span>
+    </div>
+    ${['Name *|name|text','Role|role|text','Company|company|text','Email|email|email','Phone|phone|tel'].map(f=>{
+      const [label,key,type]=f.split('|');
+      return `<div class="field-wrap"><div class="field-label">${label}</div>
+        <input class="inp" id="f-${key}" type="${type}" placeholder="${label.replace(' *','')}"/></div>`;
+    }).join('')}
+    <div class="field-wrap">
+      <div class="field-label">NODE COLOR</div>
+      <div class="color-row" id="color-row">
+        ${COLORS.map(col=>`<div class="color-swatch" style="background:${col};" onclick="pickColor('${col}')"></div>`).join('')}
+      </div>
+    </div>
+    <button class="submit-btn" style="background:#00f5d4;color:#050813;" onclick="submitAdd()">ADD TO NETWORK</button>
+  `;
+  updateColorSwatches();
+  showView('add');
+}
+
+function pickColor(col) { formColor=col; updateColorSwatches(); }
+function updateColorSwatches() {
+  const rows = document.querySelectorAll('.color-swatch');
+  rows.forEach(s => {
+    s.style.boxShadow = s.style.background===formColor||s.style.backgroundColor===formColor
+      ? `0 0 10px ${formColor},0 0 0 2px ${formColor}` : 'none';
+  });
+}
+function submitAdd() {
+  const name = document.getElementById('f-name')?.value.trim();
+  if(!name) return;
+  const ang = Math.random()*Math.PI*2;
+  contacts.push({
+    id: Date.now(),
+    name,
+    role: document.getElementById('f-role').value.trim(),
+    company: document.getElementById('f-company').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    color: formColor,
+    x: Math.cos(ang)*4, y: (Math.random()-.5)*3, z: Math.sin(ang)*4
+  });
+  buildScene(); goList();
+}
+
+// ── ADD LINK FORM ─────────────────────────────────────────────────────────────
+function showLinkForm() {
+  const fp = document.getElementById('form-panel');
+  const opts = contacts.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  fp.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <button class="back-btn" onclick="goList()">← Back</button>
+      <span class="form-title" style="color:#f72585;">New Link</span>
+    </div>
+    <div class="field-wrap"><div class="field-label">FROM</div>
+      <select class="inp" id="l-from"><option value="">Select contact…</option>${opts}</select></div>
+    <div class="field-wrap"><div class="field-label">TO</div>
+      <select class="inp" id="l-to"><option value="">Select contact…</option>${opts}</select></div>
+    <div class="field-wrap"><div class="field-label">RELATIONSHIP</div>
+      <select class="inp" id="l-label">${RELATIONS.map(r=>`<option>${r}</option>`).join('')}</select></div>
+    <button class="submit-btn" style="background:#f72585;color:#fff;" onclick="submitLink()">LINK CONTACTS</button>
+  `;
+  showView('connect');
+}
+function submitLink() {
+  const from = parseInt(document.getElementById('l-from').value);
+  const to   = parseInt(document.getElementById('l-to').value);
+  const label = document.getElementById('l-label').value;
+  if(!from||!to||from===to) return;
+  connections.push({from,to,label});
+  buildScene(); goList();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('btn-add').addEventListener('click', showAddForm);
+document.getElementById('btn-link').addEventListener('click', showLinkForm);
+
+buildScene();
+showView('list');
+</script>
+
+</body>
+</html>
