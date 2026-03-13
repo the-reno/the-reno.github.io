@@ -1,1 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traffic Jam Theory Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0b0b;
+      color: #eaeaea;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
 
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+
+    p {
+      color: #b0b0b0;
+      max-width: 800px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .controls {
+      margin: 16px 0 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    label {
+      font-size: 14px;
+      color: #d0d0d0;
+    }
+
+    input[type="range"] {
+      width: 180px;
+    }
+
+    button {
+      background: #eaeaea;
+      color: #111;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    canvas {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      max-width: 100%;
+    }
+
+    .stats {
+      margin-top: 12px;
+      color: #a8a8a8;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Traffic Jam Theory</h1>
+  <p>
+    Ring-road model showing how phantom traffic jams can appear from small speed fluctuations,
+    even without accidents or bottlenecks.
+  </p>
+
+  <div class="controls">
+    <label>
+      Cars:
+      <input id="carsSlider" type="range" min="10" max="80" value="35" />
+      <span id="carsValue">35</span>
+    </label>
+
+    <label>
+      Reaction α:
+      <input id="alphaSlider" type="range" min="0.1" max="2.0" step="0.1" value="0.8" />
+      <span id="alphaValue">0.8</span>
+    </label>
+
+    <label>
+      Noise:
+      <input id="noiseSlider" type="range" min="0" max="0.3" step="0.01" value="0.04" />
+      <span id="noiseValue">0.04</span>
+    </label>
+
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <canvas id="canvas" width="900" height="520"></canvas>
+  <div class="stats" id="stats"></div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const carsSlider = document.getElementById("carsSlider");
+    const alphaSlider = document.getElementById("alphaSlider");
+    const noiseSlider = document.getElementById("noiseSlider");
+    const carsValue = document.getElementById("carsValue");
+    const alphaValue = document.getElementById("alphaValue");
+    const noiseValue = document.getElementById("noiseValue");
+    const stats = document.getElementById("stats");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const R = 180;
+
+    const L = 2 * Math.PI * R; // ring circumference
+    const vmax = 2.6;
+    const g0 = 18;
+
+    let cars = [];
+    let alpha = parseFloat(alphaSlider.value);
+    let noise = parseFloat(noiseSlider.value);
+    let N = parseInt(carsSlider.value, 10);
+
+    function optimalVelocity(gap) {
+      return vmax * (Math.tanh((gap - g0) / 8) + 1) / 2;
+    }
+
+    function initCars() {
+      cars = [];
+      N = parseInt(carsSlider.value, 10);
+      alpha = parseFloat(alphaSlider.value);
+      noise = parseFloat(noiseSlider.value);
+
+      for (let i = 0; i < N; i++) {
+        const x = (i * L) / N;
+        let v = optimalVelocity(L / N);
+        if (i === 0) v *= 0.75; // small perturbation to trigger waves
+        cars.push({ x, v });
+      }
+    }
+
+    function ringGap(i) {
+      const a = cars[i];
+      const b = cars[(i + 1) % N];
+      let gap = b.x - a.x;
+      if (gap < 0) gap += L;
+      return gap;
+    }
+
+    function update(dt) {
+      const newV = new Array(N);
+
+      for (let i = 0; i < N; i++) {
+        const gap = ringGap(i);
+        const desired = optimalVelocity(gap);
+        let dv = alpha * (desired - cars[i].v);
+
+        if (noise > 0) {
+          dv += (Math.random() - 0.5) * noise;
+        }
+
+        newV[i] = Math.max(0, Math.min(vmax, cars[i].v + dv * dt));
+      }
+
+      for (let i = 0; i < N; i++) {
+        cars[i].v = newV[i];
+        cars[i].x = (cars[i].x + cars[i].v * 60 * dt) % L;
+      }
+    }
+
+    function speedColor(v) {
+      const t = v / vmax;
+      const r = Math.floor(255 * (1 - t));
+      const g = Math.floor(200 * t);
+      return `rgb(${r},${g},120)`;
+    }
+
+    function drawRing() {
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 18;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#1f1f1f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    function drawCars() {
+      for (const car of cars) {
+        const theta = (car.x / L) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + R * Math.cos(theta);
+        const y = cy + R * Math.sin(theta);
+
+        ctx.fillStyle = speedColor(car.v);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawSpeedPanel() {
+      const panelX = 80;
+      const panelY = 410;
+      const panelW = 740;
+      const panelH = 70;
+
+      ctx.fillStyle = "#101010";
+      ctx.fillRect(panelX, panelY, panelW, panelH);
+      ctx.strokeStyle = "#2a2a2a";
+      ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+      for (let i = 0; i < N; i++) {
+        const x = panelX + (i / N) * panelW;
+        const barW = panelW / N - 1;
+        const barH = (cars[i].v / vmax) * (panelH - 10);
+
+        ctx.fillStyle = speedColor(cars[i].v);
+        ctx.fillRect(x, panelY + panelH - barH - 5, barW, barH);
+      }
+
+      ctx.fillStyle = "#aaa";
+      ctx.font = "12px Arial";
+      ctx.fillText("Car speeds", panelX, panelY - 8);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      drawRing();
+      drawCars();
+      drawSpeedPanel();
+
+      const avgSpeed = cars.reduce((s, c) => s + c.v, 0) / N;
+      const minSpeed = Math.min(...cars.map(c => c.v));
+
+      stats.textContent =
+        `Average speed: ${avgSpeed.toFixed(2)} | Minimum speed: ${minSpeed.toFixed(2)} | Density: ${(N / L).toFixed(3)} cars/unit`;
+    }
+
+    let last = performance.now();
+
+    function animate(t) {
+      const dt = Math.min((t - last) / 1000, 0.03);
+      last = t;
+
+      update(dt);
+      draw();
+
+      requestAnimationFrame(animate);
+    }
+
+    carsSlider.addEventListener("input", () => {
+      carsValue.textContent = carsSlider.value;
+    });
+
+    alphaSlider.addEventListener("input", () => {
+      alphaValue.textContent = alphaSlider.value;
+    });
+
+    noiseSlider.addEventListener("input", () => {
+      noiseValue.textContent = noiseSlider.value;
+    });
+
+    resetBtn.addEventListener("click", () => {
+      initCars();
+    });
+
+    carsValue.textContent = carsSlider.value;
+    alphaValue.textContent = alphaSlider.value;
+    noiseValue.textContent = noiseSlider.value;
+
+    initCars();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
