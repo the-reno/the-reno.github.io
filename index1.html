@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ronu</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111;
+      --panel-2: #0f0f0f;
+      --border: #1f1f1f;
+      --border-2: #2a2a2a;
+      --text: #efefef;
+      --muted: #888;
+      --soft: #555;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: #a8a8a8;
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .page-shell {
+      width: 100%;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .card {
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3rem 2.5rem;
+      background: var(--panel);
+      animation: fadeIn 0.8s ease forwards;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .greeting {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 3rem;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--soft);
+    }
+
+    p {
+      font-size: 13px;
+      line-height: 1.9;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 2rem 0;
+    }
+
+    .stack {
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 0.05em;
+    }
+
+    .stack span {
+      color: var(--soft);
+    }
+
+    .carousel-panel {
+      width: 100%;
+      max-width: 760px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(17, 17, 17, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      animation: fadeIn 1s ease forwards;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+    }
+
+    .carousel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .carousel-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #5a5a5a;
+    }
+
+    .carousel-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .carousel-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border-2);
+      background: transparent;
+      color: #9a9a9a;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .carousel-btn:hover {
+      border-color: #444;
+      color: var(--text);
+    }
+
+    .carousel-track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(220px, 1fr);
+      gap: 0.85rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      padding-bottom: 0.2rem;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .panel-link {
+      scroll-snap-align: start;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #121212 0%, #0e0e0e 100%);
+      padding: 1rem;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .panel-link:hover {
+      transform: translateY(-3px);
+      border-color: #3a3a3a;
+      background: linear-gradient(180deg, #151515 0%, #101010 100%);
+    }
+
+    .panel-kicker {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #5f5f5f;
+      margin-bottom: 0.8rem;
+    }
+
+    .panel-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 0.8rem;
+    }
+
+    .panel-text {
+      font-size: 12px;
+      line-height: 1.7;
+      color: #7e7e7e;
+      margin-bottom: 1rem;
+    }
+
+    .panel-meta {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #666;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        justify-content: flex-start;
+        padding: 1.25rem;
+      }
+
+      .card {
+        padding: 2.2rem 1.4rem;
+      }
+
+      h1 {
+        font-size: 2.35rem;
+      }
+
+      .carousel-panel {
+        padding: 0.85rem;
+      }
+
+      .carousel-track {
+        grid-auto-columns: 84%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="card">
+      <p class="greeting">// hello, world</p>
+      <h1>I'm <em>Ronu.</em></h1>
+      <p>
+        Welcome to my lab.
+      </p>
+      <div class="divider"></div>
+      <p class="stack"><span>triathlon · science · markets</span></p>
+    </div>
+
+    <section class="carousel-panel" aria-label="Site navigation">
+      <div class="carousel-top">
+        <div class="carousel-label">Explore</div>
+        <div class="carousel-controls">
+          <button class="carousel-btn" type="button" aria-label="Scroll left" onclick="scrollCarousel(-1)">←</button>
+          <button class="carousel-btn" type="button" aria-label="Scroll right" onclick="scrollCarousel(1)">→</button>
+        </div>
+      </div>
+
+      <div class="carousel-track" id="carouselTrack">
+        <a class="panel-link" href="/markets.html">
+          <div>
+            <div class="panel-kicker">01 / Markets</div>
+            <div class="panel-title">Markets</div>
+            <div class="panel-text">Macro thoughts, rates, FX and market structure.</div>
+          </div>
+          <div class="panel-meta">Open page</div>
+        </a>
+
+        <a class="panel-link" href="/projects.html">
+          <div>
+            <div class="panel-kicker">02 / Projects</div>
+            <div class="panel-title">Projects</div>
+            <div class="panel-text">Dashboards, tools, visual experiments and builds.</div>
+          </div>
+          <div class="panel-meta">Open page</div>
+        </a>
+
+        <a class="panel-link" href="/lab.html">
+          <div>
+            <div class="panel-kicker">03 / Lab</div>
+            <div class="panel-title">Lab Notes</div>
+            <div class="panel-text">Ideas in progress, observations and quick notes.</div>
+          </div>
+          <div class="panel-meta">Open page</div>
+        </a>
+
+        <a class="panel-link" href="/about.html">
+          <div>
+            <div class="panel-kicker">04 / Profile</div>
+            <div class="panel-title">About</div>
+            <div class="panel-text">Background, focus areas and selected direction.</div>
+          </div>
+          <div class="panel-meta">Open page</div>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function scrollCarousel(direction) {
+      const track = document.getElementById('carouselTrack');
+      const amount = Math.min(track.clientWidth * 0.9, 420);
+      track.scrollBy({
+        left: direction * amount,
+        behavior: 'smooth'
+      });
+    }
+  </script>
+</body>
+</html>
