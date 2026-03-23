@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three-Body Problem — Physics Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--s1:#0b0f1a;--s2:#0e1422;
+  --border:rgba(255,255,255,0.07);--muted:rgba(255,255,255,0.28);
+  --b1:#f59e0b;--b2:#22d3ee;--b3:#fb7185;
+  --ke:#fb923c;--pe:#818cf8;--et:#a3e635;
+}
+html,body{background:var(--bg);color:#dce8f5;font-family:'DM Sans',sans-serif;height:100%;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* HEADER */
+#hdr{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid var(–border);background:var(–s1);}
+#hdr h1{font-size:13px;font-weight:500;color:#fff;white-space:nowrap}
+#hdr p{font-size:10px;color:var(–muted);white-space:nowrap}
+.hg{flex:1}
+.pbtn{background:transparent;border:1px solid var(–border);color:rgba(255,255,255,0.45);font-family:‘DM Sans’,sans-serif;font-size:11px;padding:4px 11px;border-radius:14px;cursor:pointer;transition:all .15s;}
+.pbtn:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.pbtn.on{background:rgba(255,255,255,0.09);color:#fff;border-color:rgba(255,255,255,0.2)}
+
+/* WORKSPACE */
+#ws{flex:1;display:flex;min-height:0;overflow:hidden}
+
+/* 3D VIEW */
+#view{width:42%;flex-shrink:0;position:relative;background:#07090f;border-right:1px solid var(–border);cursor:grab;user-select:none}
+#view:active{cursor:grabbing}
+#view canvas{display:block;width:100%;height:100%;pointer-events:none}
+.vhud{position:absolute;top:10px;display:flex;gap:6px;pointer-events:none}
+#vhud-l{left:10px}.#vhud-r{right:10px}
+.vtag{background:rgba(7,9,15,0.85);border:1px solid var(–border);border-radius:18px;padding:4px 10px;font-family:‘Fira Code’,monospace;font-size:10px;color:var(–muted);backdrop-filter:blur(8px);display:flex;gap:6px;align-items:center}
+.vtag .v{color:#fff;font-weight:500}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+#vlabels{position:absolute;bottom:10px;left:10px;display:flex;gap:6px;pointer-events:none}
+.vlbl{background:rgba(7,9,15,0.85);border:1px solid var(–border);border-radius:18px;padding:3px 10px;font-family:‘Fira Code’,monospace;font-size:9px;display:flex;gap:5px;align-items:center;backdrop-filter:blur(8px)}
+#chint{position:absolute;bottom:10px;right:10px;font-size:9px;color:rgba(255,255,255,0.15);font-family:‘Fira Code’,monospace;pointer-events:none;text-align:right;line-height:1.9}
+
+/* CHARTS GRID */
+#charts{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(–border);overflow:hidden}
+.cc{background:var(–s1);display:flex;flex-direction:column;overflow:hidden}
+.ct{flex-shrink:0;padding:6px 12px 2px;font-size:9px;font-weight:500;color:var(–muted);letter-spacing:.07em;text-transform:uppercase;font-family:‘Fira Code’,monospace;display:flex;justify-content:space-between;align-items:center}
+.cl{display:flex;gap:9px}
+.cli{display:flex;align-items:center;gap:3px;font-size:9px;color:var(–muted);font-family:‘Fira Code’,monospace}
+.cll{width:13px;height:2px;border-radius:1px}
+.cw{flex:1;position:relative;overflow:hidden}
+.cw canvas{position:absolute;inset:0}
+
+/* IC PANEL */
+#ic{flex-shrink:0;border-top:1px solid var(–border);background:var(–s1);display:flex;flex-direction:column}
+#ict{display:flex;align-items:center;gap:8px;padding:6px 16px;cursor:pointer;font-size:11px;color:var(–muted);border-bottom:1px solid transparent;transition:all .15s;flex-shrink:0}
+#ict:hover{color:#dce8f5}
+#ict.open{border-bottom-color:var(–border);color:#dce8f5}
+#ict svg{transition:transform .2s}
+#ict.open svg{transform:rotate(180deg)}
+#icb{display:none;flex:1;overflow:hidden;padding:10px 16px 12px;gap:12px;align-items:flex-end}
+#icb.open{display:flex}
+.ibc{flex:1;display:flex;flex-direction:column;gap:5px}
+.ibh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;margin-bottom:2px}
+.ibd{width:7px;height:7px;border-radius:50%}
+.ibf{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+.ibfi{display:flex;flex-direction:column;gap:1px}
+.ibfl{font-size:9px;color:var(–muted);font-family:‘Fira Code’,monospace;letter-spacing:.05em}
+.ibfi input{background:rgba(255,255,255,0.04);border:1px solid var(–border);color:#fff;font-family:‘Fira Code’,monospace;font-size:10px;padding:4px 7px;border-radius:6px;outline:none;width:100%;transition:border-color .15s}
+.ibfi input:focus{border-color:rgba(255,255,255,0.25)}
+.iba{display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-self:flex-end}
+.ab{background:transparent;border:1px solid var(–border);color:rgba(255,255,255,0.55);font-family:‘DM Sans’,sans-serif;font-size:11px;padding:6px 13px;border-radius:13px;cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.ab:hover{background:rgba(255,255,255,0.08);color:#fff}
+.ab.go{background:rgba(255,255,255,0.09);color:#fff;border-color:rgba(255,255,255,0.2)}
+
+/* PLAYBAR */
+#pb{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:7px 16px;border-top:1px solid var(–border);background:var(–s1)}
+.pbb{background:transparent;border:none;color:rgba(255,255,255,0.5);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:‘DM Sans’,sans-serif;font-size:12px;font-weight:500;padding:5px 10px;border-radius:20px;transition:all .15s}
+.pbb:hover{background:rgba(255,255,255,0.08);color:#fff}
+.pbb.hi{background:rgba(255,255,255,0.1);color:#fff}
+.psep{width:1px;height:16px;background:var(–border)}
+.sr{display:flex;align-items:center;gap:7px}
+.sr label{font-size:9px;color:var(–muted);font-family:‘Fira Code’,monospace;letter-spacing:.07em}
+#sv{font-size:10px;color:rgba(255,255,255,0.5);font-family:‘Fira Code’,monospace;min-width:26px}
+input[type=range]{-webkit-appearance:none;height:3px;background:rgba(255,255,255,0.1);border-radius:3px;outline:none;cursor:pointer;width:70px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#fff;cursor:pointer}
+.pst{font-family:‘Fira Code’,monospace;font-size:10px;color:var(–muted)}
+.pst span{color:rgba(255,255,255,0.6)}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<div id="hdr">
+  <div><h1>Three-Body Problem</h1><p>Physics Analysis Workbench</p></div>
+  <div class="hg"></div>
+  <div style="display:flex;gap:5px">
+    <button class="pbtn on" id="pr-fig8"     onclick="loadPreset('fig8')">Figure-8</button>
+    <button class="pbtn"    id="pr-lagrange"  onclick="loadPreset('lagrange')">Lagrange</button>
+    <button class="pbtn"    id="pr-pyth"      onclick="loadPreset('pyth')">Pythagorean</button>
+    <button class="pbtn"    id="pr-euler"     onclick="loadPreset('euler')">Euler</button>
+    <button class="pbtn"    id="pr-random"    onclick="loadPreset('random')">Random</button>
+  </div>
+</div>
+
+<div id="ws">
+  <!-- 3D VIEW -->
+  <div id="view">
+    <canvas id="c3d"></canvas>
+    <div class="vhud" id="vhud-l">
+      <div class="vtag">t <span class="v" id="vt">0 d</span></div>
+      <div class="vtag">ΔE/E₀ <span class="v" id="vde">—</span></div>
+      <div class="vtag" id="vctag" style="display:none">Δchaos <span class="v" id="vc">—</span></div>
+    </div>
+    <div id="vlabels">
+      <div class="vlbl"><span class="dot" style="background:var(--b1)"></span>Body 1</div>
+      <div class="vlbl"><span class="dot" style="background:var(--b2)"></span>Body 2</div>
+      <div class="vlbl"><span class="dot" style="background:var(--b3)"></span>Body 3</div>
+    </div>
+    <div id="chint">drag orbit<br>scroll zoom<br>right-drag pan<br>dbl-click reset</div>
+  </div>
+
+  <!-- CHARTS -->
+
+  <div id="charts">
+    <div class="cc">
+      <div class="ct">Energy Conservation
+        <div class="cl">
+          <div class="cli"><div class="cll" style="background:var(--ke)"></div>KE</div>
+          <div class="cli"><div class="cll" style="background:var(--pe)"></div>PE</div>
+          <div class="cli"><div class="cll" style="background:var(--et)"></div>Total</div>
+        </div>
+      </div>
+      <div class="cw"><canvas id="ch-e"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ct">Pairwise Distances
+        <div class="cl">
+          <div class="cli"><div class="cll" style="background:var(--b1)"></div>r₁₂</div>
+          <div class="cli"><div class="cll" style="background:var(--b2)"></div>r₁₃</div>
+          <div class="cli"><div class="cll" style="background:var(--b3)"></div>r₂₃</div>
+        </div>
+      </div>
+      <div class="cw"><canvas id="ch-r"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ct">Angular Momentum |L| / L₀
+        <div class="cl">
+          <div class="cli"><div class="cll" style="background:#a3e635"></div>|L|/L₀</div>
+          <div class="cli"><div class="cll" style="background:rgba(255,255,255,0.2)"></div>1.0 ref</div>
+        </div>
+      </div>
+      <div class="cw"><canvas id="ch-l"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ct">Phase Portrait (x, vₓ)
+        <div class="cl">
+          <div class="cli"><div class="cll" style="background:var(--b1)"></div>B1</div>
+          <div class="cli"><div class="cll" style="background:var(--b2)"></div>B2</div>
+          <div class="cli"><div class="cll" style="background:var(--b3)"></div>B3</div>
+        </div>
+      </div>
+      <div class="cw"><canvas id="ch-p"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- IC PANEL -->
+
+<div id="ic">
+  <div id="ict" class="open" onclick="toggleIC()">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+    Initial Conditions
+    <span style="font-size:9px;color:var(--muted);margin-left:6px;font-family:'Fira Code',monospace">AU = 1.496×10¹¹ m · M☉ = 1.989×10³⁰ kg</span>
+  </div>
+  <div id="icb" class="open">
+    <div class="ibc">
+      <div class="ibh"><div class="ibd" style="background:var(--b1)"></div>Body 1</div>
+      <div class="ibf">
+        <div class="ibfi"><div class="ibfl">MASS kg</div><input id="b1m" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">X m</div><input id="b1x" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Y m</div><input id="b1y" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Z m</div><input id="b1z" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VX m/s</div><input id="b1vx" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VY m/s</div><input id="b1vy" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VZ m/s</div><input id="b1vz" type="number" step="any"></div>
+      </div>
+    </div>
+    <div class="ibc">
+      <div class="ibh"><div class="ibd" style="background:var(--b2)"></div>Body 2</div>
+      <div class="ibf">
+        <div class="ibfi"><div class="ibfl">MASS kg</div><input id="b2m" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">X m</div><input id="b2x" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Y m</div><input id="b2y" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Z m</div><input id="b2z" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VX m/s</div><input id="b2vx" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VY m/s</div><input id="b2vy" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VZ m/s</div><input id="b2vz" type="number" step="any"></div>
+      </div>
+    </div>
+    <div class="ibc">
+      <div class="ibh"><div class="ibd" style="background:var(--b3)"></div>Body 3</div>
+      <div class="ibf">
+        <div class="ibfi"><div class="ibfl">MASS kg</div><input id="b3m" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">X m</div><input id="b3x" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Y m</div><input id="b3y" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">Z m</div><input id="b3z" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VX m/s</div><input id="b3vx" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VY m/s</div><input id="b3vy" type="number" step="any"></div>
+        <div class="ibfi"><div class="ibfl">VZ m/s</div><input id="b3vz" type="number" step="any"></div>
+      </div>
+    </div>
+    <div class="iba">
+      <button class="ab go" onclick="applyIC()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.6"/></svg>Apply IC
+      </button>
+      <button class="ab" id="btn-p" onclick="togglePerturb()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Perturb ε
+      </button>
+      <button class="ab" onclick="resetView()">Reset View</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYBAR -->
+
+<div id="pb">
+  <button class="pbb hi" id="btn-play" onclick="togglePlay()">
+    <svg id="ip" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+    <svg id="ia" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    <span id="pll">Play</span>
+  </button>
+  <button class="pbb" onclick="doReset()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-3.6"/></svg>Reset
+  </button>
+  <div class="psep"></div>
+  <div class="sr">
+    <label>SPEED</label>
+    <input type="range" id="spdr" min="-1" max="3.5" step="0.1" value="0.5" oninput="setSpd(this.value)">
+    <span id="sv">×3</span>
+  </div>
+  <div class="psep"></div>
+  <div class="pst">t = <span id="st-t">0 d</span></div>
+  <div class="pst" style="margin-left:10px">ΔE/E₀ = <span id="st-de">—</span></div>
+  <div class="pst" style="margin-left:10px">ΔL/L₀ = <span id="st-dl">—</span></div>
+  <div class="pst" style="margin-left:10px">r_min = <span id="st-rm">—</span></div>
+  <div class="hg"></div>
+  <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--muted)">
+    <input type="checkbox" id="tcb" checked onchange="setTrails(this.checked)" style="accent-color:#fff">Trails
+  </label>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  PHYSICS
+// ═══════════════════════════════════════════════════════════════════
+const G=6.6743e-11, AU=1.496e11, MSun=1.989e30, DAY=86400;
+
+function mkB(mass,x,y,z,vx,vy,vz){return{mass,x,y,z,vx,vy,vz,fx:0,fy:0,fz:0};}
+
+function calcF(bs){
+  for(const b of bs)b.fx=b.fy=b.fz=0;
+  for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
+    const dx=bs[j].x-bs[i].x,dy=bs[j].y-bs[i].y,dz=bs[j].z-bs[i].z;
+    const r2=dx*dx+dy*dy+dz*dz+9e16,r=Math.sqrt(r2);
+    const F=G*bs[i].mass*bs[j].mass/r2,fx=F*dx/r,fy=F*dy/r,fz=F*dz/r;
+    bs[i].fx+=fx;bs[i].fy+=fy;bs[i].fz+=fz;
+    bs[j].fx-=fx;bs[j].fy-=fy;bs[j].fz-=fz;
+  }
+}
+
+function step(bs,dt){
+  calcF(bs);
+  for(const b of bs){b.vx+=.5*(b.fx/b.mass)*dt;b.vy+=.5*(b.fy/b.mass)*dt;b.vz+=.5*(b.fz/b.mass)*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;}
+  calcF(bs);
+  for(const b of bs){b.vx+=.5*(b.fx/b.mass)*dt;b.vy+=.5*(b.fy/b.mass)*dt;b.vz+=.5*(b.fz/b.mass)*dt;}
+}
+
+function KE(bs){return bs.reduce((s,b)=>s+.5*b.mass*(b.vx**2+b.vy**2+b.vz**2),0);}
+function PE(bs){let p=0;for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){const dx=bs[j].x-bs[i].x,dy=bs[j].y-bs[i].y,dz=bs[j].z-bs[i].z;p-=G*bs[i].mass*bs[j].mass/(Math.sqrt(dx*dx+dy*dy+dz*dz)+1e8);}return p;}
+function AngMom(bs){let lx=0,ly=0,lz=0;for(const b of bs){lx+=b.mass*(b.y*b.vz-b.z*b.vy);ly+=b.mass*(b.z*b.vx-b.x*b.vz);lz+=b.mass*(b.x*b.vy-b.y*b.vx);}return Math.sqrt(lx*lx+ly*ly+lz*lz);}
+function dist3(a,b){const dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z;return Math.sqrt(dx*dx+dy*dy+dz*dz);}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HISTORY BUFFERS
+// ═══════════════════════════════════════════════════════════════════
+const HMAX=800;
+const H={t:[],ke:[],pe:[],et:[],r12:[],r13:[],r23:[],lnorm:[],x1:[],vx1:[],x2:[],vx2:[],x3:[],vx3:[],csep:[]};
+function hpush(k,v){H[k].push(v);if(H[k].length>HMAX)H[k].shift();}
+function hclear(){for(const k in H)H[k]=[];}
+
+// ═══════════════════════════════════════════════════════════════════
+//  THREE.JS
+// ═══════════════════════════════════════════════════════════════════
+const vEl=document.getElementById('view'),c3=document.getElementById('c3d');
+const rndr=new THREE.WebGLRenderer({canvas:c3,antialias:true});
+rndr.setPixelRatio(Math.min(devicePixelRatio,2));
+rndr.setClearColor(0x07090f,1);
+const scn=new THREE.Scene(),cam3=new THREE.PerspectiveCamera(45,1,1e5,2e14);
+
+// stars
+const sv2=[];for(let i=0;i<1400;i++)sv2.push((Math.random()-.5)*8e12,(Math.random()-.5)*8e12,(Math.random()-.5)*8e12);
+const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sv2,3));
+scn.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:5e8,sizeAttenuation:true,transparent:true,opacity:0.4})));
+scn.add(new THREE.GridHelper(6e11,16,0x0f1e30,0x0a1520));
+scn.add(new THREE.AmbientLight(0xffffff,0.25));
+const pl=new THREE.PointLight(0xfff5e0,2,0);scn.add(pl);
+
+const BC=[0xf59e0b,0x22d3ee,0xfb7185];
+const TL=600;
+const bmsh=[],btrl=[];
+for(let i=0;i<3;i++){
+  const r=2e9,mat=new THREE.MeshPhongMaterial({color:BC[i],emissive:BC[i],emissiveIntensity:0.3,shininess:60});
+  const m=new THREE.Mesh(new THREE.SphereGeometry(r,18,12),mat);
+  m.add(new THREE.Mesh(new THREE.SphereGeometry(r*1.8,10,7),new THREE.MeshBasicMaterial({color:BC[i],transparent:true,opacity:0.07,side:THREE.BackSide})));
+  scn.add(m);bmsh.push(m);
+  const ta=new Float32Array(TL*3),tg=new THREE.BufferGeometry();
+  tg.setAttribute('position',new THREE.BufferAttribute(ta,3));tg.setDrawRange(0,0);
+  const tl=new THREE.Line(tg,new THREE.LineBasicMaterial({color:BC[i],transparent:true,opacity:0.4}));
+  scn.add(tl);btrl.push({line:tl,pts:[]});
+}
+// ghost spheres for perturbed clone
+const gmsh=[];
+for(let i=0;i<3;i++){
+  const g=new THREE.Mesh(new THREE.SphereGeometry(1.5e9,10,7),new THREE.MeshBasicMaterial({color:BC[i],transparent:true,opacity:0.18,wireframe:true}));
+  g.visible=false;scn.add(g);gmsh.push(g);
+}
+
+// orbit camera
+const orb={theta:.5,phi:1.1,r:4e11,tx:0,ty:0,tz:0};
+let od=false,op=false,olx=0,oly=0;
+function updCam(){cam3.position.set(orb.tx+orb.r*Math.sin(orb.phi)*Math.sin(orb.theta),orb.ty+orb.r*Math.cos(orb.phi),orb.tz+orb.r*Math.sin(orb.phi)*Math.cos(orb.theta));cam3.lookAt(orb.tx,orb.ty,orb.tz);}
+vEl.addEventListener('mousedown',e=>{if(e.button===0)od=true;if(e.button===2)op=true;olx=e.clientX;oly=e.clientY;e.preventDefault();});
+vEl.addEventListener('mousemove',e=>{const dx=e.clientX-olx,dy=e.clientY-oly;olx=e.clientX;oly=e.clientY;if(od){orb.theta-=dx*.007;orb.phi=Math.max(.05,Math.min(Math.PI-.05,orb.phi+dy*.007));updCam();}if(op){const s=orb.r*.0016;orb.tx-=Math.cos(orb.theta)*dx*s;orb.tz-=Math.sin(orb.theta)*dx*s;orb.ty+=dy*s;updCam();}});
+vEl.addEventListener('mouseup',()=>{od=false;op=false;});
+vEl.addEventListener('mouseleave',()=>{od=false;op=false;});
+vEl.addEventListener('contextmenu',e=>e.preventDefault());
+vEl.addEventListener('wheel',e=>{orb.r=Math.max(5e9,Math.min(5e13,orb.r*(1+e.deltaY*.001)));updCam();e.preventDefault();},{passive:false});
+vEl.addEventListener('dblclick',()=>{orb.theta=.5;orb.phi=1.1;orb.tx=0;orb.ty=0;updCam();});
+let tp0=null,pd0=null;
+vEl.addEventListener('touchstart',e=>{if(e.touches.length===1){od=true;tp0={x:e.touches[0].clientX,y:e.touches[0].clientY};}if(e.touches.length===2){od=false;const dx=e.touches[1].clientX-e.touches[0].clientX,dy=e.touches[1].clientY-e.touches[0].clientY;pd0=Math.sqrt(dx*dx+dy*dy);}e.preventDefault();},{passive:false});
+vEl.addEventListener('touchmove',e=>{if(e.touches.length===1&&od&&tp0){const dx=e.touches[0].clientX-tp0.x,dy=e.touches[0].clientY-tp0.y;tp0={x:e.touches[0].clientX,y:e.touches[0].clientY};orb.theta-=dx*.007;orb.phi=Math.max(.05,Math.min(Math.PI-.05,orb.phi+dy*.007));updCam();}if(e.touches.length===2&&pd0){const dx=e.touches[1].clientX-e.touches[0].clientX,dy=e.touches[1].clientY-e.touches[0].clientY;const d=Math.sqrt(dx*dx+dy*dy);orb.r=Math.max(5e9,Math.min(5e13,orb.r*(pd0/d)));pd0=d;updCam();}e.preventDefault();},{passive:false});
+vEl.addEventListener('touchend',e=>{if(e.touches.length===0){od=false;tp0=null;pd0=null;}e.preventDefault();},{passive:false});
+
+function resize3(){const w=vEl.clientWidth,h=vEl.clientHeight;rndr.setSize(w,h,false);cam3.aspect=w/h;cam3.updateProjectionMatrix();}
+function resetView(){orb.theta=.5;orb.phi=1.1;orb.tx=0;orb.ty=0;updCam();}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CHART ENGINE
+// ═══════════════════════════════════════════════════════════════════
+const PAD={l:50,r:10,t:6,b:26};
+const FM="'Fira Code',monospace";
+
+function aRange(arr,mg=0.12){
+  let mn=Infinity,mx=-Infinity;
+  for(const v of arr){if(isFinite(v)){if(v<mn)mn=v;if(v>mx)mx=v;}}
+  if(!isFinite(mn))return{min:-1,max:1};
+  const sp=mx-mn||Math.abs(mx)*.2||1;
+  return{min:mn-sp*mg,max:mx+sp*mg};
+}
+function nStep(span,n=5){const r=span/n,p=Math.pow(10,Math.floor(Math.log10(r)));for(const f of[1,2,2.5,5,10])if(f*p>=r)return f*p;return p*10;}
+function fv(v){const a=Math.abs(v);if(a===0)return'0';if(a>=1e9||a<.001)return v.toExponential(1);if(a>=1e6)return(v/1e6).toFixed(1)+'M';if(a>=1e3)return(v/1e3).toFixed(1)+'k';return v.toFixed(a<10?2:1);}
+
+function drawChart(id,series,xArr,opts){
+  const cv=document.getElementById(id);if(!cv)return;
+  const pw=cv.parentElement.clientWidth,ph=cv.parentElement.clientHeight;
+  if(pw<20||ph<20)return;
+  cv.width=pw;cv.height=ph;
+  const ctx=cv.getContext('2d');
+  const{l,r,t,b}=PAD,W=pw-l-r,H=ph-t-b;
+  ctx.clearRect(0,0,pw,ph);
+  const allY=series.flatMap(s=>s.data||[]);
+  const yr=opts.yr||aRange(allY);
+  const xr=xArr.length>1?{min:xArr[0],max:xArr[xArr.length-1]}:{min:0,max:1};
+  const px=x=>l+(x-xr.min)/(xr.max-xr.min||1)*W;
+  const py=y=>t+H-(y-yr.min)/(yr.max-yr.min||1)*H;
+  // grid y
+  ctx.font=`9px ${FM}`;ctx.fillStyle='rgba(255,255,255,0.25)';ctx.textAlign='right';
+  const ys=nStep(yr.max-yr.min,5),y0=Math.ceil(yr.min/ys)*ys;
+  for(let y=y0;y<=yr.max+ys*.01;y+=ys){const yy=py(y);if(yy<t-2||yy>t+H+2)continue;ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(l,yy);ctx.lineTo(l+W,yy);ctx.stroke();ctx.fillText(fv(y),l-4,yy+3);}
+  // grid x
+  ctx.textAlign='center';
+  const xs=nStep(xr.max-xr.min,6),x0=Math.ceil(xr.min/xs)*xs;
+  for(let x=x0;x<=xr.max+xs*.01;x+=xs){const xx=px(x);if(xx<l||xx>l+W)continue;ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(xx,t+H);ctx.lineTo(xx,t);ctx.stroke();ctx.fillText(fv(x),xx,t+H+14);}
+  // axis label
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font=`8px ${FM}`;ctx.textAlign='center';
+  ctx.fillText(opts.xl||'',l+W/2,ph-3);
+  ctx.save();ctx.translate(10,t+H/2);ctx.rotate(-Math.PI/2);ctx.fillText(opts.yl||'',0,0);ctx.restore();
+  // series
+  series.forEach(s=>{
+    if(!s.data||s.data.length<2)return;
+    ctx.strokeStyle=s.color;ctx.lineWidth=s.w||1.5;ctx.globalAlpha=s.a||1;ctx.lineJoin='round';
+    ctx.beginPath();
+    for(let i=0;i<s.data.length;i++){
+      const xv=xArr.length===s.data.length?xArr[i]:i/s.data.length*(xr.max-xr.min)+xr.min;
+      const yv=s.data[i];
+      const xx=px(xv),yy=py(yv);
+      i===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy);
+    }
+    ctx.stroke();ctx.globalAlpha=1;
+  });
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.strokeRect(l,t,W,H);
+}
+
+function drawPhase(id){
+  const cv=document.getElementById(id);if(!cv)return;
+  const pw=cv.parentElement.clientWidth,ph=cv.parentElement.clientHeight;
+  if(pw<20||ph<20)return;
+  cv.width=pw;cv.height=ph;
+  const ctx=cv.getContext('2d');
+  const{l,r,t,b}=PAD,W=pw-l-r,H=ph-t-b;
+  ctx.clearRect(0,0,pw,ph);
+  const XS=[H.x1,H.x2,H.x3],VS=[H.vx1,H.vx2,H.vx3];
+  const allX=[...H.x1,...H.x2,...H.x3],allV=[...H.vx1,...H.vx2,...H.vx3];
+  const xr=aRange(allX),vr=aRange(allV);
+  const px=x=>l+(x-xr.min)/(xr.max-xr.min||1)*W;
+  const py=v=>t+H-(v-vr.min)/(vr.max-vr.min||1)*H;
+  // grid
+  ctx.font=`9px ${FM}`;ctx.fillStyle='rgba(255,255,255,0.25)';ctx.textAlign='right';
+  const ys=nStep(vr.max-vr.min,5),y0=Math.ceil(vr.min/ys)*ys;
+  for(let y=y0;y<=vr.max+ys*.01;y+=ys){const yy=py(y);if(yy<t-2||yy>t+H+2)continue;ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(l,yy);ctx.lineTo(l+W,yy);ctx.stroke();ctx.fillText(fv(y),l-4,yy+3);}
+  ctx.textAlign='center';
+  const xs=nStep(xr.max-xr.min,5),x0=Math.ceil(xr.min/xs)*xs;
+  for(let x=x0;x<=xr.max+xs*.01;x+=xs){const xx=px(x);if(xx<l||xx>l+W)continue;ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(xx,t+H);ctx.lineTo(xx,t);ctx.stroke();ctx.fillText(fv(x),xx,t+H+14);}
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font=`8px ${FM}`;ctx.textAlign='center';
+  ctx.fillText('x (m)',l+W/2,ph-3);
+  ctx.save();ctx.translate(10,t+H/2);ctx.rotate(-Math.PI/2);ctx.fillText('vx (m/s)',0,0);ctx.restore();
+  const cols=['#f59e0b','#22d3ee','#fb7185'];
+  for(let bi=0;bi<3;bi++){
+    const xd=XS[bi],vd=VS[bi];if(!xd||xd.length<2)continue;
+    ctx.strokeStyle=cols[bi];ctx.lineWidth=1.2;ctx.globalAlpha=0.72;ctx.lineJoin='round';
+    ctx.beginPath();
+    for(let i=0;i<xd.length;i++){i===0?ctx.moveTo(px(xd[i]),py(vd[i])):ctx.lineTo(px(xd[i]),py(vd[i]));}
+    ctx.stroke();
+    if(xd.length>0){ctx.globalAlpha=1;ctx.fillStyle=cols[bi];ctx.beginPath();ctx.arc(px(xd[xd.length-1]),py(vd[vd.length-1]),3,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;
+  }
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.strokeRect(l,t,W,H);
+}
+
+function renderCharts(){
+  const n=H.t.length;if(n<2)return;
+  const td=H.t.map(v=>v/DAY);
+  const au=v=>v/AU;
+  const l0=H.lnorm[0]||1;
+  drawChart('ch-e',[
+    {data:H.ke,color:'#fb923c',w:1.3},
+    {data:H.pe,color:'#818cf8',w:1.3},
+    {data:H.et,color:'#a3e635',w:1.8},
+  ],td,{xl:'time (d)',yl:'E (J)'});
+  drawChart('ch-r',[
+    {data:H.r12.map(au),color:'#f59e0b',w:1.4},
+    {data:H.r13.map(au),color:'#22d3ee',w:1.4},
+    {data:H.r23.map(au),color:'#fb7185',w:1.4},
+  ],td,{xl:'time (d)',yl:'dist (AU)'});
+  drawChart('ch-l',[
+    {data:H.lnorm.map(v=>v/l0),color:'#a3e635',w:1.8},
+    {data:Array(n).fill(1),color:'rgba(255,255,255,0.18)',w:1,a:.7},
+  ],td,{xl:'time (d)',yl:'|L|/L₀',yr:{min:.95,max:1.05}});
+  drawPhase('ch-p');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SIM STATE
+// ═══════════════════════════════════════════════════════════════════
+let bodies=[],bodiesP=null,playing=false,sExp=.5,showT=true,pertOn=false;
+let simTime=0,e0ref=null,l0ref=null,htick=0,ctick=0;
+const SUBS=10;
+function getdt(){return 3600*Math.pow(10,sExp);}
+
+function sync3D(){
+  for(let i=0;i<3;i++){
+    bmsh[i].position.set(bodies[i].x,bodies[i].y,bodies[i].z);
+    if(showT){
+      const t=btrl[i];t.pts.push(bodies[i].x,bodies[i].y,bodies[i].z);
+      if(t.pts.length>TL*3)t.pts.splice(0,3);
+      const arr=t.line.geometry.attributes.position.array;
+      for(let j=0;j<t.pts.length;j++)arr[j]=t.pts[j];
+      t.line.geometry.setDrawRange(0,t.pts.length/3);
+      t.line.geometry.attributes.position.needsUpdate=true;
+    }
+    btrl[i].line.visible=showT;
+    if(pertOn&&bodiesP){gmsh[i].visible=true;gmsh[i].position.set(bodiesP[i].x,bodiesP[i].y,bodiesP[i].z);}
+    else gmsh[i].visible=false;
+  }
+  pl.position.set(bodies[0].x,bodies[0].y,bodies[0].z);
+}
+
+function clrTrails(){
+  for(const t of btrl){t.pts=[];t.line.geometry.setDrawRange(0,0);t.line.geometry.attributes.position.needsUpdate=true;}
+}
+
+function updHUD(){
+  const ke=KE(bodies),pe=PE(bodies),et=ke+pe,l=AngMom(bodies);
+  if(e0ref===null)e0ref=et;if(l0ref===null)l0ref=l;
+  const r12=dist3(bodies[0],bodies[1]),r13=dist3(bodies[0],bodies[2]),r23=dist3(bodies[1],bodies[2]);
+  const de=e0ref?Math.abs((et-e0ref)/e0ref):0;
+  const dl=l0ref?Math.abs((l-l0ref)/l0ref):0;
+  const rmin=Math.min(r12,r13,r23);
+  let csep=0;
+  if(pertOn&&bodiesP){for(let i=0;i<3;i++){const dx=bodies[i].x-bodiesP[i].x,dy=bodies[i].y-bodiesP[i].y,dz=bodies[i].z-bodiesP[i].z;csep+=Math.sqrt(dx*dx+dy*dy+dz*dz);}}
+  htick++;
+  if(htick%3===0){
+    hpush('t',simTime);hpush('ke',ke);hpush('pe',pe);hpush('et',et);
+    hpush('r12',r12);hpush('r13',r13);hpush('r23',r23);hpush('lnorm',l);
+    hpush('x1',bodies[0].x);hpush('vx1',bodies[0].vx);
+    hpush('x2',bodies[1].x);hpush('vx2',bodies[1].vx);
+    hpush('x3',bodies[2].x);hpush('vx3',bodies[2].vx);
+    hpush('csep',csep);
+  }
+  const td=simTime/DAY;
+  const ts=td<365?td.toFixed(1)+' d':(td/365.25).toFixed(2)+' yr';
+  document.getElementById('vt').textContent=ts;
+  document.getElementById('vde').textContent=de.toExponential(1);
+  document.getElementById('st-t').textContent=ts;
+  document.getElementById('st-de').textContent=de.toExponential(1);
+  document.getElementById('st-dl').textContent=dl.toExponential(1);
+  document.getElementById('st-rm').textContent=(rmin/AU).toFixed(3)+' AU';
+  if(pertOn&&bodiesP){document.getElementById('vctag').style.display='';document.getElementById('vc').textContent=(csep/AU).toExponential(2)+' AU';}
+  else document.getElementById('vctag').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PRESETS
+// ═══════════════════════════════════════════════════════════════════
+const PRES={
+  fig8:{cam:3e11,make:()=>{
+    const M=1e30,sr=4e10,sv=3.8e4;
+    return[mkB(M,.97*sr,-.243*sr,0,.466*sv,.432*sv,0),mkB(M,0,0,0,-.932*sv,-.865*sv,0),mkB(M,-.97*sr,.243*sr,0,.466*sv,.432*sv,0)];
+  }},
+  lagrange:{cam:4e11,make:()=>{
+    const M=1e30,r=1.5*AU,v=Math.sqrt(G*M/(r*Math.sqrt(3)));
+    return[0,1,2].map(i=>mkB(M,r*Math.cos(2*Math.PI*i/3),r*Math.sin(2*Math.PI*i/3),0,-v*Math.sin(2*Math.PI*i/3),v*Math.cos(2*Math.PI*i/3),0));
+  }},
+  pyth:{cam:6e11,make:()=>{
+    const u=1e11;
+    return[mkB(3*MSun,-u,0,0,0,0,0),mkB(4*MSun,0,2*u,0,0,0,0),mkB(5*MSun,u,-u,0,0,0,0)];
+  }},
+  euler:{cam:4e11,make:()=>{
+    const M=1e30,r=AU,v=Math.sqrt(G*3*M/(4*r))*.95;
+    return[mkB(M,-r,0,0,0,-v,0),mkB(M,0,0,0,0,2*v,0),mkB(M,r,0,0,0,-v,0)];
+  }},
+  random:{cam:4e11,make:()=>{
+    const rf=()=>(Math.random()-.5)*2*AU,vf=()=>(Math.random()-.5)*3e4;
+    return[mkB(MSun*(.5+Math.random()),rf(),rf(),0,vf(),vf(),0),mkB(MSun*(.5+Math.random()),rf(),rf(),0,vf(),vf(),0),mkB(MSun*(.5+Math.random()),rf(),rf(),0,vf(),vf(),0)];
+  }}
+};
+
+let curP='fig8';
+
+function loadPreset(name){
+  curP=name;
+  Object.keys(PRES).forEach(k=>{const e=document.getElementById('pr-'+k);if(e)e.className='pbtn'+(k===name?' on':'');});
+  applyBodies(PRES[name].make(),PRES[name].cam);
+}
+
+function applyBodies(bs,camR){
+  playing=false;setPlayUI(false);
+  bodies=bs.map(b=>({...b}));bodiesP=null;pertOn=false;
+  document.getElementById('btn-p').style.color='';document.getElementById('btn-p').style.borderColor='';
+  gmsh.forEach(g=>g.visible=false);
+  e0ref=null;l0ref=null;simTime=0;htick=0;ctick=0;
+  hclear();clrTrails();
+  if(camR){orb.r=camR;orb.theta=.5;orb.phi=1.1;orb.tx=0;orb.ty=0;updCam();}
+  fillIC(bodies);sync3D();updHUD();
+}
+
+function doReset(){loadPreset(curP);}
+
+// IC form
+function fillIC(bs){
+  const F=[['b1m','b1x','b1y','b1z','b1vx','b1vy','b1vz'],['b2m','b2x','b2y','b2z','b2vx','b2vy','b2vz'],['b3m','b3x','b3y','b3z','b3vx','b3vy','b3vz']];
+  for(let i=0;i<3;i++){const b=bs[i],f=F[i];[b.mass,b.x,b.y,b.z,b.vx,b.vy,b.vz].forEach((v,j)=>document.getElementById(f[j]).value=v.toExponential(3));}
+}
+
+function readIC(){
+  const F=[['b1m','b1x','b1y','b1z','b1vx','b1vy','b1vz'],['b2m','b2x','b2y','b2z','b2vx','b2vy','b2vz'],['b3m','b3x','b3y','b3z','b3vx','b3vy','b3vz']];
+  return F.map(f=>mkB(...f.map(id=>parseFloat(document.getElementById(id).value))));
+}
+
+function applyIC(){const bs=readIC();if(bs.some(b=>!isFinite(b.mass)||b.mass<=0))return;applyBodies(bs,null);}
+
+function togglePerturb(){
+  if(!pertOn){
+    bodiesP=bodies.map(b=>({...b}));
+    bodiesP[0].x+=1e6;// 1000 km perturbation
+    pertOn=true;
+    document.getElementById('btn-p').style.color='var(--b3)';
+    document.getElementById('btn-p').style.borderColor='var(--b3)';
+  } else {
+    bodiesP=null;pertOn=false;gmsh.forEach(g=>g.visible=false);
+    document.getElementById('btn-p').style.color='';document.getElementById('btn-p').style.borderColor='';
+  }
+}
+
+// controls
+function setPlayUI(on){document.getElementById('ip').style.display=on?'none':'';document.getElementById('ia').style.display=on?'':'none';document.getElementById('pll').textContent=on?'Pause':'Play';}
+function togglePlay(){playing=!playing;setPlayUI(playing);}
+function setSpd(v){sExp=parseFloat(v);const m=Math.pow(10,sExp);document.getElementById('sv').textContent=m>=100?'×'+Math.round(m):m>=10?'×'+m.toFixed(0):'×'+m.toFixed(1);}
+function setTrails(v){showT=v;if(!v)clrTrails();}
+function toggleIC(){const b=document.getElementById('icb'),t=document.getElementById('ict'),o=b.classList.contains('open');b.classList.toggle('open',!o);b.style.display=o?'none':'flex';t.classList.toggle('open',!o);}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LOOP
+// ═══════════════════════════════════════════════════════════════════
+function loop(){
+  requestAnimationFrame(loop);
+  if(playing&&bodies.length===3){
+    const subdt=getdt()/SUBS;
+    for(let s=0;s<SUBS;s++){step(bodies,subdt);if(pertOn&&bodiesP)step(bodiesP,subdt);simTime+=subdt;}
+    sync3D();updHUD();
+    ctick++;if(ctick%3===0)renderCharts();
+  }
+  rndr.render(scn,cam3);
+}
+requestAnimationFrame(loop);
+window.addEventListener('resize',()=>{resize3();});
+resize3();updCam();
+setSpd(document.getElementById('spdr').value);
+loadPreset('fig8');
+</script>
+
+</body>
+</html>
