@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Dice and the Storm | Ronu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111;
+      --border: #1f1f1f;
+      --border-2: #2a2a2a;
+      --text: #efefef;
+      --muted: #888;
+      --soft: #555;
+      --accent: #c8c8c8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      line-height: 1.85;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav a {
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--soft);
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+    nav .breadcrumb { color: var(--soft); font-size: 11px; letter-spacing: 0.12em; }
+    nav .breadcrumb span { color: var(--border-2); margin: 0 0.4rem; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+
+    /* ── Sections ── */
+    section {
+      margin-bottom: 5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    section.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Opening quote ── */
+    .quote-section {
+      border-left: 2px solid var(--border-2);
+      padding-left: 2rem;
+      margin-bottom: 5rem;
+    }
+    .quote-text {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 1.55rem;
+      line-height: 1.5;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .quote-logic {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--soft);
+    }
+
+    /* ── Section label ── */
+    .sec-label {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--soft);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .sec-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Headings ── */
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    h1 em { font-style: italic; color: var(--muted); }
+
+    h2 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      line-height: 1.3;
+    }
+    h2 em { font-style: italic; color: var(--muted); }
+
+    /* ── Body text ── */
+    p {
+      color: #999;
+      margin-bottom: 1.25rem;
+      font-size: 13.5px;
+    }
+    p:last-child { margin-bottom: 0; }
+    p strong { color: var(--text); font-weight: 400; }
+
+    /* ── Equation block ── */
+    .eq-block {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2rem 2.5rem;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .eq-block .katex-display { margin: 0; }
+    .eq-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--soft);
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    /* ── Canvas for logistic map ── */
+    .canvas-wrap {
+      margin: 2rem 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .canvas-wrap canvas { display: block; width: 100%; }
+    .canvas-controls {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .canvas-controls label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--soft);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 140px;
+      height: 2px;
+      background: var(--border-2);
+      outline: none;
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted);
+      cursor: pointer;
+    }
+    .r-value {
+      font-size: 12px;
+      color: var(--text);
+      min-width: 36px;
+    }
+
+    /* ── Connections list ── */
+    .connections {
+      list-style: none;
+      margin: 1.5rem 0;
+    }
+    .connections li {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: baseline;
+    }
+    .connections li:last-child { border-bottom: none; }
+    .conn-domain {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--soft);
+      min-width: 90px;
+      flex-shrink: 0;
+    }
+    .conn-desc {
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* ── Closing ── */
+    .closing-q {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 1.3rem;
+      line-height: 1.6;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 2.5rem;
+      margin-top: 2rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--soft);
+      border-top: 1px solid var(--border);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 3rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="breadcrumb">
+      <a href="/">ronu</a>
+      <span>/</span>
+      <a href="/Science/">science</a>
+      <span>/</span>
+      dice
+    </div>
+    <a href="/">← back</a>
+  </nav>
+
+  <main>
+
+    <!-- Header -->
+    <section>
+      <div class="sec-label">// science · chaos</div>
+      <h1>The Dice <em>and the Storm.</em></h1>
+      <p style="color:var(--soft); font-size:12px; margin-top:0.75rem; letter-spacing:0.05em;">On why the same motion never lands the same way twice.</p>
+    </section>
+
+    <!-- 1. Opening quote -->
+    <section class="quote-section">
+      <p class="quote-text">"Same motion. Different result. Something is missing."</p>
+      <p class="quote-logic">same motion → different result → first tension</p>
+    </section>
+
+    <!-- 2. Childhood scene -->
+    <section>
+      <div class="sec-label">01 · origin</div>
+      <h2>The child at the table.</h2>
+      <p>You roll the dice. You get a four. You pick it up, hold it exactly the same way, release it at the same height, from the same angle. You get a two.</p>
+      <p>This is the first thing that does not make sense. You did the same thing. The universe was supposed to give you the same answer.</p>
+      <p>So you try again. And again. Carefully. Deliberately. You start adjusting small things — the grip, the angle, the moment of release. Nothing works. The result keeps changing. At some point you stop trying to control it and accept it as luck. But something stays unsettled. The question does not go away.</p>
+      <p><strong>Why doesn't repeating an action repeat the outcome?</strong></p>
+    </section>
+
+    <!-- 3. Hidden variable -->
+    <section>
+      <div class="sec-label">02 · suspicion</div>
+      <h2>Maybe there is <em>a missing detail.</em></h2>
+      <p>The reasonable guess is that you are missing something. A tiny difference in spin. The texture of the table. Air movement. The exact angle of your fingers.</p>
+      <p>This seems like a solvable problem. Measure everything. Control everything. Add more variables to the equation until the output becomes predictable. The assumption underneath is that the world is deterministic — that if you knew everything, you could predict everything.</p>
+      <p>For a long time, this was the scientific position. Laplace imagined a demon that knew the position and velocity of every particle in the universe. That demon could compute the entire future. Uncertainty was just ignorance. A temporary condition. A problem of missing information.</p>
+      <p>The dice felt like a solvable problem. It was not.</p>
+    </section>
+
+    <!-- 4. Sensitivity reveal -->
+    <section>
+      <div class="sec-label">03 · shift</div>
+      <h2>The issue is not one missing variable.</h2>
+      <p>The problem is not that you are missing a measurement. The problem is that the measurements you already have are not precise enough — and can never be.</p>
+      <p>Every physical measurement has a limit. You can measure the release angle to one degree. Then to a tenth. Then to a hundredth. But the dice does not care about your measuring instrument. It responds to the actual angle, which exists at a precision beyond any tool you have.</p>
+      <p>And here is where things become strange: a difference at the fifteenth decimal place — something physically unmeasurable, effectively invisible — can completely change where the dice lands. Not slightly. Completely.</p>
+      <p><strong>Small differences do not stay small. They grow.</strong></p>
+    </section>
+
+    <!-- 5. Chaos theory intro -->
+    <section>
+      <div class="sec-label">04 · naming</div>
+      <h2>Chaos is not randomness.</h2>
+      <p>In 1963, Edward Lorenz was running a weather simulation on a computer. He re-ran a sequence by typing in a value he had printed from a previous run — but he rounded it from 0.506127 to 0.506. A difference of 0.000127. Less than a grain of precision.</p>
+      <p>The simulation diverged completely. Two months of weather that had been nearly identical became unrecognizable within a few simulated days.</p>
+      <p>The system was not random. The equations were deterministic. Given identical inputs, they would always produce identical outputs. But inputs are never truly identical. And in some systems, the gap between "nearly identical" and "completely different" collapses faster than any measurement can track.</p>
+      <p>This is chaos theory. <strong>Not randomness. Rule-based unpredictability.</strong> A system fully governed by equations that nonetheless becomes practically impossible to predict.</p>
+    </section>
+
+    <!-- 6. First equation -->
+    <section>
+      <div class="sec-label">05 · mechanism</div>
+      <h2>How small differences <em>grow.</em></h2>
+      <p>Two trajectories starting at nearly the same point — separated by a distance δ₀ — diverge exponentially over time. The separation δ(t) grows as:</p>
+
+      <div class="eq-block" id="eq1"></div>
+
+      <p>The rate of growth is controlled by λ — the Lyapunov exponent. When λ is positive, the system is chaotic. Distances grow exponentially. An error that starts at 0.000001 becomes 0.001 becomes 1 becomes unmanageable, and the timeline depends only on how large λ is.</p>
+      <p>For a dice roll, λ is large. For the weather, λ is large. For a pencil balanced on its tip, λ is enormous. Any system where nearby states fly apart is a chaotic system — and once you see the shape of that equation, you start recognizing it everywhere.</p>
+    </section>
+
+    <!-- 7. Logistic map -->
+    <section>
+      <div class="sec-label">06 · simplicity</div>
+      <h2>One clean formula. <em>Infinite complexity.</em></h2>
+      <p>Here is perhaps the most unsettling demonstration in mathematics. A single rule, applied to itself, repeatedly:</p>
+
+      <div class="eq-block" id="eq2"></div>
+
+      <p>xₙ is a population between 0 and 1. r is a growth rate. That is the entire system. One multiplication. One subtraction. Repeat.</p>
+      <p>At low r, the population settles to a fixed point. At higher r, it oscillates between two values. Higher still, four values. Then eight. Then the oscillations stop and something else happens — the output becomes completely unpredictable, tracing a pattern that never repeats, never stabilizes, never converges.</p>
+      <p>Move the slider. Watch the boundary where order ends.</p>
+
+      <div class="canvas-wrap">
+        <canvas id="logistic" height="200"></canvas>
+        <div class="canvas-controls">
+          <label>
+            r =
+            <input type="range" id="rSlider" min="1" max="4" step="0.01" value="2.8"/>
+            <span class="r-value" id="rVal">2.80</span>
+          </label>
+          <span style="font-size:11px; color:var(--soft);">drag to explore order → chaos</span>
+        </div>
+      </div>
+
+      <p>The boundary is around r = 3.57. Below it: order. Above it: chaos. One number. One threshold. The same formula before and after. Only the parameter changes.</p>
+    </section>
+
+    <!-- 8. Daily life -->
+    <section>
+      <div class="sec-label">07 · everywhere</div>
+      <h2>The same structure, <em>different scales.</em></h2>
+      <ul class="connections">
+        <li>
+          <span class="conn-domain">dice</span>
+          <span class="conn-desc">Release angle at the 8th decimal place determines the face. Unmeasurable. Always was.</span>
+        </li>
+        <li>
+          <span class="conn-domain">weather</span>
+          <span class="conn-desc">Lorenz's 0.000127 rounding error. Two months of forecast, erased. The butterfly is not metaphor — it is the Lyapunov exponent.</span>
+        </li>
+        <li>
+          <span class="conn-domain">traffic</span>
+          <span class="conn-desc">One driver braking a fraction of a second later. A phantom jam materializes from nothing, miles back. No accident. No cause visible at the scene.</span>
+        </li>
+        <li>
+          <span class="conn-domain">markets</span>
+          <span class="conn-desc">A limit order sits at a price no one notices. Then one trade hits it. The cascade does not look like its origin.</span>
+        </li>
+        <li>
+          <span class="conn-domain">conversations</span>
+          <span class="conn-desc">One word chosen differently. A relationship that bends in a direction it does not come back from. The word felt small at the time.</span>
+        </li>
+        <li>
+          <span class="conn-domain">decisions</span>
+          <span class="conn-desc">The meeting you almost skipped. The city you almost did not move to. Small differences, early in the trajectory, with λ doing its work silently.</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 9. Final shift -->
+    <section>
+      <div class="sec-label">08 · insight</div>
+      <h2>The lesson is not control.</h2>
+      <p>There is a temptation to respond to chaos with more control. Better measurements. Finer models. Longer forecasts. More data. This is a reasonable response and it is also the wrong one, at the fundamental level.</p>
+      <p>The exponential divergence does not care how good your instruments are. It only cares about λ and time. Given enough of both, the gap between your model and reality grows without bound. This is not a technology problem. It is a structure-of-reality problem.</p>
+      <p>What changes when you understand this is not what you optimize for. <strong>You stop trying to control the specific outcome and start paying attention to initial conditions.</strong> Not "how do I guarantee this result?" but "where in this trajectory am I, and what is growing?"</p>
+      <p>The dice is not broken. The weather is not broken. You just learned something true about them that was always true, and always will be.</p>
+    </section>
+
+    <!-- 10. Closing question -->
+    <section>
+      <div class="divider"></div>
+      <p class="closing-q">
+        Not: how do I repeat the same result?<br><br>
+        But: how do small differences, made now, grow into different futures?
+      </p>
+    </section>
+
+  </main>
+
+  <footer>ronu · science · chaos theory</footer>
+
+  <script>
+    // ── Render equations ──
+    katex.render("\\delta(t) = \\delta_0 \\, e^{\\lambda t}", document.getElementById("eq1"), {
+      displayMode: true, throwOnError: false
+    });
+    const eq1label = document.createElement("p");
+    eq1label.className = "eq-label";
+    eq1label.textContent = "exponential divergence · λ = lyapunov exponent";
+    document.getElementById("eq1").appendChild(eq1label);
+
+    katex.render("x_{n+1} = r \\, x_n \\left(1 - x_n\\right)", document.getElementById("eq2"), {
+      displayMode: true, throwOnError: false
+    });
+    const eq2label = document.createElement("p");
+    eq2label.className = "eq-label";
+    eq2label.textContent = "the logistic map";
+    document.getElementById("eq2").appendChild(eq2label);
+
+    // ── Logistic map canvas ──
+    const canvas = document.getElementById("logistic");
+    const ctx = canvas.getContext("2d");
+    const slider = document.getElementById("rSlider");
+    const rVal = document.getElementById("rVal");
+
+    function drawLogistic(r) {
+      const W = canvas.offsetWidth;
+      const H = 200;
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid
+      ctx.strokeStyle = "#1a1a1a";
+      ctx.lineWidth = 1;
+      for (let i = 0.2; i < 1; i += 0.2) {
+        const y = H - i * H;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // Trajectory
+      let x = 0.5;
+      const warmup = 200;
+      const steps = 600;
+
+      // Warmup
+      for (let i = 0; i < warmup; i++) x = r * x * (1 - x);
+
+      ctx.strokeStyle = "#c8c8c8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < steps; i++) {
+        x = r * x * (1 - x);
+        const px = (i / steps) * W;
+        const py = H - x * H * 0.85 - H * 0.075;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Dots at current positions (last 5)
+      ctx.fillStyle = "#888";
+      for (let i = steps - 5; i < steps; i++) {
+        x = r * x * (1 - x);
+        const px = (i / steps) * W;
+        const py = H - x * H * 0.85 - H * 0.075;
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // r label
+      ctx.fillStyle = "#444";
+      ctx.font = `11px 'DM Mono', monospace`;
+      ctx.fillText(`r = ${r.toFixed(2)}`, 12, 20);
+
+      // Chaos boundary marker
+      if (r > 3.57) {
+        ctx.fillStyle = "#555";
+        ctx.font = `10px 'DM Mono', monospace`;
+        ctx.fillText("chaos", W - 50, 20);
+      } else if (r > 3) {
+        ctx.fillStyle = "#444";
+        ctx.font = `10px 'DM Mono', monospace`;
+        ctx.fillText("bifurcation", W - 82, 20);
+      } else {
+        ctx.fillStyle = "#333";
+        ctx.font = `10px 'DM Mono', monospace`;
+        ctx.fillText("stable", W - 48, 20);
+      }
+    }
+
+    slider.addEventListener("input", () => {
+      const r = parseFloat(slider.value);
+      rVal.textContent = r.toFixed(2);
+      drawLogistic(r);
+    });
+
+    drawLogistic(parseFloat(slider.value));
+    window.addEventListener("resize", () => drawLogistic(parseFloat(slider.value)));
+
+    // ── Scroll reveal ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll("section").forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>
