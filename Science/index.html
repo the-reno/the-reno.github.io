@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Science | Ronu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080808; --surface: #101010; --surface-2: #141414;
+      --border: #1c1c1c; --border-2: #252525;
+      --text: #e8e8e8; --muted: #888; --dim: #555; --faint: #333;
+      --serif: 'Instrument Serif', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--mono); font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      height: 52px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem;
+      background: rgba(8,8,8,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-crumb { display: flex; align-items: center; gap: 0.35rem; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .nav-crumb a { color: var(--dim); text-decoration: none; transition: color 0.15s; }
+    .nav-crumb a:hover { color: var(--text); }
+    .nav-crumb span { color: var(--faint); }
+    .nav-crumb .current { color: var(--muted); }
+    .nav-back { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+
+    main { max-width: 720px; margin: 0 auto; padding: 80px 1.5rem 80px; }
+
+    /* HEADER */
+    .page-header { margin-bottom: 3.5rem; }
+    .page-kicker {
+      font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--faint); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .page-kicker::before { content: ''; display: block; width: 24px; height: 1px; background: var(--faint); }
+    .page-header h1 {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(2rem, 7vw, 3rem); line-height: 1.1;
+      letter-spacing: -0.02em; color: var(--text); margin-bottom: 1rem;
+    }
+    .page-header h1 em { font-style: italic; color: var(--muted); }
+    .page-header p { font-size: 13px; line-height: 1.85; color: var(--dim); }
+
+    /* ARTICLE CARDS */
+    .articles { display: flex; flex-direction: column; gap: 1px; margin-bottom: 4rem; }
+    .article-card {
+      display: block; text-decoration: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .article-card:hover { border-color: var(--border-2); background: var(--surface-2); }
+    .article-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    .card-meta {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .card-tag {
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--faint);
+    }
+    .card-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); }
+
+    .card-title {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(1.2rem, 4vw, 1.55rem);
+      color: var(--text); line-height: 1.2; margin-bottom: 0.6rem;
+    }
+    .card-title em { font-style: italic; color: var(--muted); }
+
+    .card-desc { font-size: 12.5px; line-height: 1.7; color: var(--dim); }
+
+    .card-arrow {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      font-size: 16px; color: var(--faint);
+      opacity: 0; transform: translateX(-4px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    /* SIMULATOR SECTION */
+    .sim-label {
+      font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--faint); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .sim-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .sim-card {
+      display: block; text-decoration: none;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.5rem; transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .sim-card:hover { border-color: var(--border-2); background: var(--surface-2); }
+    .sim-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    footer {
+      text-align: center; padding: 2.5rem 1.5rem;
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--faint); border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      main { padding: 72px 1.1rem 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-crumb">
+    <a href="/">ronu</a>
+    <span>/</span>
+    <span class="current">science</span>
+  </div>
+  <a class="nav-back" href="/">← home</a>
+</nav>
+
+<main>
+
+  <div class="page-header">
+    <div class="page-kicker">abstract things visible</div>
+    <h1>Science.<br><em>Lab notes.</em></h1>
+    <p>Mathematics, physics, and systems that behave in ways that are not obvious until you look closely.</p>
+  </div>
+
+  <!-- ARTICLES -->
+  <div class="sim-label">// articles</div>
+  <div class="articles">
+
+    <a class="article-card" href="/Science/dice.html">
+      <span class="card-arrow">→</span>
+      <div class="card-meta">
+        <span class="card-tag">chaos theory</span>
+        <span class="card-dot"></span>
+        <span class="card-tag">mathematics</span>
+      </div>
+      <div class="card-title">The Dice <em>and the Storm.</em></div>
+      <p class="card-desc">Why the same throw never lands the same way twice — and what that has in common with weather, traffic, markets, and most things that matter. With live visualizations of exponential divergence and the logistic map.</p>
+    </a>
+
+  </div>
+
+  <!-- SIMULATORS -->
+  <div class="sim-label">// simulators</div>
+  <div class="articles">
+
+    <a class="sim-card" href="/Science/Index.html">
+      <span class="card-arrow">→</span>
+      <div class="card-meta">
+        <span class="card-tag">traffic dynamics</span>
+        <span class="card-dot"></span>
+        <span class="card-tag">interactive</span>
+      </div>
+      <div class="card-title">Why Traffic <em>Suddenly Stops.</em></div>
+      <p class="card-desc">A live simulation of phantom jams — stop-and-go waves that form with no accident, no lane closure. Adjust car density, driver calmness, and brake frequency in real time.</p>
+    </a>
+
+  </div>
+
+</main>
+
+<footer>ronu · science</footer>
+
+</body>
+</html>
