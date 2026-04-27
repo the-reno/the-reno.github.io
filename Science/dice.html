@@ -9,228 +9,150 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
   <style>
     :root {
-      --bg: #080808;
-      --surface: #101010;
-      --surface-2: #141414;
-      --border: #1c1c1c;
-      --border-2: #252525;
-      --text: #e8e8e8;
-      --muted: #888;
-      --dim: #555;
-      --faint: #333;
+      --bg: #080808; --surface: #101010; --surface-2: #141414;
+      --border: #1c1c1c; --border-2: #252525;
+      --text: #e8e8e8; --muted: #aaa; --dim: #777; --faint: #555;
       --serif: 'Instrument Serif', Georgia, serif;
       --mono: 'DM Mono', 'Courier New', monospace;
-      --max: 680px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--mono);
-      font-size: 14px;
-      line-height: 1;
+      background: var(--bg); color: var(--text);
+      font-family: var(--mono); font-size: 14px; line-height: 1;
       -webkit-font-smoothing: antialiased;
     }
-
-    /* ─── NAV ─── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-      height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
+      height: 52px; display: flex; align-items: center; justify-content: space-between;
       padding: 0 1.5rem;
-      background: rgba(8,8,8,0.92);
-      backdrop-filter: blur(16px);
+      background: rgba(8,8,8,0.92); backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-crumb {
-      display: flex; align-items: center; gap: 0.35rem;
-      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-    }
-    .nav-crumb a { color: var(--dim); text-decoration: none; transition: color 0.15s; }
-    .nav-crumb a:hover { color: var(--text); }
-    .nav-crumb span { color: var(--faint); }
-    .nav-crumb .current { color: var(--muted); }
-    .nav-back { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); text-decoration: none; transition: color 0.15s; }
-    .nav-back:hover { color: var(--text); }
+    .crumb { display: flex; align-items: center; gap: 0.35rem; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .crumb a { color: var(--dim); text-decoration: none; transition: color 0.15s; }
+    .crumb a:hover { color: var(--text); }
+    .crumb span { color: var(--faint); }
+    .crumb .cur { color: var(--muted); }
+    .back { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); text-decoration: none; transition: color 0.15s; }
+    .back:hover { color: var(--text); }
 
-    /* ─── LAYOUT ─── */
-    main {
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 80px 1.5rem 80px;
-    }
+    main { max-width: 640px; margin: 0 auto; padding: 80px 1.5rem 80px; }
 
-    /* ─── HERO ─── */
-    .hero { margin-bottom: 4rem; }
-    .hero-kicker {
+    /* HERO */
+    .hero { margin-bottom: 3.5rem; }
+    .kicker {
       font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
-      color: var(--dim); margin-bottom: 1.25rem;
+      color: var(--faint); margin-bottom: 1.1rem;
       display: flex; align-items: center; gap: 0.75rem;
     }
-    .hero-kicker::before {
-      content: ''; display: block; width: 24px; height: 1px; background: var(--faint);
-    }
-    .hero h1 {
-      font-family: var(--serif);
-      font-size: clamp(2.4rem, 8vw, 3.6rem);
+    .kicker::before { content: ''; width: 20px; height: 1px; background: var(--faint); }
+    h1 {
+      font-family: var(--serif); font-size: clamp(2.4rem, 8vw, 3.4rem);
       font-weight: 400; line-height: 1.08; letter-spacing: -0.02em;
-      color: var(--text); margin-bottom: 1.5rem;
+      color: var(--text); margin-bottom: 1.25rem;
     }
-    .hero h1 em { font-style: italic; color: var(--muted); }
-    .hero-sub {
-      font-size: 13px; line-height: 1.8; color: var(--muted);
-      border-left: 2px solid var(--border-2); padding-left: 1rem;
-    }
+    h1 em { font-style: italic; color: var(--muted); }
+    .hero-sub { font-size: 13px; line-height: 1.8; color: #888; }
 
-    /* ─── SECTIONS ─── */
-    .section { margin-bottom: 4.5rem; }
-
-    .section-label {
+    /* SECTIONS */
+    .sec { margin-bottom: 4rem; }
+    .sec-tag {
       font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
-      color: var(--faint); margin-bottom: 1.5rem;
+      color: var(--faint); margin-bottom: 1.25rem;
       display: flex; align-items: center; gap: 0.75rem;
     }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
+    .sec-tag::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     h2 {
-      font-family: var(--serif);
-      font-size: clamp(1.4rem, 4vw, 1.8rem);
-      font-weight: 400; line-height: 1.25; color: var(--text);
-      margin-bottom: 1.25rem;
+      font-family: var(--serif); font-size: clamp(1.3rem, 4vw, 1.65rem);
+      font-weight: 400; line-height: 1.2; color: var(--text); margin-bottom: 1rem;
     }
     h2 em { font-style: italic; color: var(--muted); }
-
-    p {
-      font-size: 14px; line-height: 1.85; color: #808080;
-      margin-bottom: 1.1rem;
-    }
+    p { font-size: 14px; line-height: 1.85; color: #9a9a9a; margin-bottom: 1rem; }
     p:last-child { margin-bottom: 0; }
-    p strong { color: #b0b0b0; font-weight: 400; }
-    p em { font-style: italic; color: var(--muted); }
+    p strong { color: #aaa; font-weight: 400; }
 
-    /* ─── CALLOUT ─── */
-    .callout {
-      border-left: 2px solid var(--border-2);
-      padding: 1rem 1.25rem;
-      margin: 1.5rem 0;
-      background: var(--surface);
-      border-radius: 0 6px 6px 0;
-    }
-    .callout p { font-size: 13px; color: var(--dim); margin: 0; }
-    .callout strong { color: var(--muted); }
-
-    /* ─── STATEMENT ─── */
-    .statement {
-      padding: 1.5rem 0; margin: 2rem 0;
-      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    }
-    .statement p {
-      font-size: 15px; color: #c0c0c0; line-height: 1.7; margin: 0;
+    .pull {
       font-family: var(--serif); font-style: italic;
+      font-size: clamp(1rem, 3vw, 1.15rem); line-height: 1.65;
+      color: #aaa; border-left: 2px solid var(--border-2);
+      padding: 0.75rem 1.25rem; margin: 1.75rem 0;
     }
 
-    /* ─── EQUATION BLOCK ─── */
-    .eq-wrap { margin: 2rem 0; }
-    .eq-formula {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px 8px 0 0;
-      padding: 1.75rem 1.5rem 1.25rem;
-      text-align: center;
+    /* EQUATION */
+    .eq { margin: 1.75rem 0; }
+    .eq-top {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px 8px 0 0; padding: 1.5rem 1.5rem 1rem; text-align: center;
     }
-    .eq-label {
-      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--faint); margin-top: 0.75rem; text-align: center;
+    .eq-lbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); margin-top: 0.6rem; }
+    .eq-bot {
+      background: var(--surface-2); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 8px 8px; padding: 1rem 1.5rem;
     }
-    .eq-plain {
-      background: var(--surface-2);
-      border: 1px solid var(--border); border-top: none;
-      border-radius: 0 0 8px 8px;
-      padding: 1rem 1.5rem;
-    }
-    .eq-plain p {
-      font-size: 13px; color: var(--dim); margin: 0; line-height: 1.7;
-    }
-    .eq-terms { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
-    .eq-term {
-      display: grid; grid-template-columns: 90px 1fr;
-      gap: 0.75rem; align-items: baseline;
-    }
-    .eq-sym {
-      font-family: var(--mono); font-size: 12px; color: #666;
-      text-align: right;
-    }
-    .eq-def { font-size: 12.5px; color: #555; line-height: 1.6; }
+    .eq-bot p { font-size: 12.5px; color: #7a7a7a; margin-bottom: 0.5rem; }
+    .eq-row { display: grid; grid-template-columns: 90px 1fr; gap: 0.5rem 0.75rem; margin-top: 0.75rem; align-items: baseline; }
+    .eq-sym { font-size: 12px; color: #888; text-align: right; font-family: var(--mono); }
+    .eq-def { font-size: 12px; color: #777; line-height: 1.55; }
 
-    /* ─── VISUALIZATIONS ─── */
-    .viz-wrap { margin: 2rem 0; }
-    .viz-title {
-      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--faint); margin-bottom: 0.75rem;
+    /* CHARTS */
+    .chart { margin: 1.75rem 0; }
+    .chart-lbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.6rem; }
+    .chart-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .chart-box canvas { display: block; width: 100%; }
+    .chart-foot {
+      padding: 0.6rem 1.1rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;
     }
-    .viz-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px; overflow: hidden;
-    }
-    .viz-box canvas { display: block; width: 100%; }
-    .viz-footer {
-      padding: 0.75rem 1.25rem;
-      border-top: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 0.5rem;
-    }
-    .viz-note { font-size: 11px; color: var(--faint); }
-    .viz-stat { font-size: 11px; color: var(--muted); }
-
-    /* SLIDER */
+    .chart-note { font-size: 11px; color: var(--faint); }
+    .chart-live { font-size: 11px; color: var(--muted); }
     .slider-row {
       display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.6rem 1.25rem;
-      border-top: 1px solid var(--border);
+      padding: 0.55rem 1.1rem; border-top: 1px solid var(--border);
     }
-    .slider-label { font-size: 11px; color: var(--dim); white-space: nowrap; }
+    .slider-lbl { font-size: 11px; color: var(--dim); white-space: nowrap; }
     input[type=range] {
-      -webkit-appearance: none; flex: 1; height: 2px;
-      background: var(--border-2); outline: none; border-radius: 2px;
+      -webkit-appearance: none; flex: 1; height: 2px; background: var(--border-2); outline: none; border-radius: 2px;
     }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 14px; height: 14px;
-      border-radius: 50%; background: #888; cursor: pointer;
+      -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: #888; cursor: pointer;
     }
-    .slider-val { font-size: 12px; color: var(--text); min-width: 2.5rem; text-align: right; }
-    #regime {
-      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-    }
+    .slider-val { font-size: 12px; color: var(--text); min-width: 2.2rem; text-align: right; }
 
-    /* ─── CONNECTIONS TABLE ─── */
-    .connections { margin: 1.5rem 0; }
-    .conn-row {
-      display: grid; grid-template-columns: 90px 1fr;
-      gap: 1rem; padding: 0.9rem 0;
-      border-bottom: 1px solid var(--border);
-      align-items: baseline;
-    }
-    .conn-row:first-child { border-top: 1px solid var(--border); }
-    .conn-key {
-      font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--faint);
-    }
-    .conn-val { font-size: 13px; color: #666; line-height: 1.7; }
+    /* BIFURCATION */
+    .bif { margin: 1.75rem 0; }
+    .bif-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem; }
+    .bif-lbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); }
+    .bif-legend { display: flex; gap: 1rem; }
+    .bif-leg { display: flex; align-items: center; gap: 0.35rem; font-size: 10px; color: var(--faint); }
+    .bif-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .bif-main { background: var(--surface); border: 1px solid var(--border); border-radius: 8px 8px 0 0; overflow: hidden; }
+    .bif-main canvas { display: block; width: 100%; }
+    .bif-zooms { display: grid; grid-template-columns: 1fr 1fr; }
+    .bif-z { background: var(--surface); border: 1px solid var(--border); border-top: none; overflow: hidden; }
+    .bif-z:first-child { border-radius: 0 0 0 8px; }
+    .bif-z:last-child { border-radius: 0 0 8px 0; border-left: none; }
+    .bif-z canvas { display: block; width: 100%; }
+    .bif-z-lbl { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 0.45rem 0.75rem; border-top: 1px solid var(--border); }
+    .bif-cap { font-size: 11.5px; color: #7a7a7a; line-height: 1.7; margin-top: 0.75rem; }
 
-    /* ─── CLOSING ─── */
-    .closing {
-      border-top: 1px solid var(--border);
-      padding-top: 2.5rem; margin-top: 1rem;
+    /* CONNECTIONS */
+    .rows { margin: 1.25rem 0; }
+    .row {
+      display: grid; grid-template-columns: 85px 1fr;
+      gap: 0.75rem; padding: 0.8rem 0;
+      border-bottom: 1px solid var(--border); align-items: baseline;
     }
-    .closing p {
+    .row:first-child { border-top: 1px solid var(--border); }
+    .row-k { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+    .row-v { font-size: 13px; color: #888; line-height: 1.65; }
+
+    /* CLOSE */
+    .close { border-top: 1px solid var(--border); padding-top: 2.25rem; margin-top: 0.5rem; }
+    .close p {
       font-family: var(--serif); font-style: italic;
-      font-size: clamp(1.1rem, 3.5vw, 1.3rem);
-      color: var(--muted); line-height: 1.7; margin-bottom: 0.5rem;
+      font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+      color: var(--muted); line-height: 1.7; margin-bottom: 0.4rem;
     }
 
     footer {
@@ -239,257 +161,208 @@
       color: var(--faint); border-top: 1px solid var(--border);
     }
 
-    /* ─── SCROLL REVEAL ─── */
-    .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
     .reveal.on { opacity: 1; transform: none; }
 
-    /* ─── MOBILE ─── */
     @media (max-width: 480px) {
-      main { padding: 72px 1.1rem 60px; }
-      .eq-term { grid-template-columns: 70px 1fr; }
-      .conn-row { grid-template-columns: 70px 1fr; }
+      main { padding: 70px 1.1rem 56px; }
+      .eq-row { grid-template-columns: 70px 1fr; }
+      .row { grid-template-columns: 65px 1fr; }
     }
   </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-crumb">
-    <a href="/">ronu</a>
-    <span>/</span>
-    <a href="/Science/">science</a>
-    <span>/</span>
-    <span class="current">chaos</span>
+  <div class="crumb">
+    <a href="/">ronu</a><span>/</span>
+    <a href="/Science/">science</a><span>/</span>
+    <span class="cur">chaos</span>
   </div>
-  <a class="nav-back" href="/Science/">← science</a>
+  <a class="back" href="/Science/">← science</a>
 </nav>
 
 <main>
 
-  <!-- HERO -->
   <div class="hero reveal">
-    <div class="hero-kicker">chaos theory · mathematics</div>
+    <div class="kicker">chaos theory</div>
     <h1>The Dice<br><em>and the Storm.</em></h1>
-    <p class="hero-sub">
-      Why the same throw never lands the same way twice —
-      and what that has in common with weather, traffic, markets, and most things that matter.
-    </p>
+    <p class="hero-sub">The same throw never lands the same way twice. Turns out that is the same problem as predicting weather, reading markets, and a few other things worth understanding.</p>
   </div>
 
   <!-- 01 -->
-  <div class="section reveal">
-    <div class="section-label">01 · the observation</div>
-    <h2>The child at the table.</h2>
-    <p>You roll the dice. You get a four. You pick it up, hold it the same way, release it at the same height, same angle. You get a two.</p>
-    <p>You try again. You adjust carefully — same grip, same drop, same release point. Nothing repeats. After a few attempts you accept it as luck and move on. But something stays unresolved. The question does not go away:</p>
-    <div class="statement"><p>Why doesn't repeating an action repeat the outcome?</p></div>
-    <p>Most people file this under randomness. That file is not quite right.</p>
+  <div class="sec reveal">
+    <div class="sec-tag">01</div>
+    <h2>Roll the dice again.</h2>
+    <p>Same grip. Same height. Same angle. Different result. You try again. Still different. After a while you give up and call it luck.</p>
+    <p>But it is not luck. Every roll is completely determined by physics. The outcome was decided the moment you released it. The problem is you have no idea what the deciding conditions actually were, because they are too small to measure. And here is where it gets interesting: <strong>in some systems, too small to measure does not mean too small to matter.</strong></p>
   </div>
 
   <!-- 02 -->
-  <div class="section reveal">
-    <div class="section-label">02 · the obvious explanation</div>
-    <h2>There must be <em>a missing detail.</em></h2>
-    <p>The first reasonable instinct: you are missing a measurement. The exact spin at release. A small air current in the room. The precise angle of your fingers at the last moment. If you could measure all of those things with enough precision, you could predict where the dice would land. The outcome feels random, but it is just unknown.</p>
-    <p>This is actually a serious scientific position — not a casual guess. In 1814, the French mathematician <strong>Pierre-Simon Laplace</strong> formalized it. He imagined an infinite intelligence — later called <em>Laplace's Demon</em> — that knew the exact position and velocity of every atom in the universe at a single moment. Given that knowledge and the laws of physics, it could compute the entire future with perfect certainty. Uncertainty, in this view, was just ignorance. A temporary condition while waiting for better instruments.</p>
-    <p>The dice feels like a solvable problem. Measure more. Control more. Get the answer.</p>
-    <div class="statement"><p>It was not a measurement problem.</p></div>
+  <div class="sec reveal">
+    <div class="sec-tag">02</div>
+    <h2>The obvious fix that does not work.</h2>
+    <p>Your first instinct is probably: measure more things. Get a better instrument. If you knew the exact angle, the exact spin, the air pressure, you would crack it. Uncertainty is just ignorance, and ignorance is fixable.</p>
+    <p>A mathematician made this argument formally a couple of centuries ago. He imagined an intelligence that knew the position of every atom in the universe at a single moment. That intelligence could compute everything that would ever happen. Uncertainty, in this view, was a temporary condition.</p>
+    <p>It is a satisfying idea. And it turns out to be wrong in a specific, measurable way.</p>
+    <div class="pull">The problem is not that you are missing one measurement. It is that some systems take tiny errors and grow them until they are enormous.</div>
   </div>
 
   <!-- 03 -->
-  <div class="section reveal">
-    <div class="section-label">03 · the real issue</div>
-    <h2>The measurements can never be <em>precise enough.</em></h2>
-    <p>Here is the actual problem. Every physical measurement has a hard limit — not just a practical limit, but a fundamental one. You can measure the release angle to one degree. Then a tenth of a degree. Then a hundredth. But no matter how precise your instrument is, the dice responds to the <em>actual</em> angle — which exists at a precision no instrument can ever fully reach.</p>
-    <p>In most systems, this is fine. A tiny imprecision leads to a tiny error in the prediction. The gap stays small.</p>
-    <p>But in some systems — the dice being one of them — a difference at the <strong>fifteenth decimal place</strong> does not stay small. It grows. And it does not grow gradually. It grows exponentially. Fast enough that a difference you could never even measure in the first place completely determines the outcome within milliseconds.</p>
+  <div class="sec reveal">
+    <div class="sec-tag">03</div>
+    <h2>The error that <em>does not stay small.</em></h2>
+    <p>Take the same system and run it twice. Everything identical, except one starting value is off by one millionth. A difference you would never notice, never measure, never think about.</p>
+    <p>The two lines below are that experiment. Same rule, applied step by step to both. Watch what happens to the gap between them.</p>
 
-    <div class="viz-wrap reveal">
-      <div class="viz-title">two trajectories — starting difference: 0.000001</div>
-      <div class="viz-box">
-        <canvas id="traj" height="180"></canvas>
-        <div class="viz-footer">
-          <span class="viz-note">light line and dark line start at nearly the same point</span>
-          <span class="viz-stat" id="traj-gap">gap = —</span>
+    <div class="chart reveal">
+      <div class="chart-lbl">same rule, two starting points, one millionth apart</div>
+      <div class="chart-box">
+        <canvas id="traj" height="170"></canvas>
+        <div class="chart-foot">
+          <span class="chart-note">light = run A, dark = run B</span>
+          <span class="chart-live" id="traj-gap">gap = —</span>
         </div>
       </div>
     </div>
 
-    <p>Both lines above follow exactly the same rule. No randomness. No noise. They start at positions that differ by one millionth — less than the width of a bacterium compared to your hand. Watch how quickly they diverge into completely different behavior. <strong>That gap is what makes prediction fail.</strong></p>
+    <p>They start together. Then the gap grows. Then they are completely different. No randomness was added. The rule never changed. The only thing that changed was that starting value of one millionth, and the system did the rest.</p>
   </div>
 
   <!-- 04 -->
-  <div class="section reveal">
-    <div class="section-label">04 · the name</div>
-    <h2>Chaos. Not what you think it means.</h2>
-    <p>In everyday language, chaos means disorder — randomness, unpredictability, noise. In mathematics and physics, it means something more specific, and more interesting.</p>
-    <p>In <strong>1963</strong>, a meteorologist named <strong>Edward Lorenz</strong> was running weather simulations on one of the first computers at MIT. To save time, he re-ran a sequence by typing in a number from a printout: <strong>0.506</strong>. The actual value stored in memory was <strong>0.506127</strong>. The difference: 0.000127 — about the size of a dust particle compared to a marble.</p>
-    <p>Within a few simulated days, the two runs produced completely different weather. Months of forecast — unrecognizable from each other. The simulation was not broken. The equations were perfectly deterministic: given the same input, they always produce the same output. The problem was that <em>0.506 and 0.506127 are not the same input</em>, and in this kind of system, they might as well be worlds apart.</p>
-    <p>Lorenz called this <strong>sensitive dependence on initial conditions</strong>. It became known as the butterfly effect — the idea that a butterfly flapping its wings in Brazil might set off a tornado in Texas. Not as a literal cause, but as a metaphor for what tiny differences can become in a sensitive system.</p>
-    <div class="statement"><p>Chaos: a system fully governed by rules,<br>that is practically impossible to predict.</p></div>
-    <div class="callout"><p><strong>The key distinction:</strong> a chaotic system is not random. Given perfect knowledge of the starting conditions, it is perfectly predictable. The problem is that perfect knowledge is physically impossible — and in a chaotic system, imperfect knowledge quickly becomes no knowledge at all.</p></div>
+  <div class="sec reveal">
+    <div class="sec-tag">04</div>
+    <h2>The name. <em>And the story behind it.</em></h2>
+    <p>A meteorologist in the early 1960s was re-running a weather simulation and typed a number from a printout: 0.506 instead of the stored value 0.506127. Difference of 0.000127. He went for coffee and came back to find that two months of simulated weather had diverged completely between the two runs.</p>
+    <p>The equations were deterministic. Same input, same output, always. But 0.506 and 0.506127 are not the same input. And in this system, that gap did not stay small.</p>
+    <p>He called it sensitive dependence on initial conditions. Everyone else calls it the butterfly effect. A butterfly flaps its wings in one place and sets off a storm somewhere else, weeks later. Not literally, but structurally: in a sensitive system, differences that small can cascade into differences that large.</p>
+    <div class="pull">Chaos is not randomness. It is a system fully governed by rules that becomes practically impossible to predict.</div>
   </div>
 
   <!-- 05 -->
-  <div class="section reveal">
-    <div class="section-label">05 · the mathematics</div>
+  <div class="sec reveal">
+    <div class="sec-tag">05 · the math</div>
     <h2>How fast the gap grows.</h2>
-    <p>The mechanism has a clean mathematical description. Take two starting points separated by a tiny gap — call it δ₀ (delta-zero). As the system evolves, that gap does not stay constant. It grows according to:</p>
+    <p>The divergence has a clean form. Two starting points separated by a tiny gap delta-zero (δ₀) grow apart like this:</p>
 
-    <div class="eq-wrap">
-      <div class="eq-formula">
+    <div class="eq reveal">
+      <div class="eq-top">
         <div id="eq1"></div>
-        <p class="eq-label">exponential divergence</p>
+        <p class="eq-lbl">exponential divergence</p>
       </div>
-      <div class="eq-plain">
-        <p>Read this as: <em>the gap at time t equals the starting gap, multiplied by e raised to the power of λ times t.</em></p>
-        <p>In practical terms: the gap grows the same way money grows with compound interest — except instead of modest annual returns, the "interest rate" here can be enormous, and it compounds continuously.</p>
-        <div class="eq-terms">
-          <div class="eq-term">
-            <span class="eq-sym">δ(t)</span>
-            <span class="eq-def">the gap between two trajectories at time t — what you are watching grow in the chart above</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">δ₀</span>
-            <span class="eq-def">the starting gap — how different the two initial conditions were (Lorenz's case: 0.000127)</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">e</span>
-            <span class="eq-def">Euler's number ≈ 2.718 — the base of natural exponential growth. The same one that governs compound interest, population growth, and radioactive decay.</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">λ (lambda)</span>
-            <span class="eq-def">the Lyapunov exponent — a single number that describes how chaotic this system is. When λ > 0, the system is chaotic. Larger λ means faster divergence. For a dice roll, λ is large.</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">t</span>
-            <span class="eq-def">time — as t grows, so does the exponent λt, which means e^(λt) grows very fast</span>
-          </div>
+      <div class="eq-bot">
+        <p>Read as: the gap at time t equals the starting gap multiplied by e raised to the power of lambda times t. The same compounding structure as interest, but the rate here can be enormous.</p>
+        <div class="eq-row">
+          <span class="eq-sym">δ₀</span>
+          <span class="eq-def">starting gap. How different the two starting points were.</span>
         </div>
-        <p style="margin-top:1rem">What this equation tells you: <strong>better instruments help, but only logarithmically.</strong> If you halve your measurement error, you buy yourself a fixed extra amount of prediction time — not double the time. You cannot outrun exponential growth by improving your rulers.</p>
+        <div class="eq-row">
+          <span class="eq-sym">e</span>
+          <span class="eq-def">Euler's number, approximately 2.718. Base of natural exponential growth, same as compound interest.</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-sym">λ (lambda)</span>
+          <span class="eq-def">the Lyapunov exponent, a single number measuring how chaotic the system is. When lambda is positive, the system is chaotic. Larger lambda means the gap opens faster.</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-sym">t</span>
+          <span class="eq-def">time. As t grows, lambda times t grows, and e to that power grows very fast.</span>
+        </div>
+        <p style="margin-top:0.9rem">Better instruments shrink delta-zero. But lambda and t do not care. You can halve your measurement error and buy yourself a fixed extra window of prediction, not double the window. You cannot outrun the exponent.</p>
       </div>
     </div>
   </div>
 
   <!-- 06 -->
-  <div class="section reveal">
-    <div class="section-label">06 · a live example</div>
-    <h2>One rule. <em>Three completely different behaviors.</em></h2>
-    <p>To make this concrete, consider something called the <strong>logistic map</strong>. It was developed in the 1800s to model how animal populations grow when food is limited — a perfectly ordinary problem. The entire system is a single equation:</p>
+  <div class="sec reveal">
+    <div class="sec-tag">06 · one rule, three worlds</div>
+    <h2>This started as a rabbit population model.</h2>
+    <p>Someone in the 1800s wanted to model how animal populations grow when food is limited. How many this year given how many last year. Single equation. One multiplication, one subtraction. Repeat.</p>
+    <p>The only thing you can change is the growth rate, r. Move r and the behavior changes completely.</p>
 
-    <div class="eq-wrap">
-      <div class="eq-formula">
-        <div id="eq2"></div>
-        <p class="eq-label">the logistic map · one step of the rule</p>
-      </div>
-      <div class="eq-plain">
-        <p>One multiplication, one subtraction. Apply it to a number. Take the result and apply it again. Repeat. That's the entire system.</p>
-        <div class="eq-terms">
-          <div class="eq-term">
-            <span class="eq-sym">xₙ</span>
-            <span class="eq-def">the population at step n, expressed as a fraction between 0 (extinct) and 1 (at maximum capacity)</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">r</span>
-            <span class="eq-def">the growth rate — how aggressively the population reproduces each cycle. This is the only thing you can change. It controls everything.</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">(1−xₙ)</span>
-            <span class="eq-def">the brake — as population approaches 1 (full capacity), resources run out and this term pulls growth back toward zero</span>
-          </div>
-          <div class="eq-term">
-            <span class="eq-sym">xₙ₊₁</span>
-            <span class="eq-def">the population next cycle — fully determined by this cycle's value and r. Then repeat, indefinitely.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p>Drag the slider below. The same formula — the same rule — produces completely different behavior depending on where r sits.</p>
-
-    <div class="viz-wrap reveal">
-      <div class="viz-title">logistic map · population over time</div>
-      <div class="viz-box">
-        <canvas id="logistic" height="180"></canvas>
+    <div class="chart reveal">
+      <div class="chart-lbl">population over time at growth rate r</div>
+      <div class="chart-box">
+        <canvas id="logistic" height="170"></canvas>
         <div class="slider-row">
-          <span class="slider-label">growth rate r =</span>
+          <span class="slider-lbl">r =</span>
           <input type="range" id="rSlider" min="1" max="4" step="0.005" value="2.8"/>
           <span class="slider-val" id="rVal">2.80</span>
         </div>
-        <div class="viz-footer">
-          <span class="viz-note" id="regime-desc">population stabilizes — same value every cycle</span>
-          <span class="viz-stat" id="regime">stable</span>
+        <div class="chart-foot">
+          <span class="chart-note" id="regime-desc">settles to a fixed value</span>
+          <span class="chart-live" id="regime">stable</span>
         </div>
       </div>
     </div>
 
-    <div class="callout">
-      <p><strong>What to try:</strong> drag r slowly from left to right. Around r = 3 you will see the population start oscillating between two values. Around r = 3.45 it splits again into four. Then eight. Then suddenly — past r ≈ 3.57 — the pattern never repeats. Not because the rule changed. Because you crossed a threshold.</p>
-    </div>
+    <p>Drag r toward 4. Watch it go from stable, to bouncing between two values, to four, to eight, then into something that never repeats. Same formula throughout. Same rule. Just a different r.</p>
 
-    <p style="margin-top:1.5rem">The diagram below shows this across the full range of r at once. Each vertical column shows where the population eventually settles for that value of r — after the initial transient dies out. The branching structure is called a <strong>bifurcation diagram</strong>. The moment the branches fragment into a cloud is the onset of chaos.</p>
-
-    <div class="viz-wrap reveal">
-      <div class="viz-title">bifurcation diagram · r from 2.5 → 4.0</div>
-      <div class="viz-box">
-        <canvas id="bifurc" height="240"></canvas>
-        <div class="viz-footer">
-          <span class="viz-note">each vertical slice = long-run behavior at that r</span>
-          <span class="viz-stat">order → period-doubling → chaos</span>
+    <!-- BIFURCATION -->
+    <div class="bif reveal">
+      <div class="bif-head">
+        <span class="bif-lbl">bifurcation diagram</span>
+        <div class="bif-legend">
+          <div class="bif-leg"><div class="bif-dot" style="background:#555"></div>order</div>
+          <div class="bif-leg"><div class="bif-dot" style="background:#888"></div>chaos</div>
         </div>
       </div>
+      <div class="bif-main"><canvas id="bif-full" height="190"></canvas></div>
+      <div class="bif-zooms">
+        <div class="bif-z">
+          <canvas id="bif-z1" height="130"></canvas>
+          <div class="bif-z-lbl">r 2.8 to 3.6 — splitting</div>
+        </div>
+        <div class="bif-z">
+          <canvas id="bif-z2" height="130"></canvas>
+          <div class="bif-z-lbl">r 3.5 to 4.0 — chaos onset</div>
+        </div>
+      </div>
+      <p class="bif-cap">Each vertical column shows where the population ends up for that value of r, after settling. One line splits into two, then four. Around r = 3.57 it stops splitting and just breaks apart. That boundary between the structured branching and the cloud is the onset of chaos.</p>
     </div>
-
-    <p>The same formula. The same rule. The only difference is the value of one number — r. Order and chaos separated by a single threshold, at r ≈ 3.57.</p>
   </div>
 
   <!-- 07 -->
-  <div class="section reveal">
-    <div class="section-label">07 · in the world</div>
-    <h2>Where you have already seen this.</h2>
-    <p>Once you understand the mechanism — deterministic rules, sensitive dependence, tiny differences that compound — you start recognizing it in systems that previously just looked broken or random.</p>
+  <div class="sec reveal">
+    <div class="sec-tag">07 · same thing, different names</div>
+    <h2>You have already lived this.</h2>
 
-    <div class="connections">
-      <div class="conn-row">
-        <span class="conn-key">dice</span>
-        <span class="conn-val">The release angle at the 8th decimal place determines the outcome. λ is large. The result was never predictable from any measurement you could make.</span>
+    <div class="rows">
+      <div class="row">
+        <span class="row-k">dice</span>
+        <span class="row-v">Lambda is large. The outcome was set at release by conditions too small to measure. Always was.</span>
       </div>
-      <div class="conn-row">
-        <span class="conn-key">weather</span>
-        <span class="conn-val">Lorenz's 0.000127 rounding error erased two months of forecast. No matter how many satellites and sensors you add, the atmosphere's λ puts a hard ceiling on prediction at around two weeks.</span>
+      <div class="row">
+        <span class="row-k">weather</span>
+        <span class="row-v">Lambda in the atmosphere puts a hard ceiling on useful forecasts at around two weeks. No amount of sensors changes this.</span>
       </div>
-      <div class="conn-row">
-        <span class="conn-key">traffic</span>
-        <span class="conn-val">One driver brakes 0.3 seconds late. A jam forms miles back, with no accident, no visible cause. The road at high density is a sensitive system — small perturbations grow into stop-and-go waves.</span>
+      <div class="row">
+        <span class="row-k">traffic</span>
+        <span class="row-v">One driver brakes half a second late. A jam forms miles back with no accident at the scene. High-density roads have positive lambda.</span>
       </div>
-      <div class="conn-row">
-        <span class="conn-key">markets</span>
-        <span class="conn-val">A resting limit order nobody noticed. One trade hits it. The cascade looks nothing like its origin. Price discovery in liquid markets has a short predictability horizon — λ is positive.</span>
+      <div class="row">
+        <span class="row-k">markets</span>
+        <span class="row-v">A resting order nobody noticed. One trade hits it. The cascade looks nothing like its origin. Lambda is positive and the window is short.</span>
       </div>
-      <div class="conn-row">
-        <span class="conn-key">conversations</span>
-        <span class="conn-val">One word chosen differently. A relationship that bends in a direction it does not come back from. The word felt insignificant at the time. The Lyapunov exponent did not care.</span>
-      </div>
-      <div class="conn-row">
-        <span class="conn-key">decisions</span>
-        <span class="conn-val">The meeting you almost skipped. The city you almost did not move to. Small differences in initial conditions, early in a long trajectory. λ compounding quietly over years.</span>
+      <div class="row">
+        <span class="row-k">conversations</span>
+        <span class="row-v">One word differently. A relationship that bends and does not come back. The word felt small at the time.</span>
       </div>
     </div>
   </div>
 
   <!-- 08 -->
-  <div class="section reveal">
-    <div class="section-label">08 · what changes</div>
-    <h2>The lesson is not control.</h2>
-    <p>The natural response to chaos is to want more control — finer instruments, better models, more data. This is reasonable. It is also limited at the fundamental level, for a reason the equation makes precise.</p>
-    <p>The exponential δ(t) = δ₀·e^(λt) does not care how small you make δ₀. It only cares about λ and t. Given enough of either, any nonzero δ₀ grows large. Improving your measurement precision buys you more time, but logarithmically — you cannot outrun the exponent by improving linearly.</p>
-    <p>This is not a technology gap. It is a structural property of certain systems. And the systems that matter most to us — weather, markets, decisions, relationships — tend to be those systems.</p>
-    <p>What shifts when you understand this is not what you try to optimize. It is <strong>what you pay attention to</strong>: not the specific outcome, which is often irretrievably sensitive to conditions you cannot measure — but the initial conditions themselves. Where you are at the start of a trajectory. What λ looks like from here.</p>
+  <div class="sec reveal">
+    <div class="sec-tag">08</div>
+    <h2>What actually changes <em>when you understand this.</em></h2>
+    <p>The gap is delta-zero multiplied by e to the power of lambda times t. You can shrink delta-zero. Lambda and t will still win eventually. This is not a technology problem. It is a structural feature of certain systems.</p>
+    <p>What shifts is where you pay attention. Not the specific outcome, which is often gone before you can even see it. But the initial conditions you can still influence. The early part of the trajectory, before lambda takes over.</p>
+    <p>The dice was never yours to control. But you were always the one deciding how to pick it up.</p>
 
-    <div class="closing">
-      <p>Not: how do I repeat the same result?</p>
-      <p>But: how do small differences, made now,</p>
-      <p>grow into different futures?</p>
+    <div class="close">
+      <p>Not: how do I get the same result next time?</p>
+      <p>But: which small differences, right now,</p>
+      <p>are still small enough to shape?</p>
     </div>
   </div>
 
@@ -498,9 +371,7 @@
 <footer>ronu · science · chaos theory</footer>
 
 <script>
-// ── KaTeX ──
 katex.render("\\delta(t) = \\delta_0 \\, e^{\\,\\lambda t}", document.getElementById("eq1"), { displayMode: true, throwOnError: false });
-katex.render("x_{n+1} = r \\, x_n \\left(1 - x_n\\right)", document.getElementById("eq2"), { displayMode: true, throwOnError: false });
 
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -513,142 +384,127 @@ function setupCanvas(id, h) {
   return { c, ctx, W, H: h };
 }
 
-function grid(ctx, W, H) {
-  ctx.strokeStyle = "#141414"; ctx.lineWidth = 1;
+function gridLines(ctx, W, H) {
+  ctx.strokeStyle = "#131313"; ctx.lineWidth = 1;
   [0.25, 0.5, 0.75].forEach(y => {
-    const py = H - y * (H * 0.78) - H * 0.11;
+    const py = H - y * H * 0.78 - H * 0.11;
     ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
   });
 }
 
-// ── 1. Diverging trajectories ──
+// Trajectory divergence
 (function () {
   const gapEl = document.getElementById("traj-gap");
-  let frame = 0, animId;
-  const r = 3.9;
-  const t1 = [0.5], t2 = [0.5 + 1e-6];
+  let frame = 0, anim;
+  const r = 3.9, t1 = [0.5], t2 = [0.5 + 1e-6];
   for (let i = 0; i < 100; i++) {
     t1.push(r * t1[i] * (1 - t1[i]));
     t2.push(r * t2[i] * (1 - t2[i]));
   }
-
   function draw() {
-    const { c, ctx, W, H } = setupCanvas("traj", 180);
+    const { ctx, W, H } = setupCanvas("traj", 170);
     ctx.fillStyle = "#0c0c0c"; ctx.fillRect(0, 0, W, H);
-    grid(ctx, W, H);
-
-    const n = Math.min(frame + 1, t1.length);
-    const step = W / 100;
-
-    [[t1, "#c0c0c0", 1.5], [t2, "#3a3a3a", 1.2]].forEach(([traj, color, lw]) => {
-      ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath();
+    gridLines(ctx, W, H);
+    const n = Math.min(frame + 1, 101);
+    [[t1, "#c0c0c0", 1.5], [t2, "#383838", 1.2]].forEach(([tr, col, lw]) => {
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath();
       for (let i = 0; i < n; i++) {
-        const px = i * step, py = H - traj[i] * H * 0.78 - H * 0.11;
+        const px = (i / 100) * W, py = H - tr[i] * H * 0.78 - H * 0.11;
         i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
       }
       ctx.stroke();
     });
-
     if (n > 1) {
-      const diff = Math.abs(t1[n - 1] - t2[n - 1]);
-      gapEl.textContent = `gap = ${diff < 0.0001 ? diff.toExponential(1) : diff.toFixed(4)}`;
+      const d = Math.abs(t1[n-1] - t2[n-1]);
+      gapEl.textContent = `gap = ${d < 0.001 ? d.toExponential(1) : d.toFixed(3)}`;
     }
-    if (frame < 99) { frame++; animId = requestAnimationFrame(draw); }
+    if (frame < 100) { frame++; anim = requestAnimationFrame(draw); }
   }
-
   const obs = new IntersectionObserver(e => {
-    if (e[0].isIntersecting) { frame = 0; cancelAnimationFrame(animId); draw(); }
+    if (e[0].isIntersecting) { frame = 0; cancelAnimationFrame(anim); draw(); }
   }, { threshold: 0.3 });
   obs.observe(document.getElementById("traj"));
 })();
 
-// ── 2. Logistic time series ──
-const rSlider = document.getElementById("rSlider");
-const rValEl  = document.getElementById("rVal");
-const regDesc = document.getElementById("regime-desc");
-const regEl   = document.getElementById("regime");
+// Logistic
+const rs = document.getElementById("rSlider");
+const rv = document.getElementById("rVal");
+const rd = document.getElementById("regime-desc");
+const rl = document.getElementById("regime");
+const REG = [[3.57,"chaos","never repeats"],[3.449,"period 8+","bouncing between many values"],[3.2,"period 4","bouncing between 4 values"],[3.0,"period 2","bouncing between 2 values"],[0,"stable","settles to a fixed value"]];
 
-const regimes = [
-  [3.57, "chaos", "never repeats — full chaos"],
-  [3.449, "period 8+", "oscillates between many values"],
-  [3.2, "period 4", "oscillates between 4 values"],
-  [3.0, "period 2", "oscillates between 2 values"],
-  [0, "stable", "population stabilizes — same value every cycle"],
-];
-
-function drawLogistic(r) {
-  const { ctx, W, H } = setupCanvas("logistic", 180);
+function drawLog(r) {
+  const { ctx, W, H } = setupCanvas("logistic", 170);
   ctx.fillStyle = "#0c0c0c"; ctx.fillRect(0, 0, W, H);
-  grid(ctx, W, H);
-
+  gridLines(ctx, W, H);
   let x = 0.5;
   for (let i = 0; i < 300; i++) x = r * x * (1 - x);
-
   ctx.strokeStyle = "#c8c8c8"; ctx.lineWidth = 1.4; ctx.beginPath();
-  const steps = 150;
-  for (let i = 0; i < steps; i++) {
+  for (let i = 0; i < 150; i++) {
     x = r * x * (1 - x);
-    const px = (i / steps) * W, py = H - x * H * 0.78 - H * 0.11;
+    const px = (i/150)*W, py = H - x*H*0.78 - H*0.11;
     i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
   }
   ctx.stroke();
-
-  const [, label, desc] = regimes.find(([thresh]) => r > thresh);
-  regEl.textContent = label;
-  regDesc.textContent = desc;
-  regEl.style.color = r > 3.57 ? "#888" : r > 3 ? "#666" : "#444";
+  const [, lb, dsc] = REG.find(([t]) => r > t);
+  rl.textContent = lb; rd.textContent = dsc;
+  rl.style.color = r > 3.57 ? "#888" : r > 3 ? "#666" : "#444";
 }
+rs.addEventListener("input", () => { rv.textContent = parseFloat(rs.value).toFixed(2); drawLog(parseFloat(rs.value)); });
+drawLog(2.8);
 
-rSlider.addEventListener("input", () => {
-  const r = parseFloat(rSlider.value);
-  rValEl.textContent = r.toFixed(2);
-  drawLogistic(r);
-});
-drawLogistic(2.8);
-window.addEventListener("resize", () => drawLogistic(parseFloat(rSlider.value)));
-
-// ── 3. Bifurcation diagram ──
-(function () {
-  const { ctx, W, H } = setupCanvas("bifurc", 240);
+// Bifurcation
+function drawBif(id, rMin, rMax, h, alpha, boundary) {
+  const { ctx, W, H } = setupCanvas(id, h);
   ctx.fillStyle = "#0c0c0c"; ctx.fillRect(0, 0, W, H);
-
-  const rMin = 2.5, rMax = 4.0;
-  const cols = W * 2;
-
+  ctx.strokeStyle = "#131313"; ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75].forEach(y => {
+    const py = H - y*H*0.82 - H*0.09;
+    ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(W,py); ctx.stroke();
+  });
+  const cols = W * 1.5;
   for (let i = 0; i <= cols; i++) {
-    const r = rMin + (rMax - rMin) * (i / cols);
+    const r = rMin + (rMax-rMin)*(i/cols);
     let x = 0.5;
-    for (let j = 0; j < 400; j++) x = r * x * (1 - x);
-    for (let j = 0; j < 200; j++) {
-      x = r * x * (1 - x);
-      const px = (i / cols) * W;
-      const py = H - x * (H * 0.82) - H * 0.09;
-      ctx.fillStyle = r > 3.57 ? "rgba(160,160,160,0.12)" : "rgba(160,160,160,0.2)";
+    for (let j = 0; j < 400; j++) x = r*x*(1-x);
+    for (let j = 0; j < 180; j++) {
+      x = r*x*(1-x);
+      const px = (i/cols)*W, py = H - x*H*0.82 - H*0.09;
+      const br = r > 3.57 ? 150 : 180;
+      ctx.fillStyle = `rgba(${br},${br},${br},${alpha})`;
       ctx.fillRect(px, py, 1, 1);
     }
   }
+  ctx.fillStyle = "#272727"; ctx.font = `9px 'DM Mono', monospace`;
+  const step = (rMax - rMin) <= 0.8 ? 0.1 : 0.5;
+  let r0 = Math.ceil(rMin / step) * step;
+  while (r0 <= rMax + 0.001) {
+    const px = ((r0 - rMin)/(rMax - rMin))*W;
+    if (px > 5 && px < W - 10) ctx.fillText(r0.toFixed(1), px - 8, H - 5);
+    r0 = Math.round((r0 + step) * 1000) / 1000;
+  }
+  if (boundary && 3.57 >= rMin && 3.57 <= rMax) {
+    const bx = ((3.57-rMin)/(rMax-rMin))*W;
+    ctx.strokeStyle = "#222"; ctx.lineWidth = 1; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.moveTo(bx,0); ctx.lineTo(bx, H-18); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#282828"; ctx.font = `9px 'DM Mono', monospace`;
+    ctx.fillText("3.57", bx+3, 12);
+  }
+}
 
-  // r axis labels
-  ctx.fillStyle = "#2e2e2e"; ctx.font = `10px 'DM Mono', monospace`;
-  [2.5, 3.0, 3.5, 4.0].forEach(r => {
-    const px = ((r - rMin) / (rMax - rMin)) * W;
-    ctx.fillText(r.toFixed(1), Math.min(px - 8, W - 24), H - 8);
-  });
+function initBif() {
+  drawBif("bif-full",  2.5, 4.0, 190, 0.17, true);
+  drawBif("bif-z1",   2.8, 3.6, 130, 0.26, false);
+  drawBif("bif-z2",   3.5, 4.0, 130, 0.22, true);
+}
+const bifObs = new IntersectionObserver(e => { if (e[0].isIntersecting) { initBif(); bifObs.disconnect(); } }, { threshold: 0.1 });
+bifObs.observe(document.getElementById("bif-full"));
+window.addEventListener("resize", () => { drawLog(parseFloat(rs.value)); initBif(); });
 
-  // chaos boundary
-  const bx = ((3.57 - rMin) / (rMax - rMin)) * W;
-  ctx.strokeStyle = "#252525"; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
-  ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx, H - 20); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = "#2a2a2a"; ctx.font = `9px 'DM Mono', monospace`;
-  ctx.fillText("r = 3.57", bx + 4, 14);
-})();
-
-// ── Scroll reveal ──
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("on"); });
-}, { threshold: 0.07 });
-document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+// Reveal
+const ro = new IntersectionObserver(e => e.forEach(en => { if (en.isIntersecting) en.target.classList.add("on"); }), { threshold: 0.07 });
+document.querySelectorAll(".reveal").forEach(el => ro.observe(el));
 </script>
 </body>
 </html>
