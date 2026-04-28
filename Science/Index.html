@@ -3,137 +3,167 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Why Traffic Suddenly Stops | Ronu · Science</title>
+  <title>Why Traffic Jams Appear from Nothing | Ronu · Science</title>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #080808; --surface: #101010; --surface-2: #141414;
-      --border: #1c1c1c; --border-2: #252525;
-      --text: #e8e8e8; --muted: #9a9a9a; --dim: #666; --faint: #444;
-      --good: #7ec86a; --warn: #d4a843; --bad: #c96060;
+      --bg: #080808; --surface: #0e0e0e; --surface-2: #131313;
+      --border: #1c1c1c; --border-2: #242424;
+      --text: #e0e0e0; --muted: #888; --dim: #666; --faint: #444;
+      --good: #6bba58; --warn: #c89a38; --bad: #b84848;
+      --lane-change: #5878c8;
+      --road: #141414; --road-line: #252525; --road-edge: #1e1e1e;
       --serif: 'Instrument Serif', Georgia, serif;
       --mono: 'DM Mono', monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
       background: var(--bg); color: var(--text);
       font-family: var(--mono); font-size: 13px;
       -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column;
     }
 
+    /* NAV */
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-      height: 52px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.5rem;
-      background: rgba(8,8,8,0.92); backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.25rem;
+      background: rgba(8,8,8,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); z-index: 10;
     }
-    .crumb { display: flex; align-items: center; gap: 0.35rem; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .crumb { display: flex; align-items: center; gap: 0.3rem; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
     .crumb a { color: var(--faint); text-decoration: none; transition: color 0.15s; }
     .crumb a:hover { color: var(--text); }
-    .crumb span { color: #2a2a2a; }
+    .crumb span { color: #222; }
     .crumb .cur { color: var(--dim); }
-    .back { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); text-decoration: none; transition: color 0.15s; }
+    .back { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); text-decoration: none; }
     .back:hover { color: var(--text); }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 72px 1.5rem 60px; }
-
-    /* HERO */
-    .hero { margin-bottom: 2rem; }
-    .kicker {
-      font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
-      color: #3a3a3a; margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 0.75rem;
-    }
-    .kicker::before { content: ''; width: 20px; height: 1px; background: #2a2a2a; }
-    h1 {
-      font-family: var(--serif); font-size: clamp(2rem, 5vw, 3.2rem);
-      font-weight: 400; line-height: 1.08; letter-spacing: -0.02em;
-      color: var(--text); margin-bottom: 1rem;
-    }
-    h1 em { font-style: italic; color: var(--muted); }
-    .hero-body { font-size: 13px; line-height: 1.85; color: var(--dim); max-width: 680px; }
-
-    /* LAYOUT */
-    .layout {
+    /* INTRO STRIP */
+    .intro-strip {
+      flex-shrink: 0;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
       display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 1.25rem;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
       align-items: start;
     }
+    .intro-left h1 {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      line-height: 1.1; letter-spacing: -0.02em;
+      color: var(--text); margin-bottom: 0.5rem;
+    }
+    .intro-left h1 em { font-style: italic; color: var(--muted); }
+    .intro-left p {
+      font-size: 12px; line-height: 1.8; color: var(--dim);
+      max-width: 640px;
+    }
+    .intro-left p strong { color: var(--muted); font-weight: 400; }
 
-    /* PANELS */
-    .panel {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    /* THEORY PILL */
+    .theory-pill {
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: 6px; padding: 0.75rem 1rem;
+      font-size: 11px; line-height: 1.65; color: #555;
+      min-width: 200px; max-width: 240px; flex-shrink: 0;
     }
-    .panel-head {
-      padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border);
-      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #3a3a3a;
-    }
-    .panel-body { padding: 1.1rem; }
+    .theory-pill strong { color: var(--faint); display: block; margin-bottom: 0.35rem; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; font-size: 10px; }
 
-    /* CONTROLS */
-    .ctrl { margin-bottom: 1.25rem; }
-    .ctrl:last-of-type { margin-bottom: 0; }
-    .ctrl-head {
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--muted); margin-bottom: 0.4rem;
+    /* MAIN CONTENT */
+    .content {
+      flex: 1; display: flex; flex-direction: column;
+      min-height: 0; overflow: hidden;
     }
-    .ctrl-head strong { color: var(--text); font-weight: 400; }
-    .ctrl-desc { font-size: 11px; color: #484848; line-height: 1.55; margin-top: 0.35rem; }
-    input[type=range] {
-      -webkit-appearance: none; width: 100%; height: 2px;
+
+    /* ROAD SECTION — takes most vertical space */
+    .road-section {
+      flex: 1; position: relative; overflow: hidden;
+      background: #0a0a0a; min-height: 0;
+    }
+    #roadCanvas { display: block; width: 100%; height: 100%; }
+
+    /* OVERLAY STATS */
+    .road-overlay {
+      position: absolute; top: 12px; left: 12px;
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .stat-pill {
+      background: rgba(8,8,8,0.82); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.3rem 0.6rem;
+      display: flex; gap: 0.4rem; align-items: center;
+    }
+    .stat-k { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: #3a3a3a; }
+    .stat-v { font-size: 12px; color: var(--text); }
+
+    /* CONTROLS STRIP — compact */
+    .controls-strip {
+      flex-shrink: 0;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+      padding: 0.7rem 1.25rem;
+      background: var(--surface); border-top: 1px solid var(--border);
+    }
+    .ctrl-inline {
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .ctrl-inline label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #3a3a3a; white-space: nowrap; }
+    .ctrl-inline input[type=range] {
+      -webkit-appearance: none; width: 90px; height: 2px;
       background: var(--border-2); outline: none; border-radius: 2px;
     }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 12px; height: 12px;
-      border-radius: 50%; background: #888; cursor: pointer;
+    .ctrl-inline input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 11px; height: 11px;
+      border-radius: 50%; background: #777; cursor: pointer;
+    }
+    .ctrl-inline .cval { font-size: 11px; color: var(--muted); min-width: 2.8rem; }
+    .ctrl-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+    .ctrl-btn {
+      border: 1px solid var(--border-2); background: transparent;
+      color: var(--dim); font-family: var(--mono);
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.35rem 0.7rem; border-radius: 3px;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap;
+    }
+    .ctrl-btn:hover { border-color: var(--faint); color: var(--text); }
+    .ctrl-btn.primary { background: var(--text); color: #0a0a0a; border-color: var(--text); }
+    .ctrl-btn.primary:hover { background: transparent; color: var(--text); }
+
+    /* SPACE-TIME PANEL */
+    .st-section {
+      flex-shrink: 0; height: 160px;
+      border-top: 1px solid var(--border);
+      background: #0a0a0a; position: relative; overflow: hidden;
+    }
+    #stCanvas { display: block; width: 100%; height: 100%; }
+    .st-label {
+      position: absolute; top: 8px; left: 10px;
+      font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #2a2a2a;
+    }
+    .st-note {
+      position: absolute; top: 8px; right: 10px;
+      font-size: 9px; color: #2a2a2a;
     }
 
-    .btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
-    button {
-      border: 1px solid var(--border-2); background: var(--surface-2);
-      color: var(--muted); font-family: var(--mono);
-      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.55rem 0.9rem; border-radius: 4px;
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    /* LEGEND */
+    .legend-strip {
+      flex-shrink: 0;
+      display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap;
+      padding: 0.5rem 1.25rem;
+      background: var(--surface); border-top: 1px solid var(--border);
     }
-    button:hover { border-color: #444; color: var(--text); }
-    .btn-primary { background: var(--text); color: #0a0a0a; border-color: var(--text); }
-    .btn-primary:hover { background: transparent; color: var(--text); }
+    .leg { display: flex; align-items: center; gap: 0.35rem; font-size: 10px; color: #3a3a3a; }
+    .leg-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .leg-sep { color: #1e1e1e; }
 
-    /* STATS */
-    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 1rem; }
-    .stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; }
-    .stat-name { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #3a3a3a; margin-bottom: 0.4rem; }
-    .stat-val { font-size: 16px; color: var(--text); }
-
-    /* HIGHWAY CANVAS */
-    .viz-stack { display: flex; flex-direction: column; gap: 1.25rem; }
-    .canvas-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .canvas-head {
-      padding: 0.6rem 1.1rem; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .canvas-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #3a3a3a; }
-    .canvas-note { font-size: 11px; color: #3a3a3a; }
-    canvas { display: block; width: 100%; }
-    .legend {
-      padding: 0.6rem 1.1rem; border-top: 1px solid var(--border);
-      display: flex; gap: 1.1rem; flex-wrap: wrap;
-    }
-    .leg { display: flex; align-items: center; gap: 0.4rem; font-size: 11px; color: #484848; }
-    .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .caption {
-      padding: 0.75rem 1.1rem; border-top: 1px solid var(--border);
-      font-size: 12px; color: #555; line-height: 1.7;
-    }
-
-    @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      main { padding: 68px 1rem 48px; }
+    @media (max-width: 700px) {
+      .intro-strip { grid-template-columns: 1fr; }
+      .theory-pill { display: none; }
+      .controls-strip { gap: 0.75rem; }
+      .ctrl-inline input[type=range] { width: 60px; }
     }
   </style>
 </head>
@@ -148,394 +178,440 @@
   <a class="back" href="/Science/">← science</a>
 </nav>
 
-<main>
-
-  <div class="hero">
-    <div class="kicker">traffic dynamics · chaos</div>
-    <h1>You changed lanes.<br><em>Someone stopped two miles back.</em></h1>
-    <p class="hero-body">
-      You are on the highway. The lane next to you looks faster. You move over.
-      The car behind you brakes. The car behind that one brakes a little harder.
-      Four minutes later, a jam forms two miles back with no accident, no merge, no reason anyone can point to.
-      This is that.
+<!-- INTRO -->
+<div class="intro-strip">
+  <div class="intro-left">
+    <h1>The jam that <em>came from nowhere.</em></h1>
+    <p>
+      You have been in traffic that stops for no reason. You creep forward for twenty minutes,
+      waiting for the accident, the roadwork, the reason. Then the road opens up and there is nothing there.
+      <strong>The jam was the reason.</strong>
+      One driver braked a little too hard. The car behind reacted. The one behind that reacted harder.
+      By the time the wave had traveled a mile backward, the person who started it was long gone.
     </p>
   </div>
+  <div class="theory-pill">
+    <strong>// phantom jam</strong>
+    Traffic jams can self-organize from density alone, with no trigger. Above a critical car density,
+    small perturbations do not dampen. They grow into stop-and-go waves that travel backward
+    through traffic at around 15 km/h, regardless of how fast the cars are moving forward.
+    This was formalized in the 1990s and observed on real highways. The wave is stable and persistent.
+  </div>
+</div>
 
-  <div class="layout">
+<div class="content">
 
-    <!-- CONTROLS -->
-    <aside class="panel">
-      <div class="panel-head">controls</div>
-      <div class="panel-body">
+  <!-- ROAD -->
+  <div class="road-section">
+    <canvas id="roadCanvas"></canvas>
 
-        <div class="ctrl">
-          <div class="ctrl-head"><span>Cars on road</span><strong id="carsVal">36</strong></div>
-          <input type="range" id="carsSlider" min="10" max="70" value="36"/>
-          <div class="ctrl-desc">More cars, less room for error. Above a threshold, flow becomes fragile.</div>
-        </div>
-
-        <div class="ctrl">
-          <div class="ctrl-head"><span>Driver patience</span><strong id="calmVal">60%</strong></div>
-          <input type="range" id="calmSlider" min="10" max="100" value="60"/>
-          <div class="ctrl-desc">Impatient drivers react harder to the car in front, which amplifies the wave.</div>
-        </div>
-
-        <div class="ctrl">
-          <div class="ctrl-head"><span>Lane change rate</span><strong id="laneVal">25%</strong></div>
-          <input type="range" id="laneSlider" min="0" max="80" value="25"/>
-          <div class="ctrl-desc">How often drivers decide the other lane looks better. Each move is a small brake tap for everyone behind.</div>
-        </div>
-
-        <div class="btns">
-          <button class="btn-primary" id="restartBtn">Restart</button>
-          <button id="nudgeBtn">Force one brake</button>
-        </div>
-
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-name">Road state</div>
-            <div class="stat-val" id="moodVal">Flowing</div>
-          </div>
-          <div class="stat">
-            <div class="stat-name">Avg speed</div>
-            <div class="stat-val" id="speedVal">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-name">Slowest car</div>
-            <div class="stat-val" id="slowVal">—</div>
-          </div>
-          <div class="stat">
-            <div class="stat-name">Lane changes</div>
-            <div class="stat-val" id="laneCountVal">0</div>
-          </div>
-        </div>
-
+    <div class="road-overlay">
+      <div class="stat-pill">
+        <span class="stat-k">state</span>
+        <span class="stat-v" id="moodVal">flowing</span>
       </div>
-    </aside>
-
-    <!-- VIZ -->
-    <div class="viz-stack">
-
-      <!-- Highway view -->
-      <div class="canvas-wrap">
-        <div class="canvas-head">
-          <span class="canvas-title">highway · two lanes</span>
-          <span class="canvas-note" id="timeNote">t = 0s</span>
-        </div>
-        <canvas id="hwCanvas" height="200"></canvas>
-        <div class="legend">
-          <div class="leg"><div class="leg-dot" style="background:var(--good)"></div>flowing</div>
-          <div class="leg"><div class="leg-dot" style="background:var(--warn)"></div>slowing</div>
-          <div class="leg"><div class="leg-dot" style="background:var(--bad)"></div>stopped</div>
-          <div class="leg"><div class="leg-dot" style="background:#6080c8"></div>changing lanes</div>
-        </div>
-        <div class="caption">Cars move left to right. Each dot is one car. Lane changes create a brief gap that triggers braking in the cars behind.</div>
+      <div class="stat-pill">
+        <span class="stat-k">avg</span>
+        <span class="stat-v" id="speedVal">—</span>
       </div>
-
-      <!-- Space-time diagram -->
-      <div class="canvas-wrap">
-        <div class="canvas-head">
-          <span class="canvas-title">space-time diagram</span>
-          <span class="canvas-note">time flows downward</span>
-        </div>
-        <canvas id="stCanvas" height="220"></canvas>
-        <div class="caption">Each horizontal line is one moment in time. Red bands are jams. Watch for diagonal stripes moving left — those are phantom waves traveling backward through traffic while the cars move forward.</div>
+      <div class="stat-pill">
+        <span class="stat-k">slowest</span>
+        <span class="stat-v" id="slowVal">—</span>
       </div>
-
+      <div class="stat-pill">
+        <span class="stat-k">jams</span>
+        <span class="stat-v" id="jamVal">0</span>
+      </div>
     </div>
   </div>
 
-</main>
+  <!-- CONTROLS -->
+  <div class="controls-strip">
+    <div class="ctrl-inline">
+      <label>density</label>
+      <input type="range" id="densSlider" min="8" max="72" value="38"/>
+      <span class="cval" id="densVal">38</span>
+    </div>
+    <div class="ctrl-sep"></div>
+    <div class="ctrl-inline">
+      <label>patience</label>
+      <input type="range" id="calmSlider" min="10" max="100" value="58"/>
+      <span class="cval" id="calmVal">58%</span>
+    </div>
+    <div class="ctrl-sep"></div>
+    <div class="ctrl-inline">
+      <label>lane changes</label>
+      <input type="range" id="laneSlider" min="0" max="80" value="28"/>
+      <span class="cval" id="laneVal">28%</span>
+    </div>
+    <div class="ctrl-sep"></div>
+    <button class="ctrl-btn primary" id="restartBtn">restart</button>
+    <button class="ctrl-btn" id="nudgeBtn">force brake</button>
+  </div>
+
+  <!-- SPACE-TIME -->
+  <div class="st-section">
+    <canvas id="stCanvas"></canvas>
+    <div class="st-label">space-time · position →</div>
+    <div class="st-note">time ↓ · red bands = jam · diagonal drift = phantom wave</div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend-strip">
+    <div class="leg"><div class="leg-dot" style="background:var(--good)"></div>flowing freely</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--warn)"></div>slowing</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--bad)"></div>stopped / jam</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--lane-change)"></div>changing lane</div>
+    <span class="leg-sep">·</span>
+    <div class="leg" style="font-size:10px;color:#2e2e2e;">the wave travels backward while cars move forward</div>
+  </div>
+
+</div>
 
 <script>
-const hwCanvas = document.getElementById("hwCanvas");
-const hwCtx    = hwCanvas.getContext("2d");
-const stCanvas = document.getElementById("stCanvas");
-const stCtx    = stCanvas.getContext("2d");
+// ── Setup ──────────────────────────────────────────────────────────
+const roadCanvas = document.getElementById("roadCanvas");
+const roadCtx    = roadCanvas.getContext("2d");
+const stCanvas   = document.getElementById("stCanvas");
+const stCtx      = stCanvas.getContext("2d");
+const dpr        = Math.min(devicePixelRatio || 1, 2);
 
-// resize canvases
-function resize() {
-  const dpr = Math.min(devicePixelRatio || 1, 2);
-  [hwCanvas, stCanvas].forEach(c => {
-    const W = c.parentElement.clientWidth;
-    const H = parseInt(c.getAttribute("height"));
-    c.width = W * dpr; c.height = H * dpr;
-    c.style.width = W + "px"; c.style.height = H + "px";
-    c.getContext("2d").scale(dpr, dpr);
-  });
-}
-resize();
-window.addEventListener("resize", () => { resize(); });
-
-const LANES = 2;
-const ROAD_LEN = 1200;   // virtual road units
-const TOP_SPEED = 3.0;
-const SAFE_GAP  = 22;
-
-let cars = [], laneChangeCount = 0, simTime = 0;
-let stHistory = [];
-
-function getCarsSlider() { return parseInt(document.getElementById("carsSlider").value); }
-function getCalmness()   { return parseInt(document.getElementById("calmSlider").value) / 100; }
-function getLaneRate()   { return parseInt(document.getElementById("laneSlider").value) / 100; }
-
-function desiredSpeed(gap) {
-  return TOP_SPEED * (Math.tanh((gap - SAFE_GAP) / 8) + 1) / 2;
+function resizeCanvas(c) {
+  const W = c.clientWidth || c.parentElement.clientWidth;
+  const H = c.clientHeight || c.parentElement.clientHeight;
+  c.width  = W * dpr;
+  c.height = H * dpr;
+  c.getContext("2d").scale(dpr, dpr);
+  return { W, H };
 }
 
-function getGap(i, lane) {
-  const laneCars = cars.filter(c => c.lane === lane && !c.changing).sort((a,b) => a.x - b.x);
-  const idx = laneCars.indexOf(cars[i]);
-  if (idx < 0) return SAFE_GAP * 2;
-  const next = laneCars[(idx + 1) % laneCars.length];
-  let g = next.x - cars[i].x;
+function getSize(c) {
+  return { W: c.clientWidth || c.parentElement.clientWidth,
+           H: c.clientHeight || c.parentElement.clientHeight };
+}
+
+// ── Simulation params ──────────────────────────────────────────────
+const LANES     = 3;
+const ROAD_LEN  = 2000;    // virtual units (closed loop)
+const TOP_SPD   = 3.2;
+const SAFE_GAP  = 24;
+const REACT_DT  = 0.016;
+
+let cars = [], simTime = 0, jamCount = 0, stHistory = [];
+
+function getDens()  { return parseInt(document.getElementById("densSlider").value); }
+function getCalm()  { return parseInt(document.getElementById("calmSlider").value) / 100; }
+function getLane()  { return parseInt(document.getElementById("laneSlider").value) / 100; }
+
+function wantedSpeed(gap) {
+  return TOP_SPD * Math.max(0, Math.tanh((gap - SAFE_GAP) / 10) * 0.5 + 0.5);
+}
+
+function getLaneCars(laneIdx) {
+  return cars.filter(c => c.lane === laneIdx && !c.changing)
+             .sort((a, b) => a.x - b.x);
+}
+
+function frontGap(car) {
+  const lc = getLaneCars(car.changing ? car.targetLane : car.lane);
+  if (!lc.length) return SAFE_GAP * 3;
+  const idx = lc.findIndex(c => c === car);
+  if (idx < 0) return SAFE_GAP * 3;
+  const next = lc[(idx + 1) % lc.length];
+  let g = next.x - car.x;
   if (g <= 0) g += ROAD_LEN;
   return g;
 }
 
 function resetSim() {
-  const n = getCarsSlider();
-  cars = [];
-  laneChangeCount = 0;
-  simTime = 0;
-  stHistory = [];
+  const n = getDens();
+  cars = []; simTime = 0; jamCount = 0; stHistory = [];
   for (let i = 0; i < n; i++) {
     const lane = i % LANES;
-    const x = (i / n) * ROAD_LEN + (lane * ROAD_LEN / (n * 2));
-    cars.push({ x: x % ROAD_LEN, v: TOP_SPEED * 0.85, lane, changing: false, changeProg: 0, targetLane: lane, laneSwitch: false });
+    const x = ((i / n) * ROAD_LEN + lane * (ROAD_LEN / (n * LANES * 0.5))) % ROAD_LEN;
+    cars.push({
+      x, v: TOP_SPD * 0.9,
+      lane, targetLane: lane,
+      changing: false, changeProg: 0,
+      visualLane: lane, color: null
+    });
   }
 }
 
 function update(dt) {
   simTime += dt;
-  const calmness  = getCalmness();
-  const laneRate  = getLaneRate();
-  const nextV     = new Array(cars.length);
+  const calm    = getCalm();
+  const laneP   = getLane();
+  const nextV   = new Array(cars.length);
 
-  cars.forEach((c, i) => {
-    // lane change logic
-    if (!c.changing && Math.random() < laneRate * 0.004) {
-      const other = 1 - c.lane;
-      // look for gap in other lane
-      const otherCars = cars.filter(o => o.lane === other && !o.changing).sort((a,b) => a.x - b.x);
-      const nearest = otherCars.find(o => Math.abs(o.x - c.x) < SAFE_GAP * 1.5);
-      if (!nearest) {
-        c.changing = true;
-        c.targetLane = other;
-        c.changeProg = 0;
-        c.laneSwitch = true;
-        laneChangeCount++;
-      }
-    }
-
-    if (c.changing) {
-      c.changeProg += dt * 1.8;
-      if (c.changeProg >= 1) {
-        c.lane = c.targetLane;
-        c.changing = false;
-        c.changeProg = 0;
-      }
-    }
-
-    const gap = getGap(i, c.lane);
-    const want = desiredSpeed(gap);
-    const react = 0.5 + (1 - calmness) * 1.8;
-    let dv = react * (want - c.v);
-
-    // lane change causes micro-brake for cars behind
-    const laneNeighbour = cars.find(o => o.lane === c.lane && !o.changing && o !== c && o.x < c.x && (c.x - o.x) < 30);
-    if (laneNeighbour && laneNeighbour.laneSwitch) dv -= 0.5;
-
-    if (gap < 10) dv -= 1.2 * (1 - gap / 10);
-    let nv = Math.max(0, Math.min(TOP_SPEED, c.v + dv * dt));
-    nextV[i] = nv;
+  // ─ Physics ─
+  cars.forEach((car, i) => {
+    const gap  = frontGap(car);
+    const want = wantedSpeed(gap);
+    const react = 0.45 + (1 - calm) * 2.1;
+    let dv = react * (want - car.v);
+    if (gap < 8) dv -= 1.8 * (1 - gap / 8);
+    nextV[i] = Math.max(0, Math.min(TOP_SPD, car.v + dv * dt));
   });
 
-  cars.forEach((c, i) => {
-    c.v = nextV[i];
-    c.x = (c.x + c.v * 55 * dt) % ROAD_LEN;
-    c.laneSwitch = false;
+  // ─ Lane changes ─
+  cars.forEach(car => {
+    if (car.changing) {
+      car.changeProg = Math.min(1, car.changeProg + dt * 2.2);
+      car.visualLane = car.lane + (car.targetLane - car.lane) * car.changeProg;
+      if (car.changeProg >= 1) {
+        car.lane = car.targetLane;
+        car.changing = false;
+        car.changeProg = 0;
+        car.visualLane = car.lane;
+      }
+      return;
+    }
+    if (Math.random() > laneP * 0.003) return;
+
+    const tgt = (car.lane + (Math.random() < 0.5 ? 1 : -1) + LANES) % LANES;
+    const tgtCars = getLaneCars(tgt);
+    const blocker = tgtCars.find(o => Math.abs(((o.x - car.x + ROAD_LEN) % ROAD_LEN) - ROAD_LEN/2) > ROAD_LEN/2 - SAFE_GAP * 1.2 || Math.abs(o.x - car.x) < SAFE_GAP * 1.1);
+    if (!blocker) {
+      car.changing = true;
+      car.targetLane = tgt;
+      car.changeProg = 0;
+      // micro-brake for nearby followers
+      cars.filter(o => o.lane === car.lane && !o.changing && o !== car && ((car.x - o.x + ROAD_LEN) % ROAD_LEN) < 35)
+          .forEach(o => { nextV[cars.indexOf(o)] = Math.max(0, (nextV[cars.indexOf(o)] || o.v) * 0.65); });
+    }
   });
 
-  pushHistory();
+  // ─ Apply ─
+  cars.forEach((car, i) => {
+    car.v = nextV[i];
+    car.x = (car.x + car.v * 52 * dt) % ROAD_LEN;
+  });
+
+  // ─ Jam count ─
+  const stopped = cars.filter(c => c.v < TOP_SPD * 0.25).length;
+  if (stopped > cars.length * 0.12) jamCount++;
+
+  recordSpaceTime();
   updateStats();
 }
 
-function pushHistory() {
-  const W = stCanvas.clientWidth || 600;
-  const row = [];
-  const slotW = W / 60;
-  for (let s = 0; s < 60; s++) {
-    const slot = cars.filter(c => {
-      const pos = c.x / ROAD_LEN;
-      return pos >= s/60 && pos < (s+1)/60;
-    });
-    const avg = slot.length ? slot.reduce((a,c) => a + c.v, 0) / slot.length / TOP_SPEED : 1;
-    row.push(avg);
-  }
-  stHistory.push(row);
-  if (stHistory.length > 220) stHistory.shift();
-}
-
-function speedColor(r) {
-  if (r > 0.7) return `var(--good)`;
-  if (r > 0.4) return `var(--warn)`;
-  return `var(--bad)`;
-}
-
-function speedRGB(r) {
-  if (r > 0.7) return [126, 200, 106];
-  if (r > 0.4) return [212, 168, 67];
-  return [201, 96, 96];
-}
-
-function drawHighway() {
-  const W = hwCanvas.clientWidth || 700;
-  const H = 200;
-  hwCtx.clearRect(0, 0, W, H);
-
-  // Road background
-  hwCtx.fillStyle = "#0e0e0e";
-  hwCtx.fillRect(0, 0, W, H);
-
-  // Lane backgrounds
-  const laneH = 70;
-  const laneY = [H/2 - laneH - 8, H/2 + 8];
-  const laneColors = ["#111111", "#111111"];
-  laneY.forEach((y, li) => {
-    hwCtx.fillStyle = laneColors[li];
-    hwCtx.fillRect(0, y, W, laneH);
-    // dashes
-    hwCtx.strokeStyle = "#1e1e1e";
-    hwCtx.lineWidth = 1;
-    hwCtx.setLineDash([18, 14]);
-    hwCtx.beginPath();
-    hwCtx.moveTo(0, y + laneH);
-    hwCtx.lineTo(W, y + laneH);
-    hwCtx.stroke();
-    hwCtx.setLineDash([]);
-  });
-
-  // Center divider
-  hwCtx.strokeStyle = "#1a1a1a";
-  hwCtx.lineWidth = 2;
-  hwCtx.setLineDash([24, 12]);
-  hwCtx.beginPath();
-  hwCtx.moveTo(0, H/2);
-  hwCtx.lineTo(W, H/2);
-  hwCtx.stroke();
-  hwCtx.setLineDash([]);
-
-  // Road edges
-  hwCtx.strokeStyle = "#252525";
-  hwCtx.lineWidth = 1.5;
-  [laneY[0] - 2, laneY[1] + laneH + 2].forEach(y => {
-    hwCtx.beginPath(); hwCtx.moveTo(0, y); hwCtx.lineTo(W, y); hwCtx.stroke();
-  });
-
-  // Cars
+// ── Space-time history ─────────────────────────────────────────────
+function recordSpaceTime() {
+  const SLOTS = 120;
+  const row = new Float32Array(SLOTS);
+  const counts = new Uint8Array(SLOTS);
   cars.forEach(c => {
-    const px = (c.x / ROAD_LEN) * W;
-    const li = c.changing
-      ? c.lane + (c.targetLane - c.lane) * c.changeProg * (1 - c.lane === 0 ? -1 : 1)
-      : c.lane;
-    const baseY = laneY[Math.round(li)] + laneH / 2;
-    const interpY = c.changing
-      ? laneY[c.lane] + laneH/2 + (laneY[c.targetLane] - laneY[c.lane]) * c.changeProg
-      : baseY;
+    const s = Math.floor((c.x / ROAD_LEN) * SLOTS);
+    row[s]   += c.v / TOP_SPD;
+    counts[s]++;
+  });
+  for (let i = 0; i < SLOTS; i++) row[i] = counts[i] ? row[i] / counts[i] : 1;
+  stHistory.push(row);
+  if (stHistory.length > 800) stHistory.shift();
+}
 
-    const ratio = c.v / TOP_SPEED;
-    let color;
-    if (c.changing) {
-      color = "#6080c8";
+// ── Draw road ──────────────────────────────────────────────────────
+function drawRoad() {
+  const { W, H } = getSize(roadCanvas);
+  roadCtx.clearRect(0, 0, W, H);
+  roadCtx.fillStyle = "#090909";
+  roadCtx.fillRect(0, 0, W, H);
+
+  const LANE_H   = Math.floor(Math.min(H * 0.22, 64));
+  const ROAD_H   = LANE_H * LANES;
+  const ROAD_TOP = (H - ROAD_H) / 2;
+
+  // ── Road surface ──
+  roadCtx.fillStyle = "#111";
+  roadCtx.fillRect(0, ROAD_TOP, W, ROAD_H);
+
+  // Subtle asphalt texture — noise dots
+  roadCtx.fillStyle = "rgba(255,255,255,0.012)";
+  for (let i = 0; i < W * ROAD_H * 0.002; i++) {
+    roadCtx.fillRect(
+      Math.random() * W, ROAD_TOP + Math.random() * ROAD_H, 1, 1
+    );
+  }
+
+  // ── Road edges ──
+  roadCtx.strokeStyle = "#2a2a2a";
+  roadCtx.lineWidth = 2;
+  roadCtx.beginPath(); roadCtx.moveTo(0, ROAD_TOP);      roadCtx.lineTo(W, ROAD_TOP);      roadCtx.stroke();
+  roadCtx.beginPath(); roadCtx.moveTo(0, ROAD_TOP + ROAD_H); roadCtx.lineTo(W, ROAD_TOP + ROAD_H); roadCtx.stroke();
+
+  // ── Lane dividers (dashed) ──
+  roadCtx.strokeStyle = "#1e1e1e";
+  roadCtx.lineWidth = 1;
+  roadCtx.setLineDash([28, 18]);
+  for (let l = 1; l < LANES; l++) {
+    const y = ROAD_TOP + l * LANE_H;
+    roadCtx.beginPath(); roadCtx.moveTo(0, y); roadCtx.lineTo(W, y); roadCtx.stroke();
+  }
+  roadCtx.setLineDash([]);
+
+  // ── Distance markers ──
+  roadCtx.fillStyle = "#1a1a1a";
+  roadCtx.font = `10px ${getComputedStyle(document.body).fontFamily}`;
+  for (let m = 0; m <= 10; m++) {
+    const x = (m / 10) * W;
+    const km = (m / 10 * 5).toFixed(1);
+    roadCtx.fillText(km + " km", x + 3, ROAD_TOP - 6);
+    roadCtx.strokeStyle = "#181818"; roadCtx.lineWidth = 1;
+    roadCtx.beginPath(); roadCtx.moveTo(x, ROAD_TOP - 3); roadCtx.lineTo(x, ROAD_TOP); roadCtx.stroke();
+  }
+
+  // ── Cars ──
+  const CAR_W = Math.max(10, Math.min(18, W / 80));
+  const CAR_H = LANE_H * 0.44;
+
+  cars.forEach(car => {
+    const px = (car.x / ROAD_LEN) * W;
+    const py = ROAD_TOP + car.visualLane * LANE_H + LANE_H / 2;
+    const ratio = car.v / TOP_SPD;
+
+    let col;
+    if (car.changing) {
+      col = "var(--lane-change)";
+    } else if (ratio > 0.68) {
+      // interpolate green
+      const t = (ratio - 0.68) / 0.32;
+      col = `rgb(${Math.round(80 + t*27)},${Math.round(160 + t*26)},${Math.round(60 + t*18)})`;
+    } else if (ratio > 0.38) {
+      const t = (ratio - 0.38) / 0.30;
+      col = `rgb(${Math.round(184 - t*84)},${Math.round(130 + t*24)},${Math.round(38)})`;
     } else {
-      color = speedColor(ratio);
+      const t = ratio / 0.38;
+      col = `rgb(${Math.round(165 + t*19)},${Math.round(52 + t*78)},${Math.round(52 + t*(-14))})`;
     }
 
-    // car body (rect)
-    const carW = 14, carHt = 10;
-    hwCtx.fillStyle = color;
-    hwCtx.beginPath();
-    hwCtx.roundRect(px - carW/2, interpY - carHt/2, carW, carHt, 2);
-    hwCtx.fill();
+    // Car shadow/glow
+    if (ratio < 0.3) {
+      roadCtx.shadowColor = "rgba(184,72,72,0.3)";
+      roadCtx.shadowBlur  = 10;
+    }
 
-    // brake light glow
-    if (ratio < 0.35 && !c.changing) {
-      hwCtx.fillStyle = "rgba(201,96,96,0.15)";
-      hwCtx.beginPath();
-      hwCtx.arc(px, interpY, 18, 0, Math.PI * 2);
-      hwCtx.fill();
+    roadCtx.fillStyle = col;
+    roadCtx.beginPath();
+    roadCtx.roundRect(px - CAR_W / 2, py - CAR_H / 2, CAR_W, CAR_H, 2);
+    roadCtx.fill();
+    roadCtx.shadowBlur = 0;
+
+    // Headlights (tiny)
+    roadCtx.fillStyle = "rgba(255,255,220,0.55)";
+    roadCtx.fillRect(px + CAR_W/2 - 2, py - CAR_H/4, 1.5, CAR_H/2);
+
+    // Brake lights
+    if (ratio < 0.4) {
+      roadCtx.fillStyle = `rgba(220,80,80,${0.4 + 0.4 * (1 - ratio/0.4)})`;
+      roadCtx.fillRect(px - CAR_W/2, py - CAR_H/4, 1.5, CAR_H/2);
     }
   });
 
-  // direction arrow
-  hwCtx.fillStyle = "#252525";
-  hwCtx.font = "11px DM Mono, monospace";
-  hwCtx.fillText("→ direction of travel", 12, H - 12);
+  // ── Direction arrow ──
+  roadCtx.fillStyle = "#1e1e1e";
+  roadCtx.font = `10px ${getComputedStyle(document.body).fontFamily}`;
+  roadCtx.fillText("→ direction of travel (loop)", W - 200, ROAD_TOP + ROAD_H + 16);
 }
 
+// ── Draw space-time ────────────────────────────────────────────────
 function drawSpaceTime() {
-  const W = stCanvas.clientWidth || 700;
-  const H = 220;
-  stCtx.fillStyle = "#0c0c0c";
+  const { W, H } = getSize(stCanvas);
+  stCtx.fillStyle = "#080808";
   stCtx.fillRect(0, 0, W, H);
-
   if (!stHistory.length) return;
 
-  const colW = W / 60;
-  stHistory.forEach((row, y) => {
-    row.forEach((v, x) => {
-      const [r, g, b] = speedRGB(v);
-      stCtx.fillStyle = `rgba(${r},${g},${b},0.85)`;
-      stCtx.fillRect(x * colW, y, Math.ceil(colW) + 0.5, 1);
-    });
-  });
+  const SLOTS = stHistory[0].length;
+  const colW  = W / SLOTS;
+  const visRows = Math.min(stHistory.length, H);
+  const start   = Math.max(0, stHistory.length - visRows);
+
+  for (let row = start; row < stHistory.length; row++) {
+    const y = (row - start) * (H / visRows);
+    const rh = Math.max(1, H / visRows);
+    const data = stHistory[row];
+    for (let s = 0; s < SLOTS; s++) {
+      const v = data[s];
+      let r, g, b;
+      if (v > 0.68) { r = 30; g = Math.round(50 + v * 80); b = 30; }
+      else if (v > 0.38) { r = Math.round(120 + (0.68 - v) * 180); g = Math.round(90 + v * 50); b = 25; }
+      else { r = Math.round(160 + (1-v) * 55); g = Math.round(30 + v * 60); b = 30; }
+      stCtx.fillStyle = `rgba(${r},${g},${b},0.9)`;
+      stCtx.fillRect(s * colW, y, colW + 0.5, rh + 0.5);
+    }
+  }
+
+  // Time axis tick
+  stCtx.strokeStyle = "rgba(255,255,255,0.04)";
+  stCtx.lineWidth = 1;
+  stCtx.beginPath(); stCtx.moveTo(0, H/2); stCtx.lineTo(W, H/2); stCtx.stroke();
 }
 
+// ── Stats ──────────────────────────────────────────────────────────
 function updateStats() {
-  const avg = cars.reduce((s,c) => s + c.v, 0) / cars.length;
+  const avg = cars.reduce((s, c) => s + c.v, 0) / Math.max(1, cars.length);
   const min = Math.min(...cars.map(c => c.v));
-  document.getElementById("speedVal").textContent  = (avg * 36).toFixed(0) + " km/h";
-  document.getElementById("slowVal").textContent   = (min * 36).toFixed(0) + " km/h";
-  document.getElementById("laneCountVal").textContent = laneChangeCount;
-  document.getElementById("timeNote").textContent  = `t = ${simTime.toFixed(0)}s`;
+  document.getElementById("speedVal").textContent = (avg * 33).toFixed(0) + " km/h";
+  document.getElementById("slowVal").textContent  = (min * 33).toFixed(0) + " km/h";
+  document.getElementById("jamVal").textContent   = jamCount;
 
-  let mood = "Flowing";
-  if (min < 0.5 && avg < 1.5) mood = "Jam wave";
-  else if (avg < 2.0 || min < 1.0) mood = "Fragile";
-  const moodEl = document.getElementById("moodVal");
-  moodEl.textContent = mood;
-  moodEl.style.color = mood === "Jam wave" ? "var(--bad)" : mood === "Fragile" ? "var(--warn)" : "var(--good)";
+  const ratio = avg / TOP_SPD;
+  const mEl   = document.getElementById("moodVal");
+  if (ratio < 0.4)      { mEl.textContent = "jam"; mEl.style.color = "#b84848"; }
+  else if (ratio < 0.7) { mEl.textContent = "fragile"; mEl.style.color = "#c89a38"; }
+  else                  { mEl.textContent = "flowing"; mEl.style.color = "#6bba58"; }
 }
 
+// ── Sync labels ────────────────────────────────────────────────────
 function syncLabels() {
-  document.getElementById("carsVal").textContent = document.getElementById("carsSlider").value;
+  document.getElementById("densVal").textContent = document.getElementById("densSlider").value;
   document.getElementById("calmVal").textContent = document.getElementById("calmSlider").value + "%";
   document.getElementById("laneVal").textContent = document.getElementById("laneSlider").value + "%";
 }
-
-document.getElementById("carsSlider").addEventListener("input", syncLabels);
-document.getElementById("calmSlider").addEventListener("input", syncLabels);
-document.getElementById("laneSlider").addEventListener("input", syncLabels);
+["densSlider","calmSlider","laneSlider"].forEach(id => {
+  document.getElementById(id).addEventListener("input", syncLabels);
+});
 document.getElementById("restartBtn").addEventListener("click", resetSim);
 document.getElementById("nudgeBtn").addEventListener("click", () => {
+  if (!cars.length) return;
   const pick = Math.floor(Math.random() * cars.length);
-  cars[pick].v *= 0.3;
+  cars[pick].v = 0;
+  setTimeout(() => { if (cars[pick]) cars[pick].v = 0.1; }, 400);
 });
 
+// ── Init & loop ────────────────────────────────────────────────────
 let last = performance.now();
-function animate(now) {
-  const dt = Math.min((now - last) / 1000, 0.03);
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, 0.033);
   last = now;
   update(dt);
-  drawHighway();
+
+  // Resize if needed
+  const rW = roadCanvas.parentElement.clientWidth;
+  const rH = roadCanvas.parentElement.clientHeight;
+  if (roadCanvas.clientWidth !== rW || roadCanvas.clientHeight !== rH) {
+    roadCanvas.style.width  = rW + "px";
+    roadCanvas.style.height = rH + "px";
+    resizeCanvas(roadCanvas);
+  }
+  const sW = stCanvas.parentElement.clientWidth;
+  const sH = stCanvas.parentElement.clientHeight;
+  if (stCanvas.clientWidth !== sW || stCanvas.clientHeight !== sH) {
+    stCanvas.style.width  = sW + "px";
+    stCanvas.style.height = sH + "px";
+    resizeCanvas(stCanvas);
+  }
+
+  drawRoad();
   drawSpaceTime();
-  requestAnimationFrame(animate);
+  requestAnimationFrame(frame);
 }
 
+resizeCanvas(roadCanvas);
+resizeCanvas(stCanvas);
 syncLabels();
 resetSim();
-requestAnimationFrame(animate);
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
