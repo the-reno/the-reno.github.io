@@ -10,7 +10,7 @@
       --bg:#0a0a0a; --panel:#141414; --border:#262626;
       --text:#f0f0f0; --muted:#aaa; --dim:#777;
       --good:#7ed060; --warn:#f0b040; --bad:#ff5050;
-      --road:#2a2a2a; --shoulder:#3a3a3a; --grass:#1a1f1a;
+      --road:#2a2a2a; --road-edge:#666;
       --serif:'Instrument Serif',Georgia,serif;
       --mono:'DM Mono',monospace;
     }
@@ -32,7 +32,7 @@
     .crumb a:hover{color:var(--text);}
     .back{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none;}
 
-    main{max-width:680px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+    main{max-width:780px;margin:0 auto;padding:1.5rem 1rem 3rem;}
 
     h1{
       font-family:var(--serif);font-weight:400;
@@ -49,30 +49,21 @@
       overflow:hidden;margin:1.5rem 0;
     }
 
-    /* SCENE — split into perspective road + overhead */
-    .scene{
-      position:relative;
-      background:linear-gradient(180deg, #0e1014 0%, #14181c 50%, #0e1014 100%);
+    /* ROAD AREA */
+    .road-area{
+      background:#0e1014;
+      padding:1.25rem 0;
     }
-
-    #sceneCanvas{display:block;width:100%;height:280px;}
-
-    .scene-label{
-      position:absolute;top:8px;left:10px;
-      font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--dim);
-      pointer-events:none;
-    }
-    .scene-label.bottom{top:auto;bottom:8px;}
+    #roadCanvas{display:block;width:100%;height:200px;}
 
     /* STATS */
     .stats{
-      display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+      display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;
       background:var(--border);border-top:1px solid var(--border);
     }
-    .stat{background:var(--panel);padding:.7rem .85rem;}
-    .stat-k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem;}
-    .stat-v{font-size:15px;color:var(--text);}
+    .stat{background:var(--panel);padding:.7rem .65rem;}
+    .stat-k{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem;}
+    .stat-v{font-size:14px;color:var(--text);}
     .stat-v.good{color:var(--good);}
     .stat-v.warn{color:var(--warn);}
     .stat-v.bad{color:var(--bad);}
@@ -99,13 +90,13 @@
 
     /* BUTTONS */
     .btn-row{
-      display:grid;grid-template-columns:1fr 1fr;
+      display:grid;grid-template-columns:1fr 1fr 1fr;
       gap:1px;background:var(--border);border-top:1px solid var(--border);
     }
     .btn{
       background:var(--panel);border:none;color:var(--text);
-      font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
-      padding:1rem;cursor:pointer;transition:background .12s;
+      font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+      padding:1rem .5rem;cursor:pointer;transition:background .12s;
     }
     .btn:active{background:#1f1f1f;}
     .btn.primary{background:var(--text);color:#0a0a0a;}
@@ -147,7 +138,7 @@
       font-size:11px;color:var(--muted);
     }
     .st-head strong{color:var(--text);font-weight:400;}
-    #stCanvas{display:block;width:100%;height:160px;background:#070707;}
+    #stCanvas{display:block;width:100%;height:170px;background:#070707;}
     .st-foot{padding:.55rem 1rem;border-top:1px solid var(--border);font-size:11px;color:var(--dim);}
   </style>
 </head>
@@ -167,17 +158,14 @@
   </p>
   <p class="lede">
     It is the simplest possible thing. <strong>One driver brakes. The next driver brakes a little harder. And so on, all the way back.</strong>
-    Watch it happen below — from inside one car, and from above.
+    Watch it from above.
   </p>
 
   <!-- SIMULATOR -->
   <div class="sim">
 
-    <!-- TWO-VIEW SCENE -->
-    <div class="scene">
-      <canvas id="sceneCanvas"></canvas>
-      <div class="scene-label">first-person · you are the white car</div>
-      <div class="scene-label bottom">overhead · the loop you are driving</div>
+    <div class="road-area">
+      <canvas id="roadCanvas"></canvas>
     </div>
 
     <!-- STATS -->
@@ -187,77 +175,83 @@
         <div class="stat-v" id="moodVal">—</div>
       </div>
       <div class="stat">
-        <div class="stat-k">your speed</div>
+        <div class="stat-k">avg speed</div>
         <div class="stat-v" id="speedVal">—</div>
       </div>
       <div class="stat">
-        <div class="stat-k">slowest car</div>
+        <div class="stat-k">slowest</div>
         <div class="stat-v" id="slowVal">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">stopped</div>
+        <div class="stat-v" id="stoppedVal">0</div>
       </div>
     </div>
 
     <!-- DENSITY -->
     <div class="ctrl">
       <div class="ctrl-label">
-        <span>Cars on the road</span>
-        <strong id="densLbl">18</strong>
+        <span>Cars per lane</span>
+        <strong id="densLbl">15</strong>
       </div>
-      <input type="range" id="densSlider" min="6" max="30" value="18"/>
-      <div class="ctrl-help">Slide right to add cars. Above ~20 the flow becomes unstable.</div>
+      <input type="range" id="densSlider" min="5" max="28" value="15"/>
+      <div class="ctrl-help">Three lanes. Above ~18 per lane, jams form on their own.</div>
     </div>
 
     <!-- BUTTONS -->
     <div class="btn-row">
       <button class="btn primary" id="brakeBtn">Tap a brake</button>
+      <button class="btn" id="laneChangeBtn">Force lane change</button>
       <button class="btn" id="restartBtn">Restart</button>
     </div>
 
     <!-- LEGEND -->
     <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:#ffffff"></div>you</div>
       <div class="leg"><div class="leg-dot" style="background:var(--good)"></div>moving</div>
       <div class="leg"><div class="leg-dot" style="background:var(--warn)"></div>slowing</div>
       <div class="leg"><div class="leg-dot" style="background:var(--bad)"></div>stopped</div>
+      <div class="leg"><div class="leg-dot" style="background:#5a8ad8"></div>changing lane</div>
     </div>
 
   </div>
 
   <p class="lede">
-    Tap the brake button while traffic is flowing smoothly. One car stops for a moment. From the driver's seat above, you watch the brake lights ahead light up red, then green again. But the wave keeps traveling backward through the line, long after that car is fine.
+    Tap the brake. Watch what happens to the cars behind. Try forcing a lane change at high density — that single weave creates a brake-ripple in two lanes at once.
   </p>
 
   <!-- SPACE-TIME -->
   <section>
-    <h2>The wave seen from above.</h2>
-    <p>Each row of pixels below is one moment in time. Time flows downward. Position along the road runs left to right. Red bands are jams. <strong>Watch them lean to the left as they move down.</strong> That tilt means the jam is traveling backward through traffic at about 15 km/h, while every car is moving forward at 90.</p>
+    <h2>The wave seen across time.</h2>
+    <p>Each row of pixels below is one moment in time. Time flows downward. Position along the road runs left to right. Red bands are jams averaged across all three lanes. <strong>Watch the diagonal stripes lean to the left as they move down.</strong> That tilt means the jam is traveling backward through traffic at about 15 km/h, while every car is moving forward.</p>
 
     <div class="st-wrap">
       <div class="st-head">
-        <span>Space-time diagram</span>
+        <span>Space-time diagram · all 3 lanes averaged</span>
         <span><strong id="timeHud">t = 0s</strong></span>
       </div>
       <canvas id="stCanvas"></canvas>
       <div class="st-foot">red = jam · diagonal stripes drift left = waves moving backward</div>
     </div>
 
-    <p>This was first studied in 2008 with 22 real cars driving on a circular track at 30 km/h. They were told to keep a constant speed. Within a few minutes, jams formed by themselves. <strong>No driver did anything wrong.</strong> The flow itself was unstable.</p>
+    <p>This was first studied in 2008 with 22 real cars driving on a circular track. They were told to keep a constant speed. Within minutes, jams formed by themselves. <strong>No driver did anything wrong.</strong> The flow itself was unstable.</p>
   </section>
 
   <!-- WHY -->
   <section>
     <h2>Why the wave does not dissipate.</h2>
-    <p>Think of the cars as a row of springs. When one compresses, the next one compresses harder, then the next. If everyone were a perfect driver with infinite anticipation, the wave would dampen out. Real drivers react slightly late, slightly too hard, and the wave amplifies instead.</p>
-    <p>Above a critical density of cars per km, the math says small perturbations grow without bound. Below it, they fade. The dice roll, the storm, the jam — the same exponential mechanism shows up in all of them.</p>
+    <p>Cars behave like a row of springs. When one compresses, the next one compresses harder, then the next. If everyone were a perfect driver with infinite anticipation, the wave would dampen out. Real drivers react slightly late, slightly too hard, and the wave amplifies instead.</p>
+    <p>Lane changes make it worse. Every time a car cuts in front of another, the one behind has to brake. That brake propagates backward in <em>that</em> lane, while the new lane the cutter joined has its own ripple from the gap they left. One weave creates two waves.</p>
+    <p>Above a critical density, the math says small perturbations grow without bound. Below it, they fade.</p>
   </section>
 
   <!-- TRY -->
   <section>
     <h2>What to try.</h2>
-    <p>Some things worth poking at:</p>
     <div>
-      <div class="try-pill">Set cars to <strong>10</strong>. Tap brake. The wave dies out.</div>
-      <div class="try-pill">Set cars to <strong>25</strong>. Wait. A jam forms on its own.</div>
-      <div class="try-pill">Set cars to <strong>20</strong>. Tap brake. The wave keeps going.</div>
+      <div class="try-pill">Set cars to <strong>8</strong>. Tap brake. Wave dies out fast.</div>
+      <div class="try-pill">Set cars to <strong>20</strong>. Tap brake. Wave persists for minutes.</div>
+      <div class="try-pill">Set cars to <strong>22</strong>. Force a lane change. Two waves form.</div>
+      <div class="try-pill">Set cars to <strong>25</strong>. Wait. Jams form on their own.</div>
     </div>
   </section>
 
@@ -265,13 +259,14 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  SIMULATOR — two views: first-person + overhead
+//  3-LANE TRAFFIC SIMULATOR
+//  IDM physics + simple lane-change model
 // ═══════════════════════════════════════════════════════
-const sceneCanvas = document.getElementById("sceneCanvas");
-const sceneCtx    = sceneCanvas.getContext("2d");
-const stCanvas    = document.getElementById("stCanvas");
-const stCtx       = stCanvas.getContext("2d");
-const dpr         = Math.min(devicePixelRatio || 1, 2);
+const roadCanvas = document.getElementById("roadCanvas");
+const roadCtx    = roadCanvas.getContext("2d");
+const stCanvas   = document.getElementById("stCanvas");
+const stCtx      = stCanvas.getContext("2d");
+const dpr        = Math.min(devicePixelRatio || 1, 2);
 
 function sizeC(c, w, h) {
   if (c.width === Math.round(w*dpr) && c.height === Math.round(h*dpr)) return;
@@ -283,22 +278,33 @@ function sizeC(c, w, h) {
   ctx.scale(dpr, dpr);
 }
 
-// IDM single-lane closed loop
-const ROAD_LEN = 800;  // virtual meters (closed loop)
+const ROAD_LEN = 1000;
+const LANES    = 3;
+const PARAMS   = { v0: 30, T: 1.4, a: 1.4, b: 2.0, s0: 2.0, len: 5 };
+
 let cars = [], simTime = 0, stHistory = [];
 let brakingCar = null, brakingTimer = 0;
-let playerIdx = 0;  // index of "you"
-
-const PARAMS = { v0: 30, T: 1.4, a: 1.4, b: 2.0, s0: 2.0, len: 5 };
+let forcedChanger = null;
 
 function getDens() { return parseInt(document.getElementById("densSlider").value); }
 
-function frontGap(i) {
-  const car = cars[i];
-  const next = cars[(i+1) % cars.length];
-  let g = next.x - car.x - PARAMS.len;
-  if (g < 0) g += ROAD_LEN;
-  return { gap: g, lead: next };
+// Get cars in a specific lane sorted by position
+function laneCars(lane) {
+  return cars.filter(c => c.lane === lane && !c.changing).sort((a, b) => a.x - b.x);
+}
+
+// Find car directly in front in the same lane
+function frontGap(car) {
+  const lane = car.changing ? car.targetLane : car.lane;
+  const sl = laneCars(lane).filter(c => c !== car);
+  if (sl.length === 0) return { gap: ROAD_LEN, lead: { v: PARAMS.v0 } };
+  let best = null, bestD = Infinity;
+  for (const c of sl) {
+    let d = c.x - car.x - PARAMS.len;
+    if (d <= 0) d += ROAD_LEN;
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  return { gap: bestD, lead: best };
 }
 
 function idmAccel(car, gap, lead) {
@@ -310,14 +316,49 @@ function idmAccel(car, gap, lead) {
   return free + interaction;
 }
 
-function reset() {
-  const n = getDens();
-  cars = []; simTime = 0; stHistory = []; brakingCar = null;
-  for (let i = 0; i < n; i++) {
-    cars.push({ x: (i / n) * ROAD_LEN, v: PARAMS.v0 * 0.85 });
+// Check if a lane change is safe
+function laneSafe(car, targetLane) {
+  for (const c of cars) {
+    if (c === car || c.lane !== targetLane) continue;
+    let dForward = c.x - car.x;
+    if (dForward < -ROAD_LEN/2) dForward += ROAD_LEN;
+    if (dForward >  ROAD_LEN/2) dForward -= ROAD_LEN;
+    if (Math.abs(dForward) < PARAMS.s0 + PARAMS.len + car.v * 0.6) return false;
   }
-  cars.sort((a, b) => a.x - b.x);
-  playerIdx = 0;  // first car is "you"
+  return true;
+}
+
+// MOBIL-lite: lane change incentive
+function shouldChange(car, targetLane) {
+  if (!laneSafe(car, targetLane)) return false;
+  // Compare gap in current vs target lane
+  const cur = frontGap(car);
+  const fakeCar = { ...car, lane: targetLane, changing: false };
+  // measure gap if were in target lane
+  const tgt = laneCars(targetLane);
+  let bestD = ROAD_LEN, bestLead = { v: PARAMS.v0 };
+  for (const c of tgt) {
+    let d = c.x - car.x - PARAMS.len;
+    if (d <= 0) d += ROAD_LEN;
+    if (d < bestD) { bestD = d; bestLead = c; }
+  }
+  // Switch if target gap is meaningfully larger and lead is faster
+  return bestD > cur.gap * 1.4 && bestLead.v >= cur.lead.v - 2;
+}
+
+function reset() {
+  const perLane = getDens();
+  cars = []; simTime = 0; stHistory = []; brakingCar = null; forcedChanger = null;
+  for (let l = 0; l < LANES; l++) {
+    for (let i = 0; i < perLane; i++) {
+      cars.push({
+        x: ((i / perLane) + l*0.013) * ROAD_LEN,
+        v: PARAMS.v0 * 0.85,
+        lane: l, targetLane: l,
+        changing: false, changeProg: 0, visualLane: l
+      });
+    }
+  }
 }
 
 function step(dt) {
@@ -328,23 +369,53 @@ function step(dt) {
     else brakingCar.v = 0;
   }
 
-  // Maintain order on the loop without losing player reference
-  const playerCar = cars[playerIdx];
-  cars.sort((a, b) => a.x - b.x);
-  playerIdx = cars.indexOf(playerCar);
+  const newV = new Float32Array(cars.length);
 
-  const newV = cars.map((car, i) => {
-    if (car === brakingCar) return 0;
-    const { gap, lead } = frontGap(i);
+  // IDM acceleration per car
+  cars.forEach((car, i) => {
+    if (car === brakingCar) { newV[i] = 0; return; }
+    const { gap, lead } = frontGap(car);
     const acc = idmAccel(car, gap, lead);
     let v = car.v + acc * dt;
-    return Math.max(0, Math.min(PARAMS.v0 * 1.05, v));
+    newV[i] = Math.max(0, Math.min(PARAMS.v0 * 1.05, v));
   });
 
+  // Lane changes (probabilistic)
+  cars.forEach(car => {
+    if (car.changing) {
+      car.changeProg = Math.min(1, car.changeProg + dt * 1.4);
+      car.visualLane = car.lane + (car.targetLane - car.lane) * car.changeProg;
+      if (car.changeProg >= 1) {
+        car.lane = car.targetLane;
+        car.changing = false;
+        car.changeProg = 0;
+        car.visualLane = car.lane;
+      }
+      return;
+    }
+    if (Math.random() > 0.04) return;
+    [-1, 1].forEach(dir => {
+      const tgt = car.lane + dir;
+      if (tgt < 0 || tgt >= LANES || car.changing) return;
+      if (shouldChange(car, tgt)) {
+        car.changing = true;
+        car.targetLane = tgt;
+        car.changeProg = 0;
+        // Brake the car behind in the destination lane briefly
+        cars.forEach((o, oi) => {
+          if (o.lane === tgt && o !== car && !o.changing) {
+            let d = (car.x - o.x + ROAD_LEN) % ROAD_LEN;
+            if (d < 30) newV[oi] = Math.max(0, (newV[oi] || o.v) * 0.55);
+          }
+        });
+      }
+    });
+  });
+
+  // Apply
   cars.forEach((car, i) => {
     car.v = newV[i];
     car.x = (car.x + car.v * dt) % ROAD_LEN;
-    if (car.x < 0) car.x += ROAD_LEN;
   });
 
   recordST();
@@ -365,320 +436,117 @@ function recordST() {
   if (stHistory.length > 600) stHistory.shift();
 }
 
-// Get distance from player car to other car (signed, ahead positive)
-function distAheadOf(playerX, otherX) {
-  let d = otherX - playerX;
-  if (d <= -ROAD_LEN/2) d += ROAD_LEN;
-  if (d >   ROAD_LEN/2) d -= ROAD_LEN;
-  return d;
-}
-
-function speedColor(ratio, isStopped) {
-  if (isStopped) return "#ff5050";
+function speedColor(ratio) {
   if (ratio > 0.65) return "#7ed060";
   if (ratio > 0.35) return "#f0b040";
   return "#ff5050";
 }
 
 // ═══════════════════════════════════════════════════════
-//  DRAW SCENE — top half = first-person, bottom = overhead
+//  DRAW ROAD — 3 lanes, top view
 // ═══════════════════════════════════════════════════════
-function drawScene() {
-  const W = sceneCanvas.clientWidth, H = 280;
-  sizeC(sceneCanvas, W, H);
+function drawRoad() {
+  const W = roadCanvas.clientWidth, H = 200;
+  sizeC(roadCanvas, W, H);
 
-  // Split: top 60% = first-person, bottom 40% = overhead
-  const splitY = Math.round(H * 0.62);
+  roadCtx.fillStyle = "#0e1014";
+  roadCtx.fillRect(0, 0, W, H);
 
-  // ── TOP: First-person perspective road ──
-  drawFirstPerson(0, 0, W, splitY);
+  // Road geometry
+  const ROAD_TOP = 28;
+  const LANE_H   = 38;
+  const ROAD_H   = LANE_H * LANES;
 
-  // Divider
-  sceneCtx.fillStyle = "#000";
-  sceneCtx.fillRect(0, splitY, W, 1);
-
-  // ── BOTTOM: Overhead view ──
-  drawOverhead(0, splitY, W, H - splitY);
-}
-
-function drawFirstPerson(x0, y0, W, H) {
-  // Sky → ground gradient
-  const sky = sceneCtx.createLinearGradient(0, y0, 0, y0 + H);
-  sky.addColorStop(0, "#0a0e14");
-  sky.addColorStop(0.45, "#141820");
-  sky.addColorStop(0.55, "#1a1f1a");
-  sky.addColorStop(1, "#0e120e");
-  sceneCtx.fillStyle = sky;
-  sceneCtx.fillRect(x0, y0, W, H);
-
-  const horizonY = y0 + H * 0.42;
-  const cx = W / 2;
-
-  // Sun glow on horizon
-  const glow = sceneCtx.createRadialGradient(cx, horizonY, 0, cx, horizonY, W * 0.4);
-  glow.addColorStop(0, "rgba(255,180,80,0.06)");
-  glow.addColorStop(1, "rgba(255,180,80,0)");
-  sceneCtx.fillStyle = glow;
-  sceneCtx.fillRect(x0, y0, W, H);
-
-  // Distant landscape silhouette
-  sceneCtx.fillStyle = "#0a0e0a";
-  sceneCtx.beginPath();
-  sceneCtx.moveTo(x0, horizonY);
-  for (let i = 0; i <= 12; i++) {
-    const px = (i / 12) * W;
-    const ph = horizonY - (Math.sin(i * 1.7) * 4 + 4);
-    sceneCtx.lineTo(px, ph);
-  }
-  sceneCtx.lineTo(x0 + W, horizonY);
-  sceneCtx.closePath();
-  sceneCtx.fill();
-
-  // Horizon line
-  sceneCtx.fillStyle = "#252c25";
-  sceneCtx.fillRect(x0, horizonY, W, 1);
-
-  // ── Trapezoidal road (perspective) ──
-  const roadBottomW = W * 0.78;
-  const roadTopW    = W * 0.06;
-  const roadBottomY = y0 + H;
-  const roadTopY    = horizonY;
-
-  // Road shape
-  const blX = cx - roadBottomW/2, brX = cx + roadBottomW/2;
-  const tlX = cx - roadTopW/2,    trX = cx + roadTopW/2;
-
-  sceneCtx.fillStyle = "#2a2a2a";
-  sceneCtx.beginPath();
-  sceneCtx.moveTo(blX, roadBottomY);
-  sceneCtx.lineTo(tlX, roadTopY);
-  sceneCtx.lineTo(trX, roadTopY);
-  sceneCtx.lineTo(brX, roadBottomY);
-  sceneCtx.closePath();
-  sceneCtx.fill();
-
-  // Road edges
-  sceneCtx.strokeStyle = "#666";
-  sceneCtx.lineWidth = 1.5;
-  sceneCtx.beginPath();
-  sceneCtx.moveTo(blX, roadBottomY); sceneCtx.lineTo(tlX, roadTopY);
-  sceneCtx.moveTo(brX, roadBottomY); sceneCtx.lineTo(trX, roadTopY);
-  sceneCtx.stroke();
-
-  // Center dashes — animated
-  const player = cars[playerIdx];
-  if (!player) return;
-
-  const dashOffset = (player.x % 8) / 8;
-  for (let i = 0; i < 18; i++) {
-    const dt = (i + dashOffset) / 18;
-    const t1 = Math.pow(dt, 1.8);  // stronger compression at horizon
-    const t2 = Math.pow(dt + 0.025, 1.8);
-    if (t2 > 1) continue;
-    const y1 = roadBottomY - t1 * (roadBottomY - roadTopY);
-    const y2 = roadBottomY - t2 * (roadBottomY - roadTopY);
-    const w1 = roadBottomW * (1 - t1) + roadTopW * t1;
-    const w2 = roadBottomW * (1 - t2) + roadTopW * t2;
-
-    sceneCtx.fillStyle = `rgba(255,255,255,${0.6 - t1*0.4})`;
-    const stripeW = Math.max(0.5, w1 * 0.012);
-    sceneCtx.beginPath();
-    sceneCtx.moveTo(cx - stripeW, y1);
-    sceneCtx.lineTo(cx + stripeW, y1);
-    sceneCtx.lineTo(cx + stripeW * (w2/w1), y2);
-    sceneCtx.lineTo(cx - stripeW * (w2/w1), y2);
-    sceneCtx.closePath();
-    sceneCtx.fill();
-  }
-
-  // ── Cars ahead of player ──
-  // Project cars onto perspective road
-  // Distance ahead → depth on road (0 = at player, MAX_DEPTH = horizon)
-  const MAX_DEPTH = 200;  // virtual meters visible
-
-  const visibleCars = [];
-  cars.forEach((c, i) => {
-    if (i === playerIdx) return;
-    const dist = distAheadOf(player.x, c.x);
-    if (dist > 0 && dist < MAX_DEPTH) visibleCars.push({ car: c, dist });
-  });
-
-  // Draw furthest first
-  visibleCars.sort((a, b) => b.dist - a.dist);
-
-  visibleCars.forEach(({ car, dist }) => {
-    const t = dist / MAX_DEPTH;  // 0 = near, 1 = far
-    const yT = Math.pow(t, 0.85);  // perspective curve
-
-    const py = roadBottomY - yT * (roadBottomY - roadTopY);
-    const wAtY = roadBottomW * (1 - yT) + roadTopW * yT;
-
-    // Car size scales with road width
-    const carW = wAtY * 0.32;
-    const carH = carW * 0.55;
-
-    if (carW < 1.5) return;
-
-    const ratio = car.v / PARAMS.v0;
-    const isStopped = ratio < 0.2;
-    const isBraking = car === brakingCar;
-
-    // Body
-    sceneCtx.fillStyle = isBraking ? "#3a1010" : "#1f1f24";
-    sceneCtx.beginPath();
-    if (sceneCtx.roundRect) sceneCtx.roundRect(cx - carW/2, py - carH, carW, carH, Math.max(1, carW*0.08));
-    else sceneCtx.rect(cx - carW/2, py - carH, carW, carH);
-    sceneCtx.fill();
-
-    // Roof highlight (subtle)
-    sceneCtx.fillStyle = "rgba(255,255,255,0.04)";
-    sceneCtx.fillRect(cx - carW/2, py - carH, carW, carH * 0.3);
-
-    // Brake lights — visible when slowing
-    if (ratio < 0.65 && carW > 4) {
-      const intensity = ratio < 0.4 ? 1.0 : (0.65 - ratio) / 0.25;
-      const lightW = Math.max(1.5, carW * 0.18);
-      const lightH = Math.max(1, carH * 0.25);
-      const lightY = py - carH * 0.45;
-
-      // Glow
-      sceneCtx.shadowColor = `rgba(255,40,40,${0.7 * intensity})`;
-      sceneCtx.shadowBlur = Math.max(4, carW * 0.25);
-      sceneCtx.fillStyle = `rgba(255,${Math.round(40 + intensity*40)},${Math.round(40 + intensity*30)},${0.7 + intensity*0.3})`;
-      sceneCtx.fillRect(cx - carW/2 + carW*0.08, lightY, lightW, lightH);
-      sceneCtx.fillRect(cx + carW/2 - carW*0.08 - lightW, lightY, lightW, lightH);
-      sceneCtx.shadowBlur = 0;
-    }
-
-    // Tail-light tint when moving freely (small dim red)
-    if (ratio >= 0.65 && carW > 4) {
-      sceneCtx.fillStyle = "rgba(140,30,30,0.6)";
-      const lightW = Math.max(1, carW * 0.15);
-      const lightH = Math.max(1, carH * 0.22);
-      const lightY = py - carH * 0.45;
-      sceneCtx.fillRect(cx - carW/2 + carW*0.08, lightY, lightW, lightH);
-      sceneCtx.fillRect(cx + carW/2 - carW*0.08 - lightW, lightY, lightW, lightH);
-    }
-
-    // Tiny status dot above car
-    if (carW > 6) {
-      sceneCtx.fillStyle = speedColor(ratio, isStopped);
-      sceneCtx.beginPath();
-      sceneCtx.arc(cx, py - carH - 4, 2, 0, Math.PI*2);
-      sceneCtx.fill();
-    }
-  });
-
-  // Player dashboard hint at bottom edge
-  // (subtle dark band at very bottom suggesting hood)
-  const hoodGrad = sceneCtx.createLinearGradient(0, roadBottomY - 14, 0, roadBottomY);
-  hoodGrad.addColorStop(0, "rgba(0,0,0,0)");
-  hoodGrad.addColorStop(1, "rgba(0,0,0,0.7)");
-  sceneCtx.fillStyle = hoodGrad;
-  sceneCtx.fillRect(x0, roadBottomY - 14, W, 14);
-}
-
-function drawOverhead(x0, y0, W, H) {
-  // Background
-  sceneCtx.fillStyle = "#0e1014";
-  sceneCtx.fillRect(x0, y0, W, H);
-
-  const ROAD_TOP = y0 + H/2 - 18;
-  const ROAD_H = 36;
-
-  // Edges
-  sceneCtx.fillStyle = "#444";
-  sceneCtx.fillRect(x0, ROAD_TOP - 1, W, 1);
-  sceneCtx.fillRect(x0, ROAD_TOP + ROAD_H, W, 1);
+  // Outer edges
+  roadCtx.fillStyle = "#666";
+  roadCtx.fillRect(0, ROAD_TOP - 1.5, W, 1.5);
+  roadCtx.fillRect(0, ROAD_TOP + ROAD_H, W, 1.5);
 
   // Surface
-  sceneCtx.fillStyle = "#262626";
-  sceneCtx.fillRect(x0, ROAD_TOP, W, ROAD_H);
+  roadCtx.fillStyle = "#2a2a2a";
+  roadCtx.fillRect(0, ROAD_TOP, W, ROAD_H);
 
-  // Center dashed
-  sceneCtx.strokeStyle = "rgba(255,255,255,0.4)";
-  sceneCtx.lineWidth = 1.2;
-  sceneCtx.setLineDash([10, 7]);
-  sceneCtx.beginPath();
-  sceneCtx.moveTo(x0, ROAD_TOP + ROAD_H/2);
-  sceneCtx.lineTo(x0 + W, ROAD_TOP + ROAD_H/2);
-  sceneCtx.stroke();
-  sceneCtx.setLineDash([]);
+  // Lane dividers — dashed, bright
+  roadCtx.strokeStyle = "rgba(255,255,255,0.4)";
+  roadCtx.lineWidth = 1.3;
+  roadCtx.setLineDash([14, 9]);
+  for (let l = 1; l < LANES; l++) {
+    const y = ROAD_TOP + l * LANE_H;
+    roadCtx.beginPath();
+    roadCtx.moveTo(0, y); roadCtx.lineTo(W, y);
+    roadCtx.stroke();
+  }
+  roadCtx.setLineDash([]);
 
-  // Cars — aligned so player car always at fixed position from left
-  // Center the view on the player
-  const player = cars[playerIdx];
-  if (!player) return;
-
-  const carH = 14, carW = 22;
-  const playerScreenX = x0 + W * 0.18;  // player car appears 18% from left
-
-  cars.forEach((car, i) => {
-    // Position relative to player on the loop
-    let rel = car.x - player.x;
-    if (rel < -ROAD_LEN/2) rel += ROAD_LEN;
-    if (rel >  ROAD_LEN/2) rel -= ROAD_LEN;
-
-    // Map ROAD_LEN to W: full loop wrapped across screen, with player offset
-    const px = playerScreenX + (rel / ROAD_LEN) * W;
-    // Wrap around
-    let drawX = px;
-    if (drawX < x0) drawX += W;
-    if (drawX > x0 + W) drawX -= W;
-
-    const py = ROAD_TOP + ROAD_H/2;
-    const ratio = car.v / PARAMS.v0;
-    const isStopped = ratio < 0.2;
-    const isPlayer = (i === playerIdx);
-
-    let col;
-    if (isPlayer) col = "#ffffff";
-    else if (car === brakingCar) col = "#ff3030";
-    else col = speedColor(ratio, isStopped);
-
-    if (isStopped && !isPlayer) {
-      sceneCtx.shadowColor = "rgba(255,80,80,0.7)";
-      sceneCtx.shadowBlur = 8;
-    }
-
-    sceneCtx.fillStyle = col;
-    if (sceneCtx.roundRect) {
-      sceneCtx.beginPath();
-      sceneCtx.roundRect(drawX - carW/2, py - carH/2, carW, carH, 2);
-      sceneCtx.fill();
-    } else {
-      sceneCtx.fillRect(drawX - carW/2, py - carH/2, carW, carH);
-    }
-    sceneCtx.shadowBlur = 0;
-
-    // Direction marker (front)
-    sceneCtx.fillStyle = isPlayer ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.55)";
-    sceneCtx.fillRect(drawX + carW/2 - 3, py - carH/3, 2, carH*2/3);
+  // Lane labels
+  roadCtx.fillStyle = "rgba(255,255,255,0.18)";
+  roadCtx.font = `9px 'DM Mono', monospace`;
+  ["fast", "middle", "slow"].forEach((lbl, i) => {
+    roadCtx.fillText(lbl, 6, ROAD_TOP + i * LANE_H + 12);
   });
 
-  // Player marker — arrow above
-  sceneCtx.fillStyle = "#fff";
-  sceneCtx.beginPath();
-  sceneCtx.moveTo(playerScreenX, ROAD_TOP - 6);
-  sceneCtx.lineTo(playerScreenX - 4, ROAD_TOP - 12);
-  sceneCtx.lineTo(playerScreenX + 4, ROAD_TOP - 12);
-  sceneCtx.closePath();
-  sceneCtx.fill();
+  // Cars
+  const carH = 22, carW = 30;
+  // Sort so stopped/slow draw on top
+  const sorted = [...cars].sort((a, b) => a.v - b.v);
 
-  sceneCtx.fillStyle = "rgba(255,255,255,0.6)";
-  sceneCtx.font = `9px 'DM Mono', monospace`;
-  sceneCtx.fillText("YOU", playerScreenX - 9, ROAD_TOP - 14);
+  sorted.forEach(car => {
+    const px = (car.x / ROAD_LEN) * W;
+    const py = ROAD_TOP + car.visualLane * LANE_H + LANE_H/2;
+    const ratio = car.v / PARAMS.v0;
 
-  // Direction
-  sceneCtx.fillStyle = "rgba(255,255,255,0.4)";
-  sceneCtx.fillText("→ direction (loop)", x0 + W - 130, y0 + H - 6);
+    let col;
+    if (car === brakingCar) col = "#ff2020";
+    else if (car.changing)  col = "#5a8ad8";
+    else col = speedColor(ratio);
+
+    if (ratio < 0.2 && !car.changing) {
+      roadCtx.shadowColor = "rgba(255,80,80,0.7)";
+      roadCtx.shadowBlur = 9;
+    }
+
+    roadCtx.fillStyle = col;
+    if (roadCtx.roundRect) {
+      roadCtx.beginPath();
+      roadCtx.roundRect(px - carW/2, py - carH/2, carW, carH, 3);
+      roadCtx.fill();
+    } else {
+      roadCtx.fillRect(px - carW/2, py - carH/2, carW, carH);
+    }
+    roadCtx.shadowBlur = 0;
+
+    // Front marker (white stripe on right side)
+    roadCtx.fillStyle = "rgba(255,255,255,0.55)";
+    roadCtx.fillRect(px + carW/2 - 4, py - carH/3, 3, carH*2/3);
+
+    // Brake light hint (red on left when slowing)
+    if (ratio < 0.5 && !car.changing && car !== brakingCar) {
+      const intensity = (0.5 - ratio) / 0.5;
+      roadCtx.fillStyle = `rgba(255,40,40,${0.5 + intensity*0.5})`;
+      roadCtx.fillRect(px - carW/2, py - carH/3, 2.5, carH*2/3);
+    }
+
+    // Lane change indicator (blinker on top)
+    if (car.changing) {
+      roadCtx.fillStyle = "rgba(255,200,60,0.9)";
+      const dir = car.targetLane > car.lane ? 1 : -1;
+      roadCtx.beginPath();
+      roadCtx.arc(px + dir * carW * 0.3, py - carH/2 - 4, 1.5, 0, Math.PI*2);
+      roadCtx.fill();
+    }
+  });
+
+  // Direction arrow
+  roadCtx.fillStyle = "rgba(255,255,255,0.4)";
+  roadCtx.font = `10px 'DM Mono', monospace`;
+  roadCtx.fillText("→ direction (closed loop)", W - 170, H - 8);
 }
 
 // ═══════════════════════════════════════════════════════
 //  SPACE-TIME
 // ═══════════════════════════════════════════════════════
 function drawST() {
-  const W = stCanvas.clientWidth, H = 160;
+  const W = stCanvas.clientWidth, H = 170;
   sizeC(stCanvas, W, H);
   stCtx.fillStyle = "#070707";
   stCtx.fillRect(0, 0, W, H);
@@ -704,13 +572,14 @@ function drawST() {
 // ═══════════════════════════════════════════════════════
 function updateStats() {
   if (!cars.length) return;
-  const player = cars[playerIdx];
+  const avg = cars.reduce((s,c)=>s+c.v,0)/cars.length;
   const min = Math.min(...cars.map(c=>c.v));
-  document.getElementById("speedVal").textContent = (player.v * 3).toFixed(0)+" km/h";
+  const stopped = cars.filter(c => c.v < PARAMS.v0 * 0.2).length;
+  document.getElementById("speedVal").textContent = (avg * 3).toFixed(0)+" km/h";
   document.getElementById("slowVal").textContent  = (min * 3).toFixed(0)+" km/h";
+  document.getElementById("stoppedVal").textContent = stopped;
   document.getElementById("timeHud").textContent  = "t = "+simTime.toFixed(0)+"s";
   const m = document.getElementById("moodVal");
-  const avg = cars.reduce((s,c)=>s+c.v,0)/cars.length;
   const r = avg / PARAMS.v0;
   m.classList.remove("good","warn","bad");
   if (r<.4)      { m.textContent="jam";      m.classList.add("bad"); }
@@ -722,17 +591,40 @@ document.getElementById("densSlider").addEventListener("input", () => {
   document.getElementById("densLbl").textContent = document.getElementById("densSlider").value;
   reset();
 });
+
 document.getElementById("restartBtn").addEventListener("click", reset);
+
 document.getElementById("brakeBtn").addEventListener("click", () => {
   if (!cars.length) return;
-  // Pick a random car AHEAD of player so the wave reaches them
-  const aheadCars = cars.map((c, i) => ({ c, i, d: distAheadOf(cars[playerIdx].x, c.x) }))
-                        .filter(x => x.d > 30 && x.d < 200 && x.i !== playerIdx);
-  if (aheadCars.length === 0) return;
-  const pick = aheadCars[Math.floor(Math.random() * aheadCars.length)];
-  brakingCar = pick.c;
+  brakingCar = cars[Math.floor(Math.random() * cars.length)];
   brakingTimer = 1.5;
   brakingCar.v = 0;
+});
+
+document.getElementById("laneChangeBtn").addEventListener("click", () => {
+  // Force a random non-changing car to switch lanes
+  const candidates = cars.filter(c => !c.changing);
+  if (!candidates.length) return;
+  // Try a few random picks until one finds a safe target
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const car = candidates[Math.floor(Math.random() * candidates.length)];
+    const dir = car.lane === 0 ? 1 : car.lane === LANES-1 ? -1 : (Math.random() < 0.5 ? -1 : 1);
+    const tgt = car.lane + dir;
+    if (tgt < 0 || tgt >= LANES) continue;
+    if (laneSafe(car, tgt)) {
+      car.changing = true;
+      car.targetLane = tgt;
+      car.changeProg = 0;
+      // Brake the new follower
+      cars.forEach(o => {
+        if (o.lane === tgt && o !== car && !o.changing) {
+          let d = (car.x - o.x + ROAD_LEN) % ROAD_LEN;
+          if (d < 35) o.v = Math.max(0, o.v * 0.45);
+        }
+      });
+      return;
+    }
+  }
 });
 
 let last = performance.now();
@@ -740,14 +632,14 @@ function frame(now) {
   const dt = Math.min((now-last)/1000, 0.04);
   last = now;
   for (let i = 0; i < 4; i++) step(dt/4);
-  drawScene();
+  drawRoad();
   drawST();
   requestAnimationFrame(frame);
 }
 
 reset();
 requestAnimationFrame(frame);
-window.addEventListener("resize", () => { drawScene(); drawST(); });
+window.addEventListener("resize", () => { drawRoad(); drawST(); });
 </script>
 </body>
 </html>
