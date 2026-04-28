@@ -56,7 +56,7 @@
       padding:2rem 0;
       position:relative;
     }
-    #roadCanvas{display:block;width:100%;height:90px;}
+    #roadCanvas{display:block;width:100%;height:140px;}
 
     /* CONTROLS */
     .ctrl{padding:1rem 1.25rem;border-top:1px solid var(--border);}
@@ -194,10 +194,10 @@
     <div class="ctrl">
       <div class="ctrl-label">
         <span>Cars on the road</span>
-        <strong id="densLbl">25</strong>
+        <strong id="densLbl">18</strong>
       </div>
-      <input type="range" id="densSlider" min="8" max="50" value="25"/>
-      <div class="ctrl-help">More cars means less room. Above ~30 jams form on their own.</div>
+      <input type="range" id="densSlider" min="6" max="30" value="18"/>
+      <div class="ctrl-help">Slide right to add cars. Above ~20 the flow becomes unstable.</div>
     </div>
 
     <!-- BUTTONS -->
@@ -249,9 +249,9 @@
     <h2>What to try.</h2>
     <p>Some things worth poking at:</p>
     <div>
-      <div class="try-pill">Set density to <strong>15</strong>. Tap brake. The wave dies.</div>
-      <div class="try-pill">Set density to <strong>40</strong>. Wait. A jam forms by itself.</div>
-      <div class="try-pill">Set density to <strong>30</strong>. Tap brake. Watch the wave persist.</div>
+      <div class="try-pill">Set cars to <strong>10</strong>. Tap brake. The wave dies out.</div>
+      <div class="try-pill">Set cars to <strong>25</strong>. Wait. A jam forms on its own.</div>
+      <div class="try-pill">Set cars to <strong>20</strong>. Tap brake. The wave keeps going.</div>
     </div>
   </section>
 
@@ -363,15 +363,15 @@ function recordST() {
 //  DRAW ROAD — straight horizontal strip, simple
 // ═══════════════════════════════════════════════════════
 function drawRoad() {
-  const W = roadCanvas.clientWidth, H = 90;
+  const W = roadCanvas.clientWidth, H = 140;
   sizeC(roadCanvas, W, H);
 
   roadCtx.fillStyle = "#1a1d20";
   roadCtx.fillRect(0, 0, W, H);
 
   // Road strip
-  const ROAD_TOP = H/2 - 18;
-  const ROAD_H = 36;
+  const ROAD_TOP = H/2 - 32;
+  const ROAD_H = 64;
 
   // Edges
   roadCtx.fillStyle = "#666";
@@ -393,7 +393,7 @@ function drawRoad() {
   roadCtx.setLineDash([]);
 
   // Cars
-  const carH = 12, carW = 18;
+  const carH = 26, carW = 32;
   cars.forEach(car => {
     const px = (car.x / ROAD_LEN) * W;
     const py = ROAD_TOP + ROAD_H/2;
@@ -421,9 +421,9 @@ function drawRoad() {
     }
     roadCtx.shadowBlur = 0;
 
-    // Direction marker
-    roadCtx.fillStyle = "rgba(255,255,255,0.5)";
-    roadCtx.fillRect(px + carW/2 - 3, py - carH/3, 2, carH*2/3);
+    // Direction marker (front of car)
+    roadCtx.fillStyle = "rgba(255,255,255,0.55)";
+    roadCtx.fillRect(px + carW/2 - 4, py - carH/3, 3, carH*2/3);
   });
 
   // Direction arrow
