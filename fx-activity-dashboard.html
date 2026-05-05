@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Monthly Historical FX Activity</title>
+  <script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'></script>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--ink:#0f1b33;--muted:#61708a;--line:#dce3ee;--grid:#e8edf5;--spot:#0b2f66;--m1:#1f67cf;--m3:#0c929b;--m6:#9bd3df;--m12:#b8c7dc;--closed:#071b43;--accent:#0c929b;--warn:#e46b55;--shadow:0 18px 45px rgba(15,27,51,.12),0 2px 8px rgba(15,27,51,.06);--radius:18px;--font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#fbfcff 0%,var(--bg) 100%);font-family:var(--font);color:var(--ink)}
+    .page{padding:18px;max-width:1420px;margin:0 auto}.panel{background:var(--card);border:1px solid #e4e9f2;border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px 16px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}.brand{display:flex;gap:16px;align-items:center}.icon{width:52px;height:52px;border-radius:50%;background:#061a42;display:grid;place-items:center;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14)}.icon svg{width:30px;height:30px}.title h1{margin:0;font-size:28px;letter-spacing:-.03em}.title p{margin:4px 0 0;color:#526385;font-size:17px}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.upload{position:relative;overflow:hidden;border:1px solid #cfd8e6;border-radius:12px;background:#fff;padding:10px 13px;font-weight:700;font-size:13px;color:#12213d;cursor:pointer}.upload input{position:absolute;inset:0;opacity:0;cursor:pointer}.hint{font-size:12px;color:var(--muted);max-width:310px;line-height:1.35}.grid{display:grid;grid-template-columns:minmax(720px,1fr) 390px;gap:24px;margin-top:18px}.main h2,.side h2{font-size:16px;margin:0 0 12px}.main h2 span,.side h2 span{font-weight:500;color:var(--muted)}.chartWrap{height:430px;position:relative}.chartWrap canvas{width:100%!important;height:100%!important}.side{border-left:1px solid var(--line);padding-left:22px}.tenorHead,.tenorRow{display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center}.tenorHead{font-size:11px;color:#6d7b93;font-weight:700;margin:8px 0 8px}.tenorRow{min-height:62px;border-bottom:1px dashed #dce3ee}.tenorRow strong{font-size:14px}.bars{display:grid;gap:7px}.barLine{display:flex;align-items:center;gap:8px}.bar{height:15px;border-radius:0 8px 8px 0;min-width:3px}.q{background:linear-gradient(90deg,#1f67cf,#2f79e5)}.c{background:linear-gradient(90deg,#0c929b,#11a7a2)}.num{font-size:12px;color:#273651}.pct{width:54px;height:54px;border-radius:50%;border:1.5px dashed #8bb5c7;display:grid;place-items:center;color:var(--accent);font-size:16px;font-weight:800}.totalRow{background:#f5f8fc;border:1px solid #e3e9f2;border-radius:10px;margin-top:10px;padding:12px;display:grid;grid-template-columns:70px 1fr 1fr 60px;align-items:center;gap:8px}.totalRow span{font-weight:800}.totalRow .qtxt{color:#1f67cf}.totalRow .ctxt{color:var(--accent)}.kpis{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;gap:0;border:1px solid var(--line);border-radius:14px;margin-top:18px;overflow:hidden}.kpi{padding:16px 20px;display:flex;align-items:center;gap:14px;border-right:1px solid var(--line)}.kpi:last-child{border-right:0}.bubble{width:48px;height:48px;border-radius:50%;border:1px solid #d4dce9;background:#f8fafc;display:grid;place-items:center}.kpi label{display:block;font-size:12px;font-weight:800;color:#1f67cf}.kpi:nth-child(2) label{color:var(--accent)}.kpi:nth-child(3) label{color:var(--warn)}.kpi .big{font-size:28px;font-weight:850;letter-spacing:-.03em}.kpi small{display:block;color:#6c7890}.notes{background:#f5f7fb}.notes p{margin:0;color:#41516c;font-size:13px;line-height:1.45}.foot{margin:10px 0 0;font-size:11px;color:#6b7891}.callouts{display:flex;gap:10px;margin:0 0 8px}.callout{padding:8px 10px;border-radius:9px;color:#fff;font-size:12px;font-weight:750}.callout.blue{background:#0b2f66}.callout.teal{background:#0c929b}@media(max-width:1050px){.grid{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.kpis{grid-template-columns:1fr 1fr}.top{align-items:flex-start;flex-direction:column}.chartWrap{height:390px}}@media(max-width:640px){.page{padding:10px}.panel{padding:16px}.title h1{font-size:22px}.grid{gap:14px}.kpis{grid-template-columns:1fr}.kpi{border-right:0;border-bottom:1px solid var(--line)}.chartWrap{height:360px}}
+  </style>
+</head>
+<body>
+  <main class='page'>
+    <section class='panel'>
+      <div class='top'>
+        <div class='brand'>
+          <div class='icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8'><path d='M4 19V5M4 19h17M8 16v-4M12 16V8M16 16v-7M20 16V4'/><path d='M7 9l4-3 4 2 5-5'/></svg></div>
+          <div class='title'><h1>Monthly Historical FX Activity</h1><p>Quoted vs Closed | Last 24 Months</p></div>
+        </div>
+        <div class='controls'>
+          <label class='upload'>Import CSV <input id='csvFile' type='file' accept='.csv,text/csv'></label>
+          <div class='hint'>Expected columns: <b>month</b>, <b>tenor</b>, <b>quoted</b>, <b>closed</b>. Example month: 2025-01. Tenors: Spot, 1M, 3M, 6M, 12M+.</div>
+        </div>
+      </div>
+      <div class='grid'>
+        <div class='main'>
+          <h2>Monthly Volume <span id='unitLabel'>(USD Volume)</span></h2>
+          <div class='callouts'><div id='peakBox' class='callout blue'>Peak quoted</div><div id='rateBox' class='callout teal'>Best hit rate</div></div>
+          <div class='chartWrap'><canvas id='monthlyChart'></canvas></div>
+        </div>
+        <aside class='side'>
+          <h2>By Tenor <span>(Last 24 Months)</span></h2>
+          <div class='tenorHead'><div>Bucket</div><div>Quoted / Closed</div><div>Hit Rate</div></div>
+          <div id='tenorRows'></div>
+          <div id='tenorTotal' class='totalRow'></div>
+        </aside>
+      </div>
+      <div class='kpis'>
+        <div class='kpi'><div class='bubble'>▦</div><div><label>TOTAL QUOTED</label><div id='kpiQuoted' class='big'>-</div><small>input volume</small></div></div>
+        <div class='kpi'><div class='bubble'>✓</div><div><label>TOTAL CLOSED</label><div id='kpiClosed' class='big'>-</div><small>input volume</small></div></div>
+        <div class='kpi'><div class='bubble'>◎</div><div><label>OVERALL HIT RATE</label><div id='kpiHit' class='big'>-</div><small>Closed / Quoted</small></div></div>
+        <div class='kpi notes'><div class='bubble'>▥</div><p id='insightText'>Import a CSV to rebuild the dashboard automatically.</p></div>
+      </div>
+      <p class='foot'>CSV volumes should be in one consistent unit. The page aggregates duplicated month/tenor rows automatically.</p>
+    </section>
+  </main>
+<script>
+const TENORS=['Spot','1M','3M','6M','12M+'];
+const COLORS={'Spot':'#0b2f66','1M':'#1f67cf','3M':'#0c929b','6M':'#9bd3df','12M+':'#b8c7dc'};
+const sampleCsv=`month,tenor,quoted,closed
+2024-01,Spot,30,13
+2024-01,1M,34,14
+2024-01,3M,19,8
+2024-01,6M,10,5
+2024-01,12M+,18,4
+2024-02,Spot,35,16
+2024-02,1M,37,15
+2024-02,3M,20,9
+2024-02,6M,12,6
+2024-02,12M+,19,4
+2024-03,Spot,37,16
+2024-03,1M,39,15
+2024-03,3M,22,9
+2024-03,6M,12,6
+2024-03,12M+,20,5
+2024-04,Spot,38,15
+2024-04,1M,41,15
+2024-04,3M,23,9
+2024-04,6M,13,5
+2024-04,12M+,21,4
+2024-05,Spot,42,18
+2024-05,1M,41,18
+2024-05,3M,24,10
+2024-05,6M,13,6
+2024-05,12M+,24,5
+2024-06,Spot,39,16
+2024-06,1M,36,16
+2024-06,3M,19,8
+2024-06,6M,11,5
+2024-06,12M+,18,4
+2024-07,Spot,42,19
+2024-07,1M,35,18
+2024-07,3M,21,10
+2024-07,6M,12,7
+2024-07,12M+,18,5
+2024-08,Spot,39,17
+2024-08,1M,35,16
+2024-08,3M,19,9
+2024-08,6M,11,6
+2024-08,12M+,18,5
+2024-09,Spot,37,18
+2024-09,1M,34,18
+2024-09,3M,16,8
+2024-09,6M,10,6
+2024-09,12M+,14,4
+2024-10,Spot,34,17
+2024-10,1M,33,17
+2024-10,3M,15,9
+2024-10,6M,9,5
+2024-10,12M+,14,4
+2024-11,Spot,32,17
+2024-11,1M,31,18
+2024-11,3M,13,8
+2024-11,6M,8,5
+2024-11,12M+,12,5
+2024-12,Spot,34,18
+2024-12,1M,31,19
+2024-12,3M,14,9
+2024-12,6M,8,5
+2024-12,12M+,15,5
+2025-01,Spot,40,21
+2025-01,1M,30,20
+2025-01,3M,14,10
+2025-01,6M,10,7
+2025-01,12M+,16,9
+2025-02,Spot,43,23
+2025-02,1M,31,22
+2025-02,3M,18,12
+2025-02,6M,12,7
+2025-02,12M+,19,9
+2025-03,Spot,42,24
+2025-03,1M,30,23
+2025-03,3M,18,12
+2025-03,6M,11,7
+2025-03,12M+,16,9
+2025-04,Spot,42,26
+2025-04,1M,30,26
+2025-04,3M,19,14
+2025-04,6M,14,9
+2025-04,12M+,18,10
+2025-05,Spot,46,29
+2025-05,1M,31,29
+2025-05,3M,20,16
+2025-05,6M,13,9
+2025-05,12M+,20,11
+2025-06,Spot,46,32
+2025-06,1M,30,31
+2025-06,3M,20,18
+2025-06,6M,12,10
+2025-06,12M+,10,10
+2025-07,Spot,41,28
+2025-07,1M,28,26
+2025-07,3M,17,15
+2025-07,6M,10,8
+2025-07,12M+,15,8
+2025-08,Spot,39,27
+2025-08,1M,25,25
+2025-08,3M,18,15
+2025-08,6M,8,8
+2025-08,12M+,15,9
+2025-09,Spot,36,24
+2025-09,1M,26,24
+2025-09,3M,17,13
+2025-09,6M,8,7
+2025-09,12M+,14,9
+2025-10,Spot,37,25
+2025-10,1M,27,25
+2025-10,3M,17,14
+2025-10,6M,9,7
+2025-10,12M+,20,10
+2025-11,Spot,36,24
+2025-11,1M,25,23
+2025-11,3M,17,13
+2025-11,6M,9,7
+2025-11,12M+,15,9
+2025-12,Spot,36,24
+2025-12,1M,25,23
+2025-12,3M,17,13
+2025-12,6M,9,7
+2025-12,12M+,15,9`;
+let monthlyChart;
+document.getElementById('csvFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=ev=>loadCsv(ev.target.result);reader.readAsText(f)});
+function cleanRow(row){const out={};Object.keys(row).forEach(k=>out[String(k).trim().toLowerCase()]=row[k]);return out}
+function pick(o,names){for(const n of names){if(o[n]!==undefined&&o[n]!==null&&String(o[n]).trim()!=='')return o[n]}return ''}
+function money(n){if(!isFinite(n))return '-';return Math.round(n).toLocaleString('en-US')}
+function pct(c,q){return q?Math.round(c/q*100):0}
+function monthLabel(m){const [y,mo]=m.split('-');const d=new Date(Number(y),Number(mo)-1,1);return d.toLocaleString('en-US',{month:'short'})+' '+String(y).slice(2)}
+function normMonth(x){let s=String(x||'').trim();if(!s)return null;if(s.length>=7&&s[4]==='-')return s.slice(0,7);const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return s}
+function normTenor(x){let s=String(x||'').trim().toUpperCase().replaceAll(' ','');if(s==='SPOT'||s==='SP')return 'Spot';if(s==='1M'||s==='ONEMONTH')return '1M';if(s==='3M')return '3M';if(s==='6M')return '6M';if(['12M','12M+','1Y','>12M','12MONTHS','12+'].includes(s))return '12M+';return TENORS.includes(s)?s:'12M+'}
+function loadCsv(text){Papa.parse(text,{header:true,dynamicTyping:true,skipEmptyLines:true,complete:r=>render(r.data.map(cleanRow))})}
+function aggregate(rows){const map=new Map();for(const r of rows){const m=normMonth(pick(r,['month','date','period','trade_month']));const t=normTenor(pick(r,['tenor','bucket','prazo','maturity','maturity_bucket']));const q=Number(pick(r,['quoted','quote','quoted_volume','volume_quoted','rfq','rfq_volume'])||0);const c=Number(pick(r,['closed','done','closed_volume','volume_closed','traded','executed'])||0);if(!m||!isFinite(q)||!isFinite(c))continue;if(!map.has(m)){map.set(m,{});TENORS.forEach(x=>map.get(m)[x]={quoted:0,closed:0})}map.get(m)[t].quoted+=q;map.get(m)[t].closed+=c}const months=[...map.keys()].sort().slice(-24);return {months,map}}
+function render(rows){const {months,map}=aggregate(rows);if(!months.length)return;const totals={quoted:0,closed:0};const tenorTotals={};TENORS.forEach(t=>tenorTotals[t]={quoted:0,closed:0});const closedMonthly=[];const quotedMonthly=[];for(const m of months){let q=0,c=0;for(const t of TENORS){q+=map.get(m)[t].quoted;c+=map.get(m)[t].closed;tenorTotals[t].quoted+=map.get(m)[t].quoted;tenorTotals[t].closed+=map.get(m)[t].closed}quotedMonthly.push(q);closedMonthly.push(c);totals.quoted+=q;totals.closed+=c}drawMonthly(months,map,closedMonthly);drawTenor(tenorTotals,totals);drawKpis(totals,months,quotedMonthly,closedMonthly)}
+function drawMonthly(months,map,closedMonthly){const labels=months.map(monthLabel);const ds=TENORS.map(t=>({type:'bar',label:t,data:months.map(m=>map.get(m)[t].quoted),backgroundColor:COLORS[t],borderWidth:0,borderRadius:2,stack:'quoted'}));ds.push({type:'line',label:'Closed Total',data:closedMonthly,borderColor:'#071b43',backgroundColor:'#071b43',borderWidth:3,pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#fff',pointBorderColor:'#071b43',pointBorderWidth:2,tension:.25,yAxisID:'y'});const ctx=document.getElementById('monthlyChart');if(monthlyChart)monthlyChart.destroy();monthlyChart=new Chart(ctx,{data:{labels,datasets:ds},options:{maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'start',labels:{boxWidth:12,boxHeight:12,usePointStyle:false,color:'#15233e',font:{size:12,weight:'600'}}},tooltip:{backgroundColor:'#0f1b33',padding:10,cornerRadius:8}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#34435e',maxRotation:0,minRotation:0,font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:'#e6ebf3',borderDash:[5,5]},ticks:{color:'#66758e'},title:{display:true,text:'Volume',color:'#56647d'}}}}})}
+function drawTenor(tt,totals){const max=Math.max(...TENORS.map(t=>tt[t].quoted),1);const rows=TENORS.map(t=>{const q=tt[t].quoted,c=tt[t].closed;return `<div class='tenorRow'><strong>${t}</strong><div class='bars'><div class='barLine'><div class='bar q' style='width:${Math.max(3,q/max*100)}%'></div><span class='num'>${money(q)}</span></div><div class='barLine'><div class='bar c' style='width:${Math.max(3,c/max*100)}%'></div><span class='num'>${money(c)}</span></div></div><div class='pct'>${pct(c,q)}%</div></div>`}).join('');document.getElementById('tenorRows').innerHTML=rows;document.getElementById('tenorTotal').innerHTML=`<b>TOTAL</b><span class='qtxt'>${money(totals.quoted)}</span><span class='ctxt'>${money(totals.closed)}</span><div class='pct'>${pct(totals.closed,totals.quoted)}%</div>`}
+function drawKpis(totals,months,qm,cm){document.getElementById('kpiQuoted').textContent=money(totals.quoted);document.getElementById('kpiClosed').textContent=money(totals.closed);document.getElementById('kpiHit').textContent=pct(totals.closed,totals.quoted)+'%';let peakI=qm.indexOf(Math.max(...qm));let bestI=0,best=-1;for(let i=0;i<months.length;i++){let r=qm[i]?cm[i]/qm[i]:0;if(r>best){best=r;bestI=i}}document.getElementById('peakBox').textContent=`Peak quoted: ${monthLabel(months[peakI])} | ${money(qm[peakI])}`;document.getElementById('rateBox').textContent=`Best hit rate: ${monthLabel(months[bestI])} | ${pct(cm[bestI],qm[bestI])}%`;document.getElementById('insightText').innerHTML=`Quoted volumes peaked in <b>${monthLabel(months[peakI])}</b> at <b>${money(qm[peakI])}</b>. Highest close rate was <b>${pct(cm[bestI],qm[bestI])}%</b> in <b>${monthLabel(months[bestI])}</b>.`}
+loadCsv(sampleCsv);
+</script>
+</body>
+</html>
