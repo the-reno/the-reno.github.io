@@ -1,21 +1,12 @@
 # The Complexity of Prediction
 
-In my view, prediction is one of the most interesting ideas in science.
-
 I have always liked the idea of predictability.
-
-It probably started with dice, moved through Newton and gravity, then reached places where even good equations stop giving one clean answer.
-
----
-
-## Dice
 
 I used to think prediction was repetition.
 
 I remember trying to throw a dice in exactly the same way.
 
-Same hand.
-Same angle.
+Same direction.
 Same strength.
 
 6.
@@ -25,19 +16,13 @@ Then something else.
 The movement looked almost identical.
 The result was not.
 
-Maybe prediction was not about repeating the exact outcome.
+i then realized the prediction was not about repeating everything. Maybe there was something else.
 
-Maybe there was something else.
-
----
-
-## Probability
-
-Later I learned that uncertainty does not mean absence of patterns.
+then i learn probabilities. 
 
 A dice has six sides.
-Stable rules.
-Known probabilities.
+repeting the process in the same way or just rolling doesnt affect the probablity of a event. 
+but we can predict what the randonwness can give us.
 
 Probability:
 
@@ -45,22 +30,20 @@ successful possibilities
 ────────────────
 all possibilities
 
-The probability of rolling a 3:
+The probability of rolling a dice and result i 3:
 
 1
 ─
 6
 
-There is only one successful outcome and six total possibilities.
+There is only one successful outcome amonng six total possibilities.
 
 The exact result is uncertain.
 But the structure behind the result is predictable.
 
----
+this idea was great. and now we can play arounf this.
 
-## Two Dice
-
-With two dice, we stop predicting one face and start predicting the sum.
+lets take  two dice. and figure out the posaibilities to the sum of numbers. again.. i dont know the next result, but  i can see waht is the most probable result.
 
 Some numbers become more common because more combinations create them.
 
@@ -75,15 +58,9 @@ That idea stayed with me.
 
 Sometimes systems look random only because we are looking at them the wrong way.
 
----
+Later I heatd about isaac Newton, gravity, and the apple story.
 
-## Newton
-
-Later I learned about Newton, gravity, and the apple story.
-
-Prediction suddenly felt much larger than games.
-
-An apple falling from a tree is predictable because gravity on Earth is extremely stable.
+this guy discovered we can predict An apple falling from a tree. there is a constante power on earth extremely stable that push things down. somehow he discover the patern. (put a chatt to deminstarte how he taught) measure the objest and drop.. he found that regardless the obhest this power pull down at 
 
 g ≈ 9.81 m/s²
 
@@ -95,36 +72,30 @@ And because velocity changes continuously, position changes faster and faster.
 
 position = initial position + (initial velocity × time) − ½(gravity × time²)
 
-I remember calculating things like this only out of curiosity.
+explain how and what is the final formula.
+
+i like formulas.
+I remember calculating things like  only out of curiosity.
 
 How fast something falls.
 How far it moves.
 How numbers evolve.
 
----
+them i decided to study Math in the colege. nothing but curiosity about the dynamics.
 
-## Mathematics
 
-Then mathematics opened another world.
-
-Limits.
+probability,
+calculus
 Differential equations.
-Imaginary numbers.
+Imaginary numbers (this is crazy ideia)
 
-The idea that something can become so close to another value that, for practical purposes, we treat them as the same.
-
-Reality stopped looking static.
-Everything became continuous change.
+The idea of limite.. when calculate the exact number is hard but  something can become so close to another value that, for practical purposes, we treat them as the same.
 
 At first prediction looked simple:
 
 measure the variables → apply the equations → predict the outcome.
 
----
-
-## Complexity
-
-Then things become difficult again.
+but then things become difficult again.
 
 Weather.
 Traffic.
@@ -133,25 +104,19 @@ Markets.
 Not because the laws disappeared.
 Because the number of interactions becomes enormous.
 
-Two planets orbiting each other can remain stable for long periods.
+lorenz started this idea. 
 
-Add a third object and tiny differences start growing with time.
-
-known rules + small errors + time = fragile prediction
+another great idea is the relation of planets orbiting each other.take teo planets and they can remain stable for long periods but Add a third object and tiny differences start growing with time.
 
 The rules still work.
 Gravity still works.
 The equations still work.
 
-Prediction is the part that breaks.
+(lets go deeper in this and connect with next topic)
 
----
+Then physics becomes strange again. try to connect with diferential equation and dluid mechanince 
 
-## Quantum Mechanics
-
-Then physics becomes strange again.
-
-At atomic scales, classical physics stops being enough.
+when we see At atomic scales, classical physics get even worts and the analysis need to be coonsider 
 
 The equations stop predicting one exact outcome and start predicting probabilities.
 
