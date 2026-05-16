@@ -37,7 +37,6 @@
 
     main { max-width: 720px; margin: 0 auto; padding: 80px 1.5rem 80px; }
 
-    /* HEADER */
     .page-header { margin-bottom: 3.5rem; }
     .page-kicker {
       font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
@@ -53,8 +52,7 @@
     .page-header h1 em { font-style: italic; color: var(--muted); }
     .page-header p { font-size: 13px; line-height: 1.85; color: var(--dim); }
 
-    /* ARTICLE CARDS */
-    .articles { display: flex; flex-direction: column; gap: 1px; margin-bottom: 4rem; }
+    .articles { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 4rem; }
     .article-card {
       display: block; text-decoration: none;
       background: var(--surface);
@@ -93,22 +91,12 @@
       transition: opacity 0.2s, transform 0.2s;
     }
 
-    /* SIMULATOR SECTION */
     .sim-label {
       font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
       color: var(--faint); margin-bottom: 1rem;
       display: flex; align-items: center; gap: 0.75rem;
     }
     .sim-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    .sim-card {
-      display: block; text-decoration: none;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-      padding: 1.5rem; transition: border-color 0.2s, background 0.2s;
-      position: relative;
-    }
-    .sim-card:hover { border-color: var(--border-2); background: var(--surface-2); }
-    .sim-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
 
     footer {
       text-align: center; padding: 2.5rem 1.5rem;
@@ -137,12 +125,22 @@
   <div class="page-header">
     <div class="page-kicker">abstract things visible</div>
     <h1>Science.<br><em>Lab notes.</em></h1>
-    <p>Mathematics, physics, and systems that behave in ways that are not obvious until you look closely.</p>
+    <p>Mathematics, physics, probability, and systems that slowly stop behaving in predictable ways.</p>
   </div>
 
-  <!-- ARTICLES -->
   <div class="sim-label">// articles</div>
   <div class="articles">
+
+    <a class="article-card" href="/Science/prediction.html">
+      <span class="card-arrow">→</span>
+      <div class="card-meta">
+        <span class="card-tag">probability</span>
+        <span class="card-dot"></span>
+        <span class="card-tag">physics</span>
+      </div>
+      <div class="card-title">The Complexity <em>of Prediction.</em></div>
+      <p class="card-desc">A personal exploration that starts with dice probabilities, moves through Newton and gravity, then reaches chaos theory and quantum mechanics. Why some systems are predictable, others statistical, and some fundamentally uncertain.</p>
+    </a>
 
     <a class="article-card" href="/Science/dice.html">
       <span class="card-arrow">→</span>
@@ -152,24 +150,7 @@
         <span class="card-tag">mathematics</span>
       </div>
       <div class="card-title">The Dice <em>and the Storm.</em></div>
-      <p class="card-desc">Why the same throw never lands the same way twice — and what that has in common with weather, traffic, markets, and most things that matter. With live visualizations of exponential divergence and the logistic map.</p>
-    </a>
-
-  </div>
-
-  <!-- SIMULATORS -->
-  <div class="sim-label">// simulators</div>
-  <div class="articles">
-
-    <a class="sim-card" href="/Science/Index.html">
-      <span class="card-arrow">→</span>
-      <div class="card-meta">
-        <span class="card-tag">traffic dynamics</span>
-        <span class="card-dot"></span>
-        <span class="card-tag">interactive</span>
-      </div>
-      <div class="card-title">Why Traffic <em>Suddenly Stops.</em></div>
-      <p class="card-desc">A live simulation of phantom jams — stop-and-go waves that form with no accident, no lane closure. Adjust car density, driver calmness, and brake frequency in real time.</p>
+      <p class="card-desc">Why the same throw never lands the same way twice — and what that has in common with weather, traffic, markets, and most things that matter.</p>
     </a>
 
   </div>
