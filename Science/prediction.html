@@ -1,111 +1,230 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The Complexity of Prediction | Ronu</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
-<style>
-:root{--bg:#080808;--surface:#101010;--border:#1d1d1d;--text:#e8e8e8;--muted:#9a9a9a;--dim:#6f6f6f;--serif:'Instrument Serif',serif;--mono:'DM Mono',monospace}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);-webkit-font-smoothing:antialiased}
-nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;padding:0 1.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:10}
-nav a{text-decoration:none;color:#666;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
-main{max-width:760px;margin:0 auto;padding:90px 1.6rem 120px}
-h1{font-family:var(--serif);font-size:clamp(3rem,9vw,5.4rem);line-height:.95;font-weight:400;letter-spacing:-.05em;margin-bottom:2rem}
-h1 em{font-style:italic;color:#666}h2{font-family:var(--serif);font-size:2rem;font-weight:400;margin:4rem 0 1.5rem;color:#ddd}
-p{font-size:15px;line-height:2;color:#969696;margin-bottom:1.3rem}.strong{color:#d7d7d7}.block{margin:2rem 0;padding:1.2rem 1.4rem;border:1px solid #1d1d1d;border-radius:12px;background:#101010}.table{width:100%;border-collapse:collapse;margin-top:1rem}.table td,.table th{padding:.8rem 0;border-bottom:1px solid #1c1c1c;text-align:left;color:#888;font-size:13px}.table th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#555}.chart{font-size:15px;line-height:1.9;color:#b0b0b0;letter-spacing:.08em}.quote{margin:2rem 0;padding-left:1rem;border-left:2px solid #2a2a2a;font-family:var(--serif);font-style:italic;color:#aaa;font-size:1.25rem;line-height:1.7}.sep{height:1px;background:#1a1a1a;margin:4rem 0}
-</style>
-</head>
-<body>
-<nav><a href="/">← Index</a></nav>
-<main>
-<h1>The Complexity<br><em>of Prediction.</em></h1>
-<p>I have always liked the idea of predictability.</p>
-<p>It probably started with dice.</p>
-<p>I remember trying to throw a dice in what felt like exactly the same way.</p>
-<p>Same direction.<br>Same strength.<br>Same movement.</p>
-<p>Part of me thought I could somehow fool the system and force the same result again.</p>
-<p>You roll once.</p>
-<p class="strong">6</p>
-<p>You try again.</p>
-<p class="strong">3</p>
-<p>Again.</p>
-<p class="strong">1</p>
-<p>The movement looked almost identical.</p>
-<p>The result did not.</p>
-<p>That stayed in my head for a long time.</p>
-<p>At first, I thought prediction meant controlling the outcome.</p>
-<p>Later I realized prediction could also mean understanding the pattern behind the outcome.</p>
-<div class="sep"></div>
-<h2>Probability</h2>
-<p>A dice has six sides.</p>
-<p>Six equal possibilities.</p>
-<div class="block"><p class="strong">P(event) = successful possibilities / all possibilities</p></div>
-<p>If we want the probability of rolling a 3:</p>
-<div class="block"><p class="strong">P(3) = 1 / 6</p></div>
-<p>The exact outcome is uncertain.</p>
-<p>I still do not know what the next roll will be.</p>
-<p>But the structure behind the outcomes is predictable.</p>
-<p>If we roll the dice only once, anything can happen.</p>
-<p>But if we roll it many times, patterns start appearing.</p>
-<p>Over time, each number tends to appear close to its expected probability.</p>
-<p>Not exactly.</p>
-<p>But approximately.</p>
-<p>Sometimes prediction is not about knowing the next result.</p>
-<p>It is about understanding the pattern underneath many results together.</p>
-<div class="sep"></div>
-<h2>Two Dice</h2>
-<p>Then things become more interesting.</p>
-<p>Take two dice.</p>
-<p>Now we stop looking at one number and start looking at the sum of both.</p>
-<p>At first it still feels random.</p>
-<p>But patterns immediately appear.</p>
-<p>Some numbers become more common because there are more combinations that create them.</p>
-<table class="table"><tr><th>Sum</th><th>Combinations</th></tr><tr><td>2</td><td>1 + 1</td></tr><tr><td>3</td><td>1 + 2 · 2 + 1</td></tr><tr><td>4</td><td>1 + 3 · 2 + 2 · 3 + 1</td></tr><tr><td>7</td><td>1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1</td></tr><tr><td>12</td><td>6 + 6</td></tr></table>
-<p>The next roll is still uncertain.</p>
-<p>But uncertainty is no longer flat.</p>
-<p>Some outcomes become statistically more likely.</p>
-<div class="block chart">2&nbsp;&nbsp;&nbsp;█<br>3&nbsp;&nbsp;&nbsp;██<br>4&nbsp;&nbsp;&nbsp;███<br>5&nbsp;&nbsp;&nbsp;████<br>6&nbsp;&nbsp;&nbsp;█████<br>7&nbsp;&nbsp;&nbsp;██████<br>8&nbsp;&nbsp;&nbsp;█████<br>9&nbsp;&nbsp;&nbsp;████<br>10&nbsp;&nbsp;███<br>11&nbsp;&nbsp;██<br>12&nbsp;&nbsp;█</div>
-<p>That was probably the first time I noticed how patterns can emerge from randomness.</p>
-<div class="sep"></div>
-<h2>Newton and the Apple</h2>
-<p>Later I heard about Isaac Newton, gravity, and the apple story.</p>
-<p>An apple falling from a tree is predictable.</p>
-<p>The movement is not random.</p>
-<p>Objects move following patterns.</p>
-<p>After enough observation, the pattern becomes measurable.</p>
-<p>And once it becomes measurable, mathematics can describe it.</p>
-<div class="block"><p class="strong">gravity ≈ 9.81 m/s²</p></div>
-<p>What became interesting to me was that the same idea appeared far beyond the apple itself.</p>
-<p>Galaxies.<br>Planets.<br>Comets.<br>Apples.<br>A grain of sand.</p>
-<p>Different objects.</p>
-<p>Different scales.</p>
-<p>But similar structures repeating underneath movement.</p>
-<p>I remember calculating things like this only out of curiosity.</p>
-<p>How fast something falls.</p>
-<p>How far it moves.</p>
-<p>How the numbers evolve.</p>
-<p>The time² part also fascinated me.</p>
-<p>The apple is not moving at a constant speed.</p>
-<p>It keeps accelerating.</p>
-<div class="sep"></div>
-<h2>Chaos</h2>
-<p>Eventually prediction becomes fragile again.</p>
-<p>Not because the laws disappear.</p>
-<p>Because the interactions become enormous.</p>
-<p>Weather.<br>Turbulence.<br>Ocean waves.<br>Markets.</p>
-<p>Small differences at the beginning slowly grow with time.</p>
-<div class="block"><p class="strong">known rules + tiny errors + time = fragile prediction</p></div>
-<p>The rules still work.</p>
-<p>The equations still work.</p>
-<p>Prediction is the part that breaks.</p>
-<div class="quote">Observation.<br>Pattern.<br>Prediction.</div>
-<p>That progression became interesting to me because the same search keeps repeating through different scales.</p>
-<p>Dice.<br>Gravity.<br>Fluid movement.<br>Planets.<br>Quantum particles.</p>
-<p>Different systems.</p>
-<p>Same attempt:</p>
-<p class="strong">finding structure underneath uncertainty.</p>
-</main>
-</body>
-</html>
+# The Complexity  
+## of Prediction.
+
+I have always liked the idea of predictability.
+
+It probably started with dice.
+
+I remember trying to throw a dice in what felt like exactly the same way.
+
+Same direction.  
+Same strength.  
+Same movement.
+
+Part of me thought I could somehow fool the system and force the same result again.
+
+You roll once.
+
+6
+
+You try again.
+
+3
+
+Again.
+
+1
+
+The movement looked almost identical.
+
+The result did not.
+
+That stayed in my head for a long time.
+
+At first, I thought prediction meant controlling the outcome.
+
+Later I realized prediction could also mean understanding the pattern behind the outcome.
+
+---
+
+## Probability
+
+A dice has six sides.
+
+Six equal possibilities.
+
+P(event) = successful possibilities / all possibilities
+
+If we want the probability of rolling a 3:
+
+P(3) = 1 / 6
+
+The exact outcome is uncertain.
+
+I still do not know what the next roll will be.
+
+But the structure behind the outcomes is predictable.
+
+If we roll the dice only once, anything can happen.
+
+But if we roll it many times, patterns start appearing.
+
+Over time, each number tends to appear close to its expected probability.
+
+Not exactly.
+
+But approximately.
+
+Sometimes prediction is not about knowing the next result.
+
+It is about understanding the pattern underneath many results together.
+
+---
+
+## Two Dice
+
+Then things become more interesting.
+
+Take two dice.
+
+Now we stop looking at one number and start looking at the sum of both.
+
+At first it still feels random.
+
+But patterns immediately appear.
+
+Some numbers become more common because there are more combinations that create them.
+
+| SUM | COMBINATIONS |
+|---|---|
+| 2 | 1 + 1 |
+| 3 | 1 + 2 · 2 + 1 |
+| 4 | 1 + 3 · 2 + 2 · 3 + 1 |
+| 7 | 1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1 |
+| 12 | 6 + 6 |
+
+The next roll is still uncertain.
+
+But uncertainty is no longer flat.
+
+Some outcomes become statistically more likely.
+
+2   █  
+3   ██  
+4   ███  
+5   ████  
+6   █████  
+7   ██████  
+8   █████  
+9   ████  
+10  ███  
+11  ██  
+12  █  
+
+That was probably the first time I noticed how patterns can emerge from randomness.
+
+---
+
+## Newton and the Apple
+
+Later I heard about Isaac Newton, gravity, and the apple story.
+
+An apple falling from a tree is predictable.
+
+The movement is not random.
+
+Objects move following patterns.
+
+After enough observation, the pattern becomes measurable.
+
+And once it becomes measurable, mathematics can describe it.
+
+gravity ≈ 9.81 m/s²
+
+What became interesting to me was that the same idea appeared far beyond the apple itself.
+
+Galaxies.  
+Planets.  
+Comets.  
+Apples.  
+A grain of sand.
+
+Different objects.
+
+Different scales.
+
+But similar structures repeating underneath movement.
+
+I remember calculating things like this only out of curiosity.
+
+How fast something falls.
+
+How far it moves.
+
+How the numbers evolve.
+
+The **time squared** part also fascinated me.
+
+The apple is not moving at a constant speed.
+
+It keeps accelerating.
+
+The movement changes continuously.
+
+That idea became important later.
+
+Because things in nature are continuous.
+
+Then college pulled me deeper into this world.
+
+Mathematics.  
+Differential equations.
+
+At first they looked abstract.
+
+Later I realized they were deeply connected to the same idea that started with the dice:
+
+trying to understand how patterns evolve through time.
+
+Not only where something is.
+
+But where it could be with a high level of probability.
+
+How fast it changes.
+
+And how small variations can slowly transform the future behavior of a system.
+
+Fluid dynamics.  
+Gas.  
+Electricity.  
+Waves.
+
+Everything changing continuously.
+
+And once systems become continuous, tiny variations start mattering much more.
+
+A small difference now can slowly become a large difference later.
+
+Then mathematics itself starts expanding.
+
+Imaginary numbers appear.
+
+At first the idea sounds absurd.
+
+But somehow mathematics keeps growing and starts describing real systems surprisingly well.
+
+And the original idea from the dice gained a new meaning.
+
+Now, using continuous equations and probability together, we can move into molecular scales where predictability itself becomes the central idea.
+
+Very similar to the dice.
+
+Some outcomes become much more likely than others.
+
+Not certainty.
+
+Probability distributed across possibilities.
+
+Quantum mechanics introduced a similar logic at atomic scales.
+
+The equations no longer predict one exact outcome.
+
+They predict a distribution of possible outcomes with different probabilities.
+
+Not where something is with certainty.
+
+But where it is more likely to be found.
+
+At that point, prediction stopped meaning “knowing exactly what will happen.”
+
+It became understanding the structure behind what could happen.
