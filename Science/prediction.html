@@ -1,230 +1,124 @@
-# The Complexity  
-## of Prediction.
-
-I have always liked the idea of predictability.
-
-It probably started with dice.
-
-I remember trying to throw a dice in what felt like exactly the same way.
-
-Same direction.  
-Same strength.  
-Same movement.
-
-Part of me thought I could somehow fool the system and force the same result again.
-
-You roll once.
-
-6
-
-You try again.
-
-3
-
-Again.
-
-1
-
-The movement looked almost identical.
-
-The result did not.
-
-That stayed in my head for a long time.
-
-At first, I thought prediction meant controlling the outcome.
-
-Later I realized prediction could also mean understanding the pattern behind the outcome.
-
----
-
-## Probability
-
-A dice has six sides.
-
-Six equal possibilities.
-
-P(event) = successful possibilities / all possibilities
-
-If we want the probability of rolling a 3:
-
-P(3) = 1 / 6
-
-The exact outcome is uncertain.
-
-I still do not know what the next roll will be.
-
-But the structure behind the outcomes is predictable.
-
-If we roll the dice only once, anything can happen.
-
-But if we roll it many times, patterns start appearing.
-
-Over time, each number tends to appear close to its expected probability.
-
-Not exactly.
-
-But approximately.
-
-Sometimes prediction is not about knowing the next result.
-
-It is about understanding the pattern underneath many results together.
-
----
-
-## Two Dice
-
-Then things become more interesting.
-
-Take two dice.
-
-Now we stop looking at one number and start looking at the sum of both.
-
-At first it still feels random.
-
-But patterns immediately appear.
-
-Some numbers become more common because there are more combinations that create them.
-
-| SUM | COMBINATIONS |
-|---|---|
-| 2 | 1 + 1 |
-| 3 | 1 + 2 · 2 + 1 |
-| 4 | 1 + 3 · 2 + 2 · 3 + 1 |
-| 7 | 1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1 |
-| 12 | 6 + 6 |
-
-The next roll is still uncertain.
-
-But uncertainty is no longer flat.
-
-Some outcomes become statistically more likely.
-
-2   █  
-3   ██  
-4   ███  
-5   ████  
-6   █████  
-7   ██████  
-8   █████  
-9   ████  
-10  ███  
-11  ██  
-12  █  
-
-That was probably the first time I noticed how patterns can emerge from randomness.
-
----
-
-## Newton and the Apple
-
-Later I heard about Isaac Newton, gravity, and the apple story.
-
-An apple falling from a tree is predictable.
-
-The movement is not random.
-
-Objects move following patterns.
-
-After enough observation, the pattern becomes measurable.
-
-And once it becomes measurable, mathematics can describe it.
-
-gravity ≈ 9.81 m/s²
-
-What became interesting to me was that the same idea appeared far beyond the apple itself.
-
-Galaxies.  
-Planets.  
-Comets.  
-Apples.  
-A grain of sand.
-
-Different objects.
-
-Different scales.
-
-But similar structures repeating underneath movement.
-
-I remember calculating things like this only out of curiosity.
-
-How fast something falls.
-
-How far it moves.
-
-How the numbers evolve.
-
-The **time squared** part also fascinated me.
-
-The apple is not moving at a constant speed.
-
-It keeps accelerating.
-
-The movement changes continuously.
-
-That idea became important later.
-
-Because things in nature are continuous.
-
-Then college pulled me deeper into this world.
-
-Mathematics.  
-Differential equations.
-
-At first they looked abstract.
-
-Later I realized they were deeply connected to the same idea that started with the dice:
-
-trying to understand how patterns evolve through time.
-
-Not only where something is.
-
-But where it could be with a high level of probability.
-
-How fast it changes.
-
-And how small variations can slowly transform the future behavior of a system.
-
-Fluid dynamics.  
-Gas.  
-Electricity.  
-Waves.
-
-Everything changing continuously.
-
-And once systems become continuous, tiny variations start mattering much more.
-
-A small difference now can slowly become a large difference later.
-
-Then mathematics itself starts expanding.
-
-Imaginary numbers appear.
-
-At first the idea sounds absurd.
-
-But somehow mathematics keeps growing and starts describing real systems surprisingly well.
-
-And the original idea from the dice gained a new meaning.
-
-Now, using continuous equations and probability together, we can move into molecular scales where predictability itself becomes the central idea.
-
-Very similar to the dice.
-
-Some outcomes become much more likely than others.
-
-Not certainty.
-
-Probability distributed across possibilities.
-
-Quantum mechanics introduced a similar logic at atomic scales.
-
-The equations no longer predict one exact outcome.
-
-They predict a distribution of possible outcomes with different probabilities.
-
-Not where something is with certainty.
-
-But where it is more likely to be found.
-
-At that point, prediction stopped meaning “knowing exactly what will happen.”
-
-It became understanding the structure behind what could happen.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Complexity of Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+body{margin:0;background:#080808;color:#d0d0d0;font-family:'DM Mono',monospace;line-height:1.9;padding:80px 24px;max-width:820px;margin:auto}h1,h2{font-family:'Instrument Serif',serif;font-weight:400;color:#f2f2f2}h1{font-size:4rem;line-height:.95;margin-bottom:40px}h2{font-size:2rem;margin-top:70px}p{font-size:15px;color:#9a9a9a;margin:18px 0}.strong{color:#f0f0f0}.sep{height:1px;background:#1a1a1a;margin:60px 0}table{width:100%;border-collapse:collapse;margin:30px 0}td,th{border-bottom:1px solid #1f1f1f;padding:12px 0;text-align:left;color:#999}th{font-size:11px;letter-spacing:.12em;color:#666}pre{background:#101010;padding:20px;border:1px solid #1c1c1c;border-radius:10px;color:#d9d9d9;overflow:auto}a{color:#888;text-decoration:none;position:fixed;top:24px;left:24px;font-size:11px;letter-spacing:.12em;text-transform:uppercase}a:hover{color:#fff}
+</style>
+</head>
+<body>
+<a href="/">← Index</a>
+<h1>The Complexity<br><em>of Prediction.</em></h1>
+<p>I have always liked the idea of predictability.</p>
+<p>It probably started with dice.</p>
+<p>I remember trying to throw a dice in what felt like exactly the same way.</p>
+<p>Same direction.<br>Same strength.<br>Same movement.</p>
+<p>Part of me thought I could somehow fool the system and force the same result again.</p>
+<p>You roll once.</p>
+<p class="strong">6</p>
+<p>You try again.</p>
+<p class="strong">3</p>
+<p>Again.</p>
+<p class="strong">1</p>
+<p>The movement looked almost identical.</p>
+<p>The result did not.</p>
+<p>That stayed in my head for a long time.</p>
+<p>At first, I thought prediction meant controlling the outcome.</p>
+<p>Later I realized prediction could also mean understanding the pattern behind the outcome.</p>
+<div class="sep"></div>
+<h2>Probability</h2>
+<p>A dice has six sides.</p>
+<p>Six equal possibilities.</p>
+<pre>P(event) = successful possibilities / all possibilities</pre>
+<p>If we want the probability of rolling a 3:</p>
+<pre>P(3) = 1 / 6</pre>
+<p>The exact outcome is uncertain.</p>
+<p>I still do not know what the next roll will be.</p>
+<p>But the structure behind the outcomes is predictable.</p>
+<p>If we roll the dice only once, anything can happen.</p>
+<p>But if we roll it many times, patterns start appearing.</p>
+<p>Over time, each number tends to appear close to its expected probability.</p>
+<p>Not exactly.</p>
+<p>But approximately.</p>
+<p>Sometimes prediction is not about knowing the next result.</p>
+<p>It is about understanding the pattern underneath many results together.</p>
+<div class="sep"></div>
+<h2>Two Dice</h2>
+<p>Then things become more interesting.</p>
+<p>Take two dice.</p>
+<p>Now we stop looking at one number and start looking at the sum of both.</p>
+<p>At first it still feels random.</p>
+<p>But patterns immediately appear.</p>
+<p>Some numbers become more common because there are more combinations that create them.</p>
+<table><tr><th>SUM</th><th>COMBINATIONS</th></tr><tr><td>2</td><td>1 + 1</td></tr><tr><td>3</td><td>1 + 2 · 2 + 1</td></tr><tr><td>4</td><td>1 + 3 · 2 + 2 · 3 + 1</td></tr><tr><td>7</td><td>1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1</td></tr><tr><td>12</td><td>6 + 6</td></tr></table>
+<pre>2   █
+3   ██
+4   ███
+5   ████
+6   █████
+7   ██████
+8   █████
+9   ████
+10  ███
+11  ██
+12  █</pre>
+<p>That was probably the first time I noticed how patterns can emerge from randomness.</p>
+<div class="sep"></div>
+<h2>Newton and the Apple</h2>
+<p>Later I heard about Isaac Newton, gravity, and the apple story.</p>
+<p>An apple falling from a tree is predictable.</p>
+<p>The movement is not random.</p>
+<p>Objects move following patterns.</p>
+<p>After enough observation, the pattern becomes measurable.</p>
+<p>And once it becomes measurable, mathematics can describe it.</p>
+<pre>gravity ≈ 9.81 m/s²</pre>
+<p>What became interesting to me was that the same idea appeared far beyond the apple itself.</p>
+<p>Galaxies.<br>Planets.<br>Comets.<br>Apples.<br>A grain of sand.</p>
+<p>Different objects.</p>
+<p>Different scales.</p>
+<p>But similar structures repeating underneath movement.</p>
+<p>I remember calculating things like this only out of curiosity.</p>
+<p>How fast something falls.</p>
+<p>How far it moves.</p>
+<p>How the numbers evolve.</p>
+<p>The <strong>time squared</strong> part also fascinated me.</p>
+<p>The apple is not moving at a constant speed.</p>
+<p>It keeps accelerating.</p>
+<p>The movement changes continuously.</p>
+<p>That idea became important later.</p>
+<p>Because things in nature are continuous.</p>
+<p>Then college pulled me deeper into this world.</p>
+<p>Mathematics.<br>Differential equations.</p>
+<p>At first they looked abstract.</p>
+<p>Later I realized they were deeply connected to the same idea that started with the dice:</p>
+<p>trying to understand how patterns evolve through time.</p>
+<p>Not only where something is.</p>
+<p>But where it could be with a high level of probability.</p>
+<p>How fast it changes.</p>
+<p>And how small variations can slowly transform the future behavior of a system.</p>
+<p>Fluid dynamics.<br>Gas.<br>Electricity.<br>Waves.</p>
+<p>Everything changing continuously.</p>
+<p>And once systems become continuous, tiny variations start mattering much more.</p>
+<p>A small difference now can slowly become a large difference later.</p>
+<p>Then mathematics itself starts expanding.</p>
+<p>Imaginary numbers appear.</p>
+<p>At first the idea sounds absurd.</p>
+<p>But somehow mathematics keeps growing and starts describing real systems surprisingly well.</p>
+<p>And the original idea from the dice gained a new meaning.</p>
+<p>Now, using continuous equations and probability together, we can move into molecular scales where predictability itself becomes the central idea.</p>
+<p>Very similar to the dice.</p>
+<p>Some outcomes become much more likely than others.</p>
+<p>Not certainty.</p>
+<p>Probability distributed across possibilities.</p>
+<p>Quantum mechanics introduced a similar logic at atomic scales.</p>
+<p>The equations no longer predict one exact outcome.</p>
+<p>They predict a distribution of possible outcomes with different probabilities.</p>
+<p>Not where something is with certainty.</p>
+<p>But where it is more likely to be found.</p>
+<p>At that point, prediction stopped meaning “knowing exactly what will happen.”</p>
+<p>It became understanding the structure behind what could happen.</p>
+</body>
+</html>
