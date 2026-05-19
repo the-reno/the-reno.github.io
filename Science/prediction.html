@@ -7,166 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#080808;--surface:#101010;--border:#1d1d1d;--text:#e8e8e8;--muted:#9a9a9a;--dim:#6f6f6f;--faint:#3f3f3f;--serif:'Instrument Serif',Georgia,serif;--mono:'DM Mono',monospace}
-*{box-sizing:border-box;margin:0;padding:0}body{background:#080808;color:var(--text);font-family:var(--mono);font-size:14px;-webkit-font-smoothing:antialiased}main{max-width:780px;margin:0 auto;padding:84px 1.5rem 72px}nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:20}nav a{text-decoration:none;color:#666;font-size:11px;letter-spacing:.14em;text-transform:uppercase}nav a:hover{color:#eee}h1{font-family:var(--serif);font-size:clamp(2.8rem,8vw,4.35rem);font-weight:400;line-height:1.02;letter-spacing:-.04em;margin-bottom:1.2rem}h1 em{font-style:italic;color:#777}h2{font-family:var(--serif);font-size:clamp(1.45rem,4vw,2rem);font-weight:400;line-height:1.15;margin-bottom:1rem;color:#ddd}.intro{max-width:660px;color:#8a8a8a;font-size:13px;line-height:1.9;margin-bottom:4rem}.section{margin-bottom:4rem}.tag{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#444;margin-bottom:1rem;display:flex;align-items:center;gap:.7rem}.tag:after{content:'';flex:1;height:1px;background:#1d1d1d}p{color:#979797;line-height:1.9;margin-bottom:1rem}.strong{color:#d0d0d0}.formula,.chart,.table-wrap,.flow{margin:1.4rem 0;padding:1rem 1.1rem;border:1px solid #1d1d1d;border-radius:10px;background:#101010}.label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:.7rem}.formula-main{font-family:var(--serif);font-size:1.22rem;line-height:1.55;color:#ddd}.fraction{display:inline-grid;grid-template-rows:auto 1px auto;gap:.28rem;align-items:center;text-align:center}.fraction span:nth-child(2){background:#777;height:1px;min-width:210px}.pull{font-family:var(--serif);font-style:italic;font-size:1.2rem;line-height:1.6;color:#aaa;border-left:2px solid #2a2a2a;padding:.7rem 1rem;margin:1.6rem 0}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.7rem 0;border-bottom:1px solid #1b1b1b;font-size:12px;color:#8f8f8f;vertical-align:top}th{color:#555;text-transform:uppercase;font-size:10px;letter-spacing:.14em}.bars{display:grid;gap:.45rem}.bar{display:grid;grid-template-columns:44px 1fr 48px;align-items:center;gap:.7rem;font-size:12px;color:#888}.track{height:8px;background:#171717;border:1px solid #222;border-radius:999px;overflow:hidden}.fill{height:100%;background:#8c8c8c}.curve{height:145px;position:relative;border-left:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a}.dot{position:absolute;width:5px;height:5px;border-radius:50%;background:#aaa}.axis{display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:.5rem}.flow-line{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.55rem;align-items:center;color:#aaa;font-size:12px}.flow-line span{padding:.65rem .7rem;border:1px solid #1f1f1f;border-radius:8px;background:#0c0c0c;text-align:center}.flow-line b{color:#444;font-weight:400}.closing{border-top:1px solid #1d1d1d;padding-top:2rem;margin-top:4rem}.closing p{font-family:var(--serif);font-style:italic;font-size:1.25rem;color:#aaa}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}.reveal.on{opacity:1;transform:none}@media(max-width:620px){main{padding:72px 1.1rem 58px}.formula-main{font-size:1.08rem}.flow-line{grid-template-columns:1fr}.flow-line b{display:none}.fraction span:nth-child(2){min-width:160px}}
+*{box-sizing:border-box;margin:0;padding:0}body{background:#080808;color:var(--text);font-family:var(--mono);font-size:14px;-webkit-font-smoothing:antialiased}main{max-width:780px;margin:0 auto;padding:84px 1.5rem 72px}nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:flex-start;padding:0 1.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:20}nav a{text-decoration:none;color:#666;font-size:11px;letter-spacing:.14em;text-transform:uppercase}nav a:hover{color:#eee}h1{font-family:var(--serif);font-size:clamp(2.8rem,8vw,4.35rem);font-weight:400;line-height:1.02;letter-spacing:-.04em;margin-bottom:1.2rem}h1 em{font-style:italic;color:#777}h2{font-family:var(--serif);font-size:clamp(1.45rem,4vw,2rem);font-weight:400;line-height:1.15;margin-bottom:1rem;color:#ddd}.intro{max-width:660px;color:#8a8a8a;font-size:13px;line-height:1.9;margin-bottom:4rem}.section{margin-bottom:4rem}.tag{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#444;margin-bottom:1rem;display:flex;align-items:center;gap:.7rem}.tag:after{content:'';flex:1;height:1px;background:#1d1d1d}p{color:#979797;line-height:1.9;margin-bottom:1rem}.strong{color:#d0d0d0}.formula,.chart,.table-wrap,.flow{margin:1.4rem 0;padding:1rem 1.1rem;border:1px solid #1d1d1d;border-radius:10px;background:#101010}.label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:.7rem}.formula-main{font-family:var(--serif);font-size:1.22rem;line-height:1.55;color:#ddd}.fraction{display:inline-grid;grid-template-rows:auto 1px auto;gap:.28rem;align-items:center;text-align:center}.fraction span:nth-child(2){background:#777;height:1px;min-width:210px}.pull{font-family:var(--serif);font-style:italic;font-size:1.2rem;line-height:1.6;color:#aaa;border-left:2px solid #2a2a2a;padding:.7rem 1rem;margin:1.6rem 0}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.7rem 0;border-bottom:1px solid #1b1b1b;font-size:12px;color:#8f8f8f;vertical-align:top}th{color:#555;text-transform:uppercase;font-size:10px;letter-spacing:.14em}.bars{display:grid;gap:.45rem}.bar{display:grid;grid-template-columns:44px 1fr 48px;align-items:center;gap:.7rem;font-size:12px;color:#888}.track{height:8px;background:#171717;border:1px solid #222;border-radius:999px;overflow:hidden}.fill{height:100%;background:#8c8c8c}.curve{height:145px;position:relative;border-left:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a}.dot{position:absolute;width:5px;height:5px;border-radius:50%;background:#aaa}.axis{display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:.5rem}.flow-line{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.55rem;align-items:center;color:#aaa;font-size:12px}.flow-line span{padding:.65rem .7rem;border:1px solid #1f1f1f;border-radius:8px;background:#0c0c0c;text-align:center}.flow-line b{color:#444;font-weight:400}.closing{border-top:1px solid #1d1d1d;padding-top:2rem;margin-top:4rem}.closing p{font-family:var(--serif);font-style:italic;font-size:1.25rem;color:#aaa}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}.reveal.on{opacity:1;transform:none}@media(max-width:620px){main{padding:72px 1.1rem 58px}.formula-main{font-size:1.08rem}.flow-line{grid-template-columns:1fr}.flow-line b{display:none}.fraction span:nth-child(2){min-width:160px}}
 </style>
 </head>
 <body>
 <nav>
-<a href="/">ronu</a>
-<a href="/Science/">science</a>
+<a href="/">← index</a>
 </nav>
 <main>
-
 <section class="reveal">
 <h1>The Complexity<br><em>of Prediction.</em></h1>
 <p class="intro">I have always liked the idea of predictability. It probably started with dice: the hope that doing the same thing again would produce the same result. Later it moved through probability, Newton, gravity, calculus, chaos, and finally quantum mechanics — places where prediction becomes less obvious and much more interesting.</p>
 </section>
-
-<section class="section reveal">
-<div class="tag">01 · dice</div>
-<h2>I used to think prediction was repetition.</h2>
-<p>I remember trying to throw a dice in what felt like the same way.</p>
-<p>Same direction. Same strength. Same movement.</p>
-<p><span class="strong">6.</span> Then <span class="strong">3.</span> Then something else.</p>
-<p>The movement looked almost identical. The result was not.</p>
-<div class="pull">I started to think that maybe prediction was not about repeating everything. Maybe there was another layer underneath.</div>
-</section>
-
-<section class="section reveal">
-<div class="tag">02 · probability</div>
-<h2>Randomness can still have structure.</h2>
-<p>Later I learned probability. That changed the way I looked at the dice.</p>
-<p>Repeating the motion does not change the probability of an event. But we can still predict what randomness can give us over time.</p>
-<p>A dice has six sides. Stable rules. Known possibilities.</p>
-<div class="formula">
-<div class="label">probability</div>
-<div class="formula-main">P(event) = <span class="fraction"><span>successful possibilities</span><span></span><span>all possibilities</span></span></div>
-</div>
-<p>The probability of rolling a 3 is:</p>
-<div class="formula">
-<div class="label">one dice</div>
-<div class="formula-main">P(3) = <span class="fraction"><span>1 successful result</span><span></span><span>6 possible results</span></span></div>
-</div>
-<p>The exact result is uncertain. But the structure behind the result is predictable.</p>
-<p>That idea was great to me. Now we could start playing with randomness instead of only being surprised by it.</p>
-</section>
-
-<section class="section reveal">
-<div class="tag">03 · two dice</div>
-<h2>The pattern becomes visible.</h2>
-<p>Take two dice. Now we are not only looking at one face. We are looking at the sum of two results.</p>
-<p>I still do not know the next result. But I can see what is more likely.</p>
-<p>Some numbers become more common because more combinations create them.</p>
-<div class="table-wrap">
-<table>
-<thead><tr><th>Sum</th><th>Combinations</th><th>Probability</th></tr></thead>
-<tbody>
-<tr><td>2</td><td>1 + 1</td><td>1 / 36</td></tr>
-<tr><td>3</td><td>1 + 2 · 2 + 1</td><td>2 / 36</td></tr>
-<tr><td>7</td><td>1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 · 5 + 2 · 6 + 1</td><td>6 / 36</td></tr>
-<tr><td>12</td><td>6 + 6</td><td>1 / 36</td></tr>
-</tbody>
-</table>
-</div>
-<div class="chart">
-<div class="label">two dice · sum distribution</div>
-<div class="bars">
-<div class="bar"><span>2</span><div class="track"><div class="fill" style="width:16%"></div></div><span>1/36</span></div>
-<div class="bar"><span>3</span><div class="track"><div class="fill" style="width:33%"></div></div><span>2/36</span></div>
-<div class="bar"><span>4</span><div class="track"><div class="fill" style="width:50%"></div></div><span>3/36</span></div>
-<div class="bar"><span>5</span><div class="track"><div class="fill" style="width:66%"></div></div><span>4/36</span></div>
-<div class="bar"><span>6</span><div class="track"><div class="fill" style="width:83%"></div></div><span>5/36</span></div>
-<div class="bar"><span>7</span><div class="track"><div class="fill" style="width:100%"></div></div><span>6/36</span></div>
-<div class="bar"><span>8</span><div class="track"><div class="fill" style="width:83%"></div></div><span>5/36</span></div>
-<div class="bar"><span>9</span><div class="track"><div class="fill" style="width:66%"></div></div><span>4/36</span></div>
-<div class="bar"><span>10</span><div class="track"><div class="fill" style="width:50%"></div></div><span>3/36</span></div>
-<div class="bar"><span>11</span><div class="track"><div class="fill" style="width:33%"></div></div><span>2/36</span></div>
-<div class="bar"><span>12</span><div class="track"><div class="fill" style="width:16%"></div></div><span>1/36</span></div>
-</div>
-</div>
-<p>Sometimes systems look random only because we are looking at them the wrong way.</p>
-</section>
-
-<section class="section reveal">
-<div class="tag">04 · Newton</div>
-<h2>Then physics enters the conversation.</h2>
-<p>Later I heard about Isaac Newton, gravity, and the apple story.</p>
-<p>The idea was powerful: an apple falling from a tree is not only something we observe. It is something we can predict.</p>
-<p>There is a constant pull on Earth. It is not perfectly identical everywhere, but it is stable enough to be useful.</p>
-<div class="formula">
-<div class="label">gravity near Earth</div>
-<div class="formula-main">g ≈ 9.81 m/s²</div>
-</div>
-<p>One way to imagine the discovery is simple: measure the object, drop it, measure the time, repeat. Different objects reveal the same pattern. Gravity keeps pulling.</p>
-<div class="flow">
-<div class="label">classical chain</div>
-<div class="flow-line"><span>force</span><b>→</b><span>acceleration</span><b>→</b><span>velocity and position</span></div>
-</div>
-<p>Because gravity keeps acting every second, the apple keeps gaining speed.</p>
-<div class="formula"><div class="label">velocity</div><div class="formula-main">velocity = initial velocity − (gravity × time)</div></div>
-<p>And because velocity changes continuously, position changes faster and faster.</p>
-<div class="formula"><div class="label">position</div><div class="formula-main">position = initial position + (initial velocity × time) − ½(gravity × time²)</div></div>
-<div class="chart">
-<div class="label">falling apple · height over time</div>
-<div class="curve">
-<span class="dot" style="left:8%;top:8%"></span>
-<span class="dot" style="left:22%;top:18%"></span>
-<span class="dot" style="left:38%;top:35%"></span>
-<span class="dot" style="left:58%;top:60%"></span>
-<span class="dot" style="left:82%;top:86%"></span>
-</div>
-<div class="axis"><span>height</span><span>time →</span></div>
-</div>
-<p>The time² part matters. The apple is not moving at the same speed. It is accelerating.</p>
-<p>I liked formulas. I remember calculating things only out of curiosity: how fast something falls, how far it moves, how the numbers evolve.</p>
-</section>
-
-<section class="section reveal">
-<div class="tag">05 · mathematics</div>
-<h2>Then mathematics opened another world.</h2>
-<p>I later studied math in college mostly out of curiosity about dynamics.</p>
-<p>Probability. Calculus. Differential equations. Imaginary numbers.</p>
-<p>Imaginary numbers felt crazy at first. Limits felt different: the idea that when calculating the exact number is hard, something can become so close to another value that, for practical purposes, we treat it as the same.</p>
-<p>At first prediction looked simple:</p>
-<div class="flow"><div class="flow-line"><span>measure variables</span><b>→</b><span>apply equations</span><b>→</b><span>predict outcome</span></div></div>
-<p>But that simplicity does not survive every system.</p>
-</section>
-
-<section class="section reveal">
-<div class="tag">06 · complexity</div>
-<h2>Then things become difficult again.</h2>
-<p>Weather. Traffic. Markets.</p>
-<p>Not because the laws disappeared. Because the number of interactions becomes enormous.</p>
-<p>This is the bridge to chaos. Lorenz helped make this idea famous with weather: small differences in starting conditions can grow into very different outcomes.</p>
-<p>Another powerful example is gravity again.</p>
-<p>Two planets orbiting each other can remain stable for long periods. Add a third object and tiny differences start growing with time.</p>
-<div class="formula"><div class="label">chaos intuition</div><div class="formula-main">known rules + small errors + time = fragile prediction</div></div>
-<p>The rules still work. Gravity still works. The equations still work.</p>
-<p>Prediction is the part that breaks.</p>
-</section>
-
-<section class="section reveal">
-<div class="tag">07 · fluids and quantum mechanics</div>
-<h2>Then physics becomes strange again.</h2>
-<p>Fluid mechanics gives a useful bridge. Air and water follow equations, but turbulence makes prediction difficult. The rules are there. The system becomes too sensitive.</p>
-<p>At atomic scales, classical physics becomes even less intuitive. The analysis changes again.</p>
-<p>The equations stop predicting one exact outcome and start predicting probabilities.</p>
-<div class="formula"><div class="label">quantum mechanics</div><div class="formula-main">P(x) = |ψ(x)|²</div></div>
-<p>In classical physics:</p>
-<p>one system → one trajectory → one expected result.</p>
-<p>In quantum mechanics:</p>
-<p>one system → many possible outcomes → different probabilities.</p>
-<p>Probability is no longer only a limitation of human knowledge.</p>
-<p>It becomes part of the structure of reality itself.</p>
-</section>
-
-<section class="closing reveal">
-<p>Prediction begins with certainty.</p>
-<p>Then approximation.</p>
-<p>Then sensitivity.</p>
-<p>Then probability.</p>
-</section>
-
 </main>
 <script>
 const ro=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('on')}),{threshold:.08});document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
