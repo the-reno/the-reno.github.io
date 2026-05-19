@@ -3,25 +3,109 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The Complexity of Prediction | Ronu · Science</title>
+<title>The Complexity of Prediction | Ronu</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#080808;--surface:#101010;--border:#1d1d1d;--text:#e8e8e8;--muted:#9a9a9a;--dim:#6f6f6f;--faint:#3f3f3f;--serif:'Instrument Serif',Georgia,serif;--mono:'DM Mono',monospace}
-*{box-sizing:border-box;margin:0;padding:0}body{background:#080808;color:var(--text);font-family:var(--mono);font-size:14px;-webkit-font-smoothing:antialiased}main{max-width:780px;margin:0 auto;padding:84px 1.5rem 72px}nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:flex-start;padding:0 1.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:20}nav a{text-decoration:none;color:#666;font-size:11px;letter-spacing:.14em;text-transform:uppercase}nav a:hover{color:#eee}h1{font-family:var(--serif);font-size:clamp(2.8rem,8vw,4.35rem);font-weight:400;line-height:1.02;letter-spacing:-.04em;margin-bottom:1.2rem}h1 em{font-style:italic;color:#777}h2{font-family:var(--serif);font-size:clamp(1.45rem,4vw,2rem);font-weight:400;line-height:1.15;margin-bottom:1rem;color:#ddd}.intro{max-width:660px;color:#8a8a8a;font-size:13px;line-height:1.9;margin-bottom:4rem}.section{margin-bottom:4rem}.tag{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#444;margin-bottom:1rem;display:flex;align-items:center;gap:.7rem}.tag:after{content:'';flex:1;height:1px;background:#1d1d1d}p{color:#979797;line-height:1.9;margin-bottom:1rem}.strong{color:#d0d0d0}.formula,.chart,.table-wrap,.flow{margin:1.4rem 0;padding:1rem 1.1rem;border:1px solid #1d1d1d;border-radius:10px;background:#101010}.label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:.7rem}.formula-main{font-family:var(--serif);font-size:1.22rem;line-height:1.55;color:#ddd}.fraction{display:inline-grid;grid-template-rows:auto 1px auto;gap:.28rem;align-items:center;text-align:center}.fraction span:nth-child(2){background:#777;height:1px;min-width:210px}.pull{font-family:var(--serif);font-style:italic;font-size:1.2rem;line-height:1.6;color:#aaa;border-left:2px solid #2a2a2a;padding:.7rem 1rem;margin:1.6rem 0}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.7rem 0;border-bottom:1px solid #1b1b1b;font-size:12px;color:#8f8f8f;vertical-align:top}th{color:#555;text-transform:uppercase;font-size:10px;letter-spacing:.14em}.bars{display:grid;gap:.45rem}.bar{display:grid;grid-template-columns:44px 1fr 48px;align-items:center;gap:.7rem;font-size:12px;color:#888}.track{height:8px;background:#171717;border:1px solid #222;border-radius:999px;overflow:hidden}.fill{height:100%;background:#8c8c8c}.curve{height:145px;position:relative;border-left:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a}.dot{position:absolute;width:5px;height:5px;border-radius:50%;background:#aaa}.axis{display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:.5rem}.flow-line{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:.55rem;align-items:center;color:#aaa;font-size:12px}.flow-line span{padding:.65rem .7rem;border:1px solid #1f1f1f;border-radius:8px;background:#0c0c0c;text-align:center}.flow-line b{color:#444;font-weight:400}.closing{border-top:1px solid #1d1d1d;padding-top:2rem;margin-top:4rem}.closing p{font-family:var(--serif);font-style:italic;font-size:1.25rem;color:#aaa}.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}.reveal.on{opacity:1;transform:none}@media(max-width:620px){main{padding:72px 1.1rem 58px}.formula-main{font-size:1.08rem}.flow-line{grid-template-columns:1fr}.flow-line b{display:none}.fraction span:nth-child(2){min-width:160px}}
+:root{--bg:#080808;--surface:#101010;--border:#1d1d1d;--text:#e8e8e8;--muted:#9a9a9a;--dim:#6f6f6f;--serif:'Instrument Serif',serif;--mono:'DM Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);-webkit-font-smoothing:antialiased}
+nav{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;padding:0 1.5rem;background:rgba(8,8,8,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:10}
+nav a{text-decoration:none;color:#666;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+main{max-width:760px;margin:0 auto;padding:90px 1.6rem 120px}
+h1{font-family:var(--serif);font-size:clamp(3rem,9vw,5.4rem);line-height:.95;font-weight:400;letter-spacing:-.05em;margin-bottom:2rem}
+h1 em{font-style:italic;color:#666}h2{font-family:var(--serif);font-size:2rem;font-weight:400;margin:4rem 0 1.5rem;color:#ddd}
+p{font-size:15px;line-height:2;color:#969696;margin-bottom:1.3rem}.strong{color:#d7d7d7}.block{margin:2rem 0;padding:1.2rem 1.4rem;border:1px solid #1d1d1d;border-radius:12px;background:#101010}.table{width:100%;border-collapse:collapse;margin-top:1rem}.table td,.table th{padding:.8rem 0;border-bottom:1px solid #1c1c1c;text-align:left;color:#888;font-size:13px}.table th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#555}.chart{font-size:15px;line-height:1.9;color:#b0b0b0;letter-spacing:.08em}.quote{margin:2rem 0;padding-left:1rem;border-left:2px solid #2a2a2a;font-family:var(--serif);font-style:italic;color:#aaa;font-size:1.25rem;line-height:1.7}.sep{height:1px;background:#1a1a1a;margin:4rem 0}
 </style>
 </head>
 <body>
-<nav>
-<a href="/">← index</a>
-</nav>
+<nav><a href="/">← Index</a></nav>
 <main>
-<section class="reveal">
 <h1>The Complexity<br><em>of Prediction.</em></h1>
-<p class="intro">I have always liked the idea of predictability. It probably started with dice: the hope that doing the same thing again would produce the same result. Later it moved through probability, Newton, gravity, calculus, chaos, and finally quantum mechanics — places where prediction becomes less obvious and much more interesting.</p>
-</section>
+<p>I have always liked the idea of predictability.</p>
+<p>It probably started with dice.</p>
+<p>I remember trying to throw a dice in what felt like exactly the same way.</p>
+<p>Same direction.<br>Same strength.<br>Same movement.</p>
+<p>Part of me thought I could somehow fool the system and force the same result again.</p>
+<p>You roll once.</p>
+<p class="strong">6</p>
+<p>You try again.</p>
+<p class="strong">3</p>
+<p>Again.</p>
+<p class="strong">1</p>
+<p>The movement looked almost identical.</p>
+<p>The result did not.</p>
+<p>That stayed in my head for a long time.</p>
+<p>At first, I thought prediction meant controlling the outcome.</p>
+<p>Later I realized prediction could also mean understanding the pattern behind the outcome.</p>
+<div class="sep"></div>
+<h2>Probability</h2>
+<p>A dice has six sides.</p>
+<p>Six equal possibilities.</p>
+<div class="block"><p class="strong">P(event) = successful possibilities / all possibilities</p></div>
+<p>If we want the probability of rolling a 3:</p>
+<div class="block"><p class="strong">P(3) = 1 / 6</p></div>
+<p>The exact outcome is uncertain.</p>
+<p>I still do not know what the next roll will be.</p>
+<p>But the structure behind the outcomes is predictable.</p>
+<p>If we roll the dice only once, anything can happen.</p>
+<p>But if we roll it many times, patterns start appearing.</p>
+<p>Over time, each number tends to appear close to its expected probability.</p>
+<p>Not exactly.</p>
+<p>But approximately.</p>
+<p>Sometimes prediction is not about knowing the next result.</p>
+<p>It is about understanding the pattern underneath many results together.</p>
+<div class="sep"></div>
+<h2>Two Dice</h2>
+<p>Then things become more interesting.</p>
+<p>Take two dice.</p>
+<p>Now we stop looking at one number and start looking at the sum of both.</p>
+<p>At first it still feels random.</p>
+<p>But patterns immediately appear.</p>
+<p>Some numbers become more common because there are more combinations that create them.</p>
+<table class="table"><tr><th>Sum</th><th>Combinations</th></tr><tr><td>2</td><td>1 + 1</td></tr><tr><td>3</td><td>1 + 2 · 2 + 1</td></tr><tr><td>4</td><td>1 + 3 · 2 + 2 · 3 + 1</td></tr><tr><td>7</td><td>1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1</td></tr><tr><td>12</td><td>6 + 6</td></tr></table>
+<p>The next roll is still uncertain.</p>
+<p>But uncertainty is no longer flat.</p>
+<p>Some outcomes become statistically more likely.</p>
+<div class="block chart">2&nbsp;&nbsp;&nbsp;█<br>3&nbsp;&nbsp;&nbsp;██<br>4&nbsp;&nbsp;&nbsp;███<br>5&nbsp;&nbsp;&nbsp;████<br>6&nbsp;&nbsp;&nbsp;█████<br>7&nbsp;&nbsp;&nbsp;██████<br>8&nbsp;&nbsp;&nbsp;█████<br>9&nbsp;&nbsp;&nbsp;████<br>10&nbsp;&nbsp;███<br>11&nbsp;&nbsp;██<br>12&nbsp;&nbsp;█</div>
+<p>That was probably the first time I noticed how patterns can emerge from randomness.</p>
+<div class="sep"></div>
+<h2>Newton and the Apple</h2>
+<p>Later I heard about Isaac Newton, gravity, and the apple story.</p>
+<p>An apple falling from a tree is predictable.</p>
+<p>The movement is not random.</p>
+<p>Objects move following patterns.</p>
+<p>After enough observation, the pattern becomes measurable.</p>
+<p>And once it becomes measurable, mathematics can describe it.</p>
+<div class="block"><p class="strong">gravity ≈ 9.81 m/s²</p></div>
+<p>What became interesting to me was that the same idea appeared far beyond the apple itself.</p>
+<p>Galaxies.<br>Planets.<br>Comets.<br>Apples.<br>A grain of sand.</p>
+<p>Different objects.</p>
+<p>Different scales.</p>
+<p>But similar structures repeating underneath movement.</p>
+<p>I remember calculating things like this only out of curiosity.</p>
+<p>How fast something falls.</p>
+<p>How far it moves.</p>
+<p>How the numbers evolve.</p>
+<p>The time² part also fascinated me.</p>
+<p>The apple is not moving at a constant speed.</p>
+<p>It keeps accelerating.</p>
+<div class="sep"></div>
+<h2>Chaos</h2>
+<p>Eventually prediction becomes fragile again.</p>
+<p>Not because the laws disappear.</p>
+<p>Because the interactions become enormous.</p>
+<p>Weather.<br>Turbulence.<br>Ocean waves.<br>Markets.</p>
+<p>Small differences at the beginning slowly grow with time.</p>
+<div class="block"><p class="strong">known rules + tiny errors + time = fragile prediction</p></div>
+<p>The rules still work.</p>
+<p>The equations still work.</p>
+<p>Prediction is the part that breaks.</p>
+<div class="quote">Observation.<br>Pattern.<br>Prediction.</div>
+<p>That progression became interesting to me because the same search keeps repeating through different scales.</p>
+<p>Dice.<br>Gravity.<br>Fluid movement.<br>Planets.<br>Quantum particles.</p>
+<p>Different systems.</p>
+<p>Same attempt:</p>
+<p class="strong">finding structure underneath uncertainty.</p>
 </main>
-<script>
-const ro=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('on')}),{threshold:.08});document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
-</script>
 </body>
 </html>
