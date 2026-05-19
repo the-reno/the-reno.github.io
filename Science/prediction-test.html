@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prediction Test Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+body{margin:0;background:#080808;color:#d0d0d0;font-family:'DM Mono',monospace;line-height:1.9;padding:80px 24px;max-width:920px;margin:auto}h1,h2{font-family:'Instrument Serif',serif;font-weight:400;color:#f2f2f2}h1{font-size:4.5rem;line-height:.92;margin-bottom:40px}h2{font-size:2rem;margin-top:90px;margin-bottom:24px}p{font-size:15px;color:#9a9a9a;margin:18px 0}.sep{height:1px;background:#1a1a1a;margin:80px 0}.chart{margin:40px 0;padding:24px;background:#101010;border:1px solid #1d1d1d;border-radius:14px}.bars{display:flex;align-items:flex-end;gap:12px;height:220px;margin-top:20px}.bar{flex:1;background:linear-gradient(to top,#444,#bfbfbf);border-radius:6px 6px 0 0;position:relative}.bar span{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);font-size:11px;color:#777}.caption{font-size:13px;color:#6f6f6f;margin-top:18px}.wave{position:relative;height:140px;overflow:hidden}.wave svg{width:100%;height:140px}.equation{padding:20px;background:#101010;border:1px solid #1c1c1c;border-radius:10px;margin:24px 0;color:#ececec}a{color:#888;text-decoration:none;position:fixed;top:24px;left:24px;font-size:11px;letter-spacing:.12em;text-transform:uppercase}a:hover{color:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a href="/">← Index</a>
+<h1>The Complexity<br><em>of Prediction.</em></h1>
+
+<p>I have always liked the idea of predictability.</p>
+
+<p>It probably started with dice.</p>
+
+<p>I remember trying to throw a dice in what felt like exactly the same way.</p>
+
+<p>Same direction.<br>Same strength.<br>Same movement.</p>
+
+<p>Part of me thought I could somehow fool the system and force the same result again.</p>
+
+<div class="sep"></div>
+
+<h2>Probability</h2>
+
+<p>The exact outcome is uncertain.</p>
+
+<p>But the structure behind the outcomes is predictable.</p>
+
+<div class="chart">
+<div class="bars">
+<div class="bar" style="height:16.6%"><span>1</span></div>
+<div class="bar" style="height:16.6%"><span>2</span></div>
+<div class="bar" style="height:16.6%"><span>3</span></div>
+<div class="bar" style="height:16.6%"><span>4</span></div>
+<div class="bar" style="height:16.6%"><span>5</span></div>
+<div class="bar" style="height:16.6%"><span>6</span></div>
+</div>
+<p class="caption">Single dice probability distribution. Every outcome has the same probability.</p>
+</div>
+
+<div class="sep"></div>
+
+<h2>Two Dice</h2>
+
+<p>Then things become more interesting.</p>
+
+<p>Some numbers become more common because there are more combinations that create them.</p>
+
+<div class="chart">
+<div class="bars">
+<div class="bar" style="height:16%"><span>2</span></div>
+<div class="bar" style="height:32%"><span>3</span></div>
+<div class="bar" style="height:48%"><span>4</span></div>
+<div class="bar" style="height:64%"><span>5</span></div>
+<div class="bar" style="height:80%"><span>6</span></div>
+<div class="bar" style="height:100%"><span>7</span></div>
+<div class="bar" style="height:80%"><span>8</span></div>
+<div class="bar" style="height:64%"><span>9</span></div>
+<div class="bar" style="height:48%"><span>10</span></div>
+<div class="bar" style="height:32%"><span>11</span></div>
+<div class="bar" style="height:16%"><span>12</span></div>
+</div>
+<p class="caption">Patterns emerging from randomness. Some outcomes become statistically more likely than others.</p>
+</div>
+
+<div class="sep"></div>
+
+<h2>Newton and the Apple</h2>
+
+<p>The movement is not random.</p>
+
+<p>Objects move following patterns.</p>
+
+<div class="grid">
+<div class="chart">
+<div class="equation">gravity ≈ 9.81 m/s²</div>
+<p class="caption">Acceleration is continuous. The object keeps gaining speed over time.</p>
+</div>
+<div class="chart">
+<svg viewBox="0 0 300 200">
+<path d="M20 20 Q120 60 280 180" stroke="#d9d9d9" fill="none" stroke-width="2"/>
+<circle cx="280" cy="180" r="6" fill="#d9d9d9"/>
+</svg>
+<p class="caption">The path evolves continuously instead of jumping between positions.</p>
+</div>
+</div>
+
+<div class="sep"></div>
+
+<h2>Differential Equations</h2>
+
+<p>Trying to understand how systems evolve through time.</p>
+
+<p>Fluid dynamics.<br>Gas.<br>Electricity.<br>Waves.</p>
+
+<div class="chart wave">
+<svg viewBox="0 0 1000 140" preserveAspectRatio="none">
+<path d="M0 70 C80 20 160 120 240 70 C320 20 400 120 480 70 C560 20 640 120 720 70 C800 20 880 120 960 70" stroke="#d0d0d0" fill="none" stroke-width="2"/>
+</svg>
+<p class="caption">Continuous systems evolving through time.</p>
+</div>
+
+<div class="sep"></div>
+
+<h2>Quantum Mechanics</h2>
+
+<p>The equations no longer predict one exact outcome.</p>
+
+<p>They predict a distribution of possible outcomes with different probabilities.</p>
+
+<div class="chart">
+<div class="bars">
+<div class="bar" style="height:20%"><span>A</span></div>
+<div class="bar" style="height:45%"><span>B</span></div>
+<div class="bar" style="height:90%"><span>C</span></div>
+<div class="bar" style="height:55%"><span>D</span></div>
+<div class="bar" style="height:25%"><span>E</span></div>
+</div>
+<p class="caption">Not certainty. Probability distributed across possibilities.</p>
+</div>
+
+<p>At that point, prediction stopped meaning “knowing exactly what will happen.”</p>
+
+<p>It became understanding the structure behind what could happen.</p>
+
+</body>
+</html>
