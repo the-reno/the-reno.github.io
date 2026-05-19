@@ -10,13 +10,13 @@ It probably started with dice.
 
 ## Trying to Fool the Dice
 
-I remember trying to throw a dice in what felt like the same way.
+I remember trying to throw a dice in what felt like exactly the same way.
 
 Same direction.  
 Same strength.  
 Same movement.
 
-Part of me thought I could somehow force the same result again.
+Part of me thought I could somehow fool the system and force the same result again.
 
 You roll once.
 
@@ -30,7 +30,7 @@ Again.
 
 **1**
 
-The movement looked similar.
+The movement looked almost identical.
 
 The result did not.
 
@@ -76,11 +76,11 @@ Not exactly.
 
 But approximately.
 
-The larger the number of rolls, the closer the results usually move toward the expected probabilities.
+The larger the number of rolls, the closer the results move toward the expected probabilities.
 
 Sometimes prediction is not about knowing the next result.
 
-It is about knowing the pattern behind the results.
+It is about understanding the pattern underneath many results together.
 
 ---
 
@@ -103,7 +103,7 @@ Some numbers become more common because there are more combinations that create 
 | 2 | 1 + 1 |
 | 3 | 1 + 2 · 2 + 1 |
 | 4 | 1 + 3 · 2 + 2 · 3 + 1 |
-| 7 | 1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 · 5 + 2 · 6 + 1 |
+| 7 | 1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1 |
 | 12 | 6 + 6 |
 
 The next roll is still uncertain.
@@ -136,22 +136,6 @@ Later I heard about Isaac Newton, gravity, and the apple story.
 
 An apple falling from a tree is predictable.
 
-apple
-
-  •
-
-  ↓
-
-    •
-
-      ↓
-
-          •
-
-             ↓
-
-                 •
-
 The movement is not random.
 
 Objects move following patterns.
@@ -164,7 +148,7 @@ Eventually we call it gravity:
 
 gravity ≈ 9.81 m/s²
 
-What becomes interesting is that the same pattern appears far beyond the apple itself.
+What became interesting to me was that the same idea appeared far beyond the apple itself.
 
 Galaxies.  
 Planets.  
@@ -185,6 +169,14 @@ How fast something falls.
 How far it moves.
 
 How the numbers evolve.
+
+The time² part also fascinated me.
+
+The apple is not moving at a constant speed.
+
+It keeps accelerating.
+
+The pattern itself evolves continuously.
 
 ---
 
@@ -292,9 +284,9 @@ The equations still work.
 
 Prediction is the part that breaks.
 
-That is one of the interesting ideas behind chaos theory.
+That was another interesting shift for me.
 
-A system can still follow deterministic laws and become extremely difficult to predict.
+A system can follow deterministic laws and still become extremely difficult to predict.
 
 ---
 
@@ -386,7 +378,7 @@ Sometimes the pattern still exists, but small variations grow too fast.
 
 And sometimes, like in quantum mechanics, the prediction itself becomes probabilistic.
 
-That progression was interesting to me because the same search keeps repeating through different scales.
+That progression became interesting to me because the same search keeps repeating through different scales.
 
 Dice.  
 Gravity.  
