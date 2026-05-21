@@ -12,36 +12,17 @@ body{min-height:100vh;background:#0a0a0a;color:#a8a8a8;font-family:'DM Mono',mon
 .card{position:absolute;width:340px;border:1px solid #1f1f1f;border-radius:8px;padding:2.5rem 2.25rem;background:#111;transition:transform .55s cubic-bezier(.4,0,.2,1),opacity .55s ease,filter .55s ease;transform-style:preserve-3d;transform-origin:center center;user-select:none}
 .greeting{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:1rem}
 h1{font-family:'Instrument Serif',serif;font-size:2.6rem;font-weight:400;color:#efefef;line-height:1;letter-spacing:-.02em;margin-bottom:1.25rem}
-h1 em{font-style:italic;color:#555}
-.card-body{font-size:12px;line-height:1.9;color:#666;margin-bottom:1.1rem;min-height:72px}.divider{height:1px;background:#1f1f1f;margin-bottom:1.25rem}.tag{font-size:11px;color:#444;letter-spacing:.05em}
-.feature-link{display:inline-block;margin-top:.1rem;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none;pointer-events:auto;position:relative;z-index:999}
-.feature-link:hover{color:#efefef}
-.arrow{position:absolute;top:50%;transform:translateY(-50%);background:none;border:none;color:#333;font-size:2rem;cursor:pointer;z-index:100;padding:1rem;transition:color .2s;font-family:'DM Mono',monospace;line-height:1}.arrow:hover{color:#888}.arrow.left{left:1rem}.arrow.right{right:1rem}
-.dots{display:flex;gap:6px;margin-top:2rem}.dot{width:5px;height:5px;border-radius:50%;background:#1f1f1f;transition:background .2s,transform .2s;cursor:pointer}.dot.active{background:#555;transform:scale(1.35)}
+h1 em{font-style:italic;color:#555}.card-body{font-size:12px;line-height:1.9;color:#666;margin-bottom:1.1rem;min-height:72px}.divider{height:1px;background:#1f1f1f;margin-bottom:1.25rem}.tag{font-size:11px;color:#444;letter-spacing:.05em}.feature-link{display:inline-block;margin-top:.1rem;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none;pointer-events:auto;position:relative;z-index:999}.feature-link:hover{color:#efefef}.arrow{position:absolute;top:50%;transform:translateY(-50%);background:none;border:none;color:#333;font-size:2rem;cursor:pointer;z-index:100;padding:1rem;transition:color .2s;font-family:'DM Mono',monospace;line-height:1}.arrow:hover{color:#888}.arrow.left{left:1rem}.arrow.right{right:1rem}.dots{display:flex;gap:6px;margin-top:2rem}.dot{width:5px;height:5px;border-radius:50%;background:#1f1f1f;transition:background .2s,transform .2s;cursor:pointer}.dot.active{background:#555;transform:scale(1.35)}
 </style>
 </head>
 <body>
 <div class="stage">
 <div class="card"><p class="greeting">// hello, world</p><h1>I'm <em>Ronu.</em></h1><p class="card-body">Welcome to my lab.</p><div class="divider"></div><p class="tag">triathlon · science · markets</p></div>
-<div class="card"><p class="greeting">// 01 · endurance</p><h1><em>Triathlon.</em></h1><p class="card-body">Swim, bike, run. Repeat until the numbers improve.</p></div>
+<div class="card"><p class="greeting">// 01 · endurance</p><h1><em>Triathlon.</em></h1><p class="card-body">Swim, bike, run. Repeat until the numbers improve.</p><a class="feature-link" href="/triathlon/">Read · Through the Chaos →</a></div>
 <div class="card"><p class="greeting">// 02 · inquiry</p><h1><em>Science.</em></h1><p class="card-body">From dice probabilities to gravity, calculus and quantum mechanics.</p><a class="feature-link" href="/Science/prediction.html">Read · The Complexity of Prediction →</a></div>
 <div class="card"><p class="greeting">// 03 · finance</p><h1><em>Markets.</em></h1><p class="card-body">Sharp edges.</p></div>
 <div class="card"><p class="greeting">// 04 · craft</p><h1><em>Maker.</em></h1><p class="card-body">Loading.</p></div>
 </div>
-<button class="arrow left" id="prev">&#8249;</button>
-<button class="arrow right" id="next">&#8250;</button>
-<div class="dots" id="dots"></div>
-<script>
-const cards=[...document.querySelectorAll('.card')];
-const dotsEl=document.getElementById('dots');
-const total=cards.length;
-let current=0;
-const positions=[{x:-540,rotY:42,scale:.72,opacity:.35,z:-200},{x:-240,rotY:28,scale:.85,opacity:.60,z:-100},{x:0,rotY:0,scale:1,opacity:1,z:0},{x:240,rotY:-28,scale:.85,opacity:.60,z:-100},{x:540,rotY:-42,scale:.72,opacity:.35,z:-200}];
-const dots=Array.from({length:total},(_,i)=>{const d=document.createElement('div');d.className='dot'+(i===0?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);return d});
-function goTo(n){current=((n%total)+total)%total;cards.forEach((card,i)=>{let slot=i-current;if(slot<-2)slot+=total;if(slot>2)slot-=total;const pos=positions[slot+2];card.style.transform=`translateX(${pos.x}px) translateZ(${pos.z}px) rotateY(${pos.rotY}deg) scale(${pos.scale})`;card.style.opacity=pos.opacity;card.style.filter=slot===0?'none':'brightness(0.6)';card.style.zIndex=10-Math.abs(slot);card.style.pointerEvents=slot===0?'auto':'none'});dots.forEach((d,i)=>d.classList.toggle('active',i===current))}
-document.getElementById('prev').onclick=()=>goTo(current-1);
-document.getElementById('next').onclick=()=>goTo(current+1);
-goTo(0);
-</script>
-</body>
-</html>
+<button class="arrow left" id="prev">&#8249;</button><button class="arrow right" id="next">&#8250;</button><div class="dots" id="dots"></div>
+<script>const cards=[...document.querySelectorAll('.card')];const dotsEl=document.getElementById('dots');const total=cards.length;let current=0;const positions=[{x:-540,rotY:42,scale:.72,opacity:.35,z:-200},{x:-240,rotY:28,scale:.85,opacity:.60,z:-100},{x:0,rotY:0,scale:1,opacity:1,z:0},{x:240,rotY:-28,scale:.85,opacity:.60,z:-100},{x:540,rotY:-42,scale:.72,opacity:.35,z:-200}];const dots=Array.from({length:total},(_,i)=>{const d=document.createElement('div');d.className='dot'+(i===0?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);return d});function goTo(n){current=((n%total)+total)%total;cards.forEach((card,i)=>{let slot=i-current;if(slot<-2)slot+=total;if(slot>2)slot-=total;const pos=positions[slot+2];card.style.transform=`translateX(${pos.x}px) translateZ(${pos.z}px) rotateY(${pos.rotY}deg) scale(${pos.scale})`;card.style.opacity=pos.opacity;card.style.filter=slot===0?'none':'brightness(0.6)';card.style.zIndex=10-Math.abs(slot);card.style.pointerEvents=slot===0?'auto':'none'});dots.forEach((d,i)=>d.classList.toggle('active',i===current))}document.getElementById('prev').onclick=()=>goTo(current-1);document.getElementById('next').onclick=()=>goTo(current+1);goTo(0);</script>
+</body></html>
