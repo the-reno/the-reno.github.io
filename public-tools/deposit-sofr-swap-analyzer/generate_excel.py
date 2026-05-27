@@ -132,16 +132,17 @@ def build_workbook():
         ws[f"{col}18"] = header
         style_cell(ws[f"{col}18"], gray, True)
 
+    swap_days_formula = 'COUNTIFS($J$30:$J$430,">="&$B$8,$J$30:$J$430,"<"&$B$9)'
     rows = [
         (19, "Deposit Days", "=B6-B5", "=B6-B5", "=C19-B19", "0"),
         (20, "Deposit Interest", "=B4*B7*B19/360", "=B20", "=C20-B20", "$#,##0"),
         (21, "Floating Received", "=0", "=B4*($T$9-1)", "=C21-B21", "$#,##0"),
-        (22, "Fixed Paid", "=0", "=B4*B7*COUNTIFS($J$30:$J$430,\">="&$B$8,$J$30:$J$430,\"<\"&$B$9)/360", "=C22-B22", "$#,##0"),
+        (22, "Fixed Paid", "=0", f"=B4*B7*{swap_days_formula}/360", "=C22-B22", "$#,##0"),
         (23, "Net Swap", "=0", "=C21-C22", "=C23-B23", "$#,##0"),
         (24, "Total Interest", "=B20", "=C20+C23", "=C24-B24", "$#,##0"),
         (25, "Maturity Value", "=B4+B24", "=B4+C24", "=C25-B25", "$#,##0"),
         (26, "Effective Yield", "=B24/B4*360/B19", "=C24/B4*360/B19", "=C26-B26", "0.00%"),
-        (27, "Compounded Float Rate", "=0", "=($T$9-1)*360/COUNTIFS($J$30:$J$430,\">="&$B$8,$J$30:$J$430,\"<\"&$B$9)", "=C27-B27", "0.00%"),
+        (27, "Compounded Float Rate", "=0", f"=($T$9-1)*360/{swap_days_formula}", "=C27-B27", "0.00%"),
     ]
     for row, metric, f1, f2, f3, fmt in rows:
         ws[f"A{row}"] = metric
@@ -192,14 +193,12 @@ def build_workbook():
         ws[f"K{row}"] = f"=IF(J{row}=\"\",\"\",IF(AND(WEEKDAY(J{row},2)<=5,COUNTIF($G$5:$G$24,J{row})=0),\"Y\",\"N\"))"
         ws[f"L{row}"] = f"=IF(J{row}=\"\",\"\",IFERROR(VLOOKUP(J{row},$G$5:$H$24,2,FALSE),\"\"))"
 
-        # Raw SOFR changes only on business days.
         ws[f"M{row}"] = (
             f"=IF(J{row}=\"\",\"\",IF(K{row}=\"Y\",$E$5+(IF(AND($D$10<>\"\",J{row}>$D$10),$E$10,0)+"
             f"IF(AND($D$11<>\"\",J{row}>$D$11),$E$11,0)+IF(AND($D$12<>\"\",J{row}>$D$12),$E$12,0)+"
             f"IF(AND($D$13<>\"\",J{row}>$D$13),$E$13,0)+IF(AND($D$14<>\"\",J{row}>$D$14),$E$14,0))/10000,\"\"))"
         )
 
-        # Carried SOFR repeats the previous business-day fixing on weekends and holidays.
         if row == 30:
             ws[f"N{row}"] = f"=IF(J{row}=\"\",\"\",IF(M{row}<>\"\",M{row},$E$5))"
         else:
