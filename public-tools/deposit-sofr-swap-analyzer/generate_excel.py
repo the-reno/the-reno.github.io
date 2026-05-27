@@ -131,21 +131,20 @@ def build_workbook() -> Workbook:
         ws[f"{col}18"] = header
         style_cell(ws[f"{col}18"], gray, True)
 
-    swap_days = 'COUNTIFS($J$30:$J$430,">="&$B$8,$J$30:$J$430,"<"&$B$9)'
-    final_sofr_factor = 'LOOKUP(2,1/($O$30:$O$430<>""),$O$30:$O$430)'
-    spread_factor = f'($B$10/10000)*({swap_days}/360)'
-    float_coupon_factor = f'(({final_sofr_factor})-1)+{spread_factor}'
+    final_float = 'IFERROR(LOOKUP(2,1/($R$30:$R$430<>""),$R$30:$R$430),0)'
+    final_fixed = 'IFERROR(LOOKUP(2,1/($S$30:$S$430<>""),$S$30:$S$430),0)'
+    swap_days = "($B$9-$B$8)"
 
     rows = [
         (19, "Deposit Days", "=B6-B5", "=B6-B5", "=C19-B19", "0"),
         (20, "Deposit Interest", "=B4*B7*B19/360", "=B20", "=C20-B20", "$#,##0"),
-        (21, "Floating Received", "=0", f"=B4*({float_coupon_factor})", "=C21-B21", "$#,##0"),
-        (22, "Fixed Paid", "=0", f"=B4*B7*({swap_days})/360", "=C22-B22", "$#,##0"),
+        (21, "Floating Received", "=0", f"={final_float}", "=C21-B21", "$#,##0"),
+        (22, "Fixed Paid", "=0", f"={final_fixed}", "=C22-B22", "$#,##0"),
         (23, "Net Swap", "=0", "=C21-C22", "=C23-B23", "$#,##0"),
         (24, "Total Interest", "=B20", "=C20+C23", "=C24-B24", "$#,##0"),
         (25, "Maturity Value", "=B4+B24", "=B4+C24", "=C25-B25", "$#,##0"),
         (26, "Effective Yield", "=B24/B4*360/B19", "=C24/B4*360/B19", "=C26-B26", "0.00%"),
-        (27, "Float Coupon Rate", "=0", f"=({float_coupon_factor})*360/({swap_days})", "=C27-B27", "0.00%"),
+        (27, "Float Coupon Rate", "=0", f"=IFERROR(C21/$B$4*360/{swap_days},0)", "=C27-B27", "0.00%"),
     ]
     for row, metric, f1, f2, f3, fmt in rows:
         ws[f"A{row}"] = metric
@@ -156,26 +155,29 @@ def build_workbook() -> Workbook:
         for col in "BCD":
             style_cell(ws[f"{col}{row}"], green, num_format=fmt)
 
-    ws["F17"] = "Scenario"
-    ws["G17"] = "Total Interest"
-    ws["F18"] = "Deposit Only"
-    ws["G18"] = "=B24"
-    ws["F19"] = "Deposit + Swap"
-    ws["G19"] = "=C24"
-    for cell in ["F17", "G17", "F18", "G18", "F19", "G19"]:
-        style_cell(ws[cell], gray if cell in ["F17", "G17"] else None, bold=cell in ["F17", "G17"], num_format="$#,##0" if cell in ["G18", "G19"] else None)
+    # Hidden chart helper away from input/dashboard area.
+    ws["Z3"] = "Scenario"
+    ws["AA3"] = "Total Interest"
+    ws["Z4"] = "Deposit Only"
+    ws["AA4"] = "=B24"
+    ws["Z5"] = "Deposit + Swap"
+    ws["AA5"] = "=C24"
+    for cell in ["Z3", "AA3", "Z4", "AA4", "Z5", "AA5"]:
+        style_cell(ws[cell], gray if cell in ["Z3", "AA3"] else None, bold=cell in ["Z3", "AA3"], num_format="$#,##0" if cell in ["AA4", "AA5"] else None)
+    ws.column_dimensions["Z"].hidden = True
+    ws.column_dimensions["AA"].hidden = True
 
     chart = BarChart()
     chart.title = "Total Interest Comparison"
     chart.y_axis.title = "Interest"
     chart.x_axis.title = "Scenario"
-    data = Reference(ws, min_col=7, min_row=17, max_row=19)
-    cats = Reference(ws, min_col=6, min_row=18, max_row=19)
+    data = Reference(ws, min_col=27, min_row=3, max_row=5)
+    cats = Reference(ws, min_col=26, min_row=4, max_row=5)
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(cats)
     chart.height = 7
     chart.width = 12
-    ws.add_chart(chart, "F21")
+    ws.add_chart(chart, "A37")
 
     ws["J28"] = "SOFR Daily Compounding Engine"
     style_cell(ws["J28"], blue, True, "FFFFFF")
@@ -193,21 +195,25 @@ def build_workbook() -> Workbook:
             ws[f"J{row}"] = "=$B$8"
         else:
             ws[f"J{row}"] = f"=IFERROR(IF(AND(J{row-1}<>\"\",J{row-1}+1<$B$9),J{row-1}+1,\"\"),\"\")"
+
         ws[f"K{row}"] = f"=IF(J{row}=\"\",\"\",IF(AND(WEEKDAY(J{row},2)<=5,COUNTIF($G$5:$G$24,J{row})=0),\"Y\",\"N\"))"
         ws[f"L{row}"] = f"=IF(J{row}=\"\",\"\",IF(K{row}=\"Y\",$E$5+SUMIFS($E$10:$E$14,$D$10:$D$14,\"<\"&J{row})/10000,\"\"))"
         if row == 30:
             ws[f"M{row}"] = f"=IF(J{row}=\"\",\"\",IF(L{row}<>\"\",L{row},$E$5))"
         else:
             ws[f"M{row}"] = f"=IF(J{row}=\"\",\"\",IF(L{row}<>\"\",L{row},M{row-1}))"
+
         ws[f"N{row}"] = f"=IF(J{row}=\"\",\"\",1+M{row}/360)"
         if row == 30:
             ws[f"O{row}"] = f"=IF(J{row}=\"\",\"\",N{row})"
         else:
             ws[f"O{row}"] = f"=IF(J{row}=\"\",\"\",O{row-1}*N{row})"
+
+        elapsed = f"IF(J{row}=\"\",0,J{row}-$B$8+1)"
         ws[f"P{row}"] = f"=IF(J{row}=\"\",\"\",$B$4*(O{row}-1))"
-        ws[f"Q{row}"] = f"=IF(J{row}=\"\",\"\",$B$4*($B$10/10000)*COUNTIFS($J$30:J{row},\">=\"&$B$8,$J$30:J{row},\"<\"&$B$9)/360)"
+        ws[f"Q{row}"] = f"=IF(J{row}=\"\",\"\",$B$4*($B$10/10000)*({elapsed})/360)"
         ws[f"R{row}"] = f"=IF(J{row}=\"\",\"\",P{row}+Q{row})"
-        ws[f"S{row}"] = f"=IF(J{row}=\"\",\"\",$B$4*$B$7*COUNTIFS($J$30:J{row},\">=\"&$B$8,$J$30:J{row},\"<\"&$B$9)/360)"
+        ws[f"S{row}"] = f"=IF(J{row}=\"\",\"\",$B$4*$B$7*({elapsed})/360)"
 
         for col_idx in range(10, 20):
             style_cell(ws.cell(row, col_idx))
@@ -224,8 +230,8 @@ def build_workbook() -> Workbook:
     ws.merge_cells("A32:H35")
     ws["A32"] = (
         "SOFR is updated only on business days; weekends and user-entered holidays carry the prior SOFR fixing. "
-        "The SOFR component is compounded daily. The spread is added linearly as spread x days / 360, not compounded. "
-        "Accrued SOFR, spread, total floating, and fixed swap amounts are shown in the engine table for auditability."
+        "SOFR is compounded daily. Spread is added linearly as spread x days / 360 and is not compounded. "
+        "The engine table shows accrued SOFR, spread, total floating, and fixed swap amounts for auditability."
     )
     ws["A32"].alignment = Alignment(wrap_text=True, vertical="top")
     ws["A32"].font = Font(color="666666")
