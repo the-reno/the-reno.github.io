@@ -1,23 +1,31 @@
 """
 Deposit vs SOFR Swap Analyzer
-Creates a single-tab Excel workbook to compare:
+
+Local-friendly Python generator for a single-tab Excel workbook comparing:
 1. Fixed deposit only
 2. Fixed deposit plus forward-starting SOFR swap
 
-Assumptions:
-- ACT/360
-- Floating leg = daily SOFR path + spread
-- Fed shocks entered in bp
-- Fed shock impacts SOFR after meeting date
-- No PV / MTM
+Key methodology:
+- Deposit accrues ACT/360.
+- Swap fixed leg accrues ACT/360.
+- Swap floating leg uses compounded SOFR in arrears.
+- SOFR fixings are applied only on business days.
+- Weekend and user-entered holiday days are included in the business-day fixing weight.
+- User inputs Fed scenario moves in bp; the projected SOFR path is adjusted after meeting dates.
+- No PV / MTM / hedge accounting.
+
+Dependency:
+    pip install openpyxl
 """
+
+from __future__ import annotations
 
 from datetime import date
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.chart import BarChart, Reference
 
-OUTPUT_FILE = "Deposit_SOFR_Swap_Analyzer.xlsx"
+OUTPUT_FILE = "Deposit_SOFR_Swap_Analyzer_Calendar_Compounded.xlsx"
 
 
 def style_cell(cell, fill=None, bold=False, font_color="000000", num_format=None):
@@ -45,12 +53,13 @@ def build_workbook():
 
     ws["A1"] = "Deposit vs SOFR Swap Analyzer"
     ws["A1"].font = Font(bold=True, size=16, color=blue)
+    ws.merge_cells("A1:H1")
 
     # Transaction inputs
     ws["A3"] = "Transaction Inputs"
     style_cell(ws["A3"], blue, True, "FFFFFF")
     inputs = [
-        ("Notional", 100000000, "$#,##0"),
+        ("Notional", 100_000_000, "$#,##0"),
         ("Deposit Start", date(2026, 5, 26), "dd-mmm-yy"),
         ("Deposit End", date(2026, 8, 20), "dd-mmm-yy"),
         ("Deposit Rate", 0.0395, "0.00%"),
@@ -58,131 +67,205 @@ def build_workbook():
         ("Swap End", date(2026, 8, 20), "dd-mmm-yy"),
         ("SOFR Spread bp", 26, "0"),
     ]
-    for r, (label, value, fmt) in enumerate(inputs, 4):
-        ws[f"A{r}"] = label
-        ws[f"B{r}"] = value
-        style_cell(ws[f"A{r}"], gray, True)
-        style_cell(ws[f"B{r}"], yellow, False, num_format=fmt)
+    for row, (label, value, fmt) in enumerate(inputs, 4):
+        ws[f"A{row}"] = label
+        ws[f"B{row}"] = value
+        style_cell(ws[f"A{row}"], gray, True)
+        style_cell(ws[f"B{row}"], yellow, num_format=fmt)
 
     # Market data
     ws["D3"] = "Market Data"
     style_cell(ws["D3"], blue, True, "FFFFFF")
-    ws["D4"] = "Market Date"
-    ws["E4"] = date(2026, 5, 26)
-    ws["D5"] = "SOFR Today"
-    ws["E5"] = 0.0355
-    for c in ["D4", "D5"]:
-        style_cell(ws[c], gray, True)
-    style_cell(ws["E4"], yellow, num_format="dd-mmm-yy")
-    style_cell(ws["E5"], yellow, num_format="0.00%")
+    market = [
+        ("As Of Date", date(2026, 5, 26), "dd-mmm-yy"),
+        ("SOFR Today", 0.0355, "0.00%"),
+        ("Effective Fed Rate", 0.0433, "0.00%"),
+    ]
+    for row, (label, value, fmt) in enumerate(market, 4):
+        ws[f"D{row}"] = label
+        ws[f"E{row}"] = value
+        style_cell(ws[f"D{row}"], gray, True)
+        style_cell(ws[f"E{row}"], yellow, num_format=fmt)
 
-    # Fed path
-    ws["D7"] = "Fed Shock Path"
-    style_cell(ws["D7"], blue, True, "FFFFFF")
-    ws["D8"] = "Meeting Date"
-    ws["E8"] = "Move bp"
-    style_cell(ws["D8"], gray, True)
-    style_cell(ws["E8"], gray, True)
+    # Fed scenario path
+    ws["D8"] = "Fed Scenario"
+    style_cell(ws["D8"], blue, True, "FFFFFF")
+    ws["D9"] = "Meeting Date"
+    ws["E9"] = "Move bp"
+    style_cell(ws["D9"], gray, True)
+    style_cell(ws["E9"], gray, True)
     meetings = [
         (date(2026, 6, 17), 25),
         (date(2026, 7, 29), 25),
-        (None, 0),
-        (None, 0),
-        (None, 0),
+        (date(2026, 9, 16), 0),
+        (date(2026, 10, 28), 0),
+        (date(2026, 12, 9), 0),
     ]
-    for r, (meeting, move) in enumerate(meetings, 9):
-        ws[f"D{r}"] = meeting
-        ws[f"E{r}"] = move
-        style_cell(ws[f"D{r}"], yellow, num_format="dd-mmm-yy")
-        style_cell(ws[f"E{r}"], yellow, num_format="0")
+    for row, (meeting, move) in enumerate(meetings, 10):
+        ws[f"D{row}"] = meeting
+        ws[f"E{row}"] = move
+        style_cell(ws[f"D{row}"], yellow, num_format="dd-mmm-yy")
+        style_cell(ws[f"E{row}"], yellow, num_format="0")
+
+    # Holiday calendar
+    ws["G3"] = "Holiday Calendar"
+    style_cell(ws["G3"], blue, True, "FFFFFF")
+    ws["G4"] = "Holiday Date"
+    ws["H4"] = "Holiday Name"
+    style_cell(ws["G4"], gray, True)
+    style_cell(ws["H4"], gray, True)
+    holiday_defaults = [
+        (date(2026, 6, 19), "Juneteenth"),
+        (date(2026, 7, 3), "Independence Day Observed"),
+        (date(2026, 9, 7), "Labor Day"),
+        (date(2026, 11, 26), "Thanksgiving"),
+        (date(2026, 12, 25), "Christmas"),
+    ]
+    for row in range(5, 25):
+        idx = row - 5
+        if idx < len(holiday_defaults):
+            ws[f"G{row}"] = holiday_defaults[idx][0]
+            ws[f"H{row}"] = holiday_defaults[idx][1]
+        style_cell(ws[f"G{row}"], yellow, num_format="dd-mmm-yy")
+        style_cell(ws[f"H{row}"], yellow)
 
     # Output summary
-    ws["A16"] = "Output Summary"
-    style_cell(ws["A16"], blue, True, "FFFFFF")
+    ws["A17"] = "Output Summary"
+    style_cell(ws["A17"], blue, True, "FFFFFF")
     headers = ["Metric", "Deposit Only", "Deposit + Swap", "Difference"]
     for col, header in zip("ABCD", headers):
-        ws[f"{col}17"] = header
-        style_cell(ws[f"{col}17"], gray, True)
+        ws[f"{col}18"] = header
+        style_cell(ws[f"{col}18"], gray, True)
 
     rows = [
-        (18, "Deposit Days", "=B6-B5", "=B6-B5", "=C18-B18", "0"),
-        (19, "Deposit Interest", "=B4*B7*B18/360", "=B19", "=C19-B19", "$#,##0"),
-        (20, "Floating Received", "=0", "=SUM(K27:K400)", "=C20-B20", "$#,##0"),
-        (21, "Fixed Paid", "=0", "=SUM(L27:L400)", "=C21-B21", "$#,##0"),
-        (22, "Net Swap", "=0", "=C20-C21", "=C22-B22", "$#,##0"),
-        (23, "Total Interest", "=B19", "=C19+C22", "=C23-B23", "$#,##0"),
-        (24, "Maturity Value", "=B4+B23", "=B4+C23", "=C24-B24", "$#,##0"),
-        (25, "Effective Yield", "=B23/B4*360/B18", "=C23/B4*360/B18", "=C25-B25", "0.00%"),
+        (19, "Deposit Days", "=B6-B5", "=B6-B5", "=C19-B19", "0"),
+        (20, "Deposit Interest", "=B4*B7*B19/360", "=B20", "=C20-B20", "$#,##0"),
+        (21, "Floating Received", "=0", "=B4*(N5-1)", "=C21-B21", "$#,##0"),
+        (22, "Fixed Paid", "=0", "=B4*B7*SUMIFS(K30:K430,J30:J430,\"Y\")/360", "=C22-B22", "$#,##0"),
+        (23, "Net Swap", "=0", "=C21-C22", "=C23-B23", "$#,##0"),
+        (24, "Total Interest", "=B20", "=C20+C23", "=C24-B24", "$#,##0"),
+        (25, "Maturity Value", "=B4+B24", "=B4+C24", "=C25-B25", "$#,##0"),
+        (26, "Effective Yield", "=B24/B4*360/B19", "=C24/B4*360/B19", "=C26-B26", "0.00%"),
+        (27, "Compounded Float Rate", "=0", "=(N5-1)*360/SUMIFS(K30:K430,J30:J430,\"Y\")", "=C27-B27", "0.00%"),
     ]
-    for r, metric, f1, f2, f3, fmt in rows:
-        ws[f"A{r}"] = metric
-        ws[f"B{r}"] = f1
-        ws[f"C{r}"] = f2
-        ws[f"D{r}"] = f3
-        style_cell(ws[f"A{r}"], gray, True)
+    for row, metric, f1, f2, f3, fmt in rows:
+        ws[f"A{row}"] = metric
+        ws[f"B{row}"] = f1
+        ws[f"C{row}"] = f2
+        ws[f"D{row}"] = f3
+        style_cell(ws[f"A{row}"], gray, True)
         for col in "BCD":
-            style_cell(ws[f"{col}{r}"], green, num_format=fmt)
+            style_cell(ws[f"{col}{row}"], green, num_format=fmt)
 
-    # Daily accrual engine
-    ws["G3"] = "Daily Accrual Engine"
-    style_cell(ws["G3"], blue, True, "FFFFFF")
-    daily_headers = ["Date", "Day", "SOFR", "SOFR+Spread", "Float Accrual", "Fixed Accrual"]
-    for col, header in zip("GHIJKL", daily_headers):
-        ws[f"{col}4"] = header
-        style_cell(ws[f"{col}4"], gray, True)
-
-    for r in range(5, 401):
-        if r == 5:
-            ws[f"G{r}"] = "=$B$5"
-        else:
-            ws[f"G{r}"] = f"=IF(G{r-1}+1<=$B$6,G{r-1}+1,\"\")"
-        ws[f"H{r}"] = f"=IF(G{r}=\"\",\"\",1)"
-        ws[f"I{r}"] = f"=IF(G{r}=\"\",\"\",$E$5+(IF(AND($D$9<>\"\",G{r}>$D$9),$E$9,0)+IF(AND($D$10<>\"\",G{r}>$D$10),$E$10,0)+IF(AND($D$11<>\"\",G{r}>$D$11),$E$11,0)+IF(AND($D$12<>\"\",G{r}>$D$12),$E$12,0)+IF(AND($D$13<>\"\",G{r}>$D$13),$E$13,0))/10000)"
-        ws[f"J{r}"] = f"=IF(G{r}=\"\",\"\",I{r}+$B$10/10000)"
-        ws[f"K{r}"] = f"=IF(AND(G{r}>=$B$8,G{r}<$B$9),$B$4*J{r}/360,0)"
-        ws[f"L{r}"] = f"=IF(AND(G{r}>=$B$8,G{r}<$B$9),$B$4*$B$7/360,0)"
-        for col in "GHIJKL":
-            style_cell(ws[f"{col}{r}"])
-        ws[f"G{r}"].number_format = "dd-mmm-yy"
-        ws[f"I{r}"].number_format = "0.00%"
-        ws[f"J{r}"].number_format = "0.00%"
-        ws[f"K{r}"].number_format = "$#,##0"
-        ws[f"L{r}"].number_format = "$#,##0"
-
-    # Chart
-    ws["G18"] = "Scenario"
-    ws["H18"] = "Total Interest"
-    ws["G19"] = "Deposit Only"
-    ws["H19"] = "=B23"
-    ws["G20"] = "Deposit + Swap"
-    ws["H20"] = "=C23"
-    for c in ["G18", "H18", "G19", "H19", "G20", "H20"]:
-        style_cell(ws[c])
-    ws["H19"].number_format = "$#,##0"
-    ws["H20"].number_format = "$#,##0"
+    # Chart source and chart
+    ws["F17"] = "Scenario"
+    ws["G17"] = "Total Interest"
+    ws["F18"] = "Deposit Only"
+    ws["G18"] = "=B24"
+    ws["F19"] = "Deposit + Swap"
+    ws["G19"] = "=C24"
+    for cell in ["F17", "G17", "F18", "G18", "F19", "G19"]:
+        style_cell(ws[cell], gray if cell in ["F17", "G17"] else None, bold=cell in ["F17", "G17"], num_format="$#,##0" if cell in ["G18", "G19"] else None)
 
     chart = BarChart()
     chart.title = "Total Interest Comparison"
     chart.y_axis.title = "Interest"
     chart.x_axis.title = "Scenario"
-    data = Reference(ws, min_col=8, min_row=18, max_row=20)
-    cats = Reference(ws, min_col=7, min_row=19, max_row=20)
+    data = Reference(ws, min_col=7, min_row=17, max_row=19)
+    cats = Reference(ws, min_col=6, min_row=18, max_row=19)
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(cats)
     chart.height = 7
     chart.width = 12
-    ws.add_chart(chart, "G22")
+    ws.add_chart(chart, "F21")
 
-    # Column widths
-    widths = {"A": 22, "B": 18, "C": 18, "D": 18, "E": 12, "G": 14, "H": 10, "I": 12, "J": 14, "K": 16, "L": 16}
+    # SOFR compounding engine
+    ws["J28"] = "SOFR Compounding Engine"
+    style_cell(ws["J28"], blue, True, "FFFFFF")
+    engine_headers = [
+        "Date", "Bus Day", "Holiday", "Weight", "Projected SOFR", "SOFR+Spread", "Factor", "Cumulative Factor"
+    ]
+    for col_idx, header in enumerate(engine_headers, 10):
+        cell = ws.cell(29, col_idx)
+        cell.value = header
+        style_cell(cell, gray, True)
+
+    # Calendar rows. Starts on swap start and stops after swap end.
+    for row in range(30, 431):
+        if row == 30:
+            ws[f"J{row}"] = "=$B$8"
+        else:
+            ws[f"J{row}"] = f"=IF(J{row-1}+1<=$B$9,J{row-1}+1,\"\")"
+
+        # Business day: weekday and not in user holiday list.
+        ws[f"K{row}"] = f"=IF(J{row}=\"\",\"\",IF(AND(WEEKDAY(J{row},2)<=5,COUNTIF($G$5:$G$24,J{row})=0),\"Y\",\"N\"))"
+        ws[f"L{row}"] = f"=IF(J{row}=\"\",\"\",IFERROR(VLOOKUP(J{row},$G$5:$H$24,2,FALSE),\"\"))"
+
+        # Weight: for each business day, number of calendar days until the next business day.
+        # Uses next valid business day by checking the following 10 calendar days.
+        next_bd_formula = (
+            f"MIN(IF((WEEKDAY(J{row}+ROW($1:$10),2)<=5)*(COUNTIF($G$5:$G$24,J{row}+ROW($1:$10))=0),J{row}+ROW($1:$10)))"
+        )
+        ws[f"M{row}"] = f"=IF(K{row}<>\"Y\",0,{next_bd_formula}-J{row})"
+
+        # Projected SOFR path from SOFR Today plus cumulative Fed moves after meeting dates.
+        ws[f"N{row}"] = (
+            f"=IF(J{row}=\"\",\"\",$E$5+(IF(AND($D$10<>\"\",J{row}>$D$10),$E$10,0)+"
+            f"IF(AND($D$11<>\"\",J{row}>$D$11),$E$11,0)+IF(AND($D$12<>\"\",J{row}>$D$12),$E$12,0)+"
+            f"IF(AND($D$13<>\"\",J{row}>$D$13),$E$13,0)+IF(AND($D$14<>\"\",J{row}>$D$14),$E$14,0))/10000)"
+        )
+        ws[f"O{row}"] = f"=IF(J{row}=\"\",\"\",N{row}+$B$10/10000)"
+        ws[f"P{row}"] = f"=IF(K{row}=\"Y\",1+O{row}*M{row}/360,1)"
+        if row == 30:
+            ws[f"Q{row}"] = f"=P{row}"
+        else:
+            ws[f"Q{row}"] = f"=IF(J{row}=\"\",\"\",Q{row-1}*P{row})"
+
+        for col_idx in range(10, 18):
+            style_cell(ws.cell(row, col_idx))
+        ws[f"J{row}"].number_format = "dd-mmm-yy"
+        ws[f"M{row}"].number_format = "0"
+        ws[f"N{row}"].number_format = "0.00%"
+        ws[f"O{row}"].number_format = "0.00%"
+        ws[f"P{row}"].number_format = "0.000000000"
+        ws[f"Q{row}"].number_format = "0.000000000"
+
+    # Final compound factor helper
+    ws["M4"] = "Final Compound Factor"
+    ws["N4"] = "=LOOKUP(2,1/(Q30:Q430<>\"\"),Q30:Q430)"
+    ws["M5"] = "Floating Coupon Factor"
+    ws["N5"] = "=N4"
+    for cell in ["M4", "M5"]:
+        style_cell(ws[cell], gray, True)
+    for cell in ["N4", "N5"]:
+        style_cell(ws[cell], green, num_format="0.000000000")
+
+    # Notes
+    ws["A31"] = "Methodology"
+    style_cell(ws["A31"], blue, True, "FFFFFF")
+    ws.merge_cells("A32:H35")
+    ws["A32"] = (
+        "SOFR floating leg uses business-day fixings with weekend/holiday weighting. "
+        "Each business-day factor = 1 + (SOFR + spread) * weight / 360. "
+        "The coupon factor is the product of all factors over the swap period. "
+        "User-entered holidays in G:H are excluded from business days and increase the prior fixing weight."
+    )
+    ws["A32"].alignment = Alignment(wrap_text=True, vertical="top")
+    ws["A32"].font = Font(color="666666")
+
+    widths = {
+        "A": 22, "B": 18, "C": 18, "D": 18, "E": 14,
+        "F": 18, "G": 18, "H": 22, "J": 14, "K": 10,
+        "L": 22, "M": 10, "N": 14, "O": 14, "P": 16, "Q": 18,
+    }
     for col, width in widths.items():
         ws.column_dimensions[col].width = width
 
-    ws.freeze_panes = "A17"
+    ws.freeze_panes = "A18"
     return wb
 
 
 if __name__ == "__main__":
-    wb = build_workbook()
-    wb.save(OUTPUT_FILE)
+    workbook = build_workbook()
+    workbook.save(OUTPUT_FILE)
     print(f"Created {OUTPUT_FILE}")
