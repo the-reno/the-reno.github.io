@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phantom Traffic Jam | Ronu · Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#070707;--panel:#101010;--panel2:#151515;--line:#252525;--text:#e9e9e9;--muted:#969696;--dim:#666;--accent:#c0392b;--serif:'Instrument Serif',Georgia,serif;--mono:'DM Mono',monospace}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0%,#171717 0,#070707 45%);color:var(--text);font-family:var(--mono);font-size:13px}nav{position:sticky;top:0;z-index:10;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(7,7,7,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}a{color:var(--muted);text-decoration:none}a:hover{color:var(--text)}.crumb{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}main{max-width:1180px;margin:0 auto;padding:46px 20px 70px}.hero{max-width:760px;margin-bottom:30px}.kicker{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,7vw,5.4rem);line-height:.96;letter-spacing:-.04em;margin:0 0 16px}h1 em{color:var(--muted)}.sub{color:#999;line-height:1.7;font-size:14px;max-width:680px}.grid{display:grid;grid-template-columns:310px 1fr;gap:18px}.panel{background:linear-gradient(180deg,#111,#0b0b0b);border:1px solid var(--line);border-radius:16px;padding:16px}.panel h2{font-family:var(--serif);font-weight:400;font-size:1.45rem;margin:0 0 12px}.control{margin:15px 0}.control label{display:flex;justify-content:space-between;color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}.control span{color:#ddd}input[type=range]{width:100%;accent-color:var(--accent)}button{width:100%;margin-top:10px;padding:11px;border:1px solid #333;border-radius:999px;background:#e6e6e6;color:#111;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.stage{min-height:420px}.road{position:relative;height:210px;border-radius:18px;background:linear-gradient(180deg,#181818,#0f0f0f);border:1px solid #2b2b2b;overflow:hidden}.lane{position:absolute;left:0;right:0;height:1px;background:repeating-linear-gradient(90deg,#555 0 24px,transparent 24px 46px);opacity:.65}.lane.l1{top:70px}.lane.l2{top:140px}.car{position:absolute;width:18px;height:9px;border-radius:8px;background:#ddd;box-shadow:0 0 10px rgba(255,255,255,.22);transform:translate(-50%,-50%)}.truck{width:28px;background:#aaa}.marker{position:absolute;top:0;bottom:0;width:1px;background:rgba(192,57,43,.45)}.mtext{position:absolute;top:10px;transform:translateX(-50%);font-size:10px;color:#777}.bottleneck{position:absolute;top:0;bottom:0;width:42px;background:linear-gradient(90deg,transparent,rgba(192,57,43,.18),transparent)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{background:#0c0c0c;border:1px solid var(--line);border-radius:12px;padding:12px}.metric .v{font-family:var(--serif);font-size:1.7rem}.metric .l{font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.12em}.heat{height:240px;border:1px solid var(--line);border-radius:14px;background:#0a0a0a;overflow:hidden}.note{color:#898989;line-height:1.65;margin-top:12px}.legend{display:flex;gap:14px;color:#777;font-size:11px;margin-top:10px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}.fast{background:#78c679}.mid{background:#f6e05e}.slow{background:#c0392b}@media(max-width:850px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<nav><div class="crumb"><a href="/">ronu</a> / <a href="/Science/">science</a> / phantom jam</div><a href="/Science/">← science</a></nav>
+<main>
+  <section class="hero">
+    <div class="kicker">metropolitan systems</div>
+    <h1>Phantom<br><em>Traffic Jam.</em></h1>
+    <p class="sub">A small brake tap on a dense highway can become a backward-moving wave. This prototype turns the NJ Turnpike idea into a small laboratory: change demand, reaction time, spacing, trucks, rain, and a disturbance, then watch when smooth flow becomes unstable.</p>
+  </section>
+  <section class="grid">
+    <aside class="panel">
+      <h2>Scenario controls</h2>
+      <div class="control"><label>Demand shock <span id="demandV">25%</span></label><input id="demand" type="range" min="0" max="60" value="25"></div>
+      <div class="control"><label>Reaction delay <span id="reactionV">1.4s</span></label><input id="reaction" type="range" min="0.6" max="2.4" step="0.1" value="1.4"></div>
+      <div class="control"><label>Following gap <span id="gapV">1.3s</span></label><input id="gap" type="range" min="0.8" max="2.6" step="0.1" value="1.3"></div>
+      <div class="control"><label>Truck share <span id="truckV">10%</span></label><input id="truck" type="range" min="0" max="30" value="10"></div>
+      <div class="control"><label>Rain / caution <span id="rainV">15%</span></label><input id="rain" type="range" min="0" max="50" value="15"></div>
+      <div class="control"><label>Brake event <span id="brakeV">strong</span></label><input id="brake" type="range" min="0" max="3" step="1" value="2"></div>
+      <button id="reset">reset simulation</button>
+      <p class="note">Conceptual model. It is designed to explain phantom jams, not to replace calibrated NJDOT / NJTA traffic models.</p>
+    </aside>
+    <section class="panel stage">
+      <h2>NJ Turnpike corridor sketch</h2>
+      <div class="road" id="road"><div class="lane l1"></div><div class="lane l2"></div><div class="marker" style="left:22%"></div><div class="mtext" style="left:22%">Exit 13</div><div class="marker" style="left:58%"></div><div class="mtext" style="left:58%">14C</div><div class="bottleneck" style="left:55%"></div><div class="marker" style="left:86%"></div><div class="mtext" style="left:86%">16E</div></div>
+      <div class="metrics"><div class="metric"><div class="v" id="avgSpeed">—</div><div class="l">avg speed mph</div></div><div class="metric"><div class="v" id="jamLen">—</div><div class="l">jam length mi</div></div><div class="metric"><div class="v" id="flow">—</div><div class="l">flow veh/hr</div></div><div class="metric"><div class="v" id="state">—</div><div class="l">system state</div></div></div>
+      <canvas class="heat" id="heat" width="900" height="240"></canvas>
+      <div class="legend"><span><i class="dot fast"></i>smooth</span><span><i class="dot mid"></i>unstable</span><span><i class="dot slow"></i>jam wave</span></div>
+    </section>
+  </section>
+</main>
+<script>
+const road=document.getElementById('road'), heat=document.getElementById('heat'), ctx=heat.getContext('2d');
+const ids=['demand','reaction','gap','truck','rain','brake']; const ui={}; ids.forEach(id=>ui[id]=document.getElementById(id));
+let cars=[],t=0,history=[]; const N=72,L=1;
+function init(){cars=[];t=0;history=[];road.querySelectorAll('.car').forEach(e=>e.remove());for(let i=0;i<N;i++){let el=document.createElement('div');let isTruck=Math.random()*100<+ui.truck.value;el.className='car'+(isTruck?' truck':'');road.appendChild(el);cars.push({x:i/N,v:.012+Math.random()*.004,lane:i%3,isTruck,el,delay:[]});}drawHeat();}
+function params(){return{d:+ui.demand.value/100,r:+ui.reaction.value,g:+ui.gap.value,tr:+ui.truck.value/100,rain:+ui.rain.value/100,b:+ui.brake.value};}
+function step(){const p=params();t++;let desired=.018*(1-p.rain*.7)*(1+p.d*.15);let instability=(p.d*1.4)+(p.r*.45)+(1/p.g*.55)+p.rain*.45+p.tr*.35;cars.sort((a,b)=>a.x-b.x);for(let i=0;i<cars.length;i++){let c=cars[i],lead=cars[(i+1)%cars.length];let gap=(lead.x-c.x+L)%L;let target=desired*(c.isTruck?.78:1);if(gap<.025*p.g*(1+p.d)){target*=Math.max(.08,gap/(.025*p.g));}let shock=Math.sin((c.x*.9-t*.006)*24); if(instability>1.8&&shock>.72)target*=.36;if(p.b>0&&t%520>80&&t%520<135&&Math.abs(c.x-.56)<.07)target*=1-p.b*.22;c.v+=.08*(target-c.v)/(p.r);c.v=Math.max(.001,Math.min(c.v,.026));c.x=(c.x+c.v)%L;if(Math.random()<.004*instability)c.lane=(c.lane+1+Math.floor(Math.random()*2))%3;let y=[52,105,158][c.lane];c.el.style.left=(c.x*100)+'%';c.el.style.top=y+'px';}
+let avg=cars.reduce((s,c)=>s+c.v,0)/cars.length;let mph=Math.round(avg/.018*62);let slow=cars.filter(c=>c.v<.008).length;let jam=+(slow/N*8).toFixed(1);let flow=Math.round(N*avg*2200);document.getElementById('avgSpeed').textContent=mph;document.getElementById('jamLen').textContent=jam;document.getElementById('flow').textContent=flow;document.getElementById('state').textContent=jam>2?'jam':jam>.6?'unstable':'smooth';history.push(cars.map(c=>c.v));if(history.length>120)history.shift();drawHeat();requestAnimationFrame(step)}
+function drawHeat(){ctx.clearRect(0,0,heat.width,heat.height);let cols=80,rows=120;for(let y=0;y<history.length;y++){for(let x=0;x<cols;x++){let slice=history[y].filter((v,i)=>cars[i]&&cars[i].x>=x/cols&&cars[i].x<(x+1)/cols);let v=slice.length?slice.reduce((a,b)=>a+b,0)/slice.length:.018;let color=v<.008?'#c0392b':v<.014?'#f6e05e':'#78c679';ctx.fillStyle=color;ctx.globalAlpha=.82;ctx.fillRect(x*heat.width/cols,y*heat.height/rows,heat.width/cols+1,heat.height/rows+1)}}ctx.globalAlpha=1;}
+function labels(){document.getElementById('demandV').textContent=ui.demand.value+'%';document.getElementById('reactionV').textContent=Number(ui.reaction.value).toFixed(1)+'s';document.getElementById('gapV').textContent=Number(ui.gap.value).toFixed(1)+'s';document.getElementById('truckV').textContent=ui.truck.value+'%';document.getElementById('rainV').textContent=ui.rain.value+'%';document.getElementById('brakeV').textContent=['none','light','strong','severe'][+ui.brake.value];}
+ids.forEach(id=>ui[id].addEventListener('input',labels));document.getElementById('reset').onclick=()=>{labels();init()};labels();init();step();
+</script>
+</body>
+</html>
