@@ -12,12 +12,20 @@
       font-family:'DM Mono',monospace;
       padding:40px;
     }
+    .articles{display:flex;flex-direction:column;gap:16px;max-width:700px}
+    .article-card{display:block;padding:18px 20px;border:1px solid #202020;border-radius:14px;background:#101010;color:#ddd;text-decoration:none;transition:.2s}
+    .article-card:hover{transform:translateY(-2px);border-color:#333;background:#141414}
+    .card-title{font-size:1.35rem;font-family:'Instrument Serif',serif}
+    .card-title em{color:#aaa}
   </style>
 </head>
 <body>
   <div class="articles">
     <a class="article-card" href="/Science/dice.html">
       <div class="card-title">The Dice <em>and the Storm.</em></div>
+    </a>
+    <a class="article-card" href="/Science/traffic-jam.html">
+      <div class="card-title">Phantom <em>Traffic Jam.</em></div>
     </a>
   </div>
 </body>
