@@ -20,6 +20,7 @@ def build_workbook():
     thin = Side(style="thin", color="D9D9D9")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Global inputs
     ws["B3"] = "Start Date"
     ws["C3"] = date(2026, 5, 29)
     ws["B4"] = "End Date"
@@ -27,16 +28,14 @@ def build_workbook():
     ws["B3"].font = bold_font
     ws["B4"].font = bold_font
 
+    # Instrument inputs on left side
     input_rows = {
-        "Name": 8,
-        "Identifier / CUSIP": 9,
-        "Issue Date": 10,
-        "Maturity Date": 11,
-        "Outstanding": 12,
-        "Coupon": 13,
-        "Coupon Months": 14,
-        "Payment Day": 15,
-        "Frequency": 16,
+        "Name": 7,
+        "Identifier / CUSIP": 8,
+        "Maturity Date": 9,
+        "Outstanding": 10,
+        "Coupon": 11,
+        "Frequency": 12,
     }
 
     for label, row in input_rows.items():
@@ -45,18 +44,42 @@ def build_workbook():
         ws.cell(row, 2).fill = light_blue
 
     instruments = [
-        ["Bond A", "ID-A", date(2021, 11, 19), date(2026, 11, 19), 500_000_000, 0.0350, "5,11", 19, 2],
-        ["Bond B", "ID-B", date(2022, 9, 15), date(2027, 9, 15), 475_000_000, 0.0400, "3,9", 15, 2],
-        ["Bond C", "ID-C", date(2024, 5, 14), date(2034, 5, 14), 300_000_000, 0.0550, "5,11", 14, 2],
+        ["Bond A", "ID-A", date(2026, 11, 19), 500_000_000, 0.0350, 2],
+        ["Bond B", "ID-B", date(2027, 9, 15), 475_000_000, 0.0400, 2],
+        ["Bond C", "ID-C", date(2034, 5, 14), 300_000_000, 0.0550, 2],
     ]
 
     for col_offset, inst in enumerate(instruments, start=3):
-        for idx, value in enumerate(inst, start=8):
+        for idx, value in enumerate(inst, start=7):
             ws.cell(idx, col_offset, value)
 
-    holiday_col = 7
-    ws.cell(21, holiday_col, "Holiday Date")
-    ws.cell(21, holiday_col).font = bold_font
+    # User-entered payment dates table.
+    # User enters coupon dates for each bond in rows under each bond column.
+    ws["B15"] = "Payment Dates"
+    ws["B15"].font = bold_font
+
+    payment_header_row = 16
+    for i, inst in enumerate(instruments, start=3):
+        ws.cell(payment_header_row, i, inst[0])
+        ws.cell(payment_header_row, i).font = white_font
+        ws.cell(payment_header_row, i).fill = navy
+
+    sample_payment_dates = {
+        3: [date(2026, 5, 19), date(2026, 11, 19)],
+        4: [date(2026, 9, 15), date(2027, 3, 15), date(2027, 9, 15)],
+        5: [date(2026, 11, 14), date(2027, 5, 14), date(2027, 11, 14), date(2028, 5, 14)],
+    }
+    for col, dates in sample_payment_dates.items():
+        for r_offset, d in enumerate(dates, start=17):
+            ws.cell(r_offset, col, d)
+
+    # Holiday calendar
+    ws["B30"] = "Holiday Dates"
+    ws["B30"].font = bold_font
+    holiday_col = 3
+    ws.cell(31, holiday_col, "Holiday Date")
+    ws.cell(31, holiday_col).font = white_font
+    ws.cell(31, holiday_col).fill = navy
 
     sample_holidays = [
         date(2026, 1, 1),
@@ -68,90 +91,99 @@ def build_workbook():
         date(2026, 11, 26),
         date(2026, 12, 25),
     ]
-    for r, h in enumerate(sample_holidays, start=22):
+    for r, h in enumerate(sample_holidays, start=32):
         ws.cell(r, holiday_col, h)
 
-    cf_header_row = 21
-    headers = ["Date", "Day Type"] + [x[0] for x in instruments] + ["Total"]
-    for c, h in enumerate(headers, start=1):
-        ws.cell(cf_header_row, c, h)
-        ws.cell(cf_header_row, c).font = white_font
-        ws.cell(cf_header_row, c).fill = navy
-        ws.cell(cf_header_row, c).alignment = Alignment(horizontal="center")
+    # Cash flow table starts at row 5, column H
+    cf_start_row = 5
+    cf_start_col = 8  # H
 
-    current = ws["C3"].value
+    headers = ["Date", "Day Type"] + [x[0] for x in instruments] + ["Total"]
+    for c_offset, h in enumerate(headers):
+        cell = ws.cell(cf_start_row, cf_start_col + c_offset, h)
+        cell.font = white_font
+        cell.fill = navy
+        cell.alignment = Alignment(horizontal="center")
+
+    start_date = ws["C3"].value
     end_date = ws["C4"].value
-    row = cf_header_row + 1
+    current = start_date
+    row = cf_start_row + 1
 
     while current <= end_date:
-        ws.cell(row, 1, current)
-        ws.cell(row, 2, f'=IF(COUNTIF($G$22:$G$200,A{row})>0,"HOL",IF(WEEKDAY(A{row},2)>5,"WE","BD"))')
+        ws.cell(row, cf_start_col, current)
 
+        # Day Type uses shared holiday calendar.
+        ws.cell(
+            row,
+            cf_start_col + 1,
+            f'=IF(COUNTIF($C$32:$C$200,{get_column_letter(cf_start_col)}{row})>0,"HOL",IF(WEEKDAY({get_column_letter(cf_start_col)}{row},2)>5,"WE","BD"))'
+        )
+
+        # Each instrument cashflow formula:
+        # - If the row date exists in the user-entered payment date list for that bond, pay coupon.
+        # - If the row date equals the maturity date, add principal.
+        # - Otherwise zero.
+        # This keeps the model simple and lets the user control the actual payment schedule.
         for i in range(len(instruments)):
-            cf_col = 3 + i
-            input_col = get_column_letter(cf_col)
+            instrument_cf_col = cf_start_col + 2 + i
+            input_col = get_column_letter(3 + i)
+            date_list_col = get_column_letter(3 + i)
+            row_date = f"{get_column_letter(cf_start_col)}{row}"
+            payment_date_range = f"${date_list_col}$17:${date_list_col}$120"
+            maturity_date = f"${input_col}$9"
+            outstanding = f"${input_col}$10"
+            coupon = f"${input_col}$11"
+            frequency = f"${input_col}$12"
 
-            maturity_date = f"${input_col}$11"
-            outstanding = f"${input_col}$12"
-            coupon = f"${input_col}$13"
-            coupon_months = f"${input_col}$14"
-            payment_day = f"${input_col}$15"
-            frequency = f"${input_col}$16"
-
-            # Simple rule:
-            # Cash flow appears only when:
-            # 1) The row is a business day.
-            # 2) The month is one of the coupon payment months.
-            # 3) The row is the first business day on or after the payment day.
-            # 4) The date is on or before maturity.
-            # Principal is added on the adjusted maturity settlement date.
             formula = (
-                f'=IF($B{row}<>"BD",0,'
-                f'IF(A{row}>{maturity_date},0,'
-                f'IF(ISNUMBER(SEARCH(","&MONTH(A{row})&",",","&{coupon_months}&",")),'
-                f'IF(A{row}=WORKDAY(DATE(YEAR(A{row}),MONTH(A{row}),{payment_day})-1,1,$G$22:$G$200),'
-                f'({outstanding}*{coupon}/{frequency})'
-                f'+IF(A{row}=WORKDAY({maturity_date}-1,1,$G$22:$G$200),{outstanding},0),'
-                f'0),'
-                f'IF(A{row}=WORKDAY({maturity_date}-1,1,$G$22:$G$200),{outstanding},0)'
-                f')))' 
+                f'=IF(COUNTIF({payment_date_range},{row_date})>0,'
+                f'{outstanding}*{coupon}/{frequency},0)'
+                f'+IF({row_date}={maturity_date},{outstanding},0)'
             )
-            ws.cell(row, cf_col, formula)
+            ws.cell(row, instrument_cf_col, formula)
 
-        total_col = 3 + len(instruments)
-        ws.cell(row, total_col, f"=SUM(C{row}:{get_column_letter(total_col-1)}{row})")
+        total_col = cf_start_col + 2 + len(instruments)
+        first_inst_col = get_column_letter(cf_start_col + 2)
+        last_inst_col = get_column_letter(total_col - 1)
+        ws.cell(row, total_col, f"=SUM({first_inst_col}{row}:{last_inst_col}{row})")
+
         current += timedelta(days=1)
         row += 1
 
-    widths = {"A": 16, "B": 16, "C": 18, "D": 18, "E": 18, "F": 18, "G": 18}
-    for col, width in widths.items():
-        ws.column_dimensions[col].width = width
+    # Formatting
+    for col in range(1, total_col + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 16
+    ws.column_dimensions["B"].width = 22
 
     for r in range(1, row):
-        for c in range(1, holiday_col + 1):
+        for c in range(1, total_col + 1):
             ws.cell(r, c).border = border
 
     ws["C3"].number_format = "dd-mmm-yyyy"
     ws["C4"].number_format = "dd-mmm-yyyy"
 
-    for col in range(3, 6):
-        ws.cell(10, col).number_format = "dd-mmm-yyyy"
-        ws.cell(11, col).number_format = "dd-mmm-yyyy"
-        ws.cell(12, col).number_format = "#,##0"
-        ws.cell(13, col).number_format = "0.00%"
+    for col in range(3, 3 + len(instruments)):
+        ws.cell(9, col).number_format = "dd-mmm-yyyy"
+        ws.cell(10, col).number_format = "#,##0"
+        ws.cell(11, col).number_format = "0.00%"
+        for r in range(17, 121):
+            ws.cell(r, col).number_format = "dd-mmm-yyyy"
 
-    for r in range(cf_header_row + 1, row):
-        ws.cell(r, 1).number_format = "dd-mmm-yyyy"
-        for c in range(3, 3 + len(instruments) + 1):
-            ws.cell(r, c).number_format = '#,##0.00;[Red](#,##0.00);-'
-
-    for r in range(22, 200):
+    for r in range(32, 201):
         ws.cell(r, holiday_col).number_format = "dd-mmm-yyyy"
 
-    ws.freeze_panes = "A22"
+    for r in range(cf_start_row + 1, row):
+        ws.cell(r, cf_start_col).number_format = "dd-mmm-yyyy"
+        for c in range(cf_start_col + 2, total_col + 1):
+            ws.cell(r, c).number_format = '#,##0.00;[Red](#,##0.00);-'
 
-    last_col = get_column_letter(3 + len(instruments))
-    tab = Table(displayName="CashFlowTable", ref=f"A21:{last_col}{row-1}")
+    ws.freeze_panes = "H6"
+
+    # Excel table only around cashflow grid
+    last_col = get_column_letter(total_col)
+    first_col = get_column_letter(cf_start_col)
+    tab = Table(displayName="CashFlowTable", ref=f"{first_col}{cf_start_row}:{last_col}{row-1}")
     style = TableStyleInfo(name="TableStyleMedium2", showFirstColumn=False, showLastColumn=False, showRowStripes=True, showColumnStripes=False)
     tab.tableStyleInfo = style
     ws.add_table(tab)
