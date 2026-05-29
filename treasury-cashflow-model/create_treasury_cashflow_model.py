@@ -8,16 +8,6 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 OUTPUT_FILE = "treasury_cashflow_model.xlsx"
 
 
-def is_business_day(d, holidays):
-    return d.weekday() < 5 and d not in holidays
-
-
-def following_business_day(d, holidays):
-    while not is_business_day(d, holidays):
-        d += timedelta(days=1)
-    return d
-
-
 def build_workbook():
     wb = Workbook()
     ws = wb.active
@@ -30,6 +20,9 @@ def build_workbook():
     thin = Side(style="thin", color="D9D9D9")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # -----------------------------
+    # Inputs
+    # -----------------------------
     ws["B3"] = "Start Date"
     ws["C3"] = date(2026, 5, 29)
     ws["B4"] = "End Date"
@@ -60,6 +53,10 @@ def build_workbook():
         for idx, value in enumerate(inst, start=7):
             ws.cell(idx, col_offset, value)
 
+    # -----------------------------
+    # Coupon payment dates input
+    # User enters business-adjusted coupon payment dates here.
+    # -----------------------------
     ws["B14"] = "Coupon Payment Dates"
     ws["B14"].font = bold_font
 
@@ -73,14 +70,17 @@ def build_workbook():
         ws.cell(payment_header_row, i).fill = navy
 
     sample_payment_dates = {
-        3: [date(2026, 5, 19), date(2026, 11, 19)],
+        3: [date(2026, 11, 19)],
         4: [date(2026, 9, 15), date(2027, 3, 15), date(2027, 9, 15)],
-        5: [date(2026, 11, 14), date(2027, 5, 14), date(2027, 11, 14), date(2028, 5, 14)],
+        5: [date(2026, 11, 16), date(2027, 5, 14), date(2027, 11, 15), date(2028, 5, 15)],
     }
     for col, dates in sample_payment_dates.items():
         for r_offset, d in enumerate(dates, start=payment_start_row):
             ws.cell(r_offset, col, d)
 
+    # -----------------------------
+    # Cash flow table starts at H5
+    # -----------------------------
     cf_start_row = 5
     cf_start_col = 8  # H
     total_col = cf_start_col + 2 + len(instruments)
@@ -92,9 +92,13 @@ def build_workbook():
         cell.fill = navy
         cell.alignment = Alignment(horizontal="center")
 
+    # Holiday table on right side of cashflow table.
+    # It is used only to label Day Type. Coupon dates should already be entered as payment dates.
     holiday_col = total_col + 2
     holiday_col_letter = get_column_letter(holiday_col)
     holiday_data_start_row = cf_start_row + 1
+    holiday_end_row = 500
+    holiday_range = f"${holiday_col_letter}${holiday_data_start_row}:${holiday_col_letter}${holiday_end_row}"
 
     ws.cell(cf_start_row, holiday_col, "Holiday Date")
     ws.cell(cf_start_row, holiday_col).font = white_font
@@ -113,35 +117,48 @@ def build_workbook():
     for r, h in enumerate(sample_holidays, start=holiday_data_start_row):
         ws.cell(r, holiday_col, h)
 
-    holidays = set(sample_holidays)
-
-    # Pre-calculate adjusted coupon and principal settlement dates in Python.
-    # This removes WORKDAY formulas from Excel and avoids #NUM! errors.
-    adjusted_coupon_dates = []
-    adjusted_maturity_dates = []
-    for idx, inst in enumerate(instruments, start=3):
-        contractual_dates = sample_payment_dates.get(idx, [])
-        adjusted_coupon_dates.append({following_business_day(d, holidays) for d in contractual_dates})
-        adjusted_maturity_dates.append(following_business_day(inst[2], holidays))
-
+    # -----------------------------
+    # Daily cash flow rows with formulas
+    # -----------------------------
     start_date = ws["C3"].value
     end_date = ws["C4"].value
     current = start_date
     row = cf_start_row + 1
 
+    date_col_letter = get_column_letter(cf_start_col)
+    day_type_col_letter = get_column_letter(cf_start_col + 1)
+
     while current <= end_date:
         ws.cell(row, cf_start_col, current)
-        day_type = "HOL" if current in holidays else "WE" if current.weekday() >= 5 else "BD"
-        ws.cell(row, cf_start_col + 1, day_type)
 
-        for i, inst in enumerate(instruments):
-            cf = 0
-            if day_type == "BD":
-                if current in adjusted_coupon_dates[i]:
-                    cf += inst[4]
-                if current == adjusted_maturity_dates[i]:
-                    cf += inst[3]
-            ws.cell(row, cf_start_col + 2 + i, cf)
+        # Day type formula only. It does not drive errors.
+        ws.cell(
+            row,
+            cf_start_col + 1,
+            f'=IF(COUNTIF({holiday_range},{date_col_letter}{row})>0,"HOL",IF(WEEKDAY({date_col_letter}{row},2)>5,"WE","BD"))'
+        )
+
+        for i in range(len(instruments)):
+            instrument_cf_col = cf_start_col + 2 + i
+            input_col = get_column_letter(3 + i)
+            payment_date_col = get_column_letter(3 + i)
+
+            row_date = f"{date_col_letter}{row}"
+            payment_date_range = f"${payment_date_col}${payment_start_row}:${payment_date_col}${payment_end_row}"
+            maturity_date = f"${input_col}$9"
+            outstanding = f"${input_col}$10"
+            coupon_amount = f"${input_col}$11"
+
+            # Simple formula:
+            # User enters final business-day payment dates.
+            # Coupon cash flow appears if row date is in coupon payment date list.
+            # Principal appears if row date equals maturity date.
+            # No WORKDAY formula is used, avoiding #NUM errors.
+            formula = (
+                f'=IF(COUNTIF({payment_date_range},{row_date})>0,{coupon_amount},0)'
+                f'+IF({row_date}={maturity_date},{outstanding},0)'
+            )
+            ws.cell(row, instrument_cf_col, formula)
 
         first_inst_col = get_column_letter(cf_start_col + 2)
         last_inst_col = get_column_letter(total_col - 1)
@@ -150,6 +167,9 @@ def build_workbook():
         current += timedelta(days=1)
         row += 1
 
+    # -----------------------------
+    # Formatting
+    # -----------------------------
     last_used_col = holiday_col
     for col in range(1, last_used_col + 1):
         ws.column_dimensions[get_column_letter(col)].width = 16
@@ -170,7 +190,7 @@ def build_workbook():
         for r in range(payment_start_row, payment_end_row + 1):
             ws.cell(r, col).number_format = "dd-mmm-yyyy"
 
-    for r in range(holiday_data_start_row, holiday_data_start_row + len(sample_holidays)):
+    for r in range(holiday_data_start_row, holiday_end_row + 1):
         ws.cell(r, holiday_col).number_format = "dd-mmm-yyyy"
 
     for r in range(cf_start_row + 1, row):
