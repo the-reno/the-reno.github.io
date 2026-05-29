@@ -8,100 +8,6 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 OUTPUT_FILE = "treasury_cashflow_model.xlsx"
 
 
-def add_months(d, months):
-    month = d.month - 1 + months
-    year = d.year + month // 12
-    month = month % 12 + 1
-    days_in_month = [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    day = min(d.day, days_in_month[month - 1])
-    return date(year, month, day)
-
-
-def is_business_day(d, holidays):
-    return d.weekday() < 5 and d not in holidays
-
-
-def adjust_business_day(d, holidays, convention="Following"):
-    convention = convention.lower()
-
-    if is_business_day(d, holidays):
-        return d
-
-    if convention == "preceding":
-        while not is_business_day(d, holidays):
-            d -= timedelta(days=1)
-        return d
-
-    if convention == "modified following":
-        original_month = d.month
-        adjusted = d
-        while not is_business_day(adjusted, holidays):
-            adjusted += timedelta(days=1)
-        if adjusted.month != original_month:
-            adjusted = d
-            while not is_business_day(adjusted, holidays):
-                adjusted -= timedelta(days=1)
-        return adjusted
-
-    # default: Following
-    while not is_business_day(d, holidays):
-        d += timedelta(days=1)
-    return d
-
-
-def year_fraction_30_360_us(start, end):
-    d1 = min(start.day, 30)
-    d2 = end.day
-    if d1 == 30 and d2 == 31:
-        d2 = 30
-    return ((end.year - start.year) * 360 + (end.month - start.month) * 30 + (d2 - d1)) / 360
-
-
-def year_fraction_act_360(start, end):
-    return (end - start).days / 360
-
-
-def year_fraction_act_365(start, end):
-    return (end - start).days / 365
-
-
-def year_fraction(start, end, day_count):
-    dc = str(day_count).upper().replace(" ", "")
-    if dc in ["30/360", "30/360US", "BOND"]:
-        return year_fraction_30_360_us(start, end)
-    if dc in ["ACT/360", "ACTUAL/360"]:
-        return year_fraction_act_360(start, end)
-    if dc in ["ACT/365", "ACTUAL/365"]:
-        return year_fraction_act_365(start, end)
-    return year_fraction_30_360_us(start, end)
-
-
-def generate_coupon_cashflows(issue_date, first_coupon, maturity_date, outstanding, coupon, freq_months, day_count, holidays, business_day_convention):
-    flows = {}
-    prev_coupon = issue_date
-    scheduled_coupon = first_coupon
-
-    while scheduled_coupon <= maturity_date:
-        accrual_start = prev_coupon
-        accrual_end = scheduled_coupon
-        yf = year_fraction(accrual_start, accrual_end, day_count)
-        coupon_amount = outstanding * coupon * yf
-
-        scheduled_payment = scheduled_coupon
-        settlement_date = adjust_business_day(scheduled_payment, holidays, business_day_convention)
-
-        amount = coupon_amount
-        if scheduled_coupon == maturity_date:
-            amount += outstanding
-
-        flows[settlement_date] = flows.get(settlement_date, 0) + amount
-
-        prev_coupon = scheduled_coupon
-        scheduled_coupon = add_months(scheduled_coupon, freq_months)
-
-    return flows
-
-
 def build_workbook():
     wb = Workbook()
     ws = wb.active
@@ -130,7 +36,7 @@ def build_workbook():
         "Coupon": 13,
         "Freq. Months": 14,
         "First Coupon Date": 15,
-        "Day Count": 16,
+        "Day Count Base": 16,
         "Business Day Convention": 17,
     }
 
@@ -140,58 +46,16 @@ def build_workbook():
         ws.cell(row, 2).fill = light_blue
 
     instruments = [
-        {
-            "name": "Bond A",
-            "id": "ID-A",
-            "issue": date(2021, 11, 19),
-            "maturity": date(2026, 11, 19),
-            "outstanding": 500_000_000,
-            "coupon": 0.0350,
-            "freq_months": 6,
-            "first_coupon": date(2022, 5, 19),
-            "day_count": "30/360",
-            "business_day_convention": "Following",
-        },
-        {
-            "name": "Bond B",
-            "id": "ID-B",
-            "issue": date(2022, 9, 15),
-            "maturity": date(2027, 9, 15),
-            "outstanding": 475_000_000,
-            "coupon": 0.0400,
-            "freq_months": 6,
-            "first_coupon": date(2023, 3, 15),
-            "day_count": "30/360",
-            "business_day_convention": "Following",
-        },
-        {
-            "name": "Bond C",
-            "id": "ID-C",
-            "issue": date(2024, 5, 14),
-            "maturity": date(2034, 5, 14),
-            "outstanding": 300_000_000,
-            "coupon": 0.0550,
-            "freq_months": 6,
-            "first_coupon": date(2024, 11, 14),
-            "day_count": "30/360",
-            "business_day_convention": "Following",
-        },
+        ["Bond A", "ID-A", date(2021, 11, 19), date(2026, 11, 19), 500_000_000, 0.0350, 6, date(2022, 5, 19), 360, "Following"],
+        ["Bond B", "ID-B", date(2022, 9, 15), date(2027, 9, 15), 475_000_000, 0.0400, 6, date(2023, 3, 15), 360, "Following"],
+        ["Bond C", "ID-C", date(2024, 5, 14), date(2034, 5, 14), 300_000_000, 0.0550, 6, date(2024, 11, 14), 360, "Following"],
     ]
 
-    start_col = 3
-    for i, inst in enumerate(instruments):
-        col = start_col + i
-        ws.cell(input_rows["Name"], col, inst["name"])
-        ws.cell(input_rows["Identifier / CUSIP"], col, inst["id"])
-        ws.cell(input_rows["Issue Date"], col, inst["issue"])
-        ws.cell(input_rows["Maturity Date"], col, inst["maturity"])
-        ws.cell(input_rows["Outstanding"], col, inst["outstanding"])
-        ws.cell(input_rows["Coupon"], col, inst["coupon"])
-        ws.cell(input_rows["Freq. Months"], col, inst["freq_months"])
-        ws.cell(input_rows["First Coupon Date"], col, inst["first_coupon"])
-        ws.cell(input_rows["Day Count"], col, inst["day_count"])
-        ws.cell(input_rows["Business Day Convention"], col, inst["business_day_convention"])
+    for col_offset, inst in enumerate(instruments, start=3):
+        for idx, value in enumerate(inst, start=8):
+            ws.cell(idx, col_offset, value)
 
+    # Holiday calendar, kept beside the cash-flow grid
     holiday_col = 7
     ws.cell(21, holiday_col, "Holiday Date")
     ws.cell(21, holiday_col).font = bold_font
@@ -209,41 +73,65 @@ def build_workbook():
     for r, h in enumerate(sample_holidays, start=22):
         ws.cell(r, holiday_col, h)
 
-    holidays = set(sample_holidays)
-    instrument_flows = []
-    for inst in instruments:
-        flows = generate_coupon_cashflows(
-            issue_date=inst["issue"],
-            first_coupon=inst["first_coupon"],
-            maturity_date=inst["maturity"],
-            outstanding=inst["outstanding"],
-            coupon=inst["coupon"],
-            freq_months=inst["freq_months"],
-            day_count=inst["day_count"],
-            holidays=holidays,
-            business_day_convention=inst["business_day_convention"],
-        )
-        instrument_flows.append(flows)
-
+    # Cash-flow grid
     cf_header_row = 21
-    headers = ["Date", "Day Type"] + [inst["name"] for inst in instruments] + ["Total"]
+    headers = ["Date", "Day Type"] + [x[0] for x in instruments] + ["Total"]
     for c, h in enumerate(headers, start=1):
         ws.cell(cf_header_row, c, h)
         ws.cell(cf_header_row, c).font = white_font
         ws.cell(cf_header_row, c).fill = navy
         ws.cell(cf_header_row, c).alignment = Alignment(horizontal="center")
 
-    start_date = ws["C3"].value
+    current = ws["C3"].value
     end_date = ws["C4"].value
-    current = start_date
     row = cf_header_row + 1
 
     while current <= end_date:
         ws.cell(row, 1, current)
         ws.cell(row, 2, f'=IF(COUNTIF($G$22:$G$200,A{row})>0,"HOL",IF(WEEKDAY(A{row},2)>5,"WE","BD"))')
 
-        for i, flows in enumerate(instrument_flows):
-            ws.cell(row, 3 + i, flows.get(current, 0))
+        for i in range(len(instruments)):
+            cf_col = 3 + i
+            input_col = get_column_letter(cf_col)
+
+            issue_date = f"${input_col}$10"
+            maturity_date = f"${input_col}$11"
+            outstanding = f"${input_col}$12"
+            coupon = f"${input_col}$13"
+            freq_months = f"${input_col}$14"
+            first_coupon = f"${input_col}$15"
+            day_count_base = f"${input_col}$16"
+
+            # Formula objective:
+            # - Zero before first coupon and after maturity.
+            # - Coupon only when the row date is an adjusted settlement date.
+            # - Coupon amount uses actual days in the coupon period divided by Day Count Base.
+            # - Maturity date includes principal.
+            # - Settlement adjustment: simple Following convention using Day Type.
+            #
+            # Helper logic inside formula:
+            # Scheduled coupon date is valid when:
+            #   DAY(date)=DAY(first coupon) and months elapsed from first coupon is multiple of Freq. Months.
+            # Payment settles on first business day on/after scheduled date.
+            formula = (
+                f'=IF(A{row}<{first_coupon},0,'
+                f'IF(A{row}>WORKDAY({maturity_date}-1,1,$G$22:$G$200),0,'
+                f'LET('
+                f'd,A{row},'
+                f'fc,{first_coupon},'
+                f'mat,{maturity_date},'
+                f'freq,{freq_months},'
+                f'prev,EDATE(d,-freq),'
+                f'is_coupon_period,AND(DAY(d)>=1,MOD(DATEDIF(fc,d,"m"),freq)=0),'
+                f'scheduled,IF(d=WORKDAY(mat-1,1,$G$22:$G$200),mat,IF(is_coupon_period,d,0)),'
+                f'adj,IF(scheduled=0,0,WORKDAY(scheduled-1,1,$G$22:$G$200)),'
+                f'period_start,IF(scheduled=fc,{issue_date},EDATE(scheduled,-freq)),'
+                f'coupon_cf,IF(d=adj,{outstanding}*{coupon}*((scheduled-period_start)/{day_count_base}),0),'
+                f'principal_cf,IF(d=WORKDAY(mat-1,1,$G$22:$G$200),{outstanding},0),'
+                f'coupon_cf+principal_cf'
+                f'))'
+            )
+            ws.cell(row, cf_col, formula)
 
         total_col = 3 + len(instruments)
         ws.cell(row, total_col, f"=SUM(C{row}:{get_column_letter(total_col-1)}{row})")
