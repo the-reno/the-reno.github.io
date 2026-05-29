@@ -34,10 +34,9 @@ def build_workbook():
         "Maturity Date": 11,
         "Outstanding": 12,
         "Coupon": 13,
-        "Freq. Months": 14,
-        "First Coupon Date": 15,
-        "Day Count Base": 16,
-        "Business Day Convention": 17,
+        "Coupon Months": 14,
+        "Payment Day": 15,
+        "Frequency": 16,
     }
 
     for label, row in input_rows.items():
@@ -46,16 +45,15 @@ def build_workbook():
         ws.cell(row, 2).fill = light_blue
 
     instruments = [
-        ["Bond A", "ID-A", date(2021, 11, 19), date(2026, 11, 19), 500_000_000, 0.0350, 6, date(2022, 5, 19), 360, "Following"],
-        ["Bond B", "ID-B", date(2022, 9, 15), date(2027, 9, 15), 475_000_000, 0.0400, 6, date(2023, 3, 15), 360, "Following"],
-        ["Bond C", "ID-C", date(2024, 5, 14), date(2034, 5, 14), 300_000_000, 0.0550, 6, date(2024, 11, 14), 360, "Following"],
+        ["Bond A", "ID-A", date(2021, 11, 19), date(2026, 11, 19), 500_000_000, 0.0350, "5,11", 19, 2],
+        ["Bond B", "ID-B", date(2022, 9, 15), date(2027, 9, 15), 475_000_000, 0.0400, "3,9", 15, 2],
+        ["Bond C", "ID-C", date(2024, 5, 14), date(2034, 5, 14), 300_000_000, 0.0550, "5,11", 14, 2],
     ]
 
     for col_offset, inst in enumerate(instruments, start=3):
         for idx, value in enumerate(inst, start=8):
             ws.cell(idx, col_offset, value)
 
-    # Holiday calendar, kept beside the cash-flow grid
     holiday_col = 7
     ws.cell(21, holiday_col, "Holiday Date")
     ws.cell(21, holiday_col).font = bold_font
@@ -73,7 +71,6 @@ def build_workbook():
     for r, h in enumerate(sample_holidays, start=22):
         ws.cell(r, holiday_col, h)
 
-    # Cash-flow grid
     cf_header_row = 21
     headers = ["Date", "Day Type"] + [x[0] for x in instruments] + ["Total"]
     for c, h in enumerate(headers, start=1):
@@ -94,42 +91,30 @@ def build_workbook():
             cf_col = 3 + i
             input_col = get_column_letter(cf_col)
 
-            issue_date = f"${input_col}$10"
             maturity_date = f"${input_col}$11"
             outstanding = f"${input_col}$12"
             coupon = f"${input_col}$13"
-            freq_months = f"${input_col}$14"
-            first_coupon = f"${input_col}$15"
-            day_count_base = f"${input_col}$16"
+            coupon_months = f"${input_col}$14"
+            payment_day = f"${input_col}$15"
+            frequency = f"${input_col}$16"
 
-            # Formula objective:
-            # - Zero before first coupon and after maturity.
-            # - Coupon only when the row date is an adjusted settlement date.
-            # - Coupon amount uses actual days in the coupon period divided by Day Count Base.
-            # - Maturity date includes principal.
-            # - Settlement adjustment: simple Following convention using Day Type.
-            #
-            # Helper logic inside formula:
-            # Scheduled coupon date is valid when:
-            #   DAY(date)=DAY(first coupon) and months elapsed from first coupon is multiple of Freq. Months.
-            # Payment settles on first business day on/after scheduled date.
+            # Simple rule:
+            # Cash flow appears only when:
+            # 1) The row is a business day.
+            # 2) The month is one of the coupon payment months.
+            # 3) The row is the first business day on or after the payment day.
+            # 4) The date is on or before maturity.
+            # Principal is added on the adjusted maturity settlement date.
             formula = (
-                f'=IF(A{row}<{first_coupon},0,'
-                f'IF(A{row}>WORKDAY({maturity_date}-1,1,$G$22:$G$200),0,'
-                f'LET('
-                f'd,A{row},'
-                f'fc,{first_coupon},'
-                f'mat,{maturity_date},'
-                f'freq,{freq_months},'
-                f'prev,EDATE(d,-freq),'
-                f'is_coupon_period,AND(DAY(d)>=1,MOD(DATEDIF(fc,d,"m"),freq)=0),'
-                f'scheduled,IF(d=WORKDAY(mat-1,1,$G$22:$G$200),mat,IF(is_coupon_period,d,0)),'
-                f'adj,IF(scheduled=0,0,WORKDAY(scheduled-1,1,$G$22:$G$200)),'
-                f'period_start,IF(scheduled=fc,{issue_date},EDATE(scheduled,-freq)),'
-                f'coupon_cf,IF(d=adj,{outstanding}*{coupon}*((scheduled-period_start)/{day_count_base}),0),'
-                f'principal_cf,IF(d=WORKDAY(mat-1,1,$G$22:$G$200),{outstanding},0),'
-                f'coupon_cf+principal_cf'
-                f'))'
+                f'=IF($B{row}<>"BD",0,'
+                f'IF(A{row}>{maturity_date},0,'
+                f'IF(ISNUMBER(SEARCH(","&MONTH(A{row})&",",","&{coupon_months}&",")),'
+                f'IF(A{row}=WORKDAY(DATE(YEAR(A{row}),MONTH(A{row}),{payment_day})-1,1,$G$22:$G$200),'
+                f'({outstanding}*{coupon}/{frequency})'
+                f'+IF(A{row}=WORKDAY({maturity_date}-1,1,$G$22:$G$200),{outstanding},0),'
+                f'0),'
+                f'IF(A{row}=WORKDAY({maturity_date}-1,1,$G$22:$G$200),{outstanding},0)'
+                f')))' 
             )
             ws.cell(row, cf_col, formula)
 
@@ -138,7 +123,7 @@ def build_workbook():
         current += timedelta(days=1)
         row += 1
 
-    widths = {"A": 16, "B": 26, "C": 18, "D": 18, "E": 18, "F": 18, "G": 18}
+    widths = {"A": 16, "B": 16, "C": 18, "D": 18, "E": 18, "F": 18, "G": 18}
     for col, width in widths.items():
         ws.column_dimensions[col].width = width
 
@@ -146,15 +131,14 @@ def build_workbook():
         for c in range(1, holiday_col + 1):
             ws.cell(r, c).border = border
 
-    for r in range(3, 5):
-        ws.cell(r, 3).number_format = "dd-mmm-yyyy"
+    ws["C3"].number_format = "dd-mmm-yyyy"
+    ws["C4"].number_format = "dd-mmm-yyyy"
 
     for col in range(3, 6):
         ws.cell(10, col).number_format = "dd-mmm-yyyy"
         ws.cell(11, col).number_format = "dd-mmm-yyyy"
         ws.cell(12, col).number_format = "#,##0"
         ws.cell(13, col).number_format = "0.00%"
-        ws.cell(15, col).number_format = "dd-mmm-yyyy"
 
     for r in range(cf_header_row + 1, row):
         ws.cell(r, 1).number_format = "dd-mmm-yyyy"
