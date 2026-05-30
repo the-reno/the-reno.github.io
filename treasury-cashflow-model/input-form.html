@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Treasury Cash Flow Model - Input Form</title>
+  <title>Treasury Cash Flow Model</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; color: #1f2933; }
     header { background: #17365d; color: white; padding: 24px 32px; }
-    main { max-width: 1200px; margin: 24px auto; padding: 0 24px 48px; }
+    main { max-width: 1250px; margin: 24px auto; padding: 0 24px 48px; }
     section { background: white; border: 1px solid #d9e2ec; border-radius: 10px; margin-bottom: 24px; padding: 20px; }
     h1, h2 { margin-top: 0; }
     h2 { color: #17365d; font-size: 18px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
@@ -15,21 +15,26 @@
     label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }
     input, select, textarea { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #bcccdc; border-radius: 6px; font-size: 14px; background: #fff; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-    th { background: #17365d; color: white; text-align: left; padding: 9px; }
+    th { background: #17365d; color: white; text-align: left; padding: 9px; position: sticky; top: 0; }
     td { border: 1px solid #d9e2ec; padding: 6px; vertical-align: top; }
     td input, td select { border: 0; padding: 6px; background: transparent; }
     .note { color: #52606d; font-size: 13px; margin-top: 8px; }
     .actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
     button { background: #17365d; color: white; border: 0; border-radius: 6px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
     button.secondary { background: #627d98; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } main { padding: 0 12px 32px; } }
+    .result-wrap { max-height: 520px; overflow: auto; border: 1px solid #d9e2ec; border-radius: 8px; margin-top: 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 12px; margin-top: 12px; }
+    .metric { background: #f0f4f8; border: 1px solid #d9e2ec; border-radius: 8px; padding: 12px; }
+    .metric b { display: block; font-size: 12px; color: #52606d; margin-bottom: 4px; }
+    .error { background: #fff5f5; color: #9b2c2c; border: 1px solid #feb2b2; padding: 10px; border-radius: 8px; margin-top: 12px; }
+    @media (max-width: 900px) { .grid, .summary-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .grid, .summary-grid { grid-template-columns: 1fr; } main { padding: 0 12px 32px; } }
   </style>
 </head>
 <body>
   <header>
     <h1>Treasury Cash Flow Model</h1>
-    <p>Input form for debt cash flows, ON deposits, Fed scenarios, and IRS hedge allocations.</p>
+    <p>Input form and first calculation layer: daily debt cash flows by instrument.</p>
   </header>
 
   <main>
@@ -50,14 +55,7 @@
         <h2>2. Fed Rate Scenarios</h2>
         <p class="note">User defines the number of scenarios. Each scenario is a column. Enter expected moves in basis points for each Fed meeting date.</p>
         <table id="fedScenarioTable">
-          <thead>
-            <tr id="fedScenarioHeader">
-              <th>Meeting Date</th>
-              <th><input type="text" class="scenario-name" value="Base Case" /></th>
-              <th><input type="text" class="scenario-name" value="Higher for Longer" /></th>
-              <th><input type="text" class="scenario-name" value="Fast Cuts" /></th>
-            </tr>
-          </thead>
+          <thead><tr id="fedScenarioHeader"><th>Meeting Date</th><th><input type="text" class="scenario-name" value="Base Case" /></th><th><input type="text" class="scenario-name" value="Higher for Longer" /></th><th><input type="text" class="scenario-name" value="Fast Cuts" /></th></tr></thead>
           <tbody>
             <tr><td><input type="date" name="fedMeetingDate[]" value="2026-06-17" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
             <tr><td><input type="date" name="fedMeetingDate[]" value="2026-07-29" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
@@ -71,7 +69,7 @@
 
       <section>
         <h2>3. Debt Instruments</h2>
-        <p class="note">Generic exercise data only. Do not enter real client, counterparty, or institution names.</p>
+        <p class="note">Generic exercise data only. Instrument ID must match the Coupon Schedule and IRS tables.</p>
         <table id="debtTable"><thead><tr><th>Instrument ID</th><th>Maturity Date</th><th>Outstanding</th><th>Coupon Amount</th></tr></thead><tbody>
           <tr><td><input type="text" name="instrumentId[]" value="Bond A" /></td><td><input type="date" name="maturityDate[]" value="2026-11-19" /></td><td><input type="number" name="outstanding[]" step="1000000" value="500000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="8750000" /></td></tr>
           <tr><td><input type="text" name="instrumentId[]" value="Bond B" /></td><td><input type="date" name="maturityDate[]" value="2027-09-15" /></td><td><input type="number" name="outstanding[]" step="1000000" value="475000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="9500000" /></td></tr>
@@ -82,18 +80,29 @@
 
       <section>
         <h2>4. Coupon Schedule</h2>
-        <p class="note">Enter actual settlement dates for coupon payments. The engine will place cash flows on these dates.</p>
+        <p class="note">Enter actual settlement dates for coupon payments. Override is optional; blank uses the instrument default coupon amount.</p>
         <table id="couponTable"><thead><tr><th>Instrument ID</th><th>Payment Date</th><th>Coupon Amount Override</th></tr></thead><tbody>
           <tr><td><input type="text" name="couponInstrumentId[]" value="Bond A" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-11-19" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
           <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
           <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-03-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
           <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond C" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-11-16" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond C" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-05-14" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
         </tbody></table>
         <div class="actions"><button type="button" onclick="addRow('couponTable')">Add Coupon Date</button></div>
       </section>
 
       <section>
-        <h2>5. IRS Hedge Allocation</h2>
+        <h2>5. Daily Debt Cash Flow Model</h2>
+        <p class="note">This first model calculates daily debt cash outflows by instrument: coupon payments plus principal at maturity.</p>
+        <div class="actions"><button type="button" onclick="runDebtCashFlowModel()">Run Debt Cash Flow</button></div>
+        <div id="debtValidation"></div>
+        <div id="debtSummary" class="summary-grid"></div>
+        <div id="debtCashFlowOutput" class="result-wrap"></div>
+      </section>
+
+      <section>
+        <h2>6. IRS Hedge Allocation</h2>
         <table id="irsTable"><thead><tr><th>Instrument ID</th><th>Hedge %</th><th>Receive Fixed Rate (%)</th><th>Pay Floating Index</th><th>Spread (%)</th></tr></thead><tbody>
           <tr><td><input type="text" name="irsInstrumentId[]" value="Bond A" /></td><td><input type="number" name="hedgePercent[]" step="0.01" value="50" /></td><td><input type="number" name="receiveFixedRate[]" step="0.0001" value="3.50" /></td><td><select name="floatingIndex[]"><option value="SOFR" selected>SOFR</option></select></td><td><input type="number" name="irsSpread[]" step="0.0001" value="0.00" /></td></tr>
         </tbody></table>
@@ -101,20 +110,22 @@
       </section>
 
       <section>
-        <h2>6. Cash Allocation</h2><div class="grid"><div><label for="cashOnPercent">% Cash in ON Deposit</label><input id="cashOnPercent" name="cashOnPercent" type="number" step="0.01" value="100" /></div><div><label for="minLiquidityBuffer">Minimum Liquidity Buffer</label><input id="minLiquidityBuffer" name="minLiquidityBuffer" type="number" step="1000000" value="25000000" /></div></div>
+        <h2>7. Cash Allocation</h2><div class="grid"><div><label for="cashOnPercent">% Cash in ON Deposit</label><input id="cashOnPercent" name="cashOnPercent" type="number" step="0.01" value="100" /></div><div><label for="minLiquidityBuffer">Minimum Liquidity Buffer</label><input id="minLiquidityBuffer" name="minLiquidityBuffer" type="number" step="1000000" value="25000000" /></div></div>
       </section>
 
       <section>
-        <h2>7. Holiday Calendar</h2><table id="holidayTable"><thead><tr><th>Holiday Date</th><th>Description</th></tr></thead><tbody><tr><td><input type="date" name="holidayDate[]" value="2026-07-03" /></td><td><input type="text" name="holidayDescription[]" value="Holiday observed" /></td></tr></tbody></table><div class="actions"><button type="button" onclick="addRow('holidayTable')">Add Holiday</button></div>
+        <h2>8. Holiday Calendar</h2><table id="holidayTable"><thead><tr><th>Holiday Date</th><th>Description</th></tr></thead><tbody><tr><td><input type="date" name="holidayDate[]" value="2026-07-03" /></td><td><input type="text" name="holidayDescription[]" value="Holiday observed" /></td></tr></tbody></table><div class="actions"><button type="button" onclick="addRow('holidayTable')">Add Holiday</button></div>
       </section>
 
       <section>
-        <h2>Export</h2><p class="note">Pre-filled exercise form. Add scenario columns and meeting rows, then export JSON.</p><div class="actions"><button type="button" onclick="exportJson()">Export JSON</button><button class="secondary" type="reset">Reset</button></div><textarea id="jsonOutput" rows="14" placeholder="JSON output will appear here"></textarea>
+        <h2>Export</h2><p class="note">Export the current inputs as JSON for later model engines.</p><div class="actions"><button type="button" onclick="exportJson()">Export JSON</button><button class="secondary" type="reset">Reset</button></div><textarea id="jsonOutput" rows="14" placeholder="JSON output will appear here"></textarea>
       </section>
     </form>
   </main>
 
   <script>
+    const moneyFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+
     function addRow(tableId) {
       const table = document.getElementById(tableId).querySelector('tbody');
       const firstRow = table.querySelector('tr');
@@ -147,6 +158,122 @@
     }
 
     function formArray(formData, key) { return formData.getAll(key).filter((value) => value !== ''); }
+    function parseDate(value) { return value ? new Date(`${value}T00:00:00`) : null; }
+    function isoDate(d) { return d.toISOString().slice(0, 10); }
+    function addDays(d, days) { const x = new Date(d); x.setDate(x.getDate() + days); return x; }
+
+    function collectInputs() {
+      const form = document.getElementById('treasuryInputForm');
+      const fd = new FormData(form);
+      const ids = fd.getAll('instrumentId[]');
+      return {
+        globalAssumptions: {
+          startDate: fd.get('startDate'), endDate: fd.get('endDate'), initialCash: Number(fd.get('initialCash') || 0), initialSofrPercent: Number(fd.get('initialSofr') || 0), depositSpreadPercent: Number(fd.get('depositSpread') || 0), depositDayCount: fd.get('dayCount')
+        },
+        debtInstruments: ids.filter(Boolean).map((id, index) => ({
+          instrumentId: id.trim(), maturityDate: fd.getAll('maturityDate[]')[index] || '', outstanding: Number(fd.getAll('outstanding[]')[index] || 0), couponAmount: Number(fd.getAll('couponAmount[]')[index] || 0)
+        })),
+        couponSchedule: fd.getAll('couponInstrumentId[]').map((id, index) => ({
+          instrumentId: (id || '').trim(), paymentDate: fd.getAll('couponPaymentDate[]')[index] || '', couponAmountOverride: Number(fd.getAll('couponOverride[]')[index] || 0)
+        })).filter(x => x.instrumentId && x.paymentDate),
+        irsHedges: formArray(fd, 'irsInstrumentId[]').map((id, index) => ({ instrumentId: id, hedgePercent: Number(fd.getAll('hedgePercent[]')[index] || 0), receiveFixedRatePercent: Number(fd.getAll('receiveFixedRate[]')[index] || 0), floatingIndex: fd.getAll('floatingIndex[]')[index] || 'SOFR', spreadPercent: Number(fd.getAll('irsSpread[]')[index] || 0) })),
+        cashAllocation: { cashOnPercent: Number(fd.get('cashOnPercent') || 0), minLiquidityBuffer: Number(fd.get('minLiquidityBuffer') || 0) },
+        holidayCalendar: formArray(fd, 'holidayDate[]').map((date, index) => ({ holidayDate: date, description: fd.getAll('holidayDescription[]')[index] || '' })),
+        rateScenarios: exportFedScenarios()
+      };
+    }
+
+    function validateDebtInputs(data) {
+      const errors = [];
+      const start = parseDate(data.globalAssumptions.startDate);
+      const end = parseDate(data.globalAssumptions.endDate);
+      if (!start || !end || start > end) errors.push('Start Date must be before End Date.');
+      const ids = data.debtInstruments.map(x => x.instrumentId);
+      const unique = new Set(ids);
+      if (ids.length !== unique.size) errors.push('Debt Instrument IDs must be unique.');
+      data.debtInstruments.forEach(x => {
+        if (!x.instrumentId) errors.push('Each debt instrument needs an Instrument ID.');
+        if (!x.maturityDate) errors.push(`${x.instrumentId || 'Instrument'} needs a maturity date.`);
+        if (x.outstanding < 0) errors.push(`${x.instrumentId} outstanding cannot be negative.`);
+        if (x.couponAmount < 0) errors.push(`${x.instrumentId} coupon amount cannot be negative.`);
+      });
+      data.couponSchedule.forEach(x => { if (!unique.has(x.instrumentId)) errors.push(`Coupon schedule references missing instrument: ${x.instrumentId}.`); });
+      return errors;
+    }
+
+    function buildDailyDebtCashFlows(data) {
+      const start = parseDate(data.globalAssumptions.startDate);
+      const end = parseDate(data.globalAssumptions.endDate);
+      const instruments = data.debtInstruments;
+      const instrumentMap = new Map(instruments.map(x => [x.instrumentId, x]));
+      const couponByDate = new Map();
+      const principalByDate = new Map();
+
+      data.couponSchedule.forEach(item => {
+        const inst = instrumentMap.get(item.instrumentId);
+        if (!inst) return;
+        const amount = item.couponAmountOverride > 0 ? item.couponAmountOverride : inst.couponAmount;
+        const key = `${item.paymentDate}|${item.instrumentId}`;
+        couponByDate.set(key, (couponByDate.get(key) || 0) + amount);
+      });
+
+      instruments.forEach(inst => {
+        if (inst.maturityDate) principalByDate.set(`${inst.maturityDate}|${inst.instrumentId}`, inst.outstanding);
+      });
+
+      const rows = [];
+      for (let d = start; d <= end; d = addDays(d, 1)) {
+        const dateKey = isoDate(d);
+        const row = { date: dateKey, byInstrument: {}, total: 0 };
+        instruments.forEach(inst => {
+          const cf = (couponByDate.get(`${dateKey}|${inst.instrumentId}`) || 0) + (principalByDate.get(`${dateKey}|${inst.instrumentId}`) || 0);
+          row.byInstrument[inst.instrumentId] = cf;
+          row.total += cf;
+        });
+        rows.push(row);
+      }
+      return { instruments, rows };
+    }
+
+    function renderDebtCashFlow(result) {
+      const output = document.getElementById('debtCashFlowOutput');
+      const summary = document.getElementById('debtSummary');
+      const totalDebtCf = result.rows.reduce((sum, row) => sum + row.total, 0);
+      const eventRows = result.rows.filter(row => row.total !== 0);
+      const firstEvent = eventRows[0]?.date || '-';
+      const lastEvent = eventRows[eventRows.length - 1]?.date || '-';
+
+      summary.innerHTML = `
+        <div class="metric"><b>Total Debt Cash Flow</b>${moneyFmt.format(totalDebtCf)}</div>
+        <div class="metric"><b>Instruments</b>${result.instruments.length}</div>
+        <div class="metric"><b>Cash Flow Dates</b>${eventRows.length}</div>
+        <div class="metric"><b>First / Last Event</b>${firstEvent} / ${lastEvent}</div>`;
+
+      let html = '<table><thead><tr><th>Date</th>';
+      result.instruments.forEach(inst => html += `<th>${inst.instrumentId}</th>`);
+      html += '<th>Total</th></tr></thead><tbody>';
+      result.rows.forEach(row => {
+        html += `<tr><td>${row.date}</td>`;
+        result.instruments.forEach(inst => html += `<td>${row.byInstrument[inst.instrumentId] ? moneyFmt.format(row.byInstrument[inst.instrumentId]) : '-'}</td>`);
+        html += `<td>${row.total ? moneyFmt.format(row.total) : '-'}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      output.innerHTML = html;
+    }
+
+    function runDebtCashFlowModel() {
+      const data = collectInputs();
+      const errors = validateDebtInputs(data);
+      const validation = document.getElementById('debtValidation');
+      if (errors.length) {
+        validation.innerHTML = `<div class="error"><b>Validation errors</b><br>${errors.join('<br>')}</div>`;
+        document.getElementById('debtSummary').innerHTML = '';
+        document.getElementById('debtCashFlowOutput').innerHTML = '';
+        return;
+      }
+      validation.innerHTML = '';
+      renderDebtCashFlow(buildDailyDebtCashFlows(data));
+    }
 
     function exportFedScenarios() {
       const table = document.getElementById('fedScenarioTable');
@@ -161,17 +288,7 @@
     }
 
     function exportJson() {
-      const form = document.getElementById('treasuryInputForm');
-      const formData = new FormData(form);
-      const output = {
-        globalAssumptions: { startDate: formData.get('startDate'), endDate: formData.get('endDate'), initialCash: Number(formData.get('initialCash') || 0), initialSofrPercent: Number(formData.get('initialSofr') || 0), depositSpreadPercent: Number(formData.get('depositSpread') || 0), depositDayCount: formData.get('dayCount') },
-        rateScenarios: exportFedScenarios(),
-        debtInstruments: formArray(formData, 'instrumentId[]').map((id, index) => ({ instrumentId: id, maturityDate: formData.getAll('maturityDate[]')[index] || '', outstanding: Number(formData.getAll('outstanding[]')[index] || 0), couponAmount: Number(formData.getAll('couponAmount[]')[index] || 0) })),
-        couponSchedule: formArray(formData, 'couponInstrumentId[]').map((id, index) => ({ instrumentId: id, paymentDate: formData.getAll('couponPaymentDate[]')[index] || '', couponAmountOverride: Number(formData.getAll('couponOverride[]')[index] || 0) })),
-        irsHedges: formArray(formData, 'irsInstrumentId[]').map((id, index) => ({ instrumentId: id, hedgePercent: Number(formData.getAll('hedgePercent[]')[index] || 0), receiveFixedRatePercent: Number(formData.getAll('receiveFixedRate[]')[index] || 0), floatingIndex: formData.getAll('floatingIndex[]')[index] || 'SOFR', spreadPercent: Number(formData.getAll('irsSpread[]')[index] || 0) })),
-        cashAllocation: { cashOnPercent: Number(formData.get('cashOnPercent') || 0), minLiquidityBuffer: Number(formData.get('minLiquidityBuffer') || 0) },
-        holidayCalendar: formArray(formData, 'holidayDate[]').map((date, index) => ({ holidayDate: date, description: formData.getAll('holidayDescription[]')[index] || '' }))
-      };
+      const output = collectInputs();
       document.getElementById('jsonOutput').value = JSON.stringify(output, null, 2);
     }
   </script>
