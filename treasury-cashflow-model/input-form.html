@@ -19,7 +19,7 @@
     td { border: 1px solid #d9e2ec; padding: 6px; vertical-align: top; }
     td input, td select { border: 0; padding: 6px; background: transparent; }
     .note { color: #52606d; font-size: 13px; margin-top: 8px; }
-    .actions { display: flex; gap: 12px; margin-top: 16px; }
+    .actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
     button { background: #17365d; color: white; border: 0; border-radius: 6px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
     button.secondary { background: #627d98; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
@@ -48,94 +48,68 @@
 
       <section>
         <h2>2. Fed Rate Scenarios</h2>
-        <p class="note">User inputs expected moves for each meeting date in basis points. Each scenario runs independently using the cumulative path of those moves.</p>
+        <p class="note">User defines the number of scenarios. Each scenario is a column. Enter expected moves in basis points for each Fed meeting date.</p>
         <table id="fedScenarioTable">
           <thead>
-            <tr><th>Meeting Date</th><th>Base Case bps</th><th>Higher-for-Longer bps</th><th>Fast Cuts bps</th></tr>
+            <tr id="fedScenarioHeader">
+              <th>Meeting Date</th>
+              <th><input type="text" class="scenario-name" value="Base Case" /></th>
+              <th><input type="text" class="scenario-name" value="Higher for Longer" /></th>
+              <th><input type="text" class="scenario-name" value="Fast Cuts" /></th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-06-17" /></td><td><input type="number" name="baseBps[]" step="1" value="0" /></td><td><input type="number" name="upsideBps[]" step="1" value="0" /></td><td><input type="number" name="downsideBps[]" step="1" value="-25" /></td></tr>
-            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-07-29" /></td><td><input type="number" name="baseBps[]" step="1" value="-25" /></td><td><input type="number" name="upsideBps[]" step="1" value="0" /></td><td><input type="number" name="downsideBps[]" step="1" value="-25" /></td></tr>
-            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-09-16" /></td><td><input type="number" name="baseBps[]" step="1" value="0" /></td><td><input type="number" name="upsideBps[]" step="1" value="0" /></td><td><input type="number" name="downsideBps[]" step="1" value="-50" /></td></tr>
-            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-11-05" /></td><td><input type="number" name="baseBps[]" step="1" value="-25" /></td><td><input type="number" name="upsideBps[]" step="1" value="0" /></td><td><input type="number" name="downsideBps[]" step="1" value="-25" /></td></tr>
-            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-12-16" /></td><td><input type="number" name="baseBps[]" step="1" value="0" /></td><td><input type="number" name="upsideBps[]" step="1" value="-25" /></td><td><input type="number" name="downsideBps[]" step="1" value="-25" /></td></tr>
+            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-06-17" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
+            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-07-29" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
+            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-09-16" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-50" /></td></tr>
+            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-11-05" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
+            <tr><td><input type="date" name="fedMeetingDate[]" value="2026-12-16" /></td><td><input type="number" class="scenario-move" step="1" value="0" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td><td><input type="number" class="scenario-move" step="1" value="-25" /></td></tr>
           </tbody>
         </table>
-        <div class="actions"><button type="button" onclick="addRow('fedScenarioTable')">Add Meeting</button></div>
+        <div class="actions"><button type="button" onclick="addFedMeetingRow()">Add Meeting</button><button type="button" onclick="addFedScenarioColumn()">Add Scenario Column</button></div>
       </section>
 
       <section>
         <h2>3. Debt Instruments</h2>
         <p class="note">Generic exercise data only. Do not enter real client, counterparty, or institution names.</p>
-        <table id="debtTable">
-          <thead><tr><th>Instrument ID</th><th>Maturity Date</th><th>Outstanding</th><th>Coupon Amount</th></tr></thead>
-          <tbody>
-            <tr><td><input type="text" name="instrumentId[]" value="Bond A" /></td><td><input type="date" name="maturityDate[]" value="2026-11-19" /></td><td><input type="number" name="outstanding[]" step="1000000" value="500000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="8750000" /></td></tr>
-            <tr><td><input type="text" name="instrumentId[]" value="Bond B" /></td><td><input type="date" name="maturityDate[]" value="2027-09-15" /></td><td><input type="number" name="outstanding[]" step="1000000" value="475000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="9500000" /></td></tr>
-            <tr><td><input type="text" name="instrumentId[]" value="Bond C" /></td><td><input type="date" name="maturityDate[]" value="2029-11-14" /></td><td><input type="number" name="outstanding[]" step="1000000" value="300000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="8250000" /></td></tr>
-          </tbody>
-        </table>
+        <table id="debtTable"><thead><tr><th>Instrument ID</th><th>Maturity Date</th><th>Outstanding</th><th>Coupon Amount</th></tr></thead><tbody>
+          <tr><td><input type="text" name="instrumentId[]" value="Bond A" /></td><td><input type="date" name="maturityDate[]" value="2026-11-19" /></td><td><input type="number" name="outstanding[]" step="1000000" value="500000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="8750000" /></td></tr>
+          <tr><td><input type="text" name="instrumentId[]" value="Bond B" /></td><td><input type="date" name="maturityDate[]" value="2027-09-15" /></td><td><input type="number" name="outstanding[]" step="1000000" value="475000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="9500000" /></td></tr>
+          <tr><td><input type="text" name="instrumentId[]" value="Bond C" /></td><td><input type="date" name="maturityDate[]" value="2029-11-14" /></td><td><input type="number" name="outstanding[]" step="1000000" value="300000000" /></td><td><input type="number" name="couponAmount[]" step="1000" value="8250000" /></td></tr>
+        </tbody></table>
         <div class="actions"><button type="button" onclick="addRow('debtTable')">Add Instrument</button></div>
       </section>
 
       <section>
         <h2>4. Coupon Schedule</h2>
         <p class="note">Enter actual settlement dates for coupon payments. The engine will place cash flows on these dates.</p>
-        <table id="couponTable">
-          <thead><tr><th>Instrument ID</th><th>Payment Date</th><th>Coupon Amount Override</th></tr></thead>
-          <tbody>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond A" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-11-19" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-03-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond C" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-11-16" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond C" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-05-14" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-            <tr><td><input type="text" name="couponInstrumentId[]" value="Bond C" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-11-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
-          </tbody>
-        </table>
+        <table id="couponTable"><thead><tr><th>Instrument ID</th><th>Payment Date</th><th>Coupon Amount Override</th></tr></thead><tbody>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond A" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-11-19" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2026-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-03-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+          <tr><td><input type="text" name="couponInstrumentId[]" value="Bond B" /></td><td><input type="date" name="couponPaymentDate[]" value="2027-09-15" /></td><td><input type="number" name="couponOverride[]" step="1000" value="" /></td></tr>
+        </tbody></table>
         <div class="actions"><button type="button" onclick="addRow('couponTable')">Add Coupon Date</button></div>
       </section>
 
       <section>
         <h2>5. IRS Hedge Allocation</h2>
-        <table id="irsTable">
-          <thead><tr><th>Instrument ID</th><th>Hedge %</th><th>Receive Fixed Rate (%)</th><th>Pay Floating Index</th><th>Spread (%)</th></tr></thead>
-          <tbody>
-            <tr><td><input type="text" name="irsInstrumentId[]" value="Bond A" /></td><td><input type="number" name="hedgePercent[]" step="0.01" value="50" /></td><td><input type="number" name="receiveFixedRate[]" step="0.0001" value="3.50" /></td><td><select name="floatingIndex[]"><option value="SOFR" selected>SOFR</option></select></td><td><input type="number" name="irsSpread[]" step="0.0001" value="0.00" /></td></tr>
-            <tr><td><input type="text" name="irsInstrumentId[]" value="Bond B" /></td><td><input type="number" name="hedgePercent[]" step="0.01" value="25" /></td><td><input type="number" name="receiveFixedRate[]" step="0.0001" value="4.00" /></td><td><select name="floatingIndex[]"><option value="SOFR" selected>SOFR</option></select></td><td><input type="number" name="irsSpread[]" step="0.0001" value="0.00" /></td></tr>
-            <tr><td><input type="text" name="irsInstrumentId[]" value="Bond C" /></td><td><input type="number" name="hedgePercent[]" step="0.01" value="0" /></td><td><input type="number" name="receiveFixedRate[]" step="0.0001" value="5.50" /></td><td><select name="floatingIndex[]"><option value="SOFR" selected>SOFR</option></select></td><td><input type="number" name="irsSpread[]" step="0.0001" value="0.00" /></td></tr>
-          </tbody>
-        </table>
+        <table id="irsTable"><thead><tr><th>Instrument ID</th><th>Hedge %</th><th>Receive Fixed Rate (%)</th><th>Pay Floating Index</th><th>Spread (%)</th></tr></thead><tbody>
+          <tr><td><input type="text" name="irsInstrumentId[]" value="Bond A" /></td><td><input type="number" name="hedgePercent[]" step="0.01" value="50" /></td><td><input type="number" name="receiveFixedRate[]" step="0.0001" value="3.50" /></td><td><select name="floatingIndex[]"><option value="SOFR" selected>SOFR</option></select></td><td><input type="number" name="irsSpread[]" step="0.0001" value="0.00" /></td></tr>
+        </tbody></table>
         <div class="actions"><button type="button" onclick="addRow('irsTable')">Add Hedge</button></div>
       </section>
 
       <section>
-        <h2>6. Cash Allocation</h2>
-        <div class="grid">
-          <div><label for="cashOnPercent">% Cash in ON Deposit</label><input id="cashOnPercent" name="cashOnPercent" type="number" step="0.01" value="100" /></div>
-          <div><label for="minLiquidityBuffer">Minimum Liquidity Buffer</label><input id="minLiquidityBuffer" name="minLiquidityBuffer" type="number" step="1000000" value="25000000" /></div>
-        </div>
+        <h2>6. Cash Allocation</h2><div class="grid"><div><label for="cashOnPercent">% Cash in ON Deposit</label><input id="cashOnPercent" name="cashOnPercent" type="number" step="0.01" value="100" /></div><div><label for="minLiquidityBuffer">Minimum Liquidity Buffer</label><input id="minLiquidityBuffer" name="minLiquidityBuffer" type="number" step="1000000" value="25000000" /></div></div>
       </section>
 
       <section>
-        <h2>7. Holiday Calendar</h2>
-        <table id="holidayTable">
-          <thead><tr><th>Holiday Date</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><input type="date" name="holidayDate[]" value="2026-07-03" /></td><td><input type="text" name="holidayDescription[]" value="Holiday observed" /></td></tr>
-            <tr><td><input type="date" name="holidayDate[]" value="2026-09-07" /></td><td><input type="text" name="holidayDescription[]" value="Holiday" /></td></tr>
-            <tr><td><input type="date" name="holidayDate[]" value="2026-11-26" /></td><td><input type="text" name="holidayDescription[]" value="Holiday" /></td></tr>
-            <tr><td><input type="date" name="holidayDate[]" value="2026-12-25" /></td><td><input type="text" name="holidayDescription[]" value="Holiday" /></td></tr>
-          </tbody>
-        </table>
-        <div class="actions"><button type="button" onclick="addRow('holidayTable')">Add Holiday</button></div>
+        <h2>7. Holiday Calendar</h2><table id="holidayTable"><thead><tr><th>Holiday Date</th><th>Description</th></tr></thead><tbody><tr><td><input type="date" name="holidayDate[]" value="2026-07-03" /></td><td><input type="text" name="holidayDescription[]" value="Holiday observed" /></td></tr></tbody></table><div class="actions"><button type="button" onclick="addRow('holidayTable')">Add Holiday</button></div>
       </section>
 
       <section>
-        <h2>Export</h2>
-        <p class="note">This version is pre-filled for exercise purposes and ready to export as JSON. The calculation engine will consume this structure next.</p>
-        <div class="actions"><button type="button" onclick="exportJson()">Export JSON</button><button class="secondary" type="reset">Reset</button></div>
-        <textarea id="jsonOutput" rows="14" placeholder="JSON output will appear here"></textarea>
+        <h2>Export</h2><p class="note">Pre-filled exercise form. Add scenario columns and meeting rows, then export JSON.</p><div class="actions"><button type="button" onclick="exportJson()">Export JSON</button><button class="secondary" type="reset">Reset</button></div><textarea id="jsonOutput" rows="14" placeholder="JSON output will appear here"></textarea>
       </section>
     </form>
   </main>
@@ -145,64 +119,58 @@
       const table = document.getElementById(tableId).querySelector('tbody');
       const firstRow = table.querySelector('tr');
       const newRow = firstRow.cloneNode(true);
-      newRow.querySelectorAll('input, select').forEach((field) => {
-        if (field.tagName === 'SELECT') field.selectedIndex = 0;
-        else field.value = '';
-      });
+      newRow.querySelectorAll('input, select').forEach((field) => { if (field.tagName === 'SELECT') field.selectedIndex = 0; else field.value = ''; });
       table.appendChild(newRow);
     }
 
-    function formArray(formData, key) {
-      return formData.getAll(key).filter((value) => value !== '');
+    function addFedMeetingRow() {
+      const table = document.getElementById('fedScenarioTable');
+      const tbody = table.querySelector('tbody');
+      const scenarioCount = table.querySelectorAll('thead .scenario-name').length;
+      const row = document.createElement('tr');
+      row.innerHTML = '<td><input type="date" name="fedMeetingDate[]" /></td>' + Array.from({ length: scenarioCount }, () => '<td><input type="number" class="scenario-move" step="1" value="0" /></td>').join('');
+      tbody.appendChild(row);
+    }
+
+    function addFedScenarioColumn() {
+      const table = document.getElementById('fedScenarioTable');
+      const headerRow = document.getElementById('fedScenarioHeader');
+      const scenarioNumber = headerRow.querySelectorAll('.scenario-name').length + 1;
+      const th = document.createElement('th');
+      th.innerHTML = `<input type="text" class="scenario-name" value="Scenario ${scenarioNumber}" />`;
+      headerRow.appendChild(th);
+      table.querySelectorAll('tbody tr').forEach((row) => {
+        const td = document.createElement('td');
+        td.innerHTML = '<input type="number" class="scenario-move" step="1" value="0" />';
+        row.appendChild(td);
+      });
+    }
+
+    function formArray(formData, key) { return formData.getAll(key).filter((value) => value !== ''); }
+
+    function exportFedScenarios() {
+      const table = document.getElementById('fedScenarioTable');
+      const scenarioNames = Array.from(table.querySelectorAll('thead .scenario-name')).map((input, index) => input.value || `Scenario ${index + 1}`);
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      return rows.map((row) => {
+        const meetingDate = row.querySelector('td:first-child input').value;
+        const moves = {};
+        row.querySelectorAll('.scenario-move').forEach((input, index) => { moves[scenarioNames[index]] = Number(input.value || 0); });
+        return { meetingDate, movesBps: moves };
+      }).filter((item) => item.meetingDate);
     }
 
     function exportJson() {
       const form = document.getElementById('treasuryInputForm');
       const formData = new FormData(form);
-      const fedDates = formData.getAll('fedMeetingDate[]');
       const output = {
-        globalAssumptions: {
-          startDate: formData.get('startDate'),
-          endDate: formData.get('endDate'),
-          initialCash: Number(formData.get('initialCash') || 0),
-          initialSofrPercent: Number(formData.get('initialSofr') || 0),
-          depositSpreadPercent: Number(formData.get('depositSpread') || 0),
-          depositDayCount: formData.get('dayCount')
-        },
-        rateScenarios: fedDates.filter(Boolean).map((date, index) => ({
-          meetingDate: date,
-          movesBps: {
-            baseCase: Number(formData.getAll('baseBps[]')[index] || 0),
-            higherForLonger: Number(formData.getAll('upsideBps[]')[index] || 0),
-            fastCuts: Number(formData.getAll('downsideBps[]')[index] || 0)
-          }
-        })),
-        debtInstruments: formArray(formData, 'instrumentId[]').map((id, index) => ({
-          instrumentId: id,
-          maturityDate: formData.getAll('maturityDate[]')[index] || '',
-          outstanding: Number(formData.getAll('outstanding[]')[index] || 0),
-          couponAmount: Number(formData.getAll('couponAmount[]')[index] || 0)
-        })),
-        couponSchedule: formArray(formData, 'couponInstrumentId[]').map((id, index) => ({
-          instrumentId: id,
-          paymentDate: formData.getAll('couponPaymentDate[]')[index] || '',
-          couponAmountOverride: Number(formData.getAll('couponOverride[]')[index] || 0)
-        })),
-        irsHedges: formArray(formData, 'irsInstrumentId[]').map((id, index) => ({
-          instrumentId: id,
-          hedgePercent: Number(formData.getAll('hedgePercent[]')[index] || 0),
-          receiveFixedRatePercent: Number(formData.getAll('receiveFixedRate[]')[index] || 0),
-          floatingIndex: formData.getAll('floatingIndex[]')[index] || 'SOFR',
-          spreadPercent: Number(formData.getAll('irsSpread[]')[index] || 0)
-        })),
-        cashAllocation: {
-          cashOnPercent: Number(formData.get('cashOnPercent') || 0),
-          minLiquidityBuffer: Number(formData.get('minLiquidityBuffer') || 0)
-        },
-        holidayCalendar: formArray(formData, 'holidayDate[]').map((date, index) => ({
-          holidayDate: date,
-          description: formData.getAll('holidayDescription[]')[index] || ''
-        }))
+        globalAssumptions: { startDate: formData.get('startDate'), endDate: formData.get('endDate'), initialCash: Number(formData.get('initialCash') || 0), initialSofrPercent: Number(formData.get('initialSofr') || 0), depositSpreadPercent: Number(formData.get('depositSpread') || 0), depositDayCount: formData.get('dayCount') },
+        rateScenarios: exportFedScenarios(),
+        debtInstruments: formArray(formData, 'instrumentId[]').map((id, index) => ({ instrumentId: id, maturityDate: formData.getAll('maturityDate[]')[index] || '', outstanding: Number(formData.getAll('outstanding[]')[index] || 0), couponAmount: Number(formData.getAll('couponAmount[]')[index] || 0) })),
+        couponSchedule: formArray(formData, 'couponInstrumentId[]').map((id, index) => ({ instrumentId: id, paymentDate: formData.getAll('couponPaymentDate[]')[index] || '', couponAmountOverride: Number(formData.getAll('couponOverride[]')[index] || 0) })),
+        irsHedges: formArray(formData, 'irsInstrumentId[]').map((id, index) => ({ instrumentId: id, hedgePercent: Number(formData.getAll('hedgePercent[]')[index] || 0), receiveFixedRatePercent: Number(formData.getAll('receiveFixedRate[]')[index] || 0), floatingIndex: formData.getAll('floatingIndex[]')[index] || 'SOFR', spreadPercent: Number(formData.getAll('irsSpread[]')[index] || 0) })),
+        cashAllocation: { cashOnPercent: Number(formData.get('cashOnPercent') || 0), minLiquidityBuffer: Number(formData.get('minLiquidityBuffer') || 0) },
+        holidayCalendar: formArray(formData, 'holidayDate[]').map((date, index) => ({ holidayDate: date, description: formData.getAll('holidayDescription[]')[index] || '' }))
       };
       document.getElementById('jsonOutput').value = JSON.stringify(output, null, 2);
     }
