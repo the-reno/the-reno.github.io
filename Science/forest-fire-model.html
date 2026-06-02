@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forest Fire Model | Ronu</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/Science/forest-fire-model.css" />
+</head>
+<body>
+<nav><div><a href="/">ronu</a> / <a href="/Science/">science</a> / forest fire model</div><a href="/Science/">← science</a></nav>
+<main>
+<div class="hero"><div class="kicker">critical systems</div><h1>Forest Fire<br><em>Model.</em></h1><p class="sub">A small forest grows. Sparks arrive randomly. Most fires are small. A few become surprisingly large.</p></div>
+<p class="strong">The spark is random.</p><p>The result is not only random.</p><p>It depends on the structure the spark encounters.</p><div class="sep"></div>
+<h2>The model</h2><p>At every step, a few empty cells become trees.</p><p>Then a spark lands randomly.</p><p>If the spark lands on empty space, nothing happens.</p><p>If it lands on a tree, the entire connected region burns.</p>
+<section class="lab"><div class="lab-head"><h2>Forest grid</h2><p>growth → random spark → connected region burns</p></div><div class="controls"><div class="control"><label>Growth <span id="growthV">3</span></label><input id="growth" type="range" min="1" max="10" value="3"></div><div class="control"><label>Spark rate <span id="sparkV">1</span></label><input id="sparkRate" type="range" min="1" max="8" value="1"></div><button id="step">step</button><button id="auto" class="secondary">auto</button></div><div class="grid" id="grid"></div><div class="metrics"><div class="metric"><div class="v" id="density">—</div><div class="l">density</div></div><div class="metric"><div class="v" id="lastFire">—</div><div class="l">last fire</div></div><div class="metric"><div class="v" id="largestFire">—</div><div class="l">largest</div></div></div><div class="history"><div class="history-title"><span>Fire Size Distribution</span><span id="firesCount">0 fires</span></div><div class="bars" id="bars"></div><div class="fire-list" id="fireList"></div></div></section>
+<p>Watch the distribution.</p><p>Small fires appear constantly.</p><p>Large fires appear rarely.</p><p class="strong">The large fire is not caused by a special spark. It happens when an ordinary spark reaches a large connected cluster.</p><div class="sep"></div>
+<h2>The logic</h2><p>Connections accumulate gradually.</p><p>Propagation appears suddenly.</p><div class="formula"><pre>Future Reach
+=
+Current Reach × (1 + Connectivity)</pre></div><p>The equation is not a prediction.</p><p>It is a lens.</p><p>The next step depends on the structure that already exists.</p><div class="sep"></div>
+<p>The question is not only:</p><h2>What started the fire?</h2><p>But:</p><h2>What made the forest ready to burn?</h2>
+</main>
+<script src="/Science/forest-fire-model.js"></script>
+</body>
+</html>
