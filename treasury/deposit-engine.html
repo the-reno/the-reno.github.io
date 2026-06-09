@@ -1,1 +1,108 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><title>Deposit Engine</title><style>body{font-family:Arial;margin:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px}input{width:100px}</style></head><body><h2>Deposit Engine Prototype</h2><h3>Inputs</h3><p>Start Date <input id='start' type='date' value='2026-01-01'> End Date <input id='end' type='date' value='2026-12-31'></p><p>Initial Cash <input id='cash' value='500'> Min ON <input id='minon' value='100'></p><h3>Strategy (%)</h3><table><tr><th>ON</th><th>1M</th><th>2M</th><th>3M</th><th>6M</th></tr><tr><td><input id='on' value='25'></td><td><input id='m1' value='25'></td><td><input id='m2' value='25'></td><td><input id='m3' value='25'></td><td><input id='m6' value='0'></td></tr></table><br><button onclick='gen()'>Generate Test Cashflows</button><h3>Output</h3><table id='out'><tr><th>SCENARIO</th><th>STRATEGY</th><th>START_DATE</th><th>MATURITY_DATE</th><th>BUCKET</th><th>OPENING_BAL</th><th>RATE</th><th>DAYS</th><th>INTEREST_CF</th><th>PRINCIPAL_CF</th><th>FV</th></tr></table><script>function add(r){document.getElementById('out').insertAdjacentHTML('beforeend',r)} function gen(){let t=document.getElementById('out');t.innerHTML='<tr><th>SCENARIO</th><th>STRATEGY</th><th>START_DATE</th><th>MATURITY_DATE</th><th>BUCKET</th><th>OPENING_BAL</th><th>RATE</th><th>DAYS</th><th>INTEREST_CF</th><th>PRINCIPAL_CF</th><th>FV</th></tr>'; add('<tr><td>BASE</td><td>BALANCED</td><td>2026-01-01</td><td>2026-02-02</td><td>1M</td><td>100</td><td>4.25%</td><td>32</td><td>0.378</td><td>100</td><td>100.378</td></tr>'); add('<tr><td>BASE</td><td>BALANCED</td><td>2026-01-01</td><td>2026-03-02</td><td>2M</td><td>100</td><td>4.18%</td><td>60</td><td>0.697</td><td>100</td><td>100.697</td></tr>'); add('<tr><td>BASE</td><td>BALANCED</td><td>2026-01-01</td><td>2026-04-01</td><td>3M</td><td>100</td><td>4.10%</td><td>90</td><td>1.025</td><td>100</td><td>101.025</td></tr>');}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Deposit Cashflow Engine</title>
+<style>
+:root{--bg:#f7f7f4;--card:#fff;--ink:#1f2933;--muted:#64748b;--line:#d9ded6;--accent:#233d2e}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);margin:24px;line-height:1.35}
+h1{margin:0 0 4px 0;font-size:26px}h2{margin-top:26px;font-size:18px}p{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{border:1px solid var(--line);padding:7px;text-align:left}th{background:#eef1ec;font-weight:700}input,select{padding:6px;border:1px solid var(--line);border-radius:6px;min-width:90px}button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;margin:4px}button.secondary{background:#64748b}.grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px}.small{font-size:12px;color:var(--muted)}.right{text-align:right}.warn{color:#b45309;font-weight:700}.ok{color:#166534;font-weight:700}
+</style>
+</head>
+<body>
+<h1>Deposit Cashflow Engine</h1>
+<p>Generate deposit cashflows by selected scenario and strategy. Interest is simple ACT/360. ON cashflows are included.</p>
+
+<div class="card">
+<h2>1. Simulation Inputs</h2>
+<div class="grid">
+<label>Start Date<br><input id="startDate" type="date" value="2026-01-01"></label>
+<label>End Date<br><input id="endDate" type="date" value="2026-12-31"></label>
+<label>Initial Cash<br><input id="initialCash" type="number" value="500" step="0.01"></label>
+<label>Minimum ON<br><input id="minON" type="number" value="100" step="0.01"></label>
+</div>
+</div>
+
+<div class="card">
+<h2>2. Scenarios</h2>
+<p class="small">Base rate plus tenor spreads. Fed changes are cumulative after the meeting date.</p>
+<table id="scenarioTable"><thead><tr><th>Scenario</th><th>Initial Rate %</th><th>1M Spread bp</th><th>2M Spread bp</th><th>3M Spread bp</th><th>6M Spread bp</th></tr></thead><tbody>
+<tr><td><input value="BASE"></td><td><input type="number" value="4.25" step="0.01"></td><td><input type="number" value="0"></td><td><input type="number" value="-7"></td><td><input type="number" value="-15"></td><td><input type="number" value="-30"></td></tr>
+<tr><td><input value="CUT100"></td><td><input type="number" value="4.25" step="0.01"></td><td><input type="number" value="0"></td><td><input type="number" value="-7"></td><td><input type="number" value="-15"></td><td><input type="number" value="-30"></td></tr>
+</tbody></table>
+<button onclick="addScenario()">Add Scenario</button>
+<label>Selected Scenario <select id="scenarioSelect"></select></label>
+</div>
+
+<div class="card">
+<h2>3. Fed Meetings</h2>
+<table id="fedTable"><thead><tr><th>Date</th><th>BASE Change bp</th><th>CUT100 Change bp</th></tr></thead><tbody>
+<tr><td><input type="date" value="2026-03-18"></td><td><input type="number" value="0"></td><td><input type="number" value="-25"></td></tr>
+<tr><td><input type="date" value="2026-06-17"></td><td><input type="number" value="0"></td><td><input type="number" value="-25"></td></tr>
+<tr><td><input type="date" value="2026-09-16"></td><td><input type="number" value="0"></td><td><input type="number" value="-25"></td></tr>
+<tr><td><input type="date" value="2026-12-16"></td><td><input type="number" value="0"></td><td><input type="number" value="-25"></td></tr>
+</tbody></table>
+<button onclick="addFedRow()">Add Fed Meeting</button>
+</div>
+
+<div class="card">
+<h2>4. Strategies</h2>
+<table id="strategyTable"><thead><tr><th>Strategy</th><th>ON %</th><th>1M %</th><th>2M %</th><th>3M %</th><th>6M %</th></tr></thead><tbody>
+<tr><td><input value="BALANCED"></td><td><input type="number" value="25"></td><td><input type="number" value="25"></td><td><input type="number" value="25"></td><td><input type="number" value="25"></td><td><input type="number" value="0"></td></tr>
+<tr><td><input value="LIQUIDITY"></td><td><input type="number" value="70"></td><td><input type="number" value="30"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td></tr>
+</tbody></table>
+<button onclick="addStrategy()">Add Strategy</button>
+<label>Selected Strategy <select id="strategySelect"></select></label>
+</div>
+
+<div class="card">
+<h2>5. Fed Holidays</h2>
+<table id="holidayTable"><thead><tr><th>Date</th><th>Holiday</th></tr></thead><tbody>
+<tr><td><input type="date" value="2026-01-01"></td><td><input value="New Year's Day"></td></tr>
+<tr><td><input type="date" value="2026-01-19"></td><td><input value="MLK Day"></td></tr>
+<tr><td><input type="date" value="2026-02-16"></td><td><input value="Presidents' Day"></td></tr>
+<tr><td><input type="date" value="2026-05-25"></td><td><input value="Memorial Day"></td></tr>
+<tr><td><input type="date" value="2026-06-19"></td><td><input value="Juneteenth"></td></tr>
+<tr><td><input type="date" value="2026-07-03"></td><td><input value="Independence Day Observed"></td></tr>
+<tr><td><input type="date" value="2026-09-07"></td><td><input value="Labor Day"></td></tr>
+<tr><td><input type="date" value="2026-10-12"></td><td><input value="Columbus Day"></td></tr>
+<tr><td><input type="date" value="2026-11-11"></td><td><input value="Veterans Day"></td></tr>
+<tr><td><input type="date" value="2026-11-26"></td><td><input value="Thanksgiving"></td></tr>
+<tr><td><input type="date" value="2026-12-25"></td><td><input value="Christmas"></td></tr>
+</tbody></table>
+<button onclick="addHoliday()">Add Holiday</button>
+</div>
+
+<div class="card">
+<button onclick="refreshSelects();generate()">Generate Cashflows</button>
+<span id="status" class="small"></span>
+</div>
+
+<div class="card">
+<h2>Deposit Cashflow Output</h2>
+<table id="output"><thead><tr><th>DEAL_ID</th><th>SCENARIO</th><th>STRATEGY</th><th>START_DATE</th><th>MATURITY_DATE</th><th>BUCKET</th><th class="right">OPENING_BAL</th><th class="right">RATE</th><th class="right">DAYS</th><th class="right">INTEREST_CF</th><th class="right">PRINCIPAL_CF</th><th class="right">FV</th></tr></thead><tbody></tbody></table>
+</div>
+
+<script>
+const buckets=[['ON',1,0],['1M',1,1],['2M',2,2],['3M',3,3],['6M',6,4]];
+function d(s){return new Date(s+'T00:00:00')} function fmt(x){return x.toISOString().slice(0,10)} function n(v){return Number(v||0)}
+function addMonths(date,m){let x=new Date(date);let day=x.getDate();x.setMonth(x.getMonth()+m);if(x.getDate()<day)x.setDate(0);return x}
+function holidays(){return new Set([...document.querySelectorAll('#holidayTable tbody tr')].map(r=>r.cells[0].querySelector('input').value).filter(Boolean))}
+function isBus(x,hs){let g=x.getDay();return g!==0&&g!==6&&!hs.has(fmt(x))} function following(x,hs){let y=new Date(x);while(!isBus(y,hs))y.setDate(y.getDate()+1);return y}
+function days(a,b){return Math.round((b-a)/86400000)}
+function tableRows(id){return [...document.querySelectorAll('#'+id+' tbody tr')]}
+function refreshSelects(){let sc=document.getElementById('scenarioSelect'), st=document.getElementById('strategySelect');let oldS=sc.value,oldT=st.value;sc.innerHTML='';st.innerHTML='';tableRows('scenarioTable').forEach(r=>{let v=r.cells[0].querySelector('input').value||'SCENARIO';sc.add(new Option(v,v))});tableRows('strategyTable').forEach(r=>{let v=r.cells[0].querySelector('input').value||'STRATEGY';st.add(new Option(v,v))});sc.value=oldS||sc.options[0]?.value;st.value=oldT||st.options[0]?.value}
+function getScenario(name){let rows=tableRows('scenarioTable');for(let r of rows){let c=r.querySelectorAll('input');if(c[0].value===name)return{name:c[0].value,init:n(c[1].value),spr:[0,n(c[2].value),n(c[3].value),n(c[4].value),n(c[5].value)]}}}
+function getStrategy(name){for(let r of tableRows('strategyTable')){let c=r.querySelectorAll('input');if(c[0].value===name)return{name:c[0].value,p:[n(c[1].value),n(c[2].value),n(c[3].value),n(c[4].value),n(c[5].value)]}}}
+function fedChange(scenario,start){let names=tableRows('scenarioTable').map(r=>r.cells[0].querySelector('input').value);let idx=names.indexOf(scenario)+1;let bps=0;tableRows('fedTable').forEach(r=>{let dt=r.cells[0].querySelector('input').value;if(dt&&d(dt)<=start){let inp=r.cells[idx]?.querySelector('input');if(inp)bps+=n(inp.value)}});return bps}
+function rateFor(scenario,bucketIndex,start){let s=getScenario(scenario);return (s.init+fedChange(scenario,start)/100+s.spr[bucketIndex]/100)/100}
+function generate(){refreshSelects();let scenario=document.getElementById('scenarioSelect').value,strategy=document.getElementById('strategySelect').value;let start=d(document.getElementById('startDate').value),end=d(document.getElementById('endDate').value);let cash=n(document.getElementById('initialCash').value),minon=n(document.getElementById('minON').value),avail=cash-minon;let st=getStrategy(strategy),hs=holidays();let sum=st.p.reduce((a,b)=>a+b,0);let status=document.getElementById('status');if(Math.abs(sum-100)>.0001){status.innerHTML='<span class="warn">Strategy must sum to 100%</span>';return}if(avail<0){status.innerHTML='<span class="warn">Initial cash must be >= minimum ON</span>';return}let tbody=document.querySelector('#output tbody');tbody.innerHTML='';let deal=1,count=0,totalInt=0;for(let bi=0;bi<buckets.length;bi++){let [bucket,months,spreadIdx]=buckets[bi];let amount=(bucket==='ON'?minon+avail*st.p[bi]/100:avail*st.p[bi]/100);if(amount<=0)continue;let sd=new Date(start);while(sd<=end){let mat=bucket==='ON'?new Date(sd.getTime()+86400000):addMonths(sd,months);mat=following(mat,hs);let r=rateFor(scenario,spreadIdx,sd);let dy=days(sd,mat);let interest=amount*r*dy/360;let fv=amount+interest;let tr=document.createElement('tr');tr.innerHTML=`<td>DEP${String(deal++).padStart(6,'0')}</td><td>${scenario}</td><td>${strategy}</td><td>${fmt(sd)}</td><td>${fmt(mat)}</td><td>${bucket}</td><td class="right">${amount.toFixed(2)}</td><td class="right">${(r*100).toFixed(3)}%</td><td class="right">${dy}</td><td class="right">${interest.toFixed(3)}</td><td class="right">${amount.toFixed(2)}</td><td class="right">${fv.toFixed(3)}</td>`;tbody.appendChild(tr);count++;totalInt+=interest;sd=new Date(mat)}}status.innerHTML='<span class="ok">Generated '+count+' rows. Total interest: '+totalInt.toFixed(3)+'</span>'}
+function addScenario(){let tb=document.querySelector('#scenarioTable tbody');tb.insertAdjacentHTML('beforeend','<tr><td><input value="NEW"></td><td><input type="number" value="4.25" step="0.01"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td></tr>');refreshSelects()}
+function addStrategy(){document.querySelector('#strategyTable tbody').insertAdjacentHTML('beforeend','<tr><td><input value="NEW"></td><td><input type="number" value="100"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td><td><input type="number" value="0"></td></tr>');refreshSelects()}
+function addHoliday(){document.querySelector('#holidayTable tbody').insertAdjacentHTML('beforeend','<tr><td><input type="date"></td><td><input value="Holiday"></td></tr>')}
+function addFedRow(){let names=tableRows('scenarioTable').map(r=>r.cells[0].querySelector('input').value);let html='<tr><td><input type="date"></td>'+names.map(()=>'<td><input type="number" value="0"></td>').join('')+'</tr>';document.querySelector('#fedTable tbody').insertAdjacentHTML('beforeend',html)}
+refreshSelects();generate();
+</script>
+</body></html>
