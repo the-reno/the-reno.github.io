@@ -1,0 +1,96 @@
+Option Explicit
+
+Public Function DepositEngine(ByVal StartDate As Date, ByVal EndDate As Date, ByVal TotalCash As Double, ByVal MinON As Double, ByVal SofrToday As Double, ByVal ScenarioRange As Range, ByVal StrategyRange As Range, ByVal SpreadRange As Range, ByVal HolidayRange As Range) As Variant
+    Dim headers(1 To 12) As Variant
+    headers(1) = "DEAL_ID": headers(2) = "SCENARIO": headers(3) = "STRATEGY": headers(4) = "START_DATE": headers(5) = "MATURITY_DATE": headers(6) = "BUCKET": headers(7) = "OPENING_BAL": headers(8) = "RATE": headers(9) = "DAYS": headers(10) = "INTEREST_CF": headers(11) = "PRINCIPAL_CF": headers(12) = "FV"
+    If TotalCash < MinON Then DepositEngine = ErrorResult(headers, "Total Cash must be greater than or equal to Min ON."): Exit Function
+    Dim onPct As Double, p1 As Double, p2 As Double, p3 As Double
+    onPct = CDbl(StrategyRange.Cells(1, 1).Value) / 100: p1 = CDbl(StrategyRange.Cells(1, 2).Value) / 100: p2 = CDbl(StrategyRange.Cells(1, 3).Value) / 100: p3 = CDbl(StrategyRange.Cells(1, 4).Value) / 100
+    If Abs(onPct + p1 + p2 + p3 - 1) > 0.000001 Then DepositEngine = ErrorResult(headers, "Strategy allocation must sum to 100%."): Exit Function
+    Dim sp(0 To 3) As Double, pct(0 To 3) As Double, bucket(0 To 3) As String, months(0 To 3) As Long
+    sp(0) = CDbl(SpreadRange.Cells(1, 1).Value): sp(1) = CDbl(SpreadRange.Cells(1, 2).Value): sp(2) = CDbl(SpreadRange.Cells(1, 3).Value): sp(3) = CDbl(SpreadRange.Cells(1, 4).Value)
+    pct(0) = onPct: pct(1) = p1: pct(2) = p2: pct(3) = p3
+    bucket(0) = "ON": bucket(1) = "1M": bucket(2) = "2M": bucket(3) = "3M"
+    months(0) = 0: months(1) = 1: months(2) = 2: months(3) = 3
+    Dim allocCash As Double: allocCash = TotalCash - MinON
+    Dim maxRows As Long: maxRows = 1 + (DateDiff("d", StartDate, EndDate) + 10) + 100
+    Dim out() As Variant: ReDim out(1 To maxRows, 1 To 12)
+    Dim c As Long: For c = 1 To 12: out(1, c) = headers(c): Next c
+    Dim r As Long: r = 2
+    Dim deal As Long: deal = 1
+    Dim i As Long
+    For i = 0 To 3
+        Dim amount As Double
+        If bucket(i) = "ON" Then amount = MinON + allocCash * pct(i) Else amount = allocCash * pct(i)
+        If amount > 0 Then
+            Dim sd As Date: sd = StartDate
+            Do While sd <= EndDate
+                Dim mat As Date
+                If bucket(i) = "ON" Then mat = DateAdd("d", 1, sd) Else mat = DateAdd("m", months(i), sd)
+                mat = FollowingBusinessDay(mat, HolidayRange)
+                If r > UBound(out, 1) Then ReDim Preserve out(1 To UBound(out, 1) + 500, 1 To 12)
+                Dim rate As Double: rate = (SofrToday + CumulativeBps(ScenarioRange, sd) / 100 + sp(i) / 100) / 100
+                Dim ndays As Long: ndays = DateDiff("d", sd, mat)
+                Dim interest As Double: interest = amount * rate * ndays / 360
+                out(r, 1) = "DEP" & Format(deal, "000000")
+                out(r, 2) = "SELECTED_SCENARIO"
+                out(r, 3) = "SELECTED_STRATEGY"
+                out(r, 4) = sd
+                out(r, 5) = mat
+                out(r, 6) = bucket(i)
+                out(r, 7) = amount
+                out(r, 8) = rate
+                out(r, 9) = ndays
+                out(r, 10) = interest
+                out(r, 11) = amount
+                out(r, 12) = amount + interest
+                r = r + 1: deal = deal + 1
+                sd = mat
+            Loop
+        End If
+    Next i
+    Dim finalOut() As Variant: ReDim finalOut(1 To r - 1, 1 To 12)
+    Dim rr As Long
+    For rr = 1 To r - 1
+        For c = 1 To 12
+            finalOut(rr, c) = out(rr, c)
+        Next c
+    Next rr
+    DepositEngine = finalOut
+End Function
+
+Private Function CumulativeBps(ByVal ScenarioRange As Range, ByVal AsOfDate As Date) As Double
+    Dim i As Long, total As Double
+    For i = 1 To ScenarioRange.Rows.Count
+        If IsDate(ScenarioRange.Cells(i, 1).Value) Then
+            If CDate(ScenarioRange.Cells(i, 1).Value) <= AsOfDate Then total = total + CDbl(ScenarioRange.Cells(i, 2).Value)
+        End If
+    Next i
+    CumulativeBps = total
+End Function
+
+Private Function FollowingBusinessDay(ByVal InputDate As Date, ByVal HolidayRange As Range) As Date
+    Dim d As Date: d = InputDate
+    Do While Not IsBusinessDay(d, HolidayRange)
+        d = DateAdd("d", 1, d)
+    Loop
+    FollowingBusinessDay = d
+End Function
+
+Private Function IsBusinessDay(ByVal InputDate As Date, ByVal HolidayRange As Range) As Boolean
+    If Weekday(InputDate, vbMonday) > 5 Then IsBusinessDay = False: Exit Function
+    Dim i As Long
+    For i = 1 To HolidayRange.Rows.Count
+        If IsDate(HolidayRange.Cells(i, 1).Value) Then
+            If CDate(HolidayRange.Cells(i, 1).Value) = InputDate Then IsBusinessDay = False: Exit Function
+        End If
+    Next i
+    IsBusinessDay = True
+End Function
+
+Private Function ErrorResult(ByRef headers() As Variant, ByVal msg As String) As Variant
+    Dim out(1 To 2, 1 To 12) As Variant, c As Long
+    For c = 1 To 12: out(1, c) = headers(c): Next c
+    out(2, 1) = "ERROR": out(2, 2) = msg
+    ErrorResult = out
+End Function
