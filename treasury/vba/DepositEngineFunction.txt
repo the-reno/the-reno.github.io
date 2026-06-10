@@ -1,96 +1,281 @@
 Option Explicit
 
-Public Function DepositEngine(ByVal StartDate As Date, ByVal EndDate As Date, ByVal TotalCash As Double, ByVal MinON As Double, ByVal SofrToday As Double, ByVal ScenarioRange As Range, ByVal StrategyRange As Range, ByVal SpreadRange As Range, ByVal HolidayRange As Range) As Variant
+'====================================================
+' DepositEngine
+'
+' Excel dynamic-array function for one selected scenario
+' and one selected strategy.
+'
+' Example:
+'
+' =DepositEngine(B2,B3,B4,B5,B6,H10:I25,K10:N10,P10:S10,U10:U50)
+'
+' Inputs:
+' StartDate       = simulation start date
+' EndDate         = simulation end date
+' TotalCash       = total initial cash
+' MinON           = minimum ON balance
+' SofrToday       = current SOFR in percent, e.g. 4.25
+' ScenarioRange   = two columns: date | bps change
+' StrategyRange   = one row: ON% | 1M% | 2M% | 3M%
+' SpreadRange     = one row: ON bp | 1M bp | 2M bp | 3M bp
+' HolidayRange    = one column with Fed holidays
+'
+' Output columns:
+' DEAL_ID, SCENARIO, STRATEGY, START_DATE, MATURITY_DATE,
+' BUCKET, OPENING_BAL, RATE, DAYS, INTEREST_CF,
+' PRINCIPAL_CF, FV
+'
+' Notes:
+' - Interest is simple ACT/360.
+' - Principal does not compound.
+' - Maturity date is adjusted using Following convention.
+' - Deals are generated while START_DATE <= EndDate.
+' - A deal may mature after EndDate if opened before or on EndDate.
+'====================================================
+
+Public Function DepositEngine( _
+    ByVal StartDate As Date, _
+    ByVal EndDate As Date, _
+    ByVal TotalCash As Double, _
+    ByVal MinON As Double, _
+    ByVal SofrToday As Double, _
+    ByVal ScenarioRange As Range, _
+    ByVal StrategyRange As Range, _
+    ByVal SpreadRange As Range, _
+    ByVal HolidayRange As Range _
+) As Variant
+
     Dim headers(1 To 12) As Variant
-    headers(1) = "DEAL_ID": headers(2) = "SCENARIO": headers(3) = "STRATEGY": headers(4) = "START_DATE": headers(5) = "MATURITY_DATE": headers(6) = "BUCKET": headers(7) = "OPENING_BAL": headers(8) = "RATE": headers(9) = "DAYS": headers(10) = "INTEREST_CF": headers(11) = "PRINCIPAL_CF": headers(12) = "FV"
-    If TotalCash < MinON Then DepositEngine = ErrorResult(headers, "Total Cash must be greater than or equal to Min ON."): Exit Function
-    Dim onPct As Double, p1 As Double, p2 As Double, p3 As Double
-    onPct = CDbl(StrategyRange.Cells(1, 1).Value) / 100: p1 = CDbl(StrategyRange.Cells(1, 2).Value) / 100: p2 = CDbl(StrategyRange.Cells(1, 3).Value) / 100: p3 = CDbl(StrategyRange.Cells(1, 4).Value) / 100
-    If Abs(onPct + p1 + p2 + p3 - 1) > 0.000001 Then DepositEngine = ErrorResult(headers, "Strategy allocation must sum to 100%."): Exit Function
-    Dim sp(0 To 3) As Double, pct(0 To 3) As Double, bucket(0 To 3) As String, months(0 To 3) As Long
-    sp(0) = CDbl(SpreadRange.Cells(1, 1).Value): sp(1) = CDbl(SpreadRange.Cells(1, 2).Value): sp(2) = CDbl(SpreadRange.Cells(1, 3).Value): sp(3) = CDbl(SpreadRange.Cells(1, 4).Value)
-    pct(0) = onPct: pct(1) = p1: pct(2) = p2: pct(3) = p3
-    bucket(0) = "ON": bucket(1) = "1M": bucket(2) = "2M": bucket(3) = "3M"
-    months(0) = 0: months(1) = 1: months(2) = 2: months(3) = 3
-    Dim allocCash As Double: allocCash = TotalCash - MinON
-    Dim maxRows As Long: maxRows = 1 + (DateDiff("d", StartDate, EndDate) + 10) + 100
-    Dim out() As Variant: ReDim out(1 To maxRows, 1 To 12)
-    Dim c As Long: For c = 1 To 12: out(1, c) = headers(c): Next c
-    Dim r As Long: r = 2
-    Dim deal As Long: deal = 1
+    headers(1) = "DEAL_ID"
+    headers(2) = "SCENARIO"
+    headers(3) = "STRATEGY"
+    headers(4) = "START_DATE"
+    headers(5) = "MATURITY_DATE"
+    headers(6) = "BUCKET"
+    headers(7) = "OPENING_BAL"
+    headers(8) = "RATE"
+    headers(9) = "DAYS"
+    headers(10) = "INTEREST_CF"
+    headers(11) = "PRINCIPAL_CF"
+    headers(12) = "FV"
+
+    If EndDate < StartDate Then
+        DepositEngine = ErrorResult(headers, "End Date must be greater than or equal to Start Date.")
+        Exit Function
+    End If
+
+    If TotalCash < MinON Then
+        DepositEngine = ErrorResult(headers, "Total Cash must be greater than or equal to Min ON.")
+        Exit Function
+    End If
+
+    If StrategyRange.Columns.Count < 4 Then
+        DepositEngine = ErrorResult(headers, "StrategyRange must have 4 columns: ON%, 1M%, 2M%, 3M%.")
+        Exit Function
+    End If
+
+    If SpreadRange.Columns.Count < 4 Then
+        DepositEngine = ErrorResult(headers, "SpreadRange must have 4 columns: ON, 1M, 2M, 3M.")
+        Exit Function
+    End If
+
+    If ScenarioRange.Columns.Count < 2 Then
+        DepositEngine = ErrorResult(headers, "ScenarioRange must have 2 columns: Date, bps change.")
+        Exit Function
+    End If
+
+    Dim pct(0 To 3) As Double
+    pct(0) = CDbl(StrategyRange.Cells(1, 1).Value) / 100
+    pct(1) = CDbl(StrategyRange.Cells(1, 2).Value) / 100
+    pct(2) = CDbl(StrategyRange.Cells(1, 3).Value) / 100
+    pct(3) = CDbl(StrategyRange.Cells(1, 4).Value) / 100
+
+    If Abs(pct(0) + pct(1) + pct(2) + pct(3) - 1) > 0.000001 Then
+        DepositEngine = ErrorResult(headers, "Strategy allocation must sum to 100%.")
+        Exit Function
+    End If
+
+    Dim sp(0 To 3) As Double
+    sp(0) = CDbl(SpreadRange.Cells(1, 1).Value)
+    sp(1) = CDbl(SpreadRange.Cells(1, 2).Value)
+    sp(2) = CDbl(SpreadRange.Cells(1, 3).Value)
+    sp(3) = CDbl(SpreadRange.Cells(1, 4).Value)
+
+    Dim bucket(0 To 3) As String
+    bucket(0) = "ON"
+    bucket(1) = "1M"
+    bucket(2) = "2M"
+    bucket(3) = "3M"
+
+    Dim tenorMonths(0 To 3) As Long
+    tenorMonths(0) = 0
+    tenorMonths(1) = 1
+    tenorMonths(2) = 2
+    tenorMonths(3) = 3
+
+    Dim allocCash As Double
+    allocCash = TotalCash - MinON
+
+    Dim capacity As Long
+    capacity = EstimateRows(StartDate, EndDate)
+
+    Dim data() As Variant
+    ReDim data(1 To capacity, 1 To 12)
+
+    Dim c As Long
+    For c = 1 To 12
+        data(1, c) = headers(c)
+    Next c
+
+    Dim rowNum As Long
+    rowNum = 2
+
+    Dim dealNum As Long
+    dealNum = 1
+
     Dim i As Long
     For i = 0 To 3
+
         Dim amount As Double
-        If bucket(i) = "ON" Then amount = MinON + allocCash * pct(i) Else amount = allocCash * pct(i)
+        If bucket(i) = "ON" Then
+            amount = MinON + allocCash * pct(i)
+        Else
+            amount = allocCash * pct(i)
+        End If
+
         If amount > 0 Then
-            Dim sd As Date: sd = StartDate
+            Dim sd As Date
+            sd = StartDate
+
             Do While sd <= EndDate
+
                 Dim mat As Date
-                If bucket(i) = "ON" Then mat = DateAdd("d", 1, sd) Else mat = DateAdd("m", months(i), sd)
+                If bucket(i) = "ON" Then
+                    mat = DateAdd("d", 1, sd)
+                Else
+                    mat = DateAdd("m", tenorMonths(i), sd)
+                End If
+
                 mat = FollowingBusinessDay(mat, HolidayRange)
-                If r > UBound(out, 1) Then ReDim Preserve out(1 To UBound(out, 1) + 500, 1 To 12)
-                Dim rate As Double: rate = (SofrToday + CumulativeBps(ScenarioRange, sd) / 100 + sp(i) / 100) / 100
-                Dim ndays As Long: ndays = DateDiff("d", sd, mat)
-                Dim interest As Double: interest = amount * rate * ndays / 360
-                out(r, 1) = "DEP" & Format(deal, "000000")
-                out(r, 2) = "SELECTED_SCENARIO"
-                out(r, 3) = "SELECTED_STRATEGY"
-                out(r, 4) = sd
-                out(r, 5) = mat
-                out(r, 6) = bucket(i)
-                out(r, 7) = amount
-                out(r, 8) = rate
-                out(r, 9) = ndays
-                out(r, 10) = interest
-                out(r, 11) = amount
-                out(r, 12) = amount + interest
-                r = r + 1: deal = deal + 1
+
+                If rowNum > capacity Then
+                    DepositEngine = ErrorResult(headers, "Internal row capacity exceeded. Shorten the date range or increase EstimateRows.")
+                    Exit Function
+                End If
+
+                Dim rate As Double
+                rate = (SofrToday + CumulativeBps(ScenarioRange, sd) / 100 + sp(i) / 100) / 100
+
+                Dim dayCount As Long
+                dayCount = DateDiff("d", sd, mat)
+
+                Dim interest As Double
+                interest = amount * rate * dayCount / 360
+
+                data(rowNum, 1) = "DEP" & Format(dealNum, "000000")
+                data(rowNum, 2) = "SELECTED_SCENARIO"
+                data(rowNum, 3) = "SELECTED_STRATEGY"
+                data(rowNum, 4) = sd
+                data(rowNum, 5) = mat
+                data(rowNum, 6) = bucket(i)
+                data(rowNum, 7) = amount
+                data(rowNum, 8) = rate
+                data(rowNum, 9) = dayCount
+                data(rowNum, 10) = interest
+                data(rowNum, 11) = amount
+                data(rowNum, 12) = amount + interest
+
+                rowNum = rowNum + 1
+                dealNum = dealNum + 1
                 sd = mat
+
             Loop
         End If
     Next i
-    Dim finalOut() As Variant: ReDim finalOut(1 To r - 1, 1 To 12)
-    Dim rr As Long
-    For rr = 1 To r - 1
+
+    Dim output() As Variant
+    ReDim output(1 To rowNum - 1, 1 To 12)
+
+    Dim r As Long
+    For r = 1 To rowNum - 1
         For c = 1 To 12
-            finalOut(rr, c) = out(rr, c)
+            output(r, c) = data(r, c)
         Next c
-    Next rr
-    DepositEngine = finalOut
+    Next r
+
+    DepositEngine = output
+
+End Function
+
+Private Function EstimateRows(ByVal StartDate As Date, ByVal EndDate As Date) As Long
+    Dim nDays As Long
+    nDays = DateDiff("d", StartDate, EndDate) + 1
+
+    ' ON can generate approximately one row per calendar day.
+    ' Term buckets add a small number of rows.
+    ' Buffer added for weekends and holidays.
+    EstimateRows = 100 + nDays * 2
 End Function
 
 Private Function CumulativeBps(ByVal ScenarioRange As Range, ByVal AsOfDate As Date) As Double
-    Dim i As Long, total As Double
+    Dim i As Long
+    Dim total As Double
+    total = 0
+
     For i = 1 To ScenarioRange.Rows.Count
         If IsDate(ScenarioRange.Cells(i, 1).Value) Then
-            If CDate(ScenarioRange.Cells(i, 1).Value) <= AsOfDate Then total = total + CDbl(ScenarioRange.Cells(i, 2).Value)
+            If CDate(ScenarioRange.Cells(i, 1).Value) <= AsOfDate Then
+                If IsNumeric(ScenarioRange.Cells(i, 2).Value) Then
+                    total = total + CDbl(ScenarioRange.Cells(i, 2).Value)
+                End If
+            End If
         End If
     Next i
+
     CumulativeBps = total
 End Function
 
 Private Function FollowingBusinessDay(ByVal InputDate As Date, ByVal HolidayRange As Range) As Date
-    Dim d As Date: d = InputDate
+    Dim d As Date
+    d = InputDate
+
     Do While Not IsBusinessDay(d, HolidayRange)
         d = DateAdd("d", 1, d)
     Loop
+
     FollowingBusinessDay = d
 End Function
 
 Private Function IsBusinessDay(ByVal InputDate As Date, ByVal HolidayRange As Range) As Boolean
-    If Weekday(InputDate, vbMonday) > 5 Then IsBusinessDay = False: Exit Function
+    If Weekday(InputDate, vbMonday) > 5 Then
+        IsBusinessDay = False
+        Exit Function
+    End If
+
     Dim i As Long
     For i = 1 To HolidayRange.Rows.Count
         If IsDate(HolidayRange.Cells(i, 1).Value) Then
-            If CDate(HolidayRange.Cells(i, 1).Value) = InputDate Then IsBusinessDay = False: Exit Function
+            If CDate(HolidayRange.Cells(i, 1).Value) = InputDate Then
+                IsBusinessDay = False
+                Exit Function
+            End If
         End If
     Next i
+
     IsBusinessDay = True
 End Function
 
 Private Function ErrorResult(ByRef headers() As Variant, ByVal msg As String) As Variant
-    Dim out(1 To 2, 1 To 12) As Variant, c As Long
-    For c = 1 To 12: out(1, c) = headers(c): Next c
-    out(2, 1) = "ERROR": out(2, 2) = msg
+    Dim out(1 To 2, 1 To 12) As Variant
+    Dim c As Long
+
+    For c = 1 To 12
+        out(1, c) = headers(c)
+    Next c
+
+    out(2, 1) = "ERROR"
+    out(2, 2) = msg
+
     ErrorResult = out
 End Function
