@@ -14,6 +14,7 @@ from openpyxl.utils import get_column_letter as gcl
 from datetime import date
 from itertools import product
 
+VERSION="v2.1"
 A="Arial"
 BLUE=Font(name=A,color="0000FF"); BLK=Font(name=A); SUB=Font(name=A,bold=True)
 HDR=Font(name=A,bold=True,color="FFFFFF"); HF=PatternFill("solid",start_color="1F3864")
@@ -43,7 +44,7 @@ def put(r,c,v,font=BLK,fill=None,nf=None,align=None):
     if align:x.alignment=Alignment(horizontal=align)
     return x
 
-put(1,1,"NII EFFICIENT FRONTIER — FULL STANDALONE MODEL",Font(name=A,bold=True,size=14,color="1F3864"))
+put(1,1,f"NII EFFICIENT FRONTIER — FULL STANDALONE MODEL {VERSION}",Font(name=A,bold=True,size=14,color="1F3864"))
 put(2,1,"Single tab, live formulas, no macros. Blue = inputs. Mirrors ronu.one/projects/nii-frontier. "
         "Monthly approximation (term buckets at trailing k-month avg SOFR; swap floating = monthly SOFR; "
         "ACT/360; bonds 30/360). Frontier rows 76+: full 10%-step allocation grid with live feasibility "
@@ -334,19 +335,20 @@ tests=[("Weights sum to 100%",f'=IF(ABS(SUM(H{WR}:M{WR})-1)<0.0001,"OK","FAIL")'
 ("Cone pinch in range",f'=IF(AND(${gcl(26)}$28>=0,${gcl(26)}$28<=100),"OK","FAIL")')]
 for i,(k,f) in enumerate(tests,34):
     put(i,1,k); c=put(i,2,f,SUB); c.fill=WARN
+put(41,1,"Model version",SUB); put(41,2,VERSION,SUB)
 put(40,1,"MODEL STATUS",SUB)
 c=put(40,2,'=IF(COUNTIF(B34:B39,"FAIL")=0,"OK — ALL TESTS PASS","CHECK FAILED TESTS")',
       Font(name=A,bold=True,color="006100")); c.fill=WARN
 
 import os
 _dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
-_out = os.path.join(_dir, "NII_Frontier_Full.xlsx")
+_out = os.path.join(_dir, f"NII_Frontier_Full_{VERSION}.xlsx")
 try:
     wb.save(_out)
 except PermissionError:
-    _out = os.path.join(_dir, "NII_Frontier_Full_new.xlsx")
+    _out = os.path.join(_dir, f"NII_Frontier_Full_{VERSION}_new.xlsx")
     wb.save(_out)   # original is probably open in Excel
-print(f"built: {NC} strategies")
+print(f"built: {NC} strategies | {VERSION}")
 print(f"saved: {_out}")
 # ---- reference values (independent of the spreadsheet; sheet must match after Excel recalc)
 from datetime import date as _d
