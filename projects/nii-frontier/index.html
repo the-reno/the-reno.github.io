@@ -59,6 +59,13 @@ canvas{display:block;width:100%}
 .note b{color:var(--txt);font-weight:500}
 .foot{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--dim);
   display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+table{border-collapse:collapse;width:100%;font-size:11px;min-width:680px}
+th{color:var(--amber);text-align:left;font-weight:700;letter-spacing:.08em;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:4px 8px;border-bottom:1px solid #161c22;color:var(--txt);white-space:nowrap}
+td.num{text-align:right}
+td.dim{color:var(--dim)}
+.btn{background:none;border:1px solid var(--line);color:var(--cyan);font:11px "JetBrains Mono";padding:7px 12px;cursor:pointer;letter-spacing:.08em}
+.btn:hover{border-color:var(--cyan)}
 .tip{position:fixed;pointer-events:none;background:#000;border:1px solid var(--amber);color:var(--bright);
   font-size:11px;padding:8px 10px;display:none;z-index:9;max-width:240px}
 @media(prefers-reduced-motion:no-preference){.fold h2::after{content:"";display:inline-block;width:6px;height:6px;
@@ -121,6 +128,34 @@ ACT/360, daily-compounded SOFR. 825 strategies recomputed live as you move the i
   <div class="bd">
     <div class="seg" id="cashSeg" style="margin-bottom:12px;flex-wrap:wrap"></div>
     <canvas id="cCash" height="290"></canvas>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:14px">
+  <h2>CONVERGENCE CONE — TOTAL NII vs IRS HEDGE RATIO (BALANCED ALLOCATION)</h2>
+  <div class="bd">
+    <canvas id="cCone" height="300"></canvas>
+    <div class="hint" style="margin-top:10px">NII is linear in hedge notional, so each Fed scenario is a straight
+    line. The shaded band is the dispersion of outcomes; the cone pinches where dispersion is minimal —
+    that hedge ratio is the convergence point. Lines re-fan beyond it: over-hedging re-introduces risk
+    in the opposite direction.</div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:14px">
+  <h2>AUDIT TRAIL — DAILY CASHFLOWS (BALANCED STRATEGY · <span id="audScen"></span>)</h2>
+  <div class="bd">
+    <div class="seg" id="audFilter" style="margin-bottom:12px"></div>
+    <div style="overflow-x:auto"><table id="audTbl"></table></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" id="audMore">LOAD 100 MORE</button>
+      <button class="btn" id="audCsv">DOWNLOAD CSV</button>
+      <span id="audInfo" style="font-size:11px;color:var(--dim)"></span>
+    </div>
+    <div class="hint" style="margin-top:10px">Scenario follows the timeline selector above. Every model cashflow:
+    ON accrues daily, term deposits fix at roll and pay at maturity (open roll accrued to horizon),
+    swap settles monthly with the compounded SOFR detail, bonds accrue 30/360 per issue.
+    The cumulative column reconciles to the scenario NII total.</div>
   </div>
 </div>
 
@@ -332,7 +367,7 @@ function run(cfg) {
 </script>
 <script>
 const $ = id => document.getElementById(id);
-const VERSION="v1.4";
+const VERSION="v1.5";
 window.onerror=(msg,src,line)=>{
   let b=$("errbar");
   if(!b){b=document.createElement("div");b.id="errbar";
@@ -468,6 +503,134 @@ function drawSofr(){
     if(lx+w>x1){lx=x0+4; ly+=13;}
     g.fillStyle=SC_COL[s]; g.fillText(txt,lx,ly); lx+=w;}
 }
+// ---------- convergence cone
+function drawCone(){
+  const cv=$("cCone"), [g,W,H]=setupCanvas(cv);
+  const P={l:54,r:14,t:16,b:34}, x0=P.l,x1=W-P.r,y0=H-P.b,y1=P.t;
+  const bal=res.zones.BALANCED;
+  const depT=s=>Object.entries(bal.a).reduce((t,[b,v])=>t+v*res.depUnit[s][b].reduce((x,y)=>x+y,0),0);
+  const swT=s=>res.swapUnit[s].reduce((x,y)=>x+y,0);
+  const ends={}; res.names.forEach(s=>ends[s]=[depT(s)-res.totalBond, depT(s)+cfg.cash*swT(s)-res.totalBond]);
+  let pinch=[1e9,0];
+  const disp=p=>{const v=res.names.map(s=>ends[s][0]+(ends[s][1]-ends[s][0])*p/100);
+    return Math.max(...v)-Math.min(...v);};
+  for(let p=0;p<=100;p++){const w=disp(p); if(w<pinch[0])pinch=[w,p];}
+  const all=Object.values(ends).flat(), mn=Math.min(...all)-.5, mx=Math.max(...all)+.5;
+  const X=p=>x0+p/100*(x1-x0), Y=v=>y0-(v-mn)/(mx-mn)*(y0-y1);
+  g.clearRect(0,0,W,H); axes(g,x0,y0,x1,y1);
+  g.font="10px JetBrains Mono";
+  for(let i=0;i<=3;i++){const v=mn+(mx-mn)*i/3;
+    g.strokeStyle="rgba(31,39,48,.6)";g.beginPath();g.moveTo(x0,Y(v));g.lineTo(x1,Y(v));g.stroke();
+    g.fillStyle="#5a6672";g.fillText(fmt(v,0),6,Y(v)+3);}
+  for(let p=0;p<=100;p+=25){g.fillStyle="#5a6672";g.fillText(p+"%",X(p)-8,y0+14);}
+  // dispersion band
+  g.beginPath();
+  for(let p=0;p<=100;p+=2){const v=res.names.map(s=>ends[s][0]+(ends[s][1]-ends[s][0])*p/100);
+    const y=Y(Math.max(...v)); p?g.lineTo(X(p),y):g.moveTo(X(p),y);}
+  for(let p=100;p>=0;p-=2){const v=res.names.map(s=>ends[s][0]+(ends[s][1]-ends[s][0])*p/100);
+    g.lineTo(X(p),Y(Math.min(...v)));}
+  g.closePath(); g.fillStyle="rgba(255,176,0,.07)"; g.fill();
+  for(const s of res.names){
+    g.strokeStyle=SC_COL[s]; g.lineWidth=1.4; g.beginPath();
+    g.moveTo(X(0),Y(ends[s][0])); g.lineTo(X(100),Y(ends[s][1])); g.stroke();}
+  // pinch marker
+  g.strokeStyle="#ffb000"; g.setLineDash([4,4]); g.beginPath();
+  g.moveTo(X(pinch[1]),y0); g.lineTo(X(pinch[1]),y1); g.stroke(); g.setLineDash([]);
+  g.fillStyle="#ffb000";
+  g.fillText("MIN DISPERSION "+pinch[0].toFixed(2)+"MM @ "+pinch[1]+"%", Math.min(X(pinch[1])+6,x1-200), y1+12);
+  // zone markers
+  for(const [z,c] of Object.entries(res.zones)){
+    g.fillStyle={DEFENSIVE:"#00d4e0",BALANCED:"#ffb000",OPPORTUNISTIC:"#39d98a"}[z];
+    g.fillText("▲"+z[0], X(c.p)-6, y0-3);}
+  g.fillStyle="#8a93a0"; g.fillText("IRS NOTIONAL (% OF CASH) →", x1-180, y0+26);
+}
+// ---------- audit ledger
+const adjR=r=>cfg.sofr0+cfg.beta*(r-cfg.sofr0);
+function buildLedger(s){
+  const bal=res.zones.BALANCED, path=res.paths[s], rows=[];
+  const end=addMonths(cfg.start,12*cfg.horizonYears);
+  const bds=[...path.keys()];
+  const fD=t=>{const d=new Date(t*86400000);
+    return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");};
+  for(const [name,months,spr] of cfg.buckets){
+    const N=bal.a[name]||0; if(N<=0)continue;
+    if(months===0){
+      for(let j=0;j<bds.length;j++){
+        const t=bds[j], w=(j+1<bds.length?bds[j+1]:nextBD(bds[bds.length-1]))-t;
+        const r=adjR(path.get(t))+spr/100;
+        rows.push([t,"DEPOSIT","ON ACCRUAL",`$${N}mm ON, ${w}d`,r,w,N*(r/100)*w/360]);}
+    }else{
+      let fix=following(cfg.start);
+      while(fix<end){
+        const mat=following(addMonths(fix,months));
+        const r=adjR(path.get(fix)??cfg.sofr0)+spr/100;
+        rows.push([fix,"DEPOSIT",name+" FIX",`$${N}mm fixed, matures ${fD(Math.min(mat,end))}`,r,Math.min(mat,end)-fix,0]);
+        const days=Math.min(mat,end)-fix;
+        rows.push([Math.min(mat,end)-(mat>end?1:0),"DEPOSIT",
+          mat<=end?name+" INTEREST":name+" ACCRUED TO HORIZON",
+          `$${N}mm @ ${r.toFixed(3)}%, ${days}d ACT/360`,r,days,N*(r/100)*days/360]);
+        fix=mat;}
+    }}
+  // swap settlements
+  const N=res.zones.BALANCED.N, sign=cfg.direction==="RCV"?1:-1;
+  if(N>0)for(let j=0;;j++){
+    const ps=following(addMonths(cfg.start,j)); if(ps>=end)break;
+    const pe=Math.min(following(addMonths(cfg.start,j+1)),end); if(pe<=ps)continue;
+    let g2=1; const nd=pe-ps;
+    for(const t of bds){ if(t<ps||t>=pe)continue;
+      const w=Math.min(nextBD(t),pe)-t; g2*=1+path.get(t)/100*w/360;}
+    const fl=(g2-1)*360/nd+cfg.spread/10000;
+    const fcf=N*(cfg.fixed/100)*nd/360, flcf=N*fl*nd/360;
+    rows.push([pe-1,"SWAP","IRS SETTLEMENT",
+      `$${N}mm ${cfg.direction}, ${fD(ps)}→${fD(pe)} ${nd}d, cmp SOFR ${(fl*100).toFixed(3)}% vs fixed ${cfg.fixed.toFixed(2)}%`,
+      fl*100,nd,sign*(fcf-flcf)]);}
+  // bond accruals per issue
+  res.buckets.forEach(([s0,e0])=>{
+    for(const [bn,n,c,m] of BONDS){
+      if(m<=s0)continue;
+      const frac=m>=e0?1:(m-s0)/(e0-s0);
+      rows.push([Math.min(e0,m)-1,"BOND",bn+(frac<1?" FINAL":""),
+        `$${n}mm @ ${c.toFixed(2)}% coupon, 30/360 accrual`,c,e0-s0,-n*(c/100)/12*frac]);}});
+  rows.sort((a,b)=>a[0]-b[0]);
+  let cum=0; for(const r of rows){cum+=r[6]; r.push(cum);}
+  return rows;
+}
+let audRows=[], audShown=100, audFilt="ALL";
+function rebuildAudit(){
+  audRows=buildLedger(cashScen||res.names[0]); audShown=100; renderAudit();
+  const seg=$("audFilter");
+  if(!seg.childElementCount){
+    ["ALL","DEPOSIT","SWAP","BOND"].forEach((f,i)=>{
+      const b=document.createElement("button"); b.textContent=f;
+      b.className=i===0?"on":""; b.style.flex="1 1 auto"; b.style.padding="6px 8px";
+      b.onclick=()=>{audFilt=f;audShown=100;[...seg.children].forEach(x=>x.classList.toggle("on",x===b));renderAudit();};
+      seg.appendChild(b);});}
+}
+function renderAudit(){
+  $("audScen").textContent=cashScen||res.names[0];
+  const rows=audRows.filter(r=>audFilt==="ALL"||r[1]===audFilt);
+  const fD=t=>{const d=new Date(t*86400000);
+    return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0");};
+  let h="<tr><th>DATE</th><th>TYPE</th><th>EVENT</th><th>DETAIL</th><th>RATE %</th><th>DAYS</th><th>CASHFLOW $MM</th><th>CUMULATIVE</th></tr>";
+  for(const r of rows.slice(0,audShown)){
+    h+=`<tr><td class=dim>${fD(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td class=dim>${r[3]}</td>`+
+       `<td class=num>${r[4].toFixed(3)}</td><td class=num>${r[5]}</td>`+
+       `<td class=num style="color:${r[6]<0?"var(--down)":r[6]>0?"var(--up)":"var(--dim)"}">${r[6].toFixed(4)}</td>`+
+       `<td class=num class=dim>${r[7].toFixed(2)}</td></tr>`;}
+  $("audTbl").innerHTML=h;
+  const total=audRows.length?audRows[audRows.length-1][7]:0;
+  const model=res.zones.BALANCED.totals[cashScen||res.names[0]];
+  $("audInfo").textContent=`${Math.min(audShown,rows.length)}/${rows.length} rows · ledger total ${total.toFixed(2)} vs model NII ${model.toFixed(2)} ${Math.abs(total-model)<0.01?"✓ RECONCILED":"✗ CHECK"}`;
+}
+$("audMore").onclick=()=>{audShown+=100;renderAudit();};
+$("audCsv").onclick=()=>{
+  const fD=t=>new Date(t*86400000).toISOString().slice(0,10);
+  let csv="date,type,event,detail,rate_pct,days,cashflow_mm,cumulative_mm\n";
+  for(const r of audRows) csv+=[fD(r[0]),r[1],r[2],'"'+r[3]+'"',r[4].toFixed(4),r[5],r[6].toFixed(6),r[7].toFixed(4)].join(",")+"\n";
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="nii_audit_"+(cashScen||res.names[0]).replace(/ /g,"_")+".csv"; a.click();
+};
 let cashScen=null;
 function buildCashSeg(){
   const seg=$("cashSeg");
@@ -475,7 +638,7 @@ function buildCashSeg(){
   res.names.forEach(s=>{
     const b=document.createElement("button");
     b.textContent=s; b.style.flex="1 1 auto"; b.style.padding="6px 8px";
-    b.onclick=()=>{cashScen=s;[...seg.children].forEach(x=>x.classList.toggle("on",x===b));drawCash();};
+    b.onclick=()=>{cashScen=s;[...seg.children].forEach(x=>x.classList.toggle("on",x===b));drawCash();rebuildAudit();};
     seg.appendChild(b);});
   cashScen=res.names[2];                       // FASTER CUTS default
   seg.children[2].classList.add("on");
@@ -536,7 +699,7 @@ function drawTape(){
     `<div><span>BOND COST 2Y</span><b>$${res.totalBond.toFixed(0)}MM</b></div>`+
     `<div><span>STRATEGIES</span><b>${res.combos.length}</b></div>`;
 }
-function drawAll(){drawTape();drawFrontier();drawZones();drawScen();drawSofr();buildCashSeg();drawCash();
+function drawAll(){drawTape();drawFrontier();drawZones();drawScen();drawSofr();buildCashSeg();drawCash();drawCone();rebuildAudit();
   $("oFixed").textContent=cfg.fixed.toFixed(2)+"%";$("oSofr").textContent=cfg.sofr0.toFixed(2)+"%";
   $("oBeta").textContent=cfg.beta.toFixed(2);$("oMin").textContent=cfg.onMin;
   $("oSpr").textContent=cfg.spread;}
