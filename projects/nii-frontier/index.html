@@ -324,7 +324,7 @@ function run(cfg) {
 </script>
 <script>
 const $ = id => document.getElementById(id);
-const VERSION="v1.2";
+const VERSION="v1.3";
 window.onerror=(msg,src,line)=>{
   let b=$("errbar");
   if(!b){b=document.createElement("div");b.id="errbar";
@@ -357,11 +357,14 @@ function recompute(){
 }
 
 function setupCanvas(cv){
+  if(!cv.dataset.h) cv.dataset.h = cv.getAttribute("height");   // cache once: cv.height writes clobber the attribute
+  const hCss = +cv.dataset.h;
   const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio||1,2);
-  cv.width = r.width*dpr; cv.height = cv.getAttribute("height")*dpr;
-  cv.style.height = cv.getAttribute("height")+"px";
+  const wCss = r.width || cv.parentElement.clientWidth - 28;
+  cv.width = wCss*dpr; cv.height = hCss*dpr;
+  cv.style.height = hCss+"px";
   const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
-  return [g, r.width, +cv.getAttribute("height")];
+  return [g, wCss, hCss];
 }
 function axes(g,x0,y0,x1,y1){g.strokeStyle="#1f2730";g.lineWidth=1;g.strokeRect(x0,y1,x1-x0,y0-y1);}
 
