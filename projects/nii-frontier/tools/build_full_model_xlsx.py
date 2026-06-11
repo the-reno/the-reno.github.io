@@ -219,10 +219,10 @@ for i,(z,mf) in enumerate(zrows):
     put(r,O+4,f"=INDEX({volRng},{idx})",OUT,nf=N2)
     put(r,O+5,f"=INDEX({worRng},{idx})",OUT,nf=NUM)
 # zone scatter helpers (X col W under? use P/Q cols of a tiny block) at AB18:AC21
-put(18,28,"Zx",SUB);put(18,29,"Zy",SUB)
+put(18,45,"Zx",SUB);put(18,46,"Zy",SUB)
 for i in range(3):
-    put(19+i,28,f"=INDEX({volRng},({zrows[i][1]}))",fill=CALC,nf=N2)
-    put(19+i,29,f"=INDEX({expRng},({zrows[i][1]}))",fill=CALC,nf=NUM)
+    put(19+i,45,f"=INDEX({volRng},({zrows[i][1]}))",fill=CALC,nf=N2)
+    put(19+i,46,f"=INDEX({expRng},({zrows[i][1]}))",fill=CALC,nf=NUM)
 
 # ================= SLOPE / SENSITIVITY table (P23..V29)
 put(23,O,"NII BY SCENARIO × IRS NOTIONAL (input allocation)",SUB)
@@ -296,7 +296,7 @@ ws.add_chart(ch3,"X31")
 ch4=ScatterChart(); ch4.title="Efficient frontier — expected NII vs volatility"
 ch4.height,ch4.width=9,16; ch4.x_axis.delete=False; ch4.y_axis.delete=False
 ch4.x_axis.title="Volatility"; ch4.y_axis.title="Expected NII"
-for (xc,yc,t,sym,sz) in [(20,21,"All",'circle',3),(22,23,"Efficient",'diamond',6),(28,29,"Zones",'star',9)]:
+for (xc,yc,t,sym,sz) in [(20,21,"All",'circle',3),(22,23,"Efficient",'diamond',6),(45,46,"Zones",'star',9)]:
     if t=="Zones":
         s=Series(Reference(ws,min_col=yc,min_row=19,max_row=21),Reference(ws,min_col=xc,min_row=19,max_row=21),title=t)
     else:
