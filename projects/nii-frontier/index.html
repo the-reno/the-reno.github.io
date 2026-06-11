@@ -126,7 +126,8 @@ ACT/360, daily-compounded SOFR. 825 strategies recomputed live as you move the i
 <div class="panel" style="margin-top:14px">
   <h2>CASHFLOW TIMELINE — MONTHLY ($MM, BALANCED STRATEGY)</h2>
   <div class="bd">
-    <div class="seg" id="cashSeg" style="margin-bottom:12px;flex-wrap:wrap"></div>
+    <div class="seg" id="cashSeg" style="margin-bottom:8px;flex-wrap:wrap"></div>
+    <div id="cashFilt" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
     <canvas id="cCash" height="290"></canvas>
   </div>
 </div>
@@ -367,7 +368,7 @@ function run(cfg) {
 </script>
 <script>
 const $ = id => document.getElementById(id);
-const VERSION="v1.5";
+const VERSION="v1.6";
 window.onerror=(msg,src,line)=>{
   let b=$("errbar");
   if(!b){b=document.createElement("div");b.id="errbar";
@@ -643,38 +644,67 @@ function buildCashSeg(){
   cashScen=res.names[2];                       // FASTER CUTS default
   seg.children[2].classList.add("on");
 }
+const CASH_COL={ON:"#00d4e0","1M":"#39d98a","2M":"#7fb2ff","3M":"#1f7a8c",SWAP:"#ffb000",BOND:"#ff4d4d",NET:"#eef2f6"};
+let cashOn=null;
+function buildCashFilt(){
+  const box=$("cashFilt"); if(box.childElementCount) return;
+  const bal=res.zones.BALANCED;
+  const comps=[...cfg.buckets.filter(b=>(bal.a[b[0]]||0)>0).map(b=>b[0]),"SWAP","BOND","NET"];
+  cashOn=Object.fromEntries(comps.map(c=>[c,true]));
+  comps.forEach(c=>{
+    const b=document.createElement("button"); b.className="btn"; b.textContent=c;
+    const paint=()=>{b.style.borderColor=CASH_COL[c];
+      b.style.color=cashOn[c]?"#0a0c0e":CASH_COL[c];
+      b.style.background=cashOn[c]?CASH_COL[c]:"none";};
+    paint();
+    b.onclick=()=>{cashOn[c]=!cashOn[c];paint();drawCash();};
+    box.appendChild(b);});
+}
 function drawCash(){
   const cv=$("cCash"), [g,W,H]=setupCanvas(cv);
-  const P={l:54,r:10,t:14,b:40}, x0=P.l,x1=W-P.r,y0=H-P.b,y1=P.t;
+  const P={l:54,r:10,t:14,b:30}, x0=P.l,x1=W-P.r,y0=H-P.b,y1=P.t;
   const bal=res.zones.BALANCED, s=cashScen||res.names[0], nM=res.buckets.length;
-  const dep=[],swp=[],bnd=[],net=[];
+  if(!cashOn) buildCashFilt();
+  const comps=[];                                    // [name, monthly values]
+  for(const [bn] of cfg.buckets){
+    const N=bal.a[bn]||0;
+    if(N>0&&cashOn[bn]) comps.push([bn,res.depUnit[s][bn].map(u=>N*u)]);}
+  if(bal.N>0&&cashOn.SWAP) comps.push(["SWAP",res.swapUnit[s].map(u=>bal.N*u)]);
+  if(cashOn.BOND) comps.push(["BOND",res.bondCost.map(v=>-v)]);
+  // stacked extents
+  let top=0.1, bot=-0.1;
+  const net=Array(nM).fill(0);
   for(let m=0;m<nM;m++){
-    const dv=Object.entries(bal.a).reduce((t,[b,v])=>t+v*res.depUnit[s][b][m],0);
-    const sv=bal.N*res.swapUnit[s][m], bv=-res.bondCost[m];
-    dep.push(dv); swp.push(sv); bnd.push(bv); net.push(dv+sv+bv);}
-  const all=[...dep,...swp,...bnd,...net,0];
-  const mn=Math.min(...all)-.6, mx=Math.max(...all)+.6;
-  const X=m=>x0+(m+.5)/nM*(x1-x0), Y=v=>y0-(v-mn)/(mx-mn)*(y0-y1);
+    let p=0,n=0;
+    for(const [,vals] of comps){const v=vals[m]; v>=0?p+=v:n+=v; net[m]+=v;}
+    if(p>top)top=p; if(n<bot)bot=n;}
+  if(cashOn.NET){for(const v of net){if(v>top)top=v;if(v<bot)bot=v;}}
+  const pad=(top-bot)*.08;
+  const X=m=>x0+m/nM*(x1-x0), bw=(x1-x0)/nM-2;
+  const Y=v=>y0-(v-bot+pad)/(top-bot+2*pad)*(y0-y1);
   g.clearRect(0,0,W,H); axes(g,x0,y0,x1,y1);
   g.font="10px JetBrains Mono";
-  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4;
+  for(let i=0;i<=4;i++){const v=bot-pad+(top-bot+2*pad)*i/4;
     g.strokeStyle="rgba(31,39,48,.6)";g.beginPath();g.moveTo(x0,Y(v));g.lineTo(x1,Y(v));g.stroke();
     g.fillStyle="#5a6672";g.fillText(fmt(v,1),6,Y(v)+3);}
-  g.strokeStyle="#3a434d";g.lineWidth=1.2;                     // zero line
+  g.strokeStyle="#3a434d";g.lineWidth=1.2;
   g.beginPath();g.moveTo(x0,Y(0));g.lineTo(x1,Y(0));g.stroke();
-  g.fillStyle="#5a6672";g.fillText("0",x1-10,Y(0)-4);
   const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   for(let m=0;m<nM;m+=3){
     const dt=new Date(res.buckets[m][0]*86400000);
-    const lbl=MON[dt.getUTCMonth()]+String(dt.getUTCFullYear()).slice(2);
-    g.fillStyle="#5a6672";g.fillText(lbl,X(m)-12,y0+14);}
-  const draw=(arr,col,wd)=>{g.strokeStyle=col;g.lineWidth=wd;g.beginPath();
-    arr.forEach((v,m)=>m?g.lineTo(X(m),Y(v)):g.moveTo(X(m),Y(v)));g.stroke();};
-  draw(dep,"#00d4e0",1.5); draw(swp,"#ffb000",1.5); draw(bnd,"#ff4d4d",1.5); draw(net,"#eef2f6",2.4);
-  let lx=x0+4;
-  for(const [txt,col] of [["— DEPOSITS","#00d4e0"],["— SWAP NET","#ffb000"],
-      ["— BOND COST","#ff4d4d"],["— NET NII","#eef2f6"]]){
-    g.fillStyle=col;g.fillText(txt,lx,y0+28);lx+=g.measureText(txt).width+16;}
+    g.fillStyle="#5a6672";g.fillText(MON[dt.getUTCMonth()]+String(dt.getUTCFullYear()).slice(2),X(m),y0+14);}
+  // stacked bars
+  for(let m=0;m<nM;m++){
+    let up=0, dn=0;
+    for(const [name,vals] of comps){
+      const v=vals[m]; if(Math.abs(v)<1e-9)continue;
+      g.fillStyle=CASH_COL[name];
+      if(v>=0){g.fillRect(X(m)+1,Y(up+v),bw,Y(up)-Y(up+v)); up+=v;}
+      else{g.fillRect(X(m)+1,Y(dn),bw,Y(dn+v)-Y(dn)); dn+=v;}}}
+  if(cashOn.NET){
+    g.strokeStyle=CASH_COL.NET; g.lineWidth=2.2; g.beginPath();
+    net.forEach((v,m)=>m?g.lineTo(X(m)+bw/2,Y(v)):g.moveTo(X(m)+bw/2,Y(v)));
+    g.stroke();}
 }
 function drawZones(){
   const lab={DEFENSIVE:["z-def","max worst-case"],BALANCED:["z-bal","frontier knee"],OPPORTUNISTIC:["z-opp","max expected"]};
