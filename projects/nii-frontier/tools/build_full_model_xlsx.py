@@ -319,5 +319,13 @@ ws.add_chart(ch5,f"{gcl(T0)}31")
 ws.freeze_panes="A4"
 for col,w in [("A",24),("B",12),("C",9),("D",12),("E",22),("F",12),("G",12),("P",24)]:
     ws.column_dimensions[col].width=w
-wb.save("NII_Frontier_Full.xlsx")
+import os
+_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+_out = os.path.join(_dir, "NII_Frontier_Full.xlsx")
+try:
+    wb.save(_out)
+except PermissionError:
+    _out = os.path.join(_dir, "NII_Frontier_Full_new.xlsx")
+    wb.save(_out)   # original is probably open in Excel
 print(f"built: {NC} strategies")
+print(f"saved: {_out}")
