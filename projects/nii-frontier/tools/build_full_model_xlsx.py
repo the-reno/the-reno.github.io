@@ -72,6 +72,7 @@ for i,(n,nm,cp,mt) in enumerate(BONDS,25):
     put(i,1,n); put(i,2,nm,BLUE,nf=NUM); put(i,3,cp,BLUE,nf=N2); put(i,4,mt,BLUE,nf="YYYY-MM-DD")
 B0,B1=25,31
 
+# ================= SELF-TESTS (A33:B40) - filled after layout constants exist (see end)
 # ================= FOMC x SCENARIO (F4..M22) + weights
 put(4,6,"FED SCENARIOS — bps per FOMC decision",SUB)
 put(5,6,"Decision",SUB); put(5,7,"Effective",SUB)
@@ -257,7 +258,7 @@ put(4,T0,"CASHFLOW COMPOSITION — scenario:",SUB)
 sel=put(4,T0+4,"Faster cuts",BLUE)
 dv2=DataValidation(type="list",formula1='"'+",".join(SCEN)+'"'); ws.add_data_validation(dv2); dv2.add(f"{gcl(T0+4)}4")
 SELC=f"${gcl(T0+4)}$4"
-mtch=f"MATCH({SELC},$P$5:$V$5,0)-1"
+mtch=f"MATCH({SELC},$Q$5:$V$5,0)-1"
 thdr=["Month","ON","1M","2M","3M","SWAP","BOND","NET"]
 for c,h in enumerate(thdr): put(5,T0+c,h,SUB)
 for m in range(NM):
@@ -282,8 +283,8 @@ for sr in ch.series: sr.smooth=False
 ws.add_chart(ch,"P31")
 # slope (series per notional row)
 ch2=line("NII by scenario × IRS notional")
-ch2.add_data(Reference(ws,min_col=O,max_col=O+6,min_row=24,max_row=29),from_rows=True,titles_from_data=True)
-ch2.set_categories(Reference(ws,min_col=O+1,max_col=O+6,min_row=24))
+ch2.add_data(Reference(ws,min_col=O,max_col=O+6,min_row=25,max_row=29),from_rows=True,titles_from_data=True)
+ch2.set_categories(Reference(ws,min_col=O+1,max_col=O+6,min_row=24,max_row=24))
 for sr in ch2.series: sr.smooth=False
 ws.add_chart(ch2,"P47")
 # cone
@@ -310,15 +311,33 @@ ch5.title="Cashflow composition (selected scenario)"; ch5.height,ch5.width=9,18
 ch5.y_axis.delete=False; ch5.x_axis.delete=False
 ch5.add_data(Reference(ws,min_col=T0+1,max_col=T0+6,min_row=5,max_row=5+NM),titles_from_data=True)
 ch5.set_categories(Reference(ws,min_col=T0,min_row=6,max_row=5+NM))
-ln=LineChart()
-ln.add_data(Reference(ws,min_col=T0+7,min_row=5,max_row=5+NM),titles_from_data=True)
-for sr in ln.series: sr.smooth=False
-ch5 += ln
 ws.add_chart(ch5,f"{gcl(T0)}31")
+ln=LineChart(); ln.title="NET NII by month (selected scenario)"; ln.height,ln.width=6,18
+ln.y_axis.delete=False; ln.x_axis.delete=False
+ln.add_data(Reference(ws,min_col=T0+7,min_row=5,max_row=5+NM),titles_from_data=True)
+ln.set_categories(Reference(ws,min_col=T0,min_row=6,max_row=5+NM))
+for sr in ln.series: sr.smooth=False
+ws.add_chart(ln,f"{gcl(T0)}50")
 
+from openpyxl.workbook.properties import CalcProperties
+wb.calculation=CalcProperties(fullCalcOnLoad=True)
 ws.freeze_panes="A4"
 for col,w in [("A",24),("B",12),("C",9),("D",12),("E",22),("F",12),("G",12),("P",24)]:
     ws.column_dimensions[col].width=w
+# ================= SELF-TEST BLOCK
+put(33,1,"SELF-TESTS (recompute on any input change)",SUB)
+tests=[("Weights sum to 100%",f'=IF(ABS(SUM(H{WR}:M{WR})-1)<0.0001,"OK","FAIL")'),
+("Allocation check",'=IF(B21="OK","OK","FAIL")'),
+("NII identity (dep+swap-bond)",'=IF(SUMPRODUCT(ABS($Q$9:$V$9-($Q$6:$V$6+$Q$7:$V$7-$Q$8:$V$8)))<0.001,"OK","FAIL")'),
+("Timeline reconciles to NII",f'=IF(ABS(SUM({gcl(33+7)}6:{gcl(33+7)}29)-INDEX($Q$9:$V$9,MATCH(${gcl(33+4)}$4,$Q$5:$V$5,0)))<0.01,"OK","FAIL")'),
+("Frontier non-empty",f'=IF(COUNTIF($R${C0}:$R${C0+NC-1},TRUE)>0,"OK","FAIL")'),
+("Cone pinch in range",f'=IF(AND(${gcl(26)}$28>=0,${gcl(26)}$28<=100),"OK","FAIL")')]
+for i,(k,f) in enumerate(tests,34):
+    put(i,1,k); c=put(i,2,f,SUB); c.fill=WARN
+put(40,1,"MODEL STATUS",SUB)
+c=put(40,2,'=IF(COUNTIF(B34:B39,"FAIL")=0,"OK — ALL TESTS PASS","CHECK FAILED TESTS")',
+      Font(name=A,bold=True,color="006100")); c.fill=WARN
+
 import os
 _dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
 _out = os.path.join(_dir, "NII_Frontier_Full.xlsx")
@@ -329,3 +348,26 @@ except PermissionError:
     wb.save(_out)   # original is probably open in Excel
 print(f"built: {NC} strategies")
 print(f"saved: {_out}")
+# ---- reference values (independent of the spreadsheet; sheet must match after Excel recalc)
+from datetime import date as _d
+_sofr0,_cash,_beta,_fix,_nspr,_npct=3.80,500,1.0,3.15,0,75
+_alloc=[100,0,0,400];_spr=[0,10,15,20]
+def _em(d0,m):
+    y=d0.year+(d0.month-1+m)//12; mo=(d0.month-1+m)%12+1; return _d(y,mo,1)
+_start=_d(2026,7,1); _MVd=dict(zip(SCEN,moves())); _ref={}
+for _s in SCEN:
+    _ms=[_em(_start,m) for m in range(24)]; _dy=[(_em(_start,m+1)-_em(_start,m)).days for m in range(24)]
+    _sf=[_sofr0+sum(b for dd,b in zip(FOMC,_MVd[_s]) if dd.toordinal()+1<=mm.toordinal())/100 for mm in _ms]
+    _adj=lambda x:_sofr0+_beta*(x-_sofr0); _dep=_swu=_bd=0
+    for m in range(24):
+        _rs=[_adj(_sf[m])+_spr[0]/100,_adj(_sf[m])+_spr[1]/100,
+             _adj(sum(_sf[max(0,m-1):m+1])/len(_sf[max(0,m-1):m+1]))+_spr[2]/100,
+             _adj(sum(_sf[max(0,m-2):m+1])/len(_sf[max(0,m-2):m+1]))+_spr[3]/100]
+        _dep+=sum(a*r for a,r in zip(_alloc,_rs))/100*_dy[m]/360
+        _swu+=(_fix/100-(_sf[m]/100+_nspr/10000))*_dy[m]/360
+        _bd+=sum(n*c for _,n,c,mt in BONDS if mt>_ms[m])/100/12
+    _ref[_s]=_dep+_npct/100*_cash*_swu-_bd
+print("REFERENCE (defaults; sheet row 9 should match):")
+for _s in SCEN: print(f"  {_s:18s} {_ref[_s]:9.2f}")
+_e=sum(_ref.values())/6
+print(f"  Expected {_e:.2f} | Worst {min(_ref.values()):.2f} | Best {max(_ref.values()):.2f}")
