@@ -14,7 +14,7 @@ from openpyxl.utils import get_column_letter as gcl
 from datetime import date
 from itertools import product
 
-VERSION="v2.1"
+VERSION="v2.2"
 A="Arial"
 BLUE=Font(name=A,color="0000FF"); BLK=Font(name=A); SUB=Font(name=A,bold=True)
 HDR=Font(name=A,bold=True,color="FFFFFF"); HF=PatternFill("solid",start_color="1F3864")
@@ -161,8 +161,9 @@ combos=list(product(fracs,[0,25,50,75,100]))
 NC=len(combos)
 put(C0-2,1,f"STRATEGY GRID — {NC} combinations (10% allocation steps × IRS 0/25/50/75/100%). "
            "Feasibility, frontier and zones are live.",SUB)
-cols=["ON","1M","2M","3M","Label","IRS%","Feasible"]+SCEN+["Expected","Vol","Worst","Best","Efficient","KneeD","Xall","Yall","Xeff","Yeff","W|f","E|f","V|e","E|e"]
+cols=["ON","1M","2M","3M","Label","IRS%","Feasible"]+SCEN+["Expected","Vol","Worst","Best","Efficient","KneeD"]
 for c,h in enumerate(cols,1): put(C0-1,c,h,HDR,HF)
+for c,h in enumerate(["Xall","Yall","Xeff","Yeff","W|f","E|f","V|e","E|e"],50): put(C0-1,c,h,HDR,HF)
 NR=f"${C0}:${C0+NC-1}"
 expR=f"$N{NR.split(':')[0][1:]}"  # built below explicitly
 expRng=f"$N${C0}:$N${C0+NC-1}"; volRng=f"$O${C0}:$O${C0+NC-1}"
@@ -184,33 +185,33 @@ for i,((fa,fb,fc,fd),p) in enumerate(combos):
     put(r,16,f"=MIN(H{r}:M{r})",fill=CALC,nf=NUM)
     put(r,17,f"=MAX(H{r}:M{r})",fill=CALC,nf=NUM)
     put(r,18,f"=IF(G{r},SUMPRODUCT(({feaRng})*({expRng}>=N{r})*({volRng}<=O{r}))=1,FALSE)",fill=CALC)
-    put(r,19,f"=IF(R{r},ABS((O{r}-$AC${C0})/MAX(0.0001,$AC${C0+1}-$AC${C0})"
-             f"-(N{r}-$AC${C0+2})/MAX(0.0001,$AC${C0+3}-$AC${C0+2})),-1)",fill=CALC,nf="0.000")
-    put(r,20,f"=IF(G{r},O{r},NA())",fill=CALC,nf=N2)
-    put(r,21,f"=IF(G{r},N{r},NA())",fill=CALC,nf=NUM)
-    put(r,22,f"=IF(R{r},O{r},NA())",fill=CALC,nf=N2)
-    put(r,23,f"=IF(R{r},N{r},NA())",fill=CALC,nf=NUM)
-    put(r,24,f'=IF(G{r},P{r},"")',fill=CALC)   # worst|feasible
-    put(r,25,f'=IF(G{r},N{r},"")',fill=CALC)   # exp|feasible
-    put(r,26,f'=IF(R{r},O{r},"")',fill=CALC)   # vol|efficient
-    put(r,27,f'=IF(R{r},N{r},"")',fill=CALC)   # exp|efficient
+    put(r,19,f"=IF(R{r},ABS((O{r}-$BG${C0})/MAX(0.0001,$BG${C0+1}-$BG${C0})"
+             f"-(N{r}-$BG${C0+2})/MAX(0.0001,$BG${C0+3}-$BG${C0+2})),-1)",fill=CALC,nf="0.000")
+    put(r,50,f"=IF(G{r},O{r},NA())",fill=CALC,nf=N2)
+    put(r,51,f"=IF(G{r},N{r},NA())",fill=CALC,nf=NUM)
+    put(r,52,f"=IF(R{r},O{r},NA())",fill=CALC,nf=N2)
+    put(r,53,f"=IF(R{r},N{r},NA())",fill=CALC,nf=NUM)
+    put(r,54,f'=IF(G{r},P{r},"")',fill=CALC)   # worst|feasible
+    put(r,55,f'=IF(G{r},N{r},"")',fill=CALC)   # exp|feasible
+    put(r,56,f'=IF(R{r},O{r},"")',fill=CALC)   # vol|efficient
+    put(r,57,f'=IF(R{r},N{r},"")',fill=CALC)   # exp|efficient
 
 # fixed aggregates over the strategy grid (col AC, labels AB)
-aggs=[("minVol|eff",f"=MIN($Z${C0}:$Z${C0+NC-1})"),("maxVol|eff",f"=MAX($Z${C0}:$Z${C0+NC-1})"),
-("minExp|eff",f"=MIN($AA${C0}:$AA${C0+NC-1})"),("maxExp|eff",f"=MAX($AA${C0}:$AA${C0+NC-1})"),
-("maxWorst|feas",f"=MAX($X${C0}:$X${C0+NC-1})"),("maxExp|feas",f"=MAX($Y${C0}:$Y${C0+NC-1})"),
+aggs=[("minVol|eff",f"=MIN($BD${C0}:$BD${C0+NC-1})"),("maxVol|eff",f"=MAX($BD${C0}:$BD${C0+NC-1})"),
+("minExp|eff",f"=MIN($BE${C0}:$BE${C0+NC-1})"),("maxExp|eff",f"=MAX($BE${C0}:$BE${C0+NC-1})"),
+("maxWorst|feas",f"=MAX($BB${C0}:$BB${C0+NC-1})"),("maxExp|feas",f"=MAX($BC${C0}:$BC${C0+NC-1})"),
 ("maxKnee",f"=MAX($S${C0}:$S${C0+NC-1})")]
 for i,(lab,f) in enumerate(aggs):
-    put(C0+i,28,lab,fill=CALC); put(C0+i,29,f,fill=CALC,nf="0.0000")
+    put(C0+i,58,lab,fill=CALC); put(C0+i,59,f,fill=CALC,nf="0.0000")
 
 # ================= ZONES (P17..V21)
 put(17,O,"ZONES (live from strategy grid)",SUB)
 zhdr=["Zone","Allocation","IRS %","Expected","Vol","Worst"]
 for c,h in enumerate(zhdr): put(18,O+c,h,SUB)
 kneRng=f"$S${C0}:$S${C0+NC-1}"
-zrows=[("Defensive",f"MATCH($AC${C0+4},$X${C0}:$X${C0+NC-1},0)"),
-       ("Balanced",f"MATCH($AC${C0+6},{kneRng},0)"),
-       ("Opportunistic",f"MATCH($AC${C0+5},$Y${C0}:$Y${C0+NC-1},0)")]
+zrows=[("Defensive",f"MATCH($BG${C0+4},$BB${C0}:$BB${C0+NC-1},0)"),
+       ("Balanced",f"MATCH($BG${C0+6},{kneRng},0)"),
+       ("Opportunistic",f"MATCH($BG${C0+5},$BC${C0}:$BC${C0+NC-1},0)")]
 for i,(z,mf) in enumerate(zrows):
     r=19+i
     put(r,O,z,SUB)
@@ -221,10 +222,10 @@ for i,(z,mf) in enumerate(zrows):
     put(r,O+4,f"=INDEX({volRng},{idx})",OUT,nf=N2)
     put(r,O+5,f"=INDEX({worRng},{idx})",OUT,nf=NUM)
 # zone scatter helpers (X col W under? use P/Q cols of a tiny block) at AB18:AC21
-put(18,45,"Zx",SUB);put(18,46,"Zy",SUB)
+put(18,50,"Zx",SUB);put(18,51,"Zy",SUB)
 for i in range(3):
-    put(19+i,45,f"=INDEX({volRng},({zrows[i][1]}))",fill=CALC,nf=N2)
-    put(19+i,46,f"=INDEX({expRng},({zrows[i][1]}))",fill=CALC,nf=NUM)
+    put(19+i,50,f"=INDEX({volRng},({zrows[i][1]}))",fill=CALC,nf=N2)
+    put(19+i,51,f"=INDEX({expRng},({zrows[i][1]}))",fill=CALC,nf=NUM)
 
 # ================= SLOPE / SENSITIVITY table (P23..V29)
 put(23,O,"NII BY SCENARIO × IRS NOTIONAL (input allocation)",SUB)
@@ -298,9 +299,10 @@ ws.add_chart(ch3,"X31")
 ch4=ScatterChart(); ch4.title="Efficient frontier — expected NII vs volatility"
 ch4.height,ch4.width=9,16; ch4.x_axis.delete=False; ch4.y_axis.delete=False
 ch4.x_axis.title="Volatility"; ch4.y_axis.title="Expected NII"
-for (xc,yc,t,sym,sz) in [(20,21,"All",'circle',3),(22,23,"Efficient",'diamond',6),(45,46,"Zones",'star',9)]:
+ch4.visible_cells_only=False
+for (xc,yc,t,sym,sz) in [(50,51,"All",'circle',3),(52,53,"Efficient",'diamond',6),(50,51,"Zones",'star',9)]:
     if t=="Zones":
-        s=Series(Reference(ws,min_col=yc,min_row=19,max_row=21),Reference(ws,min_col=xc,min_row=19,max_row=21),title=t)
+        s=Series(Reference(ws,min_col=51,min_row=19,max_row=21),Reference(ws,min_col=50,min_row=19,max_row=21),title=t)
     else:
         s=Series(Reference(ws,min_col=yc,min_row=C0,max_row=C0+NC-1),Reference(ws,min_col=xc,min_row=C0,max_row=C0+NC-1),title=t)
     s.marker=Marker(symbol=sym,size=sz); s.graphicalProperties.line.noFill=True
@@ -322,6 +324,7 @@ ws.add_chart(ln,f"{gcl(T0)}50")
 
 from openpyxl.workbook.properties import CalcProperties
 wb.calculation=CalcProperties(fullCalcOnLoad=True)
+for _c in range(50,60): ws.column_dimensions[gcl(_c)].hidden=True
 ws.freeze_panes="A4"
 for col,w in [("A",24),("B",12),("C",9),("D",12),("E",22),("F",12),("G",12),("P",24)]:
     ws.column_dimensions[col].width=w
