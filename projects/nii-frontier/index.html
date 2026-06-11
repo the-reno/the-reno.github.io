@@ -82,7 +82,8 @@ td.dim{color:var(--dim)}
 
 <h1>NII EFFICIENT FRONTIER <span class="amp">▮</span></h1>
 <p class="sub">Deposit tenor allocation × IRS hedge notional × Fed scenario. Accrual net interest income,
-ACT/360, daily-compounded SOFR. 825 strategies recomputed live as you move the inputs.</p>
+ACT/360, daily-compounded SOFR. 825 strategies recomputed live as you move the inputs.
+<a href="NII_Frontier_Model.xlsx" download>⬇ DOWNLOAD STANDALONE SPREADSHEET MODEL (XLSX)</a></p>
 
 <div class="tape" id="tape"></div>
 
@@ -368,7 +369,7 @@ function run(cfg) {
 </script>
 <script>
 const $ = id => document.getElementById(id);
-const VERSION="v1.6";
+const VERSION="v1.7";
 window.onerror=(msg,src,line)=>{
   let b=$("errbar");
   if(!b){b=document.createElement("div");b.id="errbar";
