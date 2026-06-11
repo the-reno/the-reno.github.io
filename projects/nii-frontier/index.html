@@ -122,7 +122,7 @@ Fed scenarios are placeholder paths over the published FOMC calendar; deposit sp
 2M+15 / 3M+20bps; term buckets fix at the prevailing scenario rate and auto-roll. Not advice.</p>
 
 <div class="foot">
-  <div>浪人 — built with the nii_frontier engine</div>
+  <div>浪人 — built with the nii_frontier engine · <span id=ver></span></div>
   <div>worst/best are scenario extremes · expected/vol are equal-weighted</div>
 </div>
 </div>
@@ -324,6 +324,14 @@ function run(cfg) {
 </script>
 <script>
 const $ = id => document.getElementById(id);
+const VERSION="v1.2";
+window.onerror=(msg,src,line)=>{
+  let b=$("errbar");
+  if(!b){b=document.createElement("div");b.id="errbar";
+    b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#3a0c0c;color:#ff9d9d;font:11px JetBrains Mono,monospace;padding:8px 12px;z-index:99";
+    document.body.appendChild(b);}
+  b.textContent="RUNTIME ERROR "+VERSION+" — "+msg+" (line "+line+")";
+};
 const cfg = { start: Math.floor(Date.now()/86400000), horizonYears: 2, sofr0: 3.80, cash: 500,
   onMin: 100, stepPct: 10, beta: 1.0, direction: "RCV", fixed: 3.15, spread: 0,
   buckets: [["ON",0,0],["1M",1,10],["2M",2,15],["3M",3,20]], notionals: [0,25,50,75,100] };
@@ -335,7 +343,7 @@ const fmt = (v, dp=1) => (v<0?"(":"")+Math.abs(v).toFixed(dp)+(v<0?")":"");
 const SC_COL = {"FLAT":"#8a93a0","GRADUAL CUTS":"#00d4e0","FASTER CUTS":"#39d98a",
   "DELAYED CUTS":"#7fb2ff","HIGHER FOR LONGER":"#c792ea","HIKE":"#ff4d4d"};
 
-let res, fair;
+let res, fair, raf=0;
 function fairRate(){
   let lo=2.0, hi=5.0;
   for(let i=0;i<24;i++){const mid=(lo+hi)/2, r=run({...cfg, fixed:mid, stepPct:100});
@@ -344,13 +352,12 @@ function fairRate(){
   return (lo+hi)/2;
 }
 function recompute(){
-  res = run(cfg);
-  fair = fairRate();
-  drawAll();
+  if(raf)return;
+  raf=requestAnimationFrame(()=>{raf=0; res=run(cfg); fair=fairRate(); drawAll();});
 }
 
 function setupCanvas(cv){
-  const r = cv.getBoundingClientRect(), dpr = devicePixelRatio||1;
+  const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio||1,2);
   cv.width = r.width*dpr; cv.height = cv.getAttribute("height")*dpr;
   cv.style.height = cv.getAttribute("height")+"px";
   const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
@@ -479,15 +486,19 @@ function drawAll(){drawTape();drawFrontier();drawZones();drawScen();drawSofr();
   $("oSpr").textContent=cfg.spread;}
 
 const tip=$("tip");
-$("cFront").addEventListener("mousemove",e=>{
-  const r=e.target.getBoundingClientRect(), mx=e.clientX-r.left,my=e.clientY-r.top;
-  let best=null,bd=12;
+function showTip(e){
+  const r=$("cFront").getBoundingClientRect(), mx=e.clientX-r.left,my=e.clientY-r.top;
+  let best=null,bd=18;
   for(const [x,y,c] of pts){const d2=Math.hypot(x-mx,y-my); if(d2<bd){bd=d2;best=c;}}
   if(best){const a=Object.entries(best.a).filter(([,v])=>v>0).map(([k,v])=>k+" "+v).join("/");
-    tip.style.display="block";tip.style.left=(e.clientX+14)+"px";tip.style.top=(e.clientY+10)+"px";
+    tip.style.display="block";
+    tip.style.left=Math.min(e.clientX+14,innerWidth-250)+"px";tip.style.top=(e.clientY+10)+"px";
     tip.innerHTML=`${a}<br>IRS ${best.p}% · exp ${fmt(best.exp)} · vol ${fmt(best.vol,2)}<br>worst ${fmt(best.worst)} (${best.worstS})`;}
-  else tip.style.display="none";});
-$("cFront").addEventListener("mouseleave",()=>tip.style.display="none");
+  else tip.style.display="none";
+}
+$("cFront").addEventListener("pointermove",showTip);
+$("cFront").addEventListener("pointerdown",showTip);
+$("cFront").addEventListener("pointerleave",()=>tip.style.display="none");
 
 const bind=(id,key,f=parseFloat)=>$(id).addEventListener("input",e=>{cfg[key]=f(e.target.value);recompute();});
 bind("iFixed","fixed");bind("iSofr","sofr0");bind("iBeta","beta");bind("iMin","onMin");bind("iSpr","spread");
@@ -496,6 +507,7 @@ $("bPay").onclick=()=>{cfg.direction="PAY";$("bPay").classList.add("on");$("bRcv
 addEventListener("resize",drawAll);
 recompute();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+$("ver").textContent=VERSION;
 </script>
 </body>
 </html>
