@@ -1,0 +1,41 @@
+Attribute VB_Name = "cStepCurve"
+' === CLASS MODULE === (Insert > Class Module, rename to cStepCurve)
+' =====================================================================
+' cStepCurve (Layer 1) - the market layer. One method matters:
+'   RateAt(date) -> percent
+' Step function over (effectiveDate, rate) knots, sorted ascending.
+' A FLAT curve (fixed legs) is simply a curve with one knot.
+' Holds VALUES only (P1); knows nothing about instruments (P2).
+' =====================================================================
+Option Explicit
+Private mEff() As Date
+Private mRate() As Double
+Private mN As Long
+Private mName As String
+
+' knots arrays are 1-based, ascending effective dates
+Public Sub Init(ByVal name As String, effDates() As Date, rates() As Double)
+    Dim i As Long
+    mName = name
+    mN = UBound(effDates)
+    ReDim mEff(1 To mN): ReDim mRate(1 To mN)
+    For i = 1 To mN
+        mEff(i) = effDates(i): mRate(i) = rates(i)
+    Next i
+End Sub
+
+Public Property Get CurveName() As String: CurveName = mName: End Property
+Public Property Get Steps() As Long: Steps = mN: End Property
+Public Property Get FirstRate() As Double: FirstRate = mRate(1): End Property
+Public Property Get LastRate() As Double: LastRate = mRate(mN): End Property
+
+' The contract: rate prevailing ON a date = rate of the last knot
+' whose effective date is <= the date. Before the first knot,
+' the first knot's rate applies (it is the initial fix).
+Public Function RateAt(ByVal d As Date) As Double
+    Dim i As Long
+    RateAt = mRate(1)
+    For i = 1 To mN
+        If mEff(i) <= d Then RateAt = mRate(i) Else Exit For
+    Next i
+End Function

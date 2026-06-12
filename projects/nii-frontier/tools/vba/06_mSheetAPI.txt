@@ -1,0 +1,159 @@
+Attribute VB_Name = "mSheetAPI"
+' =====================================================================
+' mSheetAPI (Layer 7, sheet door) - the only module that touches cells.
+' Constructor UDFs build objects from sheet VALUES, register them, and
+' return a receipt string. Consumer UDFs take handle CELLS (never typed
+' strings - convention C1) and call the engines.
+' On bad input, receipts read "#..._ERR: reason" so problems surface at
+' the construction cell, never as silent zeros downstream.
+' =====================================================================
+Option Explicit
+
+' ---------------------------------------------------------------------
+' =FED_HOL(tblHolidays)  ->  "hol_calendar | OK | 27 holidays"
+' Builds the calendar from the holiday date column(s).
+' ---------------------------------------------------------------------
+Public Function FED_HOL(holidayRange As Range) As String
+    On Error GoTo bad
+    Dim cal As New cCalendar
+    cal.Init holidayRange.Value
+    RegSet "hol_calendar", cal
+    FED_HOL = "hol_calendar | OK | " & cal.HolidayCount & " holidays"
+    Exit Function
+bad:
+    FED_HOL = "#CAL_ERR: " & Err.Description
+End Function
+
+' ---------------------------------------------------------------------
+' =MAKE_CURVE(name, sofr0, fomcDates, movesBps, scale, calHandleCell)
+'   -> "curve_cuts | OK | 7 steps | 3.80->2.30"
+' Cumulative bps moves on FOMC dates, each effective the NEXT BUSINESS
+' DAY per the calendar. Blank date rows are ignored. scale multiplies
+' every move (your scenario-scaling idea).
+' ---------------------------------------------------------------------
+Public Function MAKE_CURVE(ByVal name As String, ByVal sofr0 As Double, _
+                           fomcDates As Range, movesBps As Range, _
+                           ByVal scale As Double, calHandle As Range) As String
+    On Error GoTo bad
+    Dim cal As cCalendar
+    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
+    If cal Is Nothing Then MAKE_CURVE = "#CURVE_ERR: calendar not built (recalc Ctrl+Alt+F9)": Exit Function
+
+    Dim eff() As Date, rt() As Double, n As Long, i As Long, cum As Double
+    ReDim eff(1 To fomcDates.Rows.Count + 1)
+    ReDim rt(1 To fomcDates.Rows.Count + 1)
+    n = 1: eff(1) = DateSerial(1900, 1, 1): rt(1) = sofr0   ' initial fix knot
+    cum = sofr0
+    For i = 1 To fomcDates.Rows.Count
+        If IsDate(fomcDates.Cells(i, 1).Value) Then
+            Dim mv As Double
+            mv = 0#
+            If IsNumeric(movesBps.Cells(i, 1).Value) Then mv = CDbl(movesBps.Cells(i, 1).Value)
+            If mv <> 0# Then
+                cum = cum + scale * mv / 100#
+                n = n + 1
+                eff(n) = cal.NextBusinessDay(CDate(fomcDates.Cells(i, 1).Value))
+                rt(n) = cum
+            End If
+        End If
+    Next i
+    ReDim Preserve eff(1 To n): ReDim Preserve rt(1 To n)
+    Dim crv As New cStepCurve
+    crv.Init name, eff, rt
+    RegSet name, crv
+    MAKE_CURVE = name & " | OK | " & (n - 1) & " steps | " & _
+                 Format(sofr0, "0.00") & "->" & Format(rt(n), "0.00")
+    Exit Function
+bad:
+    MAKE_CURVE = "#CURVE_ERR: " & Err.Description
+End Function
+
+' ---------------------------------------------------------------------
+' =ON_INTEREST(date, amountMM, curveHandleCell, calHandleCell)
+' One overnight fix: amount x RateAt(date) x ONdays/360.
+' Friday carries 3 days; holiday bridges more. Your worked example.
+' ---------------------------------------------------------------------
+Public Function ON_INTEREST(ByVal d As Date, ByVal amountMM As Double, _
+                            curveHandle As Range, calHandle As Range) As Variant
+    On Error GoTo bad
+    Dim crv As cStepCurve, cal As cCalendar
+    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
+    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
+    If crv Is Nothing Or cal Is Nothing Then ON_INTEREST = CVErr(xlErrNA): Exit Function
+    ON_INTEREST = AccrueSimple(amountMM, crv.RateAt(d), cal.ONDays(d))
+    Exit Function
+bad:
+    ON_INTEREST = CVErr(xlErrValue)
+End Function
+
+' ---------------------------------------------------------------------
+' =PERIOD_INTEREST(start, end, amountMM, curveHC, calHC, accrualType)
+' The accrual engine, sheet door. Walks business days start..end:
+'   "SIMPLE"   - sum of daily accruals on constant amount (ACT/360)
+'   "COMPOUND" - daily accrual joins the balance (returns total interest)
+' This single function is the deposit, the swap float leg (scenario
+' curve) and the swap fixed leg (flat curve) - the unification.
+' ---------------------------------------------------------------------
+Public Function PERIOD_INTEREST(ByVal dStart As Date, ByVal dEnd As Date, _
+                                ByVal amountMM As Double, curveHandle As Range, _
+                                calHandle As Range, ByVal accrualType As String) As Variant
+    On Error GoTo bad
+    Dim crv As cStepCurve, cal As cCalendar
+    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
+    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
+    If crv Is Nothing Or cal Is Nothing Then PERIOD_INTEREST = CVErr(xlErrNA): Exit Function
+
+    Dim d As Date, w As Long, bal As Double, intr As Double
+    bal = amountMM: intr = 0#
+    d = cal.Following(dStart)
+    Do While d < dEnd
+        w = cal.ONDays(d)
+        If d + w > dEnd Then w = CLng(dEnd - d)        ' clip at period end
+        Select Case UCase$(accrualType)
+            Case "SIMPLE"
+                intr = intr + AccrueSimple(amountMM, crv.RateAt(d), w)
+            Case "COMPOUND"
+                intr = intr + AccrueSimple(bal, crv.RateAt(d), w)
+                bal = amountMM + intr
+            Case Else
+                PERIOD_INTEREST = CVErr(xlErrValue): Exit Function
+        End Select
+        d = cal.NextBusinessDay(d)
+    Loop
+    PERIOD_INTEREST = intr
+    Exit Function
+bad:
+    PERIOD_INTEREST = CVErr(xlErrValue)
+End Function
+
+' ---------------------------------------------------------------------
+' =SWAP_NET(start, end, notionalMM, fixedPct, scenCurveHC, calHC, dir)
+' The coordinator pattern: fixed leg = simple accrual at a constant
+' rate; float leg = PERIOD-style walk on the scenario curve; net by
+' direction ("RCV" or "PAY"). No swap math exists - only two engine
+' calls and a sign.
+' ---------------------------------------------------------------------
+Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
+                         ByVal notionalMM As Double, ByVal fixedPct As Double, _
+                         scenCurve As Range, calHandle As Range, _
+                         ByVal direction As String) As Variant
+    On Error GoTo bad
+    Dim cal As cCalendar, crv As cStepCurve
+    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
+    Set crv = RegGet(HandleName(CStr(scenCurve.Value)))
+    If cal Is Nothing Or crv Is Nothing Then SWAP_NET = CVErr(xlErrNA): Exit Function
+    Dim s As Date, e As Date, fixedLeg As Double, floatLeg As Double, d As Date, w As Long
+    s = cal.Following(dStart): e = dEnd
+    fixedLeg = AccrueSimple(notionalMM, fixedPct, CLng(e - s))
+    d = s
+    Do While d < e
+        w = cal.ONDays(d)
+        If d + w > e Then w = CLng(e - d)
+        floatLeg = floatLeg + AccrueSimple(notionalMM, crv.RateAt(d), w)
+        d = cal.NextBusinessDay(d)
+    Loop
+    SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
+    Exit Function
+bad:
+    SWAP_NET = CVErr(xlErrValue)
+End Function

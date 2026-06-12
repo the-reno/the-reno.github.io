@@ -1,0 +1,51 @@
+Attribute VB_Name = "cCalendar"
+' === CLASS MODULE === (Insert > Class Module, rename to cCalendar)
+' =====================================================================
+' cCalendar (Layer 0) - immutable value-holder built from holiday DATES.
+' Weekends are always non-business. Holds VALUES, never ranges (P1).
+' =====================================================================
+Option Explicit
+Private mHol As Object          ' Dictionary of holiday date serials
+Private mCount As Long
+
+Public Sub Init(holidayDates As Variant)
+    Dim v As Variant
+    Set mHol = CreateObject("Scripting.Dictionary")
+    mCount = 0
+    For Each v In holidayDates
+        If IsDate(v) Then
+            If Not mHol.Exists(CLng(CDate(v))) Then
+                mHol.Add CLng(CDate(v)), True
+                mCount = mCount + 1
+            End If
+        End If
+    Next v
+End Sub
+
+Public Property Get HolidayCount() As Long
+    HolidayCount = mCount
+End Property
+
+Public Function IsBusinessDay(ByVal d As Date) As Boolean
+    Dim w As Long
+    w = Weekday(d, vbMonday)            ' 1=Mon .. 7=Sun
+    IsBusinessDay = (w <= 5) And Not mHol.Exists(CLng(d))
+End Function
+
+' Following convention: roll forward to the next business day (inclusive).
+Public Function Following(ByVal d As Date) As Date
+    Do While Not IsBusinessDay(d)
+        d = d + 1
+    Loop
+    Following = d
+End Function
+
+Public Function NextBusinessDay(ByVal d As Date) As Date
+    NextBusinessDay = Following(d + 1)
+End Function
+
+' Calendar days an overnight fix applies: 1 normally, 3 over a weekend,
+' more over holiday bridges. Example: Fri 2026-07-17 -> 3.
+Public Function ONDays(ByVal d As Date) As Long
+    ONDays = CLng(NextBusinessDay(d) - d)
+End Function

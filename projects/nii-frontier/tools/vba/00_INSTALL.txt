@@ -1,18 +1,17 @@
-NII FRONTIER - VBA ENGINE MODULES
-=================================
-Build slice 1 of 6: the interest engine.
+NII ENGINE - VBA MODULES (install order)
+=========================================
+Workbook: NII_Engine_Example_v1.0.xlsx (ships macro-free; #NAME? until setup)
 
-Install (Excel):
-  1. Alt+F11 (VBA editor)
-  2. Insert > Module, rename to mInterestCalc, paste 01_mInterestCalc.txt
-     (skip the first 'Attribute VB_Name' line when pasting)
-  3. Insert > Module, rename to mTests, paste 02_mTests.txt (same rule)
-  4. Alt+F8 > TestInterestEngine > Run
-  5. A TESTS sheet appears; expect ENGINE STATUS: OK - ALL TESTS PASS
-  6. Save as .xlsm
+  01_mInterestCalc.txt   standard Module   (5 accrual primitives - signed off)
+  02_mTests.txt          standard Module   (Alt+F8 > TestInterestEngine)
+  03_mRegistry.txt       standard Module   (name -> object cache)
+  04_cCalendar.txt       CLASS Module      (Insert > Class Module, rename cCalendar)
+  05_cStepCurve.txt      CLASS Module      (Insert > Class Module, rename cStepCurve)
+  06_mSheetAPI.txt       standard Module   (FED_HOL, MAKE_CURVE, ON_INTEREST,
+                                            PERIOD_INTEREST, SWAP_NET)
 
-Architecture: every accrual in the model (deposits, swap legs, bonds)
-flows through these five functions. Sign off this module once;
-correctness propagates. Next slices: paths, debt, deposits, swap,
-portfolio+stats - each arrives with its own tests and golden totals
-reconciling to the Python v4 reference.
+Paste route: skip each file's first 'Attribute VB_Name' line and rename the
+module to match. Then save as .xlsm and press Ctrl+Alt+F9.
+
+Conventions (binding): handles flow cell-to-cell, never typed strings.
+Growable inputs are Excel Tables. See ARCHITECTURE.txt.
