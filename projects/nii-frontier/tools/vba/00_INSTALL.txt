@@ -1,0 +1,18 @@
+NII FRONTIER - VBA ENGINE MODULES
+=================================
+Build slice 1 of 6: the interest engine.
+
+Install (Excel):
+  1. Alt+F11 (VBA editor)
+  2. Insert > Module, rename to mInterestCalc, paste 01_mInterestCalc.txt
+     (skip the first 'Attribute VB_Name' line when pasting)
+  3. Insert > Module, rename to mTests, paste 02_mTests.txt (same rule)
+  4. Alt+F8 > TestInterestEngine > Run
+  5. A TESTS sheet appears; expect ENGINE STATUS: OK - ALL TESTS PASS
+  6. Save as .xlsm
+
+Architecture: every accrual in the model (deposits, swap legs, bonds)
+flows through these five functions. Sign off this module once;
+correctness propagates. Next slices: paths, debt, deposits, swap,
+portfolio+stats - each arrives with its own tests and golden totals
+reconciling to the Python v4 reference.
