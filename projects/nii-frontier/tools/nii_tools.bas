@@ -1,0 +1,59 @@
+Attribute VB_Name = "NIITools"
+' =====================================================================
+' NII FRONTIER LITE v3.0 - optional VBA helpers
+' The workbook is fully functional WITHOUT macros. Import this only
+' where macros are permitted: Alt+F11 > File > Import File > nii_tools.bas
+' Then Alt+F8 to run. Sheet assumed: "MODEL".
+' =====================================================================
+Option Explicit
+
+' Multiply every scenario's scale factor (row 31, H:M) by one number.
+' Quick way to stress all paths at once, e.g. ScaleAllScenarios 2 doubles
+' every Fed path; 0.5 halves them. Run ResetScales to return to 1.0.
+Sub ScaleAllScenarios()
+    Dim f As Variant, c As Range
+    f = Application.InputBox("Scale factor for ALL scenarios (e.g. 2 = double every path):", _
+                             "Scale scenarios", 1#, Type:=1)
+    If f = False Then Exit Sub
+    For Each c In Worksheets("MODEL").Range("H31:M31")
+        c.Value = f
+    Next c
+End Sub
+
+Sub ResetScales()
+    Worksheets("MODEL").Range("H31:M31").Value = 1#
+End Sub
+
+' Copy the current results block (per-scenario totals + stats + key inputs)
+' to a timestamped "RUNS" sheet, so different input sets can be compared
+' side by side without screenshots.
+Sub SnapshotResults()
+    Dim ws As Worksheet, rs As Worksheet, r As Long
+    Set ws = Worksheets("MODEL")
+    On Error Resume Next
+    Set rs = Worksheets("RUNS")
+    On Error GoTo 0
+    If rs Is Nothing Then
+        Set rs = Worksheets.Add(After:=ws)
+        rs.Name = "RUNS"
+        rs.Range("A1:O1").Value = Array("Timestamp", "Fixed %", "Notional %", "Dir", "SOFR0", _
+            ws.Range("Q5").Value, ws.Range("R5").Value, ws.Range("S5").Value, _
+            ws.Range("T5").Value, ws.Range("U5").Value, ws.Range("V5").Value, _
+            "Expected", "Vol", "Worst", "Fair %")
+        rs.Rows(1).Font.Bold = True
+    End If
+    r = rs.Cells(rs.Rows.Count, 1).End(xlUp).Row + 1
+    rs.Cells(r, 1).Value = Now
+    rs.Cells(r, 2).Value = ws.Range("B11").Value
+    rs.Cells(r, 3).Value = ws.Range("B13").Value
+    rs.Cells(r, 4).Value = ws.Range("B10").Value
+    rs.Cells(r, 5).Value = ws.Range("B6").Value
+    ws.Range("Q9:V9").Copy
+    rs.Cells(r, 6).PasteSpecial xlPasteValues
+    rs.Cells(r, 12).Value = ws.Range("Q11").Value
+    rs.Cells(r, 13).Value = ws.Range("Q12").Value
+    rs.Cells(r, 14).Value = ws.Range("Q13").Value
+    rs.Cells(r, 15).Value = ws.Range("Q14").Value
+    Application.CutCopyMode = False
+    MsgBox "Snapshot saved to RUNS row " & r, vbInformation
+End Sub
