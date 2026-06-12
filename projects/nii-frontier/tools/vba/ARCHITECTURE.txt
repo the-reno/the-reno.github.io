@@ -1,0 +1,103 @@
+NII ENGINE — ARCHITECTURE v1.0 (sign-off document)
+====================================================================
+Design settled in session 2026-06-12. Changes to this document require
+a version bump. The Python v4 builder remains the golden reference;
+the VBA build is not done until it reconciles to it to the cent.
+
+PRINCIPLES (the four rules everything follows)
+--------------------------------------------------------------------
+P1  Objects are immutable VALUE-holders (data copied in at build time).
+    Engines are SHEET-BLIND (nothing below a constructor touches a
+    worksheet). The worksheet is one constructor among others.
+P2  Layered one-way dependencies. A layer knows only the layer below.
+    The test for any new feature: "which layer is ignorant of this?"
+P3  Product behavior lives in product engines, market data in curves,
+    arithmetic in the accrual engine. Never mixed.
+P4  Every cashflow is a self-contained ledger row: recomputable by
+    hand from the row alone. Point-wise audit, never table-wise.
+
+LAYER MAP
+--------------------------------------------------------------------
+L0  CALENDAR     cCalendar            business days, Following, day counts
+L1  CURVES       ICurve               RateAt(date) -> pct
+                 cStepCurve           scenario: FOMC effective dates + cum moves x scale
+                 cFlatCurve           constant rate (fixed legs ARE flat curves)
+L2  PRODUCT      mDepositRates        raw -> trailing-avg(lag) -> BetaAdjust -> +spread
+    ENGINES                           outputs an EXPLICIT per-period rate vector
+                                      (inspectable: it is the Rate% ledger column)
+                                      Swap legs bypass this layer entirely (no beta).
+L3  ACCRUAL      mAccrualEngine       Calc(start, end, amount, accrualType,
+    ENGINE                                 rateVector|curve, calendar) -> cashflow
+                                      Types: SIMPLE (ACT/360) | COUPON_30360 |
+                                             COMPOUND (interest joins principal,
+                                             periods evaluated in sequence)
+                                      Built on the five mInterestCalc primitives
+                                      (slice 1, already signed off).
+L4  INSTRUMENTS  cBond                generator: COUPON_30360 stream
+    (coordinators)cDepositBook        generator: COMPOUND stream via mDepositRates
+                 cSwap                coordinator: fixed leg = Calc(flat curve),
+                                      float leg = Calc(scenario curve + spread),
+                                      net = direction x (fixed - float).
+                                      Ledger gets 3 rows/period: fixed, float, net.
+                 (later: cFloor, cCollar, cAssetSwap - new rate rules /
+                  coordinators only; zero engine changes)
+L5  PORTFOLIO    mPortfolio           sum of instrument ledgers -> NII per scenario
+L6  STATS        mStats               expected, vol, worst/best (weight-aware),
+                                      fair rate, dispersion, pinch
+L7  ORCHESTRATION mMain               sheet door wiring, RESULTS/LEDGER/TESTS output
+                 mTests               worked examples + golden totals (Python v4)
+
+REGISTRY & HANDLES (the two doors)
+--------------------------------------------------------------------
+mRegistry: module-level Scripting.Dictionary, name -> object.
+Memory is a CACHE; the sheet is the database. Objects rebuild from
+sheet formulas on any recalc; consumer UDFs rebuild-if-missing.
+
+Sheet door (UDFs return receipt strings, store objects):
+  =FED_HOL(tblHolidays)                 -> "hol_calendar (checkmark) 27 holidays 2026-2035"
+  =MAKE_CURVE(name, dates, moves, scale)-> "curve_cuts (checkmark) 8 steps 3.80->2.30 ..."
+  =MAKE_DEPOSITS(...) =MAKE_SWAP(...) =MAKE_BOND(...)
+  =ACCRUE_ON(date, amount, curveCell, calCell)   (example consumer)
+  On bad inputs the receipt is "#..._ERR: reason" - errors surface at
+  the construction cell, not as silent zeros downstream.
+
+Code door (batch/scale/Monte Carlo - zero sheet I/O inside loops):
+  Set cal = NewCalendar(datesArray)
+  Set crv = NewStepCurve(fomc, moves, scaleFactor)
+  result  = RunPortfolio(instruments, curves, cal)
+
+CONVENTIONS (binding)
+--------------------------------------------------------------------
+C1  Handles flow CELL-TO-CELL ($H$40), never typed string literals -
+    a typed handle computes correctly once, then goes silently stale.
+C2  Growable inputs (holidays, FOMC, bonds) are Excel Tables so the
+    MAKE_* references expand with the data.
+C3  Macro-written outputs (sweeps, snapshots) carry a run timestamp -
+    they are artifacts, not live cells.
+C4  Naming: c* classes, I* interfaces, m* modules. Option Explicit
+    everywhere. Classes expose Property Get only.
+C5  Every pure function header: formula + one hand-computed example,
+    asserted in mTests.
+C6  Distribution: one .txt per module in tools/vba/, numbered in
+    import order; workbook itself stays macro-free until the user
+    imports and saves as .xlsm.
+
+LEDGER SCHEMA (frozen audit contract)
+--------------------------------------------------------------------
+Date | Scenario | Instrument | Component | Detail | Calendar |
+Rate% | Days | Cashflow($mm)
+Every Ledger() emits exactly this. Totals are sums over it. A row
+must be recomputable by hand from its own columns.
+
+BUILD SLICES (each ships runnable + reconciled before the next)
+--------------------------------------------------------------------
+S1  mInterestCalc + mTests                     DONE (5 primitives, all green)
+S2  mRegistry + cCalendar + FED_HOL            tests: day counts vs v4 grid
+S3  ICurve + cStepCurve + cFlatCurve + MAKE_CURVE
+                                               tests: rates vs v4 SOFR grid
+S4  mAccrualEngine + mDepositRates             tests: one bond month, one
+                                               compounding deposit month
+S5  cBond + cDepositBook + cSwap + ledger      tests: swap month = fixed-float
+S6  mPortfolio + mStats + mMain                golden: Flat -260.5,
+                                               Deep cuts -267.6, fair 3.22
+S7  (extension) cFloor / cCollar / cAssetSwap  new classes only
