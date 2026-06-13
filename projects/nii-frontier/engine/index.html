@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NII ENGINE — playground</title>
+<style>
+:root{--bg:#0a0e12;--panel:#10161d;--line:#1e2a36;--tx:#c9d4dd;--dim:#5d7185;
+--amber:#e8a33d;--cyan:#39c2d7;--green:#3dd68c;--red:#e85d5d;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',Consolas,monospace;
+font-size:13px;padding:24px;max-width:1100px;margin:0 auto;}
+h1{font-size:18px;color:var(--amber);letter-spacing:2px;margin-bottom:4px;}
+.sub{color:var(--dim);font-size:11px;margin-bottom:20px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:800px){.grid{grid-template-columns:1fr;}}
+.panel{background:var(--panel);border:1px solid var(--line);padding:14px;}
+.panel h2{font-size:11px;color:var(--cyan);letter-spacing:1.5px;margin-bottom:10px;
+border-bottom:1px solid var(--line);padding-bottom:6px;}
+label{display:block;color:var(--dim);font-size:10px;margin:8px 0 2px;}
+input,select,textarea{background:#0d1318;border:1px solid var(--line);color:var(--tx);
+font-family:inherit;font-size:12px;padding:5px 7px;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);}
+textarea{height:96px;resize:vertical;}
+.row{display:flex;gap:8px;}.row>*{flex:1;}
+table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+th{color:var(--dim);text-align:left;font-weight:normal;border-bottom:1px solid var(--line);padding:3px 6px;}
+td{padding:3px 6px;border-bottom:1px solid #141c24;}
+td.num{text-align:right;font-variant-numeric:tabular-nums;}
+.receipt{color:var(--green);font-size:11px;padding:4px 0;}
+.receipt.err{color:var(--red);}
+.ok{color:var(--green);}.bad{color:var(--red);font-weight:bold;}
+.fomc-row{display:grid;grid-template-columns:1fr 80px 24px;gap:6px;margin-bottom:4px;}
+button{background:none;border:1px solid var(--line);color:var(--dim);font-family:inherit;
+font-size:11px;padding:4px 10px;cursor:pointer;}
+button:hover{border-color:var(--amber);color:var(--amber);}
+.res{font-size:16px;color:var(--amber);margin:8px 0;}
+.note{color:var(--dim);font-size:10px;line-height:1.5;margin-top:8px;}
+.full{grid-column:1/-1;}
+.tag{color:var(--cyan);}
+footer{margin-top:24px;color:var(--dim);font-size:10px;}
+</style>
+</head>
+<body>
+<h1>NII ENGINE</h1>
+<div class="sub">calendar → curve → accrual engine — every number carries its ledger · twin of the VBA build · v1.0</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>1 · CALENDAR OBJECT</h2>
+    <label>Holidays (one date per line, YYYY-MM-DD)</label>
+    <textarea id="hols">2026-01-01
+2026-01-19
+2026-07-03
+2026-09-07
+2026-11-26
+2026-12-25</textarea>
+    <div class="receipt" id="calReceipt"></div>
+  </div>
+
+  <div class="panel">
+    <h2>2 · CURVE OBJECT — scenario "cuts"</h2>
+    <div class="row">
+      <div><label>Initial SOFR %</label><input id="sofr0" type="number" step="0.01" value="3.80"></div>
+      <div><label>Scale ×</label><input id="scale" type="number" step="0.25" value="1.0"></div>
+    </div>
+    <label>FOMC decisions (move becomes effective next business day)</label>
+    <div id="fomc"></div>
+    <button onclick="addFomc()">+ meeting</button>
+    <div class="receipt" id="crvReceipt"></div>
+  </div>
+
+  <div class="panel full">
+    <h2>3 · GOLDEN CASES — engine vs hand-computed expected</h2>
+    <table id="cases"><thead><tr>
+      <th>Case</th><th>Inputs</th><th style="text-align:right">Engine</th>
+      <th style="text-align:right">Expected</th><th>Match</th></tr></thead><tbody></tbody></table>
+    <div class="note">Expected values were hand-computed at default inputs. Edit anything above and
+    the engine recomputes — expected values stay fixed, so defaults show OK and edits show the live engine diverging, as they should.</div>
+  </div>
+
+  <div class="panel full">
+    <h2>4 · CALCULATOR — any accrual, with its ledger</h2>
+    <div class="row">
+      <div><label>Type</label><select id="ctype">
+        <option value="ON">ON (one fix)</option>
+        <option value="SIMPLE" selected>Period — simple</option>
+        <option value="COMPOUND">Period — compounding</option>
+        <option value="SWAP">Swap month (RCV fixed)</option>
+      </select></div>
+      <div><label>Start</label><input id="cstart" type="date" value="2026-07-01"></div>
+      <div><label>End</label><input id="cend" type="date" value="2026-10-01"></div>
+      <div><label>Amount $mm</label><input id="camt" type="number" step="25" value="100"></div>
+      <div id="cfixWrap" style="display:none"><label>Fixed %</label><input id="cfix" type="number" step="0.05" value="3.15"></div>
+    </div>
+    <div class="res" id="cres"></div>
+    <table id="ledger"><thead><tr><th>Fix date</th><th style="text-align:right">Rate %</th>
+      <th style="text-align:right">Days</th><th style="text-align:right">Base $mm</th>
+      <th style="text-align:right">Accrual $mm</th><th>Component</th></tr></thead><tbody></tbody></table>
+    <div class="note">This table <span class="tag">is</span> the audit trail: every row recomputable as
+    base × rate% × days / 360. Weekend fixes carry 3 days; holiday bridges more; compounding grows the base.</div>
+  </div>
+</div>
+<footer>NII ENGINE playground · architecture: tools/vba/ARCHITECTURE.txt · 浪人</footer>
+
+<script>
+"use strict";
+// ============ ENGINE (exact twin of the VBA modules) ============
+const D=s=>{const[p,q,r]=s.split("-").map(Number);return new Date(Date.UTC(p,q-1,r));};
+const fmt=d=>d.toISOString().slice(0,10);
+const addD=(d,n)=>new Date(d.getTime()+n*86400000);
+
+// cCalendar
+function Calendar(holidayDates){
+  const hol=new Set(holidayDates.map(d=>fmt(d)));
+  const isBD=d=>{const w=d.getUTCDay();return w>=1&&w<=5&&!hol.has(fmt(d));};
+  const following=d=>{while(!isBD(d))d=addD(d,1);return d;};
+  const nextBD=d=>following(addD(d,1));
+  const onDays=d=>Math.round((nextBD(d)-d)/86400000);
+  return{count:hol.size,isBD,following,nextBD,onDays};
+}
+// cStepCurve  (knots: [effDate, rate])
+function StepCurve(knots){
+  return{steps:knots.length-1,last:knots[knots.length-1][1],
+    rateAt(d){let r=knots[0][1];for(const[e,v]of knots){if(e<=d)r=v;else break;}return r;}};
+}
+// mInterestCalc
+const accrueSimple=(n,r,days,basis=360)=>n*(r/100)*days/basis;
+
+// mAccrualEngine: walk fixes start..end; returns {total, rows[]}
+function calc(start,end,amount,type,curve,cal){
+  const rows=[];let d=cal.following(start),intr=0,bal=amount;
+  while(d<end){
+    let w=cal.onDays(d);
+    if(addD(d,w)>end)w=Math.round((end-d)/86400000);
+    const base=(type==="COMPOUND")?bal:amount;
+    const a=accrueSimple(base,curve.rateAt(d),w);
+    rows.push({date:fmt(d),rate:curve.rateAt(d),days:w,base,acc:a,comp:type});
+    intr+=a; if(type==="COMPOUND")bal=amount+intr;
+    d=cal.nextBD(d);
+  }
+  return{total:intr,rows};
+}
+// cSwap coordinator: fixed leg = flat curve, float leg = scenario curve
+function swapNet(start,end,notional,fixedPct,curve,cal,dir="RCV"){
+  const s=cal.following(start);
+  const fixedLeg=accrueSimple(notional,fixedPct,Math.round((end-s)/86400000));
+  const fl=calc(start,end,notional,"SIMPLE",curve,cal);
+  const sign=dir==="RCV"?1:-1;
+  const rows=fl.rows.map(r=>({...r,comp:"FLOAT"}));
+  rows.push({date:fmt(s)+" → "+fmt(end),rate:fixedPct,days:Math.round((end-s)/86400000),
+             base:notional,acc:fixedLeg,comp:"FIXED"});
+  rows.push({date:"NET",rate:NaN,days:NaN,base:NaN,acc:sign*(fixedLeg-fl.total),comp:dir});
+  return{total:sign*(fixedLeg-fl.total),rows};
+}
+
+// ============ SHEET DOOR (the page) ============
+const $=id=>document.getElementById(id);
+let CAL=null,CRV=null;
+const FOMC0=[["2026-06-17",-25],["2026-07-29",-25],["2026-09-16",-25],["2026-10-28",0]];
+function addFomc(d="",m=0){
+  const div=document.createElement("div");div.className="fomc-row";
+  div.innerHTML=`<input type="date" value="${d}"><input type="number" step="25" value="${m}">
+  <button onclick="this.parentNode.remove();rebuild()">×</button>`;
+  div.querySelectorAll("input").forEach(i=>i.addEventListener("input",rebuild));
+  $("fomc").appendChild(div);
+}
+function rebuild(){
+  // FED_HOL
+  try{
+    const dates=$("hols").value.split("\n").map(s=>s.trim()).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s)).map(D);
+    CAL=Calendar(dates);
+    $("calReceipt").textContent=`hol_calendar | OK | ${CAL.count} holidays`;
+    $("calReceipt").className="receipt";
+  }catch(e){$("calReceipt").textContent="#CAL_ERR: "+e.message;$("calReceipt").className="receipt err";CAL=null;}
+  // MAKE_CURVE
+  try{
+    const sofr0=parseFloat($("sofr0").value),scale=parseFloat($("scale").value);
+    const knots=[[D("1900-01-01"),sofr0]];let cum=sofr0;
+    const rows=[...$("fomc").querySelectorAll(".fomc-row")].map(r=>{
+      const[i1,i2]=r.querySelectorAll("input");return[i1.value,parseFloat(i2.value)||0];})
+      .filter(([d])=>d).sort((a,b)=>a[0]<b[0]?-1:1);
+    for(const[ds,mv]of rows){if(mv!==0){cum+=scale*mv/100;knots.push([CAL.nextBD(D(ds)),cum]);}}
+    CRV=StepCurve(knots);
+    $("crvReceipt").textContent=`curve_cuts | OK | ${CRV.steps} steps | ${sofr0.toFixed(2)}→${CRV.last.toFixed(2)}`;
+    $("crvReceipt").className="receipt";
+  }catch(e){$("crvReceipt").textContent="#CURVE_ERR: "+e.message;$("crvReceipt").className="receipt err";CRV=null;}
+  runCases();runCalc();
+}
+const CASES=[
+ ["ON, normal day","Wed 15-Jul · $100mm",0.009861,()=>calc(D("2026-07-15"),addD(D("2026-07-15"),CAL.onDays(D("2026-07-15"))),100,"SIMPLE",CRV,CAL).total],
+ ["ON over weekend","Fri 17-Jul · $100mm",0.029583,()=>accrueSimple(100,CRV.rateAt(D("2026-07-17")),CAL.onDays(D("2026-07-17")))],
+ ["ON, holiday bridge","Thu 02-Jul · $100mm",0.039444,()=>accrueSimple(100,CRV.rateAt(D("2026-07-02")),CAL.onDays(D("2026-07-02")))],
+ ["Period simple","Jul→Oct · $100mm",0.853750,()=>calc(D("2026-07-01"),D("2026-10-01"),100,"SIMPLE",CRV,CAL).total],
+ ["Period compounding","Jul→Oct · $100mm",0.857325,()=>calc(D("2026-07-01"),D("2026-10-01"),100,"COMPOUND",CRV,CAL).total],
+ ["Swap month RCV","$375mm @3.15 · Jul",-0.123958,()=>swapNet(D("2026-07-01"),D("2026-08-01"),375,3.15,CRV,CAL).total],
+];
+function runCases(){
+  const tb=$("cases").querySelector("tbody");tb.innerHTML="";
+  if(!CAL||!CRV)return;
+  for(const[nm,inp,exp,fn]of CASES){
+    let got;try{got=fn();}catch(e){got=NaN;}
+    const ok=Math.abs(got-exp)<1e-6;
+    tb.insertAdjacentHTML("beforeend",`<tr><td>${nm}</td><td style="color:var(--dim)">${inp}</td>
+    <td class="num">${got.toFixed(6)}</td><td class="num" style="color:var(--dim)">${exp.toFixed(6)}</td>
+    <td class="${ok?"ok":"bad"}">${ok?"OK":"≠"}</td></tr>`);
+  }
+}
+function runCalc(){
+  const tb=$("ledger").querySelector("tbody");tb.innerHTML="";$("cres").textContent="";
+  if(!CAL||!CRV)return;
+  const t=$("ctype").value;$("cfixWrap").style.display=t==="SWAP"?"block":"none";
+  const s=D($("cstart").value),amt=parseFloat($("camt").value);
+  let out;
+  if(t==="ON"){const e=addD(s,CAL.onDays(CAL.following(s)));out=calc(CAL.following(s),e,amt,"SIMPLE",CRV,CAL);}
+  else if(t==="SWAP")out=swapNet(s,D($("cend").value),amt,parseFloat($("cfix").value),CRV,CAL);
+  else out=calc(s,D($("cend").value),amt,t,CRV,CAL);
+  $("cres").textContent=`TOTAL  ${out.total.toFixed(6)} $mm`;
+  for(const r of out.rows){
+    tb.insertAdjacentHTML("beforeend",`<tr><td>${r.date}</td>
+    <td class="num">${isNaN(r.rate)?"":r.rate.toFixed(2)}</td>
+    <td class="num">${isNaN(r.days)?"":r.days}</td>
+    <td class="num">${isNaN(r.base)?"":r.base.toFixed(3)}</td>
+    <td class="num">${r.acc.toFixed(6)}</td><td style="color:var(--dim)">${r.comp}</td></tr>`);
+  }
+}
+for(const[d,m]of FOMC0)addFomc(d,m);
+["hols","sofr0","scale","ctype","cstart","cend","camt","cfix"].forEach(id=>$(id).addEventListener("input",rebuild));
+rebuild();
+</script>
+</body>
+</html>
