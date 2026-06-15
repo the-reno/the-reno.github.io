@@ -1,41 +1,85 @@
-Attribute VB_Name = "cStepCurve"
-' === CLASS MODULE === (Insert > Class Module, rename to cStepCurve)
+Attribute VB_Name = "cStripCurve"
+' === CLASS MODULE === (Insert > Class Module, rename to cStripCurve)
 ' =====================================================================
-' cStepCurve (Layer 1) - the market layer. One method matters:
-'   RateAt(date) -> percent
-' Step function over (effectiveDate, rate) knots, sorted ascending.
-' A FLAT curve (fixed legs) is simply a curve with one knot.
-' Holds VALUES only (P1); knows nothing about instruments (P2).
+' cStripCurve (Layer 1) - the market layer, SOFR in-arrears.
+' Built from: name, sofr0, FedMeetings (dates+bps), Calendar.
+' Produces, on demand for [start,end], the daily strip:
+'   business-day rows, calendar-day weight (onDays), day factor
+'   (1 + rate*days/360) and the running accumulated product.
+' RateAt(d) gives the step rate; Strip()/AccumFactor power Accrue.
+' Holds VALUES only (P1); a FLAT curve is one knot (fixed legs).
 ' =====================================================================
 Option Explicit
-Private mEff() As Date
-Private mRate() As Double
+Private mEff() As Date          ' knot effective dates (ascending)
+Private mRate() As Double       ' knot rates (cumulative)
 Private mN As Long
 Private mName As String
+Private mCal As cCalendar
 
-' knots arrays are 1-based, ascending effective dates
-Public Sub Init(ByVal name As String, effDates() As Date, rates() As Double)
-    Dim i As Long
-    mName = name
-    mN = UBound(effDates)
-    ReDim mEff(1 To mN): ReDim mRate(1 To mN)
-    For i = 1 To mN
-        mEff(i) = effDates(i): mRate(i) = rates(i)
+Public Sub Init(ByVal name As String, ByVal sofr0 As Double, _
+                fomcDates As Variant, movesBps As Variant, _
+                ByVal scale As Double, cal As cCalendar)
+    Dim i As Long, n As Long, cum As Double
+    mName = name: Set mCal = cal
+    ReDim mEff(1 To UBound(fomcDates) + 2)
+    ReDim mRate(1 To UBound(fomcDates) + 2)
+    n = 1: mEff(1) = DateSerial(1900, 1, 1): mRate(1) = sofr0   ' initial fix
+    cum = sofr0
+    For i = LBound(fomcDates) To UBound(fomcDates)
+        If IsDate(fomcDates(i)) Then
+            Dim mv As Double: mv = 0#
+            If IsNumeric(movesBps(i)) Then mv = CDbl(movesBps(i))
+            If mv <> 0# Then
+                cum = cum + scale * mv / 100#
+                n = n + 1
+                mEff(n) = cal.NextBusinessDay(CDate(fomcDates(i)))
+                mRate(n) = cum
+            End If
+        End If
     Next i
+    ReDim Preserve mEff(1 To n): ReDim Preserve mRate(1 To n)
+    mN = n
 End Sub
 
 Public Property Get CurveName() As String: CurveName = mName: End Property
-Public Property Get Steps() As Long: Steps = mN: End Property
-Public Property Get FirstRate() As Double: FirstRate = mRate(1): End Property
+Public Property Get Steps() As Long: Steps = mN - 1: End Property
 Public Property Get LastRate() As Double: LastRate = mRate(mN): End Property
+Public Property Get Calendar() As cCalendar: Set Calendar = mCal: End Property
 
-' The contract: rate prevailing ON a date = rate of the last knot
-' whose effective date is <= the date. Before the first knot,
-' the first knot's rate applies (it is the initial fix).
+' Step rate in force ON date d (last knot with effDate <= d).
 Public Function RateAt(ByVal d As Date) As Double
     Dim i As Long
     RateAt = mRate(1)
     For i = 1 To mN
         If mEff(i) <= d Then RateAt = mRate(i) Else Exit For
     Next i
+End Function
+
+' Accumulated factor of $1 compounded start..end, SOFR in-arrears.
+' factor = PRODUCT over business-day fixes of (1 + rate*calDays/360).
+' Used by Accrue COMPOUND: interest = notional*(AccumFactor-1).
+Public Function AccumFactor(ByVal dStart As Date, ByVal dEnd As Date) As Double
+    Dim d As Date, w As Long, acc As Double
+    acc = 1#
+    d = mCal.Following(dStart)
+    Do While d < dEnd
+        w = mCal.ONDays(d)
+        If d + w > dEnd Then w = CLng(dEnd - d)
+        acc = acc * (1# + RateAt(d) / 100# * w / 360#)
+        d = mCal.NextBusinessDay(d)
+    Loop
+    AccumFactor = acc
+End Function
+
+' Simple sum of rate*days/360 over the period (no compounding).
+Public Function SimpleFactor(ByVal dStart As Date, ByVal dEnd As Date) As Double
+    Dim d As Date, w As Long, s As Double
+    d = mCal.Following(dStart)
+    Do While d < dEnd
+        w = mCal.ONDays(d)
+        If d + w > dEnd Then w = CLng(dEnd - d)
+        s = s + RateAt(d) / 100# * w / 360#
+        d = mCal.NextBusinessDay(d)
+    Loop
+    SimpleFactor = s
 End Function
