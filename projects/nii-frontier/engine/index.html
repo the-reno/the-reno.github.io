@@ -221,7 +221,11 @@ function runCalc(){
   if(t==="ON"){out=Accrue(s,CAL.nextBD(CAL.following(s)),amt,"SIMPLE",CRV,"I");}
   else if(t==="SWAP")out=swapNet(s,D($("cend").value),amt,parseFloat($("cfix").value),CRV,CAL,"RCV");
   else out=Accrue(s,D($("cend").value),amt,t,CRV,$("cinfo")?$("cinfo").value:"I");
-  $("cres").textContent=`TOTAL  ${out.total.toFixed(6)} $mm`;
+  if(t==="SWAP"){
+    const fx=out.rows.find(r=>r.comp==="FIXED")._acc, fl=out.rows.filter(r=>r.comp==="FLOAT").reduce((s,r)=>s+r.rate/100*r.days/360*amt,0);
+    const flTot=amt*(out.rows.filter(r=>r.comp==="FLOAT").length?CRV.strip(s,D($("cend").value)).slice(-1)[0].accum-1:0);
+    $("cres").innerHTML=`FIXED <b>${fx.toFixed(6)}</b> &nbsp; FLOAT <b>${flTot.toFixed(6)}</b> &nbsp; NET <b style="color:var(--amber)">${out.total.toFixed(6)}</b> $mm`;
+  } else $("cres").textContent=`TOTAL  ${out.total.toFixed(6)} $mm`;
   for(const r of out.rows){
     const acc=("_acc"in r)?r._acc:(r.rate/100*r.days/360*amt);
     tb.insertAdjacentHTML("beforeend",`<tr><td>${r.date}</td>

@@ -74,12 +74,17 @@ bad:
     ACCRUE = CVErr(xlErrValue)
 End Function
 
-' =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir)
+'  =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir, [part])
 ' Coordinator: fixed leg = simple at fixed rate; float leg = ACCRUE
-' COMPOUND on the scenario curve (market in-arrears); net by direction.
+' COMPOUND on the scenario curve (market in-arrears).
+'   part = "NET" (default) -> direction x (fixed - float)
+'        = "FIXED"         -> the fixed-leg accrual ($mm, always positive)
+'        = "FLOAT"         -> the float-leg accrual ($mm, always positive)
+' Put three cells side by side (FIXED, FLOAT, NET) to show the netting.
 Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
                          ByVal notionalMM As Double, ByVal fixedPct As Double, _
-                         curveHandle As Range, ByVal direction As String) As Variant
+                         curveHandle As Range, ByVal direction As String, _
+                         Optional ByVal part As String = "NET") As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
     Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
@@ -88,7 +93,12 @@ Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
     s = crv.Calendar.Following(dStart)
     fixedLeg = notionalMM * fixedPct / 100# * CLng(dEnd - s) / 360#
     floatLeg = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-    SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
+    Select Case UCase$(part)
+        Case "FIXED": SWAP_NET = fixedLeg
+        Case "FLOAT": SWAP_NET = floatLeg
+        Case "NET":   SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
+        Case Else:    SWAP_NET = CVErr(xlErrValue)
+    End Select
     Exit Function
 bad:
     SWAP_NET = CVErr(xlErrValue)

@@ -3,39 +3,32 @@ NII ENGINE - ALL VBA MODULES (master file)
 Generated 2026-06-15 | engine: stripped curve, SOFR in-arrears ACT/360
 ======================================================================
 
-WHAT THIS IS
-  The complete VBA engine in one file: calendar -> stripped curve ->
-  accrual engine, plus registry, sheet functions and tests. Six modules,
-  separated by '##### MODULE n' banners below.
-
 INSTALL (Excel, ~4 minutes)
-  For EACH module below:
-    1. Alt+F11 to open the VBA editor
-    2. Insert > Module   (or Insert > CLASS MODULE where marked)
-    3. In the Properties window (F4) rename it to the name shown
-    4. Paste the module body - SKIP the first 'Attribute VB_Name' line
-  Import order does not matter; all six must be present before use.
-  Then: save as .xlsm, press Ctrl+Alt+F9 (full recalc).
+  For EACH module below: Alt+F11 > Insert > Module (or CLASS MODULE where
+  marked) > rename to the name shown > paste body, SKIPPING the first
+  'Attribute VB_Name' line. Then save as .xlsm, press Ctrl+Alt+F9.
 
-  MODULES (type matters - two are CLASS modules):
-    1  mInterestCalc   Module        five accrual primitives
-    2  mRegistry       Module        name -> object cache
-    3  cCalendar       CLASS Module  business days, onDays
-    4  cStripCurve     CLASS Module  rate path + accumulated factor
-    5  mSheetAPI       Module        FED_HOL, MAKE_CURVE, ACCRUE, SWAP_NET
-    6  mTests          Module        Alt+F8 > TestAll -> TESTS sheet
+    1 mInterestCalc  Module        five accrual primitives
+    2 mRegistry      Module        name -> object cache
+    3 cCalendar      CLASS Module  business days, onDays
+    4 cStripCurve    CLASS Module  rate path + accumulated factor
+    5 mSheetAPI      Module        FED_HOL, MAKE_CURVE, ACCRUE, SWAP_NET
+    6 mTests         Module        Alt+F8 > TestAll -> TESTS sheet
 
 WORKSHEET USAGE (handles flow cell-to-cell, never typed strings)
   B5 : =FED_HOL(tblHolidays[Date])
   B6 : =MAKE_CURVE("cuts", 3.80, FOMCdates, moves, scale, $B$5)
   any: =ACCRUE(start, end, notional, "COMPOUND", $B$6, "I")
-  any: =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV")
+  swap legs shown separately:
+       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "FIXED")
+       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "FLOAT")
+       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "NET")
 
-VERIFY (golden values, reconcile to Python and web twins)
-  Period simple  Jul-Oct 100mm = 0.853750
-  Period compound (in-arrears)  = 0.857325
-  Swap RCV net   July 375mm     = -0.125585
-  Alt+F8 > TestAll must report MODEL STATUS: OK - ALL TESTS PASS
+GOLDEN VALUES (reconcile to Python and web twins)
+  Period simple Jul-Oct 100mm = 0.853750
+  Period compound (in-arrears) = 0.857325
+  Swap July 375mm: FIXED 1.017187 | FLOAT 1.142773 | RCV NET -0.125585
+  Alt+F8 > TestAll -> MODEL STATUS: OK - ALL TESTS PASS
 
 ARCHITECTURE: projects/nii-frontier/tools/vba/ARCHITECTURE.txt
 WEB TWIN:     https://ronu.one/projects/nii-frontier/engine/
@@ -385,12 +378,17 @@ bad:
     ACCRUE = CVErr(xlErrValue)
 End Function
 
-' =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir)
+'  =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir, [part])
 ' Coordinator: fixed leg = simple at fixed rate; float leg = ACCRUE
-' COMPOUND on the scenario curve (market in-arrears); net by direction.
+' COMPOUND on the scenario curve (market in-arrears).
+'   part = "NET" (default) -> direction x (fixed - float)
+'        = "FIXED"         -> the fixed-leg accrual ($mm, always positive)
+'        = "FLOAT"         -> the float-leg accrual ($mm, always positive)
+' Put three cells side by side (FIXED, FLOAT, NET) to show the netting.
 Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
                          ByVal notionalMM As Double, ByVal fixedPct As Double, _
-                         curveHandle As Range, ByVal direction As String) As Variant
+                         curveHandle As Range, ByVal direction As String, _
+                         Optional ByVal part As String = "NET") As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
     Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
@@ -399,7 +397,12 @@ Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
     s = crv.Calendar.Following(dStart)
     fixedLeg = notionalMM * fixedPct / 100# * CLng(dEnd - s) / 360#
     floatLeg = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-    SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
+    Select Case UCase$(part)
+        Case "FIXED": SWAP_NET = fixedLeg
+        Case "FLOAT": SWAP_NET = floatLeg
+        Case "NET":   SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
+        Case Else:    SWAP_NET = CVErr(xlErrValue)
+    End Select
     Exit Function
 bad:
     SWAP_NET = CVErr(xlErrValue)
