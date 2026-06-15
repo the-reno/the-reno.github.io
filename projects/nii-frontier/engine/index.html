@@ -3,242 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NII ENGINE — playground</title>
+<title>NII ENGINE — example</title>
 <style>
 :root{--bg:#0a0e12;--panel:#10161d;--line:#1e2a36;--tx:#c9d4dd;--dim:#5d7185;
 --amber:#e8a33d;--cyan:#39c2d7;--green:#3dd68c;--red:#e85d5d;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',Consolas,monospace;
-font-size:13px;padding:24px;max-width:1100px;margin:0 auto;}
-h1{font-size:18px;color:var(--amber);letter-spacing:2px;margin-bottom:4px;}
-.sub{color:var(--dim);font-size:11px;margin-bottom:20px;}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:800px){.grid{grid-template-columns:1fr;}}
-.panel{background:var(--panel);border:1px solid var(--line);padding:14px;}
+font-size:13px;padding:18px;max-width:980px;margin:0 auto;}
+h1{font-size:17px;color:var(--amber);letter-spacing:2px;}
+.sub{color:var(--dim);font-size:11px;margin:4px 0 18px;}
+.panel{background:var(--panel);border:1px solid var(--line);padding:14px;margin-bottom:14px;}
 .panel h2{font-size:11px;color:var(--cyan);letter-spacing:1.5px;margin-bottom:10px;
 border-bottom:1px solid var(--line);padding-bottom:6px;}
 label{display:block;color:var(--dim);font-size:10px;margin:8px 0 2px;}
 input,select,textarea{background:#0d1318;border:1px solid var(--line);color:var(--tx);
-font-family:inherit;font-size:12px;padding:5px 7px;width:100%;}
+font-family:inherit;font-size:12px;padding:6px 7px;width:100%;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);}
-textarea{height:96px;resize:vertical;}
-.row{display:flex;gap:8px;}.row>*{flex:1;}
+textarea{height:84px;resize:vertical;}
+.row{display:flex;gap:8px;flex-wrap:wrap;}.row>*{flex:1;min-width:90px;}
 table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
 th{color:var(--dim);text-align:left;font-weight:normal;border-bottom:1px solid var(--line);padding:3px 6px;}
 td{padding:3px 6px;border-bottom:1px solid #141c24;}
-td.num{text-align:right;font-variant-numeric:tabular-nums;}
-.receipt{color:var(--green);font-size:11px;padding:4px 0;}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.receipt{color:var(--green);font-size:11px;padding:6px 0 0;word-break:break-all;}
 .receipt.err{color:var(--red);}
 .ok{color:var(--green);}.bad{color:var(--red);font-weight:bold;}
-.fomc-row{display:grid;grid-template-columns:1fr 80px 24px;gap:6px;margin-bottom:4px;}
+.fomc-row{display:grid;grid-template-columns:1fr 70px 28px;gap:6px;margin-bottom:4px;}
 button{background:none;border:1px solid var(--line);color:var(--dim);font-family:inherit;
-font-size:11px;padding:4px 10px;cursor:pointer;}
+font-size:11px;padding:5px 10px;cursor:pointer;}
 button:hover{border-color:var(--amber);color:var(--amber);}
-.res{font-size:16px;color:var(--amber);margin:8px 0;}
+.res{font-size:15px;color:var(--amber);margin:10px 0;line-height:1.6;}
+.res b{color:var(--tx);}
 .note{color:var(--dim);font-size:10px;line-height:1.5;margin-top:8px;}
-.full{grid-column:1/-1;}
-.tag{color:var(--cyan);}
-footer{margin-top:24px;color:var(--dim);font-size:10px;}
+footer{margin-top:20px;color:var(--dim);font-size:10px;}
 </style>
 </head>
 <body>
 <h1>NII ENGINE</h1>
-<div class="sub">calendar → curve → accrual engine — every number carries its ledger · twin of the VBA build · v1.1 · SOFR in-arrears</div>
+<div class="sub">calendar &rarr; stripped curve &rarr; accrual engine &middot; SOFR in-arrears ACT/360 &middot; twin of the VBA build</div>
 
-<div class="grid">
-  <div class="panel">
-    <h2>1 · CALENDAR OBJECT</h2>
-    <label>Holidays (one date per line, YYYY-MM-DD)</label>
-    <textarea id="hols">2026-01-01
+<div class="panel">
+  <h2>1 &middot; CALENDAR — =FED_HOL(holidays)</h2>
+  <label>Holidays (one YYYY-MM-DD per line)</label>
+  <textarea id="hols">2026-01-01
 2026-01-19
 2026-07-03
 2026-09-07
 2026-11-26
 2026-12-25</textarea>
-    <div class="receipt" id="calReceipt"></div>
-  </div>
-
-  <div class="panel">
-    <h2>2 · CURVE OBJECT — scenario "cuts"</h2>
-    <div class="row">
-      <div><label>Initial SOFR %</label><input id="sofr0" type="number" step="0.01" value="3.80"></div>
-      <div><label>Scale ×</label><input id="scale" type="number" step="0.25" value="1.0"></div>
-    </div>
-    <label>FOMC decisions (move becomes effective next business day)</label>
-    <div id="fomc"></div>
-    <button onclick="addFomc()">+ meeting</button>
-    <div class="receipt" id="crvReceipt"></div>
-  </div>
-
-  <div class="panel full">
-    <h2>3 · GOLDEN CASES — engine vs hand-computed expected</h2>
-    <table id="cases"><thead><tr>
-      <th>Case</th><th>Inputs</th><th style="text-align:right">Engine</th>
-      <th style="text-align:right">Expected</th><th>Match</th></tr></thead><tbody></tbody></table>
-    <div class="note">Expected values were hand-computed at default inputs. Edit anything above and
-    the engine recomputes — expected values stay fixed, so defaults show OK and edits show the live engine diverging, as they should.</div>
-  </div>
-
-  <div class="panel full">
-    <h2>4 · CALCULATOR — any accrual, with its ledger</h2>
-    <div class="row">
-      <div><label>Type</label><select id="ctype">
-        <option value="ON">ON (one fix)</option>
-        <option value="SIMPLE" selected>Period — simple</option>
-        <option value="COMPOUND">Period — compounding</option>
-        <option value="SWAP">Swap month (RCV fixed)</option>
-      </select></div>
-      <div><label>Start</label><input id="cstart" type="date" value="2026-07-01"></div>
-      <div><label>End</label><input id="cend" type="date" value="2026-10-01"></div>
-      <div><label>Amount $mm</label><input id="camt" type="number" step="25" value="100"></div>
-      <div id="cfixWrap" style="display:none"><label>Fixed %</label><input id="cfix" type="number" step="0.05" value="3.15"></div>
-      <div><label>Return</label><select id="cinfo"><option value="I">interest</option><option value="PI">principal+interest</option></select></div>
-    </div>
-    <div class="res" id="cres"></div>
-    <table id="ledger"><thead><tr><th>Fix date</th><th style="text-align:right">Rate %</th><th style="text-align:right">Days</th><th style="text-align:right">Day factor</th><th style="text-align:right">Accum factor</th><th>Component</th></tr></thead><tbody></tbody></table>
-    <div class="note">This table <span class="tag">is</span> the audit trail: every row recomputable as
-    the period factor (1+rate×days/360); Accum is the running product — interest = notional×(Accum−1). Weekend fixes carry 3 days; holiday bridges more; compounding grows the base.</div>
-  </div>
+  <div class="receipt" id="calReceipt"></div>
 </div>
-<footer>NII ENGINE playground · architecture: tools/vba/ARCHITECTURE.txt · 浪人</footer>
+
+<div class="panel">
+  <h2>2 &middot; CURVE — =MAKE_CURVE("cuts", sofr, meetings, scale)</h2>
+  <div class="row">
+    <div><label>Initial SOFR %</label><input id="sofr0" type="number" step="0.01" value="3.80"></div>
+    <div><label>Scale &times;</label><input id="scale" type="number" step="0.25" value="1.0"></div>
+  </div>
+  <label>FOMC meetings — date &amp; move (bps), effective next business day</label>
+  <div id="fomc"></div>
+  <button onclick="addFomc()">+ meeting</button>
+  <div class="receipt" id="crvReceipt"></div>
+</div>
+
+<div class="panel">
+  <h2>3 &middot; GOLDEN CASES — engine vs hand-computed</h2>
+  <table id="cases"><thead><tr><th>Case</th><th>Inputs</th>
+    <th class="num">Engine</th><th class="num">Expected</th><th>&check;</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="panel">
+  <h2>4 &middot; CALCULATOR — =ACCRUE(start,end,notional,type,curve,info)</h2>
+  <div class="row">
+    <div><label>Type</label><select id="ctype">
+      <option value="ON">ON (one fix)</option>
+      <option value="SIMPLE" selected>Period — simple</option>
+      <option value="COMPOUND">Period — compounding</option>
+      <option value="SWAP">Swap month (RCV)</option>
+    </select></div>
+    <div><label>Start</label><input id="cstart" type="date" value="2026-07-01"></div>
+    <div><label>End</label><input id="cend" type="date" value="2026-10-01"></div>
+    <div><label>$mm</label><input id="camt" type="number" step="25" value="100"></div>
+    <div id="cfixWrap" style="display:none"><label>Fixed %</label><input id="cfix" type="number" step="0.05" value="3.15"></div>
+    <div id="cinfoWrap"><label>Return</label><select id="cinfo">
+      <option value="I">interest</option><option value="PI">principal+interest</option></select></div>
+  </div>
+  <div class="res" id="cres"></div>
+  <table id="ledger"><thead><tr><th>Fix date</th><th class="num">Rate %</th>
+    <th class="num">Days</th><th class="num">Day factor</th>
+    <th class="num">Accum factor</th><th>Leg</th></tr></thead><tbody></tbody></table>
+  <div class="note">This table is the audit trail. Day factor = 1 + rate&times;days/360;
+  Accum is the running product; compound interest = notional &times; (Accum &minus; 1).
+  Weekend fixes carry 3 days, holiday bridges more.</div>
+</div>
+
+<footer>NII ENGINE &middot; architecture: tools/vba/ARCHITECTURE.txt &middot; &#28010;&#20154;</footer>
 
 <script>
 "use strict";
-// ============ ENGINE (stripped curve, SOFR in-arrears)
-const D=s=>{const[p,q,r]=s.split("-").map(Number);return new Date(Date.UTC(p,q-1,r));};
-const fmt=d=>d.toISOString().slice(0,10);
-const addD=(d,n)=>new Date(d.getTime()+n*86400000);
+function D(s){var p=s.split("-");return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));}
+function fmt(d){return d.toISOString().slice(0,10);}
+function addD(d,n){return new Date(d.getTime()+n*86400000);}
 
-// cCalendar
-function Calendar(holidayDates){
-  const hol=new Set(holidayDates.map(d=>fmt(d)));
-  const isBD=d=>{const w=d.getUTCDay();return w>=1&&w<=5&&!hol.has(fmt(d));};
-  const following=d=>{while(!isBD(d))d=addD(d,1);return d;};
-  const nextBD=d=>following(addD(d,1));
-  const onDays=d=>Math.round((nextBD(d)-d)/86400000);
-  return{count:hol.size,isBD,following,nextBD,onDays};
+function Calendar(dates){
+  var hol={}; for(var i=0;i<dates.length;i++) hol[fmt(dates[i])]=1;
+  function isBD(d){var w=d.getUTCDay();return w>=1&&w<=5&&!hol[fmt(d)];}
+  function following(d){while(!isBD(d))d=addD(d,1);return d;}
+  function nextBD(d){return following(addD(d,1));}
+  function onDays(d){return Math.round((nextBD(d)-d)/86400000);}
+  return {count:dates.length,isBD:isBD,following:following,nextBD:nextBD,onDays:onDays};
 }
-// MAKE_CURVE knots from FOMC moves, each effective next business day
-function makeKnots(sofr0,moves,scale,cal){
-  const knots=[[D("1900-01-01"),sofr0]];let cum=sofr0;
-  moves.slice().filter(m=>m[0]).sort((a,b)=>a[0]<b[0]?-1:1).forEach(([ds,mv])=>{
-    if(mv){cum+=scale*mv/100;knots.push([cal.nextBD(D(ds)),cum]);}});
-  return knots;
-}
-function rateAtKnots(knots,d){let r=knots[0][1];for(const[e,v]of knots){if(e<=d)r=v;else break;}return r;}
-
-// StripCurve: builds the daily table on demand for [start,end] - business-day rows,
-// calendar-day weight (in-arrears), period factor (1+r*days/360), accumulated product.
 function StripCurve(name,sofr0,moves,scale,cal){
-  const knots=makeKnots(sofr0,moves,scale,cal);
+  var knots=[[D("1900-01-01"),sofr0]],cum=sofr0;
+  var ms=moves.filter(function(m){return m[0];}).sort(function(a,b){return a[0]<b[0]?-1:1;});
+  for(var i=0;i<ms.length;i++){var mv=ms[i][1];if(mv){cum+=scale*mv/100;knots.push([cal.nextBD(D(ms[i][0])),cum]);}}
+  function rateAt(d){var r=knots[0][1];for(var i=0;i<knots.length;i++){if(knots[i][0]<=d)r=knots[i][1];else break;}return r;}
   function strip(start,end){
-    const rows=[];let d=cal.following(start),accum=1;
+    var rows=[],d=cal.following(start),accum=1;
     while(d<end){
-      let w=cal.onDays(d);
+      var w=cal.onDays(d);
       if(addD(d,w)>end)w=Math.round((end-d)/86400000);
-      const r=rateAtKnots(knots,d),f=1+r/100*w/360;
-      accum*=f;
-      rows.push({date:fmt(d),rate:r,days:w,factor:f,accum});
+      var r=rateAt(d),f=1+r/100*w/360; accum*=f;
+      rows.push({date:fmt(d),rate:r,days:w,factor:f,accum:accum});
       d=cal.nextBD(d);
     }
     return rows;
   }
-  return{name,steps:knots.length-1,last:knots[knots.length-1][1],
-         rateAt:d=>rateAtKnots(knots,d),strip};
+  return {name:name,steps:knots.length-1,last:knots[knots.length-1][1],cal:cal,rateAt:rateAt,strip:strip,
+    simpleFactor:function(s,e){var rs=strip(s,e),t=0;for(var i=0;i<rs.length;i++)t+=rs[i].rate/100*rs[i].days/360;return t;},
+    accumFactor:function(s,e){var rs=strip(s,e);return rs.length?rs[rs.length-1].accum:1;}};
 }
-
-// ACCRUE(start,end,notional,type,curve,info)
-//   SIMPLE   : notional * Σ(rate*days/360)
-//   COMPOUND : notional * (accumFactor_end - 1)   [SOFR in-arrears]
-//   info "PI" adds the notional back (principal+interest)
 function Accrue(start,end,notional,type,curve,info){
-  const rows=curve.strip(start,end);
-  let intr;
-  if(type==="COMPOUND"){const fac=rows.length?rows[rows.length-1].accum:1;intr=notional*(fac-1);}
-  else intr=notional*rows.reduce((s,r)=>s+r.rate/100*r.days/360,0);
-  const out=intr+(info==="PI"?notional:0);
-  return{total:out,interest:intr,rows};
+  var rows=curve.strip(start,end),intr;
+  if(type==="COMPOUND")intr=notional*(curve.accumFactor(start,end)-1);
+  else intr=notional*curve.simpleFactor(start,end);
+  return {total:intr+(info==="PI"?notional:0),interest:intr,rows:rows};
 }
-// cSwap coordinator: fixed leg simple at fixed rate; float leg = COMPOUND in-arrears
-function swapNet(start,end,notional,fixedPct,curve,cal,dir){
-  const s=cal.following(start);
-  const fixedLeg=notional*fixedPct/100*Math.round((end-s)/86400000)/360;
-  const fl=Accrue(start,end,notional,"COMPOUND",curve,"I");
-  const sign=dir==="RCV"?1:-1;
-  const rows=fl.rows.map(r=>({...r,comp:"FLOAT"}));
-  rows.push({date:fmt(s)+" → "+fmt(end),rate:fixedPct,days:Math.round((end-s)/86400000),
-             factor:NaN,accum:NaN,comp:"FIXED",_acc:fixedLeg});
-  rows.push({date:"NET",rate:NaN,days:NaN,factor:NaN,accum:NaN,comp:dir,_acc:sign*(fixedLeg-fl.interest)});
-  return{total:sign*(fixedLeg-fl.interest),rows};
+function swapLegs(start,end,notional,fixedPct,curve,dir){
+  var s=curve.cal.following(start);
+  var fixed=notional*fixedPct/100*Math.round((end-s)/86400000)/360;
+  var float_=notional*(curve.accumFactor(start,end)-1);
+  var sign=dir==="RCV"?1:-1;
+  return {fixed:fixed,float:float_,net:sign*(fixed-float_),
+          rows:curve.strip(start,end),fixedStart:fmt(s),fixedDays:Math.round((end-s)/86400000),fixedPct:fixedPct};
 }
- ============ 
-const $=id=>document.getElementById(id);
-let CAL=null,CRV=null;
-const FOMC0=[["2026-06-17",-25],["2026-07-29",-25],["2026-09-16",-25],["2026-10-28",0]];
-function addFomc(d="",m=0){
-  const div=document.createElement("div");div.className="fomc-row";
-  div.innerHTML=`<input type="date" value="${d}"><input type="number" step="25" value="${m}">
-  <button onclick="this.parentNode.remove();rebuild()">×</button>`;
-  div.querySelectorAll("input").forEach(i=>i.addEventListener("input",rebuild));
+function $(id){return document.getElementById(id);}
+var CAL=null,CRV=null;
+var FOMC0=[["2026-06-17",-25],["2026-07-29",-25],["2026-09-16",-25],["2026-10-28",0]];
+function addFomc(d,m){
+  d=d||""; m=(m===undefined?0:m);
+  var div=document.createElement("div"); div.className="fomc-row";
+  div.innerHTML='<input type="date" value="'+d+'"><input type="number" step="25" value="'+m+'"><button>&times;</button>';
+  var ins=div.querySelectorAll("input");
+  ins[0].addEventListener("input",rebuild); ins[1].addEventListener("input",rebuild);
+  div.querySelector("button").addEventListener("click",function(){div.parentNode.removeChild(div);rebuild();});
   $("fomc").appendChild(div);
 }
-function fomcRows(){return[...$("fomc").querySelectorAll(".fomc-row")].map(r=>{
-  const[a,b]=r.querySelectorAll("input");return[a.value,parseFloat(b.value)||0];});}
+function fomcRows(){
+  var out=[],rows=$("fomc").querySelectorAll(".fomc-row");
+  for(var i=0;i<rows.length;i++){var ins=rows[i].querySelectorAll("input");out.push([ins[0].value,parseFloat(ins[1].value)||0]);}
+  return out;
+}
 function rebuild(){
   try{
-    const dates=$("hols").value.split("\n").map(s=>s.trim()).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s)).map(D);
+    var lines=$("hols").value.split("\n"),dates=[];
+    for(var i=0;i<lines.length;i++){var s=lines[i].trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s))dates.push(D(s));}
     CAL=Calendar(dates);
-    $("calReceipt").textContent=`hol_calendar | OK | ${CAL.count} holidays`;$("calReceipt").className="receipt";
+    $("calReceipt").textContent="hol_calendar | OK | "+CAL.count+" holidays"; $("calReceipt").className="receipt";
   }catch(e){$("calReceipt").textContent="#CAL_ERR: "+e.message;$("calReceipt").className="receipt err";CAL=null;}
   try{
-    const sofr0=parseFloat($("sofr0").value),scale=parseFloat($("scale").value);
+    if(!CAL)throw new Error("no calendar");
+    var sofr0=parseFloat($("sofr0").value),scale=parseFloat($("scale").value);
     CRV=StripCurve("cuts",sofr0,fomcRows(),scale,CAL);
-    $("crvReceipt").textContent=`curve_cuts | OK | ${CRV.steps} steps | ${sofr0.toFixed(2)}→${CRV.last.toFixed(2)} | in-arrears ACT/360`;
+    $("crvReceipt").textContent="curve_cuts | OK | "+CRV.steps+" steps | "+sofr0.toFixed(2)+"\u2192"+CRV.last.toFixed(2)+" | in-arrears ACT/360";
     $("crvReceipt").className="receipt";
   }catch(e){$("crvReceipt").textContent="#CURVE_ERR: "+e.message;$("crvReceipt").className="receipt err";CRV=null;}
-  runCases();runCalc();
+  runCases(); runCalc();
 }
-const CASES=[
- ["ON, normal day","Wed 15-Jul · $100mm",0.009861,()=>Accrue(D("2026-07-15"),CAL.nextBD(D("2026-07-15")),100,"SIMPLE",CRV,"I").total],
- ["ON over weekend","Fri 17-Jul · $100mm",0.029583,()=>Accrue(D("2026-07-17"),CAL.nextBD(D("2026-07-17")),100,"SIMPLE",CRV,"I").total],
- ["ON, holiday bridge","Thu 02-Jul · $100mm",0.039444,()=>Accrue(D("2026-07-02"),CAL.nextBD(D("2026-07-02")),100,"SIMPLE",CRV,"I").total],
- ["Period simple","Jul→Oct · $100mm",0.853750,()=>Accrue(D("2026-07-01"),D("2026-10-01"),100,"SIMPLE",CRV,"I").total],
- ["Period compound (in-arrears)","Jul→Oct · $100mm",0.857325,()=>Accrue(D("2026-07-01"),D("2026-10-01"),100,"COMPOUND",CRV,"I").total],
- ["Swap month RCV","$375mm @3.15 · Jul",-0.125585,()=>swapNet(D("2026-07-01"),D("2026-08-01"),375,3.15,CRV,CAL,"RCV").total],
+var CASES=[
+ ["ON, normal day","Wed 15-Jul \u00b7 100mm",0.009861,function(){return Accrue(D("2026-07-15"),CAL.nextBD(D("2026-07-15")),100,"SIMPLE",CRV,"I").total;}],
+ ["ON over weekend","Fri 17-Jul \u00b7 100mm",0.029583,function(){return Accrue(D("2026-07-17"),CAL.nextBD(D("2026-07-17")),100,"SIMPLE",CRV,"I").total;}],
+ ["ON holiday bridge","Thu 02-Jul \u00b7 100mm",0.039444,function(){return Accrue(D("2026-07-02"),CAL.nextBD(D("2026-07-02")),100,"SIMPLE",CRV,"I").total;}],
+ ["Period simple","Jul\u2192Oct \u00b7 100mm",0.853750,function(){return Accrue(D("2026-07-01"),D("2026-10-01"),100,"SIMPLE",CRV,"I").total;}],
+ ["Period compound","Jul\u2192Oct \u00b7 100mm",0.857325,function(){return Accrue(D("2026-07-01"),D("2026-10-01"),100,"COMPOUND",CRV,"I").total;}],
+ ["Swap NET (RCV)","375mm @3.15 \u00b7 Jul",-0.125585,function(){return swapLegs(D("2026-07-01"),D("2026-08-01"),375,3.15,CRV,"RCV").net;}]
 ];
 function runCases(){
-  const tb=$("cases").querySelector("tbody");tb.innerHTML="";if(!CAL||!CRV)return;
-  for(const[nm,inp,exp,fn]of CASES){let got;try{got=fn();}catch(e){got=NaN;}
-    const ok=Math.abs(got-exp)<1e-6;
-    tb.insertAdjacentHTML("beforeend",`<tr><td>${nm}</td><td style="color:var(--dim)">${inp}</td>
-    <td class="num">${got.toFixed(6)}</td><td class="num" style="color:var(--dim)">${exp.toFixed(6)}</td>
-    <td class="${ok?"ok":"bad"}">${ok?"OK":"≠"}</td></tr>`);}
-}
-function runCalc(){
-  const tb=$("ledger").querySelector("tbody");tb.innerHTML="";$("cres").textContent="";if(!CAL||!CRV)return;
-  const t=$("ctype").value;$("cfixWrap").style.display=t==="SWAP"?"block":"none";
-  const s=D($("cstart").value),amt=parseFloat($("camt").value);let out;
-  if(t==="ON"){out=Accrue(s,CAL.nextBD(CAL.following(s)),amt,"SIMPLE",CRV,"I");}
-  else if(t==="SWAP")out=swapNet(s,D($("cend").value),amt,parseFloat($("cfix").value),CRV,CAL,"RCV");
-  else out=Accrue(s,D($("cend").value),amt,t,CRV,$("cinfo")?$("cinfo").value:"I");
-  if(t==="SWAP"){
-    const fx=out.rows.find(r=>r.comp==="FIXED")._acc, fl=out.rows.filter(r=>r.comp==="FLOAT").reduce((s,r)=>s+r.rate/100*r.days/360*amt,0);
-    const flTot=amt*(out.rows.filter(r=>r.comp==="FLOAT").length?CRV.strip(s,D($("cend").value)).slice(-1)[0].accum-1:0);
-    $("cres").innerHTML=`FIXED <b>${fx.toFixed(6)}</b> &nbsp; FLOAT <b>${flTot.toFixed(6)}</b> &nbsp; NET <b style="color:var(--amber)">${out.total.toFixed(6)}</b> $mm`;
-  } else $("cres").textContent=`TOTAL  ${out.total.toFixed(6)} $mm`;
-  for(const r of out.rows){
-    const acc=("_acc"in r)?r._acc:(r.rate/100*r.days/360*amt);
-    tb.insertAdjacentHTML("beforeend",`<tr><td>${r.date}</td>
-    <td class="num">${isNaN(r.rate)?"":r.rate.toFixed(2)}</td>
-    <td class="num">${isNaN(r.days)?"":r.days}</td>
-    <td class="num">${isNaN(r.factor)?"":r.factor.toFixed(8)}</td>
-    <td class="num">${isNaN(r.accum)?"":r.accum.toFixed(8)}</td>
-    <td style="color:var(--dim)">${r.comp||t}</td></tr>`);
+  var tb=$("cases").getElementsByTagName("tbody")[0]; tb.innerHTML=""; if(!CAL||!CRV)return;
+  for(var i=0;i<CASES.length;i++){
+    var c=CASES[i],got;try{got=c[3]();}catch(e){got=NaN;}
+    var ok=Math.abs(got-c[2])<1e-6;
+    tb.innerHTML+='<tr><td>'+c[0]+'</td><td style="color:var(--dim)">'+c[1]+'</td>'+
+      '<td class="num">'+got.toFixed(6)+'</td><td class="num" style="color:var(--dim)">'+c[2].toFixed(6)+'</td>'+
+      '<td class="'+(ok?"ok":"bad")+'">'+(ok?"OK":"\u2260")+'</td></tr>';
   }
 }
-for(const[d,m]of FOMC0)addFomc(d,m);
-["hols","sofr0","scale","ctype","cstart","cend","camt","cfix","cinfo"].forEach(id=>$(id).addEventListener("input",rebuild));
-rebuild();
+function runCalc(){
+  var tb=$("ledger").getElementsByTagName("tbody")[0]; tb.innerHTML=""; $("cres").innerHTML=""; if(!CAL||!CRV)return;
+  var t=$("ctype").value;
+  $("cfixWrap").style.display=(t==="SWAP")?"block":"none";
+  $("cinfoWrap").style.display=(t==="SWAP")?"none":"block";
+  var amt=parseFloat($("camt").value), start=D($("cstart").value), end=D($("cend").value);
+  var rows=[];
+  if(t==="SWAP"){
+    var L=swapLegs(start,end,amt,parseFloat($("cfix").value),CRV,"RCV");
+    $("cres").innerHTML='FIXED <b>'+L.fixed.toFixed(6)+'</b> &nbsp; FLOAT <b>'+L.float.toFixed(6)+
+      '</b> &nbsp; NET <b style="color:var(--amber)">'+L.net.toFixed(6)+'</b> $mm';
+    for(var i=0;i<L.rows.length;i++){var r=L.rows[i];rows.push([r.date,r.rate,r.days,r.factor,r.accum,"FLOAT"]);}
+    rows.push([L.fixedStart+" \u2192 "+fmt(end),L.fixedPct,L.fixedDays,NaN,NaN,"FIXED"]);
+    rows.push(["NET",NaN,NaN,NaN,NaN,"RCV"]);
+  } else {
+    var dEnd=(t==="ON")?CAL.nextBD(CAL.following(start)):end;
+    var typ=(t==="ON")?"SIMPLE":t;
+    var st=(t==="ON")?CAL.following(start):start;
+    var out=Accrue(st,dEnd,amt,typ,CRV,$("cinfo").value);
+    $("cres").innerHTML='TOTAL <b style="color:var(--amber)">'+out.total.toFixed(6)+'</b> $mm'+
+      (out.total!==out.interest?'  (interest '+out.interest.toFixed(6)+' + principal)':'');
+    for(var j=0;j<out.rows.length;j++){var x=out.rows[j];rows.push([x.date,x.rate,x.days,x.factor,x.accum,typ]);}
+  }
+  for(var k=0;k<rows.length;k++){var v=rows[k];
+    tb.innerHTML+='<tr><td>'+v[0]+'</td>'+
+      '<td class="num">'+(isNaN(v[1])?"":(+v[1]).toFixed(2))+'</td>'+
+      '<td class="num">'+(isNaN(v[2])?"":v[2])+'</td>'+
+      '<td class="num">'+(isNaN(v[3])?"":(+v[3]).toFixed(8))+'</td>'+
+      '<td class="num">'+(isNaN(v[4])?"":(+v[4]).toFixed(8))+'</td>'+
+      '<td style="color:var(--dim)">'+v[5]+'</td></tr>';
+  }
+}
+(function init(){
+  for(var i=0;i<FOMC0.length;i++)addFomc(FOMC0[i][0],FOMC0[i][1]);
+  var ids=["hols","sofr0","scale","ctype","cstart","cend","camt","cfix","cinfo"];
+  for(var j=0;j<ids.length;j++)$(ids[j]).addEventListener("input",rebuild);
+  rebuild();
+})();
 </script>
 </body>
 </html>
