@@ -1,105 +1,100 @@
 Attribute VB_Name = "mSheetAPI"
 ' =====================================================================
-' mSheetAPI (Layer 7, sheet door) - the only module that touches cells.
-' Constructors build objects from sheet VALUES, register them, return a
-' receipt string. Consumers take handle CELLS (never typed strings, C1)
-' and call the engine. Bad input -> "#..._ERR:" receipt at the cell.
+' mSheetAPI - the worksheet functions (the only module that reads cells).
+' Build objects with FED_HOL and MAKE_CURVE; they return a short receipt
+' and stash the object by name. Then ACCRUE and SWAP take the receipt
+' CELL (e.g. $B$5) and do the math. Never type the receipt text by hand.
 ' =====================================================================
 Option Explicit
 
-' =FED_HOL(holidayRange) -> "hol_calendar | OK | n holidays"
-Public Function FED_HOL(holidayRange As Range) As String
+' =FED_HOL(holidays)  ->  "hol_calendar | OK | 6 dates"
+'   holidays: a one-column range of dates. Weekends are automatic.
+Public Function FED_HOL(holidays As Range) As String
     On Error GoTo bad
     Dim cal As New cCalendar
-    cal.Init holidayRange.Value
+    cal.Init holidays.Value
     RegSet "hol_calendar", cal
-    FED_HOL = "hol_calendar | OK | " & cal.HolidayCount & " holidays"
+    FED_HOL = "hol_calendar | OK | " & cal.HolidayCount & " dates"
     Exit Function
 bad:
     FED_HOL = "#CAL_ERR: " & Err.Description
 End Function
 
-' =MAKE_CURVE(name, sofr0, fomcDates, movesBps, scale, calHandleCell)
-'   -> "name | OK | k steps | 3.80->3.05 | in-arrears ACT/360"
-' Each non-zero move is effective the NEXT BUSINESS DAY; scale multiplies.
-Public Function MAKE_CURVE(ByVal name As String, ByVal sofr0 As Double, _
-                           fomcDates As Range, movesBps As Range, _
-                           ByVal scale As Double, calHandle As Range) As String
+' =MAKE_CURVE(name, sofr, fedMoves, calendar)
+'   name     : text, e.g. "cuts"
+'   sofr     : today's SOFR %, e.g. 3.80
+'   fedMoves : a TWO-COLUMN range -> [meeting date | move bps]. Blank rows
+'              ignored. Each move takes effect the next business day.
+'   calendar : the FED_HOL receipt cell.
+'   -> "cuts | OK | 3 steps | 3.80->3.05"
+Public Function MAKE_CURVE(ByVal name As String, ByVal sofr As Double, _
+                           fedMoves As Range, calendar As Range) As String
     On Error GoTo bad
     Dim cal As cCalendar
-    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
-    If cal Is Nothing Then MAKE_CURVE = "#CURVE_ERR: calendar not built (Ctrl+Alt+F9)": Exit Function
-    Dim fd() As Variant, mv() As Variant, i As Long, k As Long
-    k = fomcDates.Rows.Count
-    ReDim fd(1 To k): ReDim mv(1 To k)
-    For i = 1 To k
-        fd(i) = fomcDates.Cells(i, 1).Value
-        mv(i) = movesBps.Cells(i, 1).Value
+    Set cal = RegGet(HandleName(CStr(calendar.Value)))
+    If cal Is Nothing Then MAKE_CURVE = "#CURVE_ERR: build the calendar first": Exit Function
+
+    Dim n As Long, i As Long, fd() As Variant, mv() As Variant
+    n = fedMoves.Rows.Count
+    ReDim fd(1 To n): ReDim mv(1 To n)
+    For i = 1 To n
+        fd(i) = fedMoves.Cells(i, 1).Value
+        mv(i) = fedMoves.Cells(i, 2).Value
     Next i
+
     Dim crv As New cStripCurve
-    crv.Init name, sofr0, fd, mv, scale, cal
+    crv.Init name, sofr, fd, mv, cal
     RegSet name, crv
     MAKE_CURVE = name & " | OK | " & crv.Steps & " steps | " & _
-                 Format(sofr0, "0.00") & "->" & Format(crv.LastRate, "0.00") & _
-                 " | in-arrears ACT/360"
+                 Format(sofr, "0.00") & "->" & Format(crv.LastRate, "0.00")
     Exit Function
 bad:
     MAKE_CURVE = "#CURVE_ERR: " & Err.Description
 End Function
 
-' =ACCRUE(start, end, notionalMM, type, curveHandleCell, info)
-'   type = "SIMPLE" | "COMPOUND"   info = "I" | "PI"
-' SIMPLE   : notional * SimpleFactor(start,end)
-' COMPOUND : notional * (AccumFactor(start,end) - 1)   [SOFR in-arrears]
-' info "PI": adds notional back (principal + interest).
-' This single function is the deposit, the swap float leg, and (with a
-' flat curve) the swap fixed leg.
-Public Function ACCRUE(ByVal dStart As Date, ByVal dEnd As Date, _
-                       ByVal notionalMM As Double, ByVal accrualType As String, _
-                       curveHandle As Range, Optional ByVal info As String = "I") As Variant
+' =ACCRUE(start, end, amount, type, curve)
+'   type : "SIMPLE" (sum of daily interest) or "COMPOUND" (interest joins
+'          the balance, SOFR in-arrears - the market floating-leg method).
+'   curve: the MAKE_CURVE receipt cell.
+' Returns interest in $mm for [start, end).
+Public Function ACCRUE(ByVal startDate As Date, ByVal endDate As Date, _
+                       ByVal amount As Double, ByVal accrualType As String, _
+                       curve As Range) As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
-    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
+    Set crv = RegGet(HandleName(CStr(curve.Value)))
     If crv Is Nothing Then ACCRUE = CVErr(xlErrNA): Exit Function
-    Dim intr As Double
     Select Case UCase$(accrualType)
-        Case "SIMPLE":   intr = notionalMM * crv.SimpleFactor(dStart, dEnd)
-        Case "COMPOUND": intr = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-        Case Else:       ACCRUE = CVErr(xlErrValue): Exit Function
+        Case "SIMPLE":   ACCRUE = amount * crv.SimpleFactor(startDate, endDate)
+        Case "COMPOUND": ACCRUE = amount * (crv.AccumFactor(startDate, endDate) - 1#)
+        Case Else:       ACCRUE = CVErr(xlErrValue)
     End Select
-    If UCase$(info) = "PI" Then intr = intr + notionalMM
-    ACCRUE = intr
     Exit Function
 bad:
     ACCRUE = CVErr(xlErrValue)
 End Function
 
-'  =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir, [part])
-' Coordinator: fixed leg = simple at fixed rate; float leg = ACCRUE
-' COMPOUND on the scenario curve (market in-arrears).
-'   part = "NET" (default) -> direction x (fixed - float)
-'        = "FIXED"         -> the fixed-leg accrual ($mm, always positive)
-'        = "FLOAT"         -> the float-leg accrual ($mm, always positive)
-' Put three cells side by side (FIXED, FLOAT, NET) to show the netting.
-Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
-                         ByVal notionalMM As Double, ByVal fixedPct As Double, _
-                         curveHandle As Range, ByVal direction As String, _
-                         Optional ByVal part As String = "NET") As Variant
+' =SWAP(start, end, notional, fixedRate, curve, leg)
+'   leg : "FIXED", "FLOAT" or "NET" (NET = receive-fixed: fixed - float).
+'   Fixed leg = simple at fixedRate; float leg = COMPOUND on the curve.
+Public Function SWAP(ByVal startDate As Date, ByVal endDate As Date, _
+                     ByVal notional As Double, ByVal fixedRate As Double, _
+                     curve As Range, Optional ByVal leg As String = "NET") As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
-    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
-    If crv Is Nothing Then SWAP_NET = CVErr(xlErrNA): Exit Function
+    Set crv = RegGet(HandleName(CStr(curve.Value)))
+    If crv Is Nothing Then SWAP = CVErr(xlErrNA): Exit Function
     Dim s As Date, fixedLeg As Double, floatLeg As Double
-    s = crv.Calendar.Following(dStart)
-    fixedLeg = notionalMM * fixedPct / 100# * CLng(dEnd - s) / 360#
-    floatLeg = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-    Select Case UCase$(part)
-        Case "FIXED": SWAP_NET = fixedLeg
-        Case "FLOAT": SWAP_NET = floatLeg
-        Case "NET":   SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
-        Case Else:    SWAP_NET = CVErr(xlErrValue)
+    s = crv.Calendar.Following(startDate)
+    fixedLeg = notional * fixedRate / 100# * CLng(endDate - s) / 360#
+    floatLeg = notional * (crv.AccumFactor(startDate, endDate) - 1#)
+    Select Case UCase$(leg)
+        Case "FIXED": SWAP = fixedLeg
+        Case "FLOAT": SWAP = floatLeg
+        Case "NET":   SWAP = fixedLeg - floatLeg
+        Case Else:    SWAP = CVErr(xlErrValue)
     End Select
     Exit Function
 bad:
-    SWAP_NET = CVErr(xlErrValue)
+    SWAP = CVErr(xlErrValue)
 End Function

@@ -2,7 +2,7 @@ Attribute VB_Name = "cStripCurve"
 ' === CLASS MODULE === (Insert > Class Module, rename to cStripCurve)
 ' =====================================================================
 ' cStripCurve (Layer 1) - the market layer, SOFR in-arrears.
-' Built from: name, sofr0, FedMeetings (dates+bps), Calendar.
+' Built from: name, sofr0, FOMC moves (date+bps pairs), Calendar.
 ' Produces, on demand for [start,end], the daily strip:
 '   business-day rows, calendar-day weight (onDays), day factor
 '   (1 + rate*days/360) and the running accumulated product.
@@ -17,8 +17,7 @@ Private mName As String
 Private mCal As cCalendar
 
 Public Sub Init(ByVal name As String, ByVal sofr0 As Double, _
-                fomcDates As Variant, movesBps As Variant, _
-                ByVal scale As Double, cal As cCalendar)
+                fomcDates As Variant, movesBps As Variant, cal As cCalendar)
     Dim i As Long, n As Long, cum As Double
     mName = name: Set mCal = cal
     ReDim mEff(1 To UBound(fomcDates) + 2)
@@ -30,7 +29,7 @@ Public Sub Init(ByVal name As String, ByVal sofr0 As Double, _
             Dim mv As Double: mv = 0#
             If IsNumeric(movesBps(i)) Then mv = CDbl(movesBps(i))
             If mv <> 0# Then
-                cum = cum + scale * mv / 100#
+                cum = cum + mv / 100#
                 n = n + 1
                 mEff(n) = cal.NextBusinessDay(CDate(fomcDates(i)))
                 mRate(n) = cum

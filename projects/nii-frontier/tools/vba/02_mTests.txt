@@ -24,7 +24,7 @@ Public Sub TestAll()
     Dim crv As New cStripCurve
     crv.Init "cuts", 3.8, _
         Array(CDate("2026-06-17"), CDate("2026-07-29"), CDate("2026-09-16"), CDate("2026-10-28")), _
-        Array(-25, -25, -25, 0), 1#, cal
+        Array(-25, -25, -25, 0), cal
     Hdr ws, "STRIPPED-CURVE ENGINE (in-arrears ACT/360)"
     Chk ws, "Period simple Jul-Oct 100mm", 100 * crv.SimpleFactor(CDate("2026-07-01"), CDate("2026-10-01")), 0.85375, 0.000001
     Chk ws, "Period compound Jul-Oct 100mm", 100 * (crv.AccumFactor(CDate("2026-07-01"), CDate("2026-10-01")) - 1), 0.857325, 0.000001

@@ -1,43 +1,41 @@
 ======================================================================
-NII ENGINE - ALL VBA MODULES (master file)
-Generated 2026-06-15 | engine: stripped curve, SOFR in-arrears ACT/360
+NII ENGINE - VBA  (all modules in one file)
 ======================================================================
 
-INSTALL (Excel, ~4 minutes)
-  For EACH module below: Alt+F11 > Insert > Module (or CLASS MODULE where
-  marked) > rename to the name shown > paste body, SKIPPING the first
-  'Attribute VB_Name' line. Then save as .xlsm, press Ctrl+Alt+F9.
+WHAT YOU GET (4 worksheet functions):
+  =FED_HOL(holidays)                          builds a calendar
+  =MAKE_CURVE(name, sofr, fedMoves, calCell)  builds a SOFR curve
+  =ACCRUE(start, end, amount, type, curveCell)   interest, $mm
+  =SWAP(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 
-    1 mInterestCalc  Module        five accrual primitives
-    2 mRegistry      Module        name -> object cache
-    3 cCalendar      CLASS Module  business days, onDays
-    4 cStripCurve    CLASS Module  rate path + accumulated factor
-    5 mSheetAPI      Module        FED_HOL, MAKE_CURVE, ACCRUE, SWAP_NET
-    6 mTests         Module        Alt+F8 > TestAll -> TESTS sheet
+INSTALL (about 4 minutes):
+  1. Alt+F11 to open the editor.
+  2. For each of the 6 blocks below (separated by ##### banners):
+       - Insert > Module        (for mInterestCalc, mRegistry, mSheetAPI, mTests)
+       - Insert > Class Module  (for cCalendar, cStripCurve)   <- IMPORTANT
+       - rename it (F4 > Name) to the name in the banner
+       - paste the block, but DELETE its first line (Attribute VB_Name...)
+  3. Save the workbook as .xlsm.
+  4. Press Ctrl+Alt+F9 (recalculate everything).
 
-WORKSHEET USAGE (handles flow cell-to-cell, never typed strings)
-  B5 : =FED_HOL(tblHolidays[Date])
-  B6 : =MAKE_CURVE("cuts", 3.80, FOMCdates, moves, scale, $B$5)
-  any: =ACCRUE(start, end, notional, "COMPOUND", $B$6, "I")
-  swap legs shown separately:
-       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "FIXED")
-       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "FLOAT")
-       =SWAP_NET(start, end, notional, 3.15, $B$6, "RCV", "NET")
+HOW TO USE ON A SHEET (put receipts in cells, reference the CELLS):
+  B4:  =FED_HOL(A1:A6)                         -> hol_calendar | OK | 6 dates
+  B5:  =MAKE_CURVE("cuts", 3.80, D1:E4, B4)    -> cuts | OK | 3 steps | 3.80->3.05
+       (D1:E4 is two columns: meeting date | move bps)
+  then:
+  =ACCRUE(DATE(2026,7,1), DATE(2026,10,1), 100, "COMPOUND", B5)   -> 0.857325
+  =SWAP(DATE(2026,7,1), DATE(2026,8,1), 375, 3.15, B5, "NET")     -> -0.125585
 
-GOLDEN VALUES (reconcile to Python and web twins)
-  Period simple Jul-Oct 100mm = 0.853750
-  Period compound (in-arrears) = 0.857325
-  Swap July 375mm: FIXED 1.017187 | FLOAT 1.142773 | RCV NET -0.125585
-  Alt+F8 > TestAll -> MODEL STATUS: OK - ALL TESTS PASS
+  RULE: always point ACCRUE/SWAP at the curve CELL (B5), never type "cuts".
 
-ARCHITECTURE: projects/nii-frontier/tools/vba/ARCHITECTURE.txt
-WEB TWIN:     https://ronu.one/projects/nii-frontier/engine/
+CHECK: Alt+F8 > TestAll  ->  a TESTS sheet, MODEL STATUS should say OK.
+
+Web version (no install, works on a phone): ronu.one/projects/nii-frontier/engine/
 
 
-######################################################################
-##### MODULE 1 : mInterestCalc   [Module]
-##### Insert > Module, rename to 'mInterestCalc', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 1 : mInterestCalc   [Insert > Module, name it 'mInterestCalc']
+##################################################################
 ' =====================================================================
 ' mInterestCalc - THE INTEREST ENGINE (Layer 0.5)
 ' Every accrual in the model flows through these five functions.
@@ -118,10 +116,9 @@ Public Function CompoundBalance(ByVal balanceMM As Double, ByVal ratePct As Doub
     CompoundBalance = balanceMM + AccrueSimple(balanceMM, ratePct, days)
 End Function
 
-######################################################################
-##### MODULE 2 : mRegistry   [Module]
-##### Insert > Module, rename to 'mRegistry', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 2 : mRegistry   [Insert > Module, name it 'mRegistry']
+##################################################################
 ' =====================================================================
 ' mRegistry (Layer: infrastructure)
 ' name -> object store. Memory is a CACHE; the sheet is the database.
@@ -155,10 +152,9 @@ Public Function HandleName(ByVal handle As String) As String
     If p = 0 Then HandleName = Trim$(handle) Else HandleName = Trim$(Left$(handle, p - 1))
 End Function
 
-######################################################################
-##### MODULE 3 : cCalendar   [Class Module]
-##### Insert > Class Module, rename to 'cCalendar', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 3 : cCalendar   [Insert > Class Module, name it 'cCalendar']
+##################################################################
 ' === CLASS MODULE === (Insert > Class Module, rename to cCalendar)
 ' =====================================================================
 ' cCalendar (Layer 0) - immutable value-holder built from holiday DATES.
@@ -210,14 +206,13 @@ Public Function ONDays(ByVal d As Date) As Long
     ONDays = CLng(NextBusinessDay(d) - d)
 End Function
 
-######################################################################
-##### MODULE 4 : cStripCurve   [Class Module]
-##### Insert > Class Module, rename to 'cStripCurve', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 4 : cStripCurve   [Insert > Class Module, name it 'cStripCurve']
+##################################################################
 ' === CLASS MODULE === (Insert > Class Module, rename to cStripCurve)
 ' =====================================================================
 ' cStripCurve (Layer 1) - the market layer, SOFR in-arrears.
-' Built from: name, sofr0, FedMeetings (dates+bps), Calendar.
+' Built from: name, sofr0, FOMC moves (date+bps pairs), Calendar.
 ' Produces, on demand for [start,end], the daily strip:
 '   business-day rows, calendar-day weight (onDays), day factor
 '   (1 + rate*days/360) and the running accumulated product.
@@ -232,8 +227,7 @@ Private mName As String
 Private mCal As cCalendar
 
 Public Sub Init(ByVal name As String, ByVal sofr0 As Double, _
-                fomcDates As Variant, movesBps As Variant, _
-                ByVal scale As Double, cal As cCalendar)
+                fomcDates As Variant, movesBps As Variant, cal As cCalendar)
     Dim i As Long, n As Long, cum As Double
     mName = name: Set mCal = cal
     ReDim mEff(1 To UBound(fomcDates) + 2)
@@ -245,7 +239,7 @@ Public Sub Init(ByVal name As String, ByVal sofr0 As Double, _
             Dim mv As Double: mv = 0#
             If IsNumeric(movesBps(i)) Then mv = CDbl(movesBps(i))
             If mv <> 0# Then
-                cum = cum + scale * mv / 100#
+                cum = cum + mv / 100#
                 n = n + 1
                 mEff(n) = cal.NextBusinessDay(CDate(fomcDates(i)))
                 mRate(n) = cum
@@ -299,119 +293,112 @@ Public Function SimpleFactor(ByVal dStart As Date, ByVal dEnd As Date) As Double
     SimpleFactor = s
 End Function
 
-######################################################################
-##### MODULE 5 : mSheetAPI   [Module]
-##### Insert > Module, rename to 'mSheetAPI', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 5 : mSheetAPI   [Insert > Module, name it 'mSheetAPI']
+##################################################################
 ' =====================================================================
-' mSheetAPI (Layer 7, sheet door) - the only module that touches cells.
-' Constructors build objects from sheet VALUES, register them, return a
-' receipt string. Consumers take handle CELLS (never typed strings, C1)
-' and call the engine. Bad input -> "#..._ERR:" receipt at the cell.
+' mSheetAPI - the worksheet functions (the only module that reads cells).
+' Build objects with FED_HOL and MAKE_CURVE; they return a short receipt
+' and stash the object by name. Then ACCRUE and SWAP take the receipt
+' CELL (e.g. $B$5) and do the math. Never type the receipt text by hand.
 ' =====================================================================
 Option Explicit
 
-' =FED_HOL(holidayRange) -> "hol_calendar | OK | n holidays"
-Public Function FED_HOL(holidayRange As Range) As String
+' =FED_HOL(holidays)  ->  "hol_calendar | OK | 6 dates"
+'   holidays: a one-column range of dates. Weekends are automatic.
+Public Function FED_HOL(holidays As Range) As String
     On Error GoTo bad
     Dim cal As New cCalendar
-    cal.Init holidayRange.Value
+    cal.Init holidays.Value
     RegSet "hol_calendar", cal
-    FED_HOL = "hol_calendar | OK | " & cal.HolidayCount & " holidays"
+    FED_HOL = "hol_calendar | OK | " & cal.HolidayCount & " dates"
     Exit Function
 bad:
     FED_HOL = "#CAL_ERR: " & Err.Description
 End Function
 
-' =MAKE_CURVE(name, sofr0, fomcDates, movesBps, scale, calHandleCell)
-'   -> "name | OK | k steps | 3.80->3.05 | in-arrears ACT/360"
-' Each non-zero move is effective the NEXT BUSINESS DAY; scale multiplies.
-Public Function MAKE_CURVE(ByVal name As String, ByVal sofr0 As Double, _
-                           fomcDates As Range, movesBps As Range, _
-                           ByVal scale As Double, calHandle As Range) As String
+' =MAKE_CURVE(name, sofr, fedMoves, calendar)
+'   name     : text, e.g. "cuts"
+'   sofr     : today's SOFR %, e.g. 3.80
+'   fedMoves : a TWO-COLUMN range -> [meeting date | move bps]. Blank rows
+'              ignored. Each move takes effect the next business day.
+'   calendar : the FED_HOL receipt cell.
+'   -> "cuts | OK | 3 steps | 3.80->3.05"
+Public Function MAKE_CURVE(ByVal name As String, ByVal sofr As Double, _
+                           fedMoves As Range, calendar As Range) As String
     On Error GoTo bad
     Dim cal As cCalendar
-    Set cal = RegGet(HandleName(CStr(calHandle.Value)))
-    If cal Is Nothing Then MAKE_CURVE = "#CURVE_ERR: calendar not built (Ctrl+Alt+F9)": Exit Function
-    Dim fd() As Variant, mv() As Variant, i As Long, k As Long
-    k = fomcDates.Rows.Count
-    ReDim fd(1 To k): ReDim mv(1 To k)
-    For i = 1 To k
-        fd(i) = fomcDates.Cells(i, 1).Value
-        mv(i) = movesBps.Cells(i, 1).Value
+    Set cal = RegGet(HandleName(CStr(calendar.Value)))
+    If cal Is Nothing Then MAKE_CURVE = "#CURVE_ERR: build the calendar first": Exit Function
+
+    Dim n As Long, i As Long, fd() As Variant, mv() As Variant
+    n = fedMoves.Rows.Count
+    ReDim fd(1 To n): ReDim mv(1 To n)
+    For i = 1 To n
+        fd(i) = fedMoves.Cells(i, 1).Value
+        mv(i) = fedMoves.Cells(i, 2).Value
     Next i
+
     Dim crv As New cStripCurve
-    crv.Init name, sofr0, fd, mv, scale, cal
+    crv.Init name, sofr, fd, mv, cal
     RegSet name, crv
     MAKE_CURVE = name & " | OK | " & crv.Steps & " steps | " & _
-                 Format(sofr0, "0.00") & "->" & Format(crv.LastRate, "0.00") & _
-                 " | in-arrears ACT/360"
+                 Format(sofr, "0.00") & "->" & Format(crv.LastRate, "0.00")
     Exit Function
 bad:
     MAKE_CURVE = "#CURVE_ERR: " & Err.Description
 End Function
 
-' =ACCRUE(start, end, notionalMM, type, curveHandleCell, info)
-'   type = "SIMPLE" | "COMPOUND"   info = "I" | "PI"
-' SIMPLE   : notional * SimpleFactor(start,end)
-' COMPOUND : notional * (AccumFactor(start,end) - 1)   [SOFR in-arrears]
-' info "PI": adds notional back (principal + interest).
-' This single function is the deposit, the swap float leg, and (with a
-' flat curve) the swap fixed leg.
-Public Function ACCRUE(ByVal dStart As Date, ByVal dEnd As Date, _
-                       ByVal notionalMM As Double, ByVal accrualType As String, _
-                       curveHandle As Range, Optional ByVal info As String = "I") As Variant
+' =ACCRUE(start, end, amount, type, curve)
+'   type : "SIMPLE" (sum of daily interest) or "COMPOUND" (interest joins
+'          the balance, SOFR in-arrears - the market floating-leg method).
+'   curve: the MAKE_CURVE receipt cell.
+' Returns interest in $mm for [start, end).
+Public Function ACCRUE(ByVal startDate As Date, ByVal endDate As Date, _
+                       ByVal amount As Double, ByVal accrualType As String, _
+                       curve As Range) As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
-    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
+    Set crv = RegGet(HandleName(CStr(curve.Value)))
     If crv Is Nothing Then ACCRUE = CVErr(xlErrNA): Exit Function
-    Dim intr As Double
     Select Case UCase$(accrualType)
-        Case "SIMPLE":   intr = notionalMM * crv.SimpleFactor(dStart, dEnd)
-        Case "COMPOUND": intr = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-        Case Else:       ACCRUE = CVErr(xlErrValue): Exit Function
+        Case "SIMPLE":   ACCRUE = amount * crv.SimpleFactor(startDate, endDate)
+        Case "COMPOUND": ACCRUE = amount * (crv.AccumFactor(startDate, endDate) - 1#)
+        Case Else:       ACCRUE = CVErr(xlErrValue)
     End Select
-    If UCase$(info) = "PI" Then intr = intr + notionalMM
-    ACCRUE = intr
     Exit Function
 bad:
     ACCRUE = CVErr(xlErrValue)
 End Function
 
-'  =SWAP_NET(start, end, notionalMM, fixedPct, curveHandleCell, dir, [part])
-' Coordinator: fixed leg = simple at fixed rate; float leg = ACCRUE
-' COMPOUND on the scenario curve (market in-arrears).
-'   part = "NET" (default) -> direction x (fixed - float)
-'        = "FIXED"         -> the fixed-leg accrual ($mm, always positive)
-'        = "FLOAT"         -> the float-leg accrual ($mm, always positive)
-' Put three cells side by side (FIXED, FLOAT, NET) to show the netting.
-Public Function SWAP_NET(ByVal dStart As Date, ByVal dEnd As Date, _
-                         ByVal notionalMM As Double, ByVal fixedPct As Double, _
-                         curveHandle As Range, ByVal direction As String, _
-                         Optional ByVal part As String = "NET") As Variant
+' =SWAP(start, end, notional, fixedRate, curve, leg)
+'   leg : "FIXED", "FLOAT" or "NET" (NET = receive-fixed: fixed - float).
+'   Fixed leg = simple at fixedRate; float leg = COMPOUND on the curve.
+Public Function SWAP(ByVal startDate As Date, ByVal endDate As Date, _
+                     ByVal notional As Double, ByVal fixedRate As Double, _
+                     curve As Range, Optional ByVal leg As String = "NET") As Variant
     On Error GoTo bad
     Dim crv As cStripCurve
-    Set crv = RegGet(HandleName(CStr(curveHandle.Value)))
-    If crv Is Nothing Then SWAP_NET = CVErr(xlErrNA): Exit Function
+    Set crv = RegGet(HandleName(CStr(curve.Value)))
+    If crv Is Nothing Then SWAP = CVErr(xlErrNA): Exit Function
     Dim s As Date, fixedLeg As Double, floatLeg As Double
-    s = crv.Calendar.Following(dStart)
-    fixedLeg = notionalMM * fixedPct / 100# * CLng(dEnd - s) / 360#
-    floatLeg = notionalMM * (crv.AccumFactor(dStart, dEnd) - 1#)
-    Select Case UCase$(part)
-        Case "FIXED": SWAP_NET = fixedLeg
-        Case "FLOAT": SWAP_NET = floatLeg
-        Case "NET":   SWAP_NET = IIf(UCase$(direction) = "RCV", 1#, -1#) * (fixedLeg - floatLeg)
-        Case Else:    SWAP_NET = CVErr(xlErrValue)
+    s = crv.Calendar.Following(startDate)
+    fixedLeg = notional * fixedRate / 100# * CLng(endDate - s) / 360#
+    floatLeg = notional * (crv.AccumFactor(startDate, endDate) - 1#)
+    Select Case UCase$(leg)
+        Case "FIXED": SWAP = fixedLeg
+        Case "FLOAT": SWAP = floatLeg
+        Case "NET":   SWAP = fixedLeg - floatLeg
+        Case Else:    SWAP = CVErr(xlErrValue)
     End Select
     Exit Function
 bad:
-    SWAP_NET = CVErr(xlErrValue)
+    SWAP = CVErr(xlErrValue)
 End Function
 
-######################################################################
-##### MODULE 6 : mTests   [Module]
-##### Insert > Module, rename to 'mTests', paste everything below.
-######################################################################
+##################################################################
+##### MODULE 6 : mTests   [Insert > Module, name it 'mTests']
+##################################################################
 ' =====================================================================
 ' mTests - run TestAll (Alt+F8). Asserts the interest primitives AND
 ' the stripped-curve engine golden values, writes OK/FAIL to a TESTS
@@ -437,7 +424,7 @@ Public Sub TestAll()
     Dim crv As New cStripCurve
     crv.Init "cuts", 3.8, _
         Array(CDate("2026-06-17"), CDate("2026-07-29"), CDate("2026-09-16"), CDate("2026-10-28")), _
-        Array(-25, -25, -25, 0), 1#, cal
+        Array(-25, -25, -25, 0), cal
     Hdr ws, "STRIPPED-CURVE ENGINE (in-arrears ACT/360)"
     Chk ws, "Period simple Jul-Oct 100mm", 100 * crv.SimpleFactor(CDate("2026-07-01"), CDate("2026-10-01")), 0.85375, 0.000001
     Chk ws, "Period compound Jul-Oct 100mm", 100 * (crv.AccumFactor(CDate("2026-07-01"), CDate("2026-10-01")) - 1), 0.857325, 0.000001
