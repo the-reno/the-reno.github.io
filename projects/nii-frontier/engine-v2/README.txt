@@ -33,3 +33,19 @@ RULE  Ranges/cells are passed as references, never typed text — so editing
 GOLDEN VALUES (verified vs Python twin)
   Period simple   0.853750     Period compound  0.857325
   Swap July 375mm: FIXED 1.017187 | FLOAT 1.142773 | NET -0.125585
+
+----------------------------------------------------------------------
+ONE-COMMAND MACRO-ENABLED BUILD (Windows + Excel)
+----------------------------------------------------------------------
+build_xlsm.py drives your Excel to produce NII_Engine_v2.xlsm with the
+VBA already inside - no manual import.
+
+  pip install pywin32
+  python build_xlsm.py     (run in this folder; bas/ must be alongside)
+
+One-time, if Excel blocks VBA import:
+  File > Options > Trust Center > Trust Center Settings > Macro Settings
+  > tick "Trust access to the VBA project object model".
+
+Result: NII_Engine_v2.xlsm - open it, enable macros, Ctrl+Alt+F9,
+the MODEL Check column reads OK.
