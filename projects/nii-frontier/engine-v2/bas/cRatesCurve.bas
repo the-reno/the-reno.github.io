@@ -1,87 +1,124 @@
 Attribute VB_Name = "cRatesCurve"
 ' === CLASS MODULE ===
-' The assembled curve. Built from SOFR + a FedScenario + a HolidayTable,
-' it strips a DAILY table from start to end:  date | rate% | accumFactor.
+' The one named object. Built directly from input RANGES (scenario moves
+' and holidays) plus SOFR and a horizon. It stores its own provenance
+' (the parameters that built it) AND the daily strip:
+'     date | rate% | dayFactor | accumFactor
 ' Each FOMC move is effective the next business day; rates cumulate on
-' SOFR; accumFactor is the running product (1 + rate*days/360),
-' SOFR in-arrears. Accrual reads this table - no re-walking.
+' SOFR; dayFactor = 1 + rate*days/360; accumFactor is the running product
+' (SOFR in-arrears). Accrual reads this table - no re-walking.
 ' =====================================================================
 Option Explicit
 Private mName As String
-Private mStart As Date, mEnd As Date
-Private mDates() As Date          ' one row per business day in [start,end)
+Private mStart As Date, mEnd As Date, mSofr As Double
+Private mScenRef As String, mHolRef As String          ' provenance
+Private mDates() As Date
 Private mRate() As Double
+Private mDayF() As Double
 Private mAccum() As Double
 Private mN As Long
-Private mCal As cHolidayTable
+' calendar held internally (built from the holiday range)
+Private mHol As Object
 
 Public Sub Init(ByVal nm As String, ByVal startD As Date, ByVal endD As Date, _
-                ByVal sofr As Double, scen As cFedScenario, cal As cHolidayTable)
+                ByVal sofr As Double, scenData As Variant, holData As Variant, _
+                ByVal scenRef As String, ByVal holRef As String)
     Dim i As Long
-    mName = nm: mStart = startD: mEnd = endD: Set mCal = cal
+    mName = nm: mStart = startD: mEnd = endD: mSofr = sofr
+    mScenRef = scenRef: mHolRef = holRef
 
-    ' 1) build the step knots: effective date (next BD) -> cumulative rate
-    Dim kEff() As Date, kRate() As Double, kN As Long, cum As Double
-    ReDim kEff(0 To scen.Count) : ReDim kRate(0 To scen.Count)
-    kN = 0 : kEff(0) = DateSerial(1900, 1, 1) : kRate(0) = sofr : cum = sofr
-    For i = 1 To scen.Count
-        If scen.MoveBps(i) <> 0# Then
-            cum = cum + scen.MoveBps(i) / 100#
-            kN = kN + 1
-            kEff(kN) = cal.NextBusinessDay(scen.MoveDate(i))
-            kRate(kN) = cum
+    ' --- holidays into a fast set
+    Set mHol = CreateObject("Scripting.Dictionary")
+    For i = LBound(holData, 1) To UBound(holData, 1)
+        If IsDate(holData(i, 1)) Then
+            If Not mHol.Exists(CLng(CDate(holData(i, 1)))) Then mHol.Add CLng(CDate(holData(i, 1))), True
         End If
     Next i
 
-    ' 2) strip day by day across business days, accumulating the factor
-    Dim d As Date, w As Long, acc As Double, cap As Long
+    ' --- staircase knots from the scenario moves (effective next BD, cumulative)
+    Dim kEff() As Date, kRate() As Double, kN As Long, cum As Double, nMoves As Long
+    nMoves = UBound(scenData, 1) - LBound(scenData, 1) + 1
+    ReDim kEff(0 To nMoves) : ReDim kRate(0 To nMoves)
+    kN = 0 : kEff(0) = DateSerial(1900, 1, 1) : kRate(0) = sofr : cum = sofr
+    For i = LBound(scenData, 1) To UBound(scenData, 1)
+        If IsDate(scenData(i, 1)) Then
+            Dim mv As Double : mv = 0#
+            If UBound(scenData, 2) >= 2 Then If IsNumeric(scenData(i, 2)) Then mv = CDbl(scenData(i, 2))
+            If mv <> 0# Then
+                cum = cum + mv / 100#
+                kN = kN + 1
+                kEff(kN) = NextBusinessDay(CDate(scenData(i, 1)))
+                kRate(kN) = cum
+            End If
+        End If
+    Next i
+
+    ' --- strip every business day start..end with dayFactor and accumFactor
+    Dim d As Date, w As Long, acc As Double, cap As Long, r As Double, j As Long
     cap = CLng(endD - startD) + 5
-    ReDim mDates(1 To cap) : ReDim mRate(1 To cap) : ReDim mAccum(1 To cap)
+    ReDim mDates(1 To cap): ReDim mRate(1 To cap): ReDim mDayF(1 To cap): ReDim mAccum(1 To cap)
     mN = 0 : acc = 1#
-    d = cal.Following(startD)
+    d = Following(startD)
     Do While d < endD
-        w = cal.OnDays(d)
+        w = OnDays(d)
         If d + w > endD Then w = CLng(endD - d)
-        Dim r As Double, j As Long
         r = kRate(0)
         For j = 0 To kN
             If kEff(j) <= d Then r = kRate(j) Else Exit For
         Next j
-        acc = acc * (1# + r / 100# * w / 360#)
+        Dim f As Double
+        f = 1# + r / 100# * w / 360#
+        acc = acc * f
         mN = mN + 1
-        mDates(mN) = d : mRate(mN) = r : mAccum(mN) = acc
-        d = cal.NextBusinessDay(d)
+        mDates(mN) = d: mRate(mN) = r: mDayF(mN) = f: mAccum(mN) = acc
+        d = NextBusinessDay(d)
     Loop
     ReDim Preserve mDates(1 To Application.Max(1, mN))
     ReDim Preserve mRate(1 To Application.Max(1, mN))
+    ReDim Preserve mDayF(1 To Application.Max(1, mN))
     ReDim Preserve mAccum(1 To Application.Max(1, mN))
 End Sub
 
+' ---- calendar helpers (internal, over the holiday set)
+Private Function IsBusinessDay(ByVal d As Date) As Boolean
+    Dim w As Long: w = Weekday(d, vbMonday)
+    IsBusinessDay = (w <= 5) And Not mHol.Exists(CLng(d))
+End Function
+Public Function Following(ByVal d As Date) As Date
+    Do While Not IsBusinessDay(d): d = d + 1: Loop
+    Following = d
+End Function
+Public Function NextBusinessDay(ByVal d As Date) As Date
+    NextBusinessDay = Following(d + 1)
+End Function
+Private Function OnDays(ByVal d As Date) As Long
+    OnDays = CLng(NextBusinessDay(d) - d)
+End Function
+
+' ---- identity / provenance
 Public Property Get CurveName() As String: CurveName = mName: End Property
 Public Property Get StartDate() As Date: StartDate = mStart: End Property
 Public Property Get EndDate() As Date: EndDate = mEnd: End Property
+Public Property Get Sofr() As Double: Sofr = mSofr: End Property
+Public Property Get ScenRef() As String: ScenRef = mScenRef: End Property
+Public Property Get HolRef() As String: HolRef = mHolRef: End Property
 Public Property Get Days() As Long: Days = mN: End Property
-Public Property Get FirstRate() As Double: FirstRate = mRate(1): End Property
 Public Property Get LastRate() As Double: LastRate = mRate(mN): End Property
-Public Property Get Calendar() As cHolidayTable: Set Calendar = mCal: End Property
 
-' Compound factor over [s,e): product of (1+r*days/360) for every fix
-' with s <= fixDate < e. Walk the slice directly - no boundary ambiguity.
+' ---- factors over [s,e): walk the daily slice (no boundary division)
 Public Function CompoundFactor(ByVal s As Date, ByVal e As Date) As Double
-    Dim i As Long, f As Double, w As Long
+    Dim i As Long, fac As Double, w As Long
     If e > mEnd Then Err.Raise vbObjectError + 1, , "date past curve end"
-    f = 1#
+    fac = 1#
     For i = 1 To mN
         If mDates(i) >= s And mDates(i) < e Then
             If i < mN Then w = CLng(mDates(i + 1) - mDates(i)) Else w = CLng(e - mDates(i))
             If mDates(i) + w > e Then w = CLng(e - mDates(i))
-            f = f * (1# + mRate(i) / 100# * w / 360#)
+            fac = fac * (1# + mRate(i) / 100# * w / 360#)
         End If
     Next i
-    CompoundFactor = f
+    CompoundFactor = fac
 End Function
-
-' Simple sum of rate*days/360 over the same [s,e) slice.
 Public Function SimpleFactor(ByVal s As Date, ByVal e As Date) As Double
     Dim i As Long, t As Double, w As Long
     If e > mEnd Then Err.Raise vbObjectError + 1, , "date past curve end"
@@ -95,12 +132,17 @@ Public Function SimpleFactor(ByVal s As Date, ByVal e As Date) As Double
     SimpleFactor = t
 End Function
 
-' Spill payload: date | rate% | accumFactor, one row per business day.
+' ---- spill payload: a provenance header, then the daily strip with
+'      date | rate% | dayFactor | accumFactor
 Public Function AsArray() As Variant
-    Dim a() As Variant, i As Long
-    ReDim a(1 To mN, 1 To 3)
+    Dim a() As Variant, i As Long, h As Long
+    h = 2                                   ' two header rows
+    ReDim a(1 To mN + h, 1 To 4)
+    a(1, 1) = "curve": a(1, 2) = mName: a(1, 3) = "SOFR": a(1, 4) = mSofr
+    a(2, 1) = "date": a(2, 2) = "rate%": a(2, 3) = "dayFactor": a(2, 4) = "accumFactor"
     For i = 1 To mN
-        a(i, 1) = mDates(i) : a(i, 2) = mRate(i) : a(i, 3) = mAccum(i)
+        a(h + i, 1) = mDates(i): a(h + i, 2) = mRate(i)
+        a(h + i, 3) = mDayF(i):  a(h + i, 4) = mAccum(i)
     Next i
     AsArray = a
 End Function

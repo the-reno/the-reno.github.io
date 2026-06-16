@@ -29,24 +29,24 @@ def build(path="NII_Engine_v2.xlsx"):
 
     # README
     ws=wb.active; ws.title="README"; ws.sheet_view.showGridLines=False
-    L=["NII ENGINE v2 — object layer","",
-    "Six functions:",
-    "  HolidayTable(name, range)         build a named holiday set",
-    "  FedScenario(name, range)          build a named FOMC move list",
-    "  RatesCurve(name,start,end,sofr,scenCell,holCell)   assemble the curve",
-    "  GET(handleCell)                   spill an object's whole dataset",
-    "  ACCRUE(start,end,amount,type,curveCell)            interest $mm",
-    "  SWAP(start,end,notional,fixed,curveCell,leg)       FIXED|FLOAT|NET","",
+    L=["NII ENGINE v2 — curve as the named object","",
+    "Four functions:",
+    "  RatesCurve(name,start,end,sofr,scenRange,holRange)  build the curve",
+    "  GET(curveCell)            spill the curve: provenance + daily strip",
+    "  ACCRUE(start,end,amount,type,curveCell)             interest $mm",
+    "  SWAP(start,end,notional,fixed,curveCell,leg)        FIXED|FLOAT|NET","",
+    "The curve is the one named object. It reads the scenario and holiday",
+    "ranges directly, records which ranges built it (provenance), and stores",
+    "the daily strip: date | rate% | dayFactor | accumFactor.","",
     "SETUP",
-    "1. Alt+F11. Import the 6 files from the bas folder:",
-    "   File > Import File...  (mRegistry, cHolidayTable, cFedScenario,",
-    "   cRatesCurve, mEngine — classes import as class modules automatically).",
+    "1. Alt+F11 > File > Import File... import the 3 .bas from bas/",
+    "   (mRegistry, cRatesCurve, mEngine).",
     "2. Save as .xlsm. Press Ctrl+Alt+F9.",
     "3. MODEL sheet: paste each column-E formula into the yellow cell.",
-    "   Order matters: B4 holidays, B5 scenario, B6 curve, THEN the rest.",
-    "4. Results should match the Expected column; GET cells spill a table.","",
-    "RULE: every handle is passed as a CELL ($B$6), never as typed text,",
-    "so editing an input cascades through the whole chain automatically."]
+    "   Build the curve (B6) first; the rest reference it.",
+    "4. Results should match Expected; GET($B$6) spills the strip.","",
+    "RULE: scenRange, holRange and curveCell are passed as RANGES/CELLS,",
+    "never as typed text, so editing inputs cascades automatically."]
     for i,t in enumerate(L,1):
         ws.cell(row=i,column=1,value=t).font=(Font(name=A,bold=True,size=15,color=NAVY) if i==1 else
                                               (MONO if t.startswith("  ") else BLK))
@@ -70,11 +70,9 @@ def build(path="NII_Engine_v2.xlsx"):
     # MODEL
     ws=wb.create_sheet("MODEL"); ws.sheet_view.showGridLines=False
     put(ws,1,1,"MODEL — paste each column-E formula into the yellow cell",Font(name=A,bold=True,size=12,color=NAVY))
-    put(ws,3,1,"1 · BUILD OBJECTS (in this order)",SUB); put(ws,3,5,"PASTE THIS",SUB)
-    put(ws,4,1,"Holidays"); put(ws,4,2,None,fill=YEL,box=True); put(ws,4,5,'=HolidayTable("HOL_US",INPUTS!A4:B9)',MONO)
-    put(ws,5,1,"Scenario"); put(ws,5,2,None,fill=YEL,box=True); put(ws,5,5,'=FedScenario("CUT",INPUTS!D4:E7)',MONO)
-    put(ws,6,1,"Curve");    put(ws,6,2,None,fill=YEL,box=True)
-    put(ws,6,5,'=RatesCurve("curve1",DATE(2026,6,15),DATE(2030,12,31),3.80,$B$5,$B$4)',MONO)
+    put(ws,3,1,"1 · BUILD THE CURVE (reads the input ranges directly)",SUB); put(ws,3,5,"PASTE THIS",SUB)
+    put(ws,6,1,"Curve"); put(ws,6,2,None,fill=YEL,box=True)
+    put(ws,6,5,'=RatesCurve("curve1",DATE(2026,6,15),DATE(2030,12,31),3.80,INPUTS!D4:E7,INPUTS!A4:B9)',MONO)
 
     put(ws,8,1,"2 · ACCRUE",SUB); put(ws,8,3,"Expected",SUB); put(ws,8,4,"Check",SUB); put(ws,8,5,"PASTE THIS",SUB)
     cases=[("Period simple (Jul-Oct)",0.853750,'=ACCRUE(DATE(2026,7,1),DATE(2026,10,1),100,"SIMPLE",$B$6)'),
@@ -93,11 +91,10 @@ def build(path="NII_Engine_v2.xlsx"):
         put(ws,r,3,exp,nf="0.000000"); put(ws,r,4,'=IF(ABS(B%d-C%d)<0.000001,"OK","check")'%(r,r),SUB)
         put(ws,r,5,f,MONO); r+=1
 
-    put(ws,r+1,1,"4 · INSPECT (GET spills the whole dataset)",SUB); r+=2
-    put(ws,r,1,"Holidays"); put(ws,r,5,"=GET($B$4)",MONO); r+=1
-    put(ws,r,1,"Scenario"); put(ws,r,5,"=GET($B$5)",MONO); r+=1
-    put(ws,r,1,"Curve strip"); put(ws,r,5,"=GET($B$6)",MONO); r+=1
-    put(ws,r+1,1,"GET spills into the cells below/right of it — give it empty room.",Font(name=A,size=9,color="595959"))
+    put(ws,r+1,1,"4 · INSPECT — GET spills provenance + the daily strip",SUB); r+=2
+    put(ws,r,1,"Curve table"); put(ws,r,5,"=GET($B$6)",MONO); r+=1
+    put(ws,r+1,1,"Spills: header (curve/SOFR), then date | rate% | dayFactor | accumFactor.",Font(name=A,size=9,color="595959"))
+    put(ws,r+2,1,"Give it empty room below and to the right.",Font(name=A,size=9,color="595959"))
     for c,w in [("A",28),("B",13),("C",13),("D",8),("E",64)]: ws.column_dimensions[c].width=w
 
     wb.calculation=CalcProperties(fullCalcOnLoad=True)
