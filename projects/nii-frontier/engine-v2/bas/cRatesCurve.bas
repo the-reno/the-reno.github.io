@@ -132,6 +132,16 @@ Public Function SimpleFactor(ByVal s As Date, ByVal e As Date) As Double
     SimpleFactor = t
 End Function
 
+' ---- the rate in force on a single date (the staircase value).
+'      Before the first business day in the strip, returns the opening SOFR.
+Public Function RateOn(ByVal d As Date) As Double
+    Dim i As Long
+    RateOn = mSofr
+    For i = 1 To mN
+        If mDates(i) <= d Then RateOn = mRate(i) Else Exit For
+    Next i
+End Function
+
 ' ---- spill payload: a provenance header, then the daily strip with
 '      date | rate% | dayFactor | accumFactor
 Public Function AsArray() As Variant

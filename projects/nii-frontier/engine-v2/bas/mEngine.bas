@@ -5,8 +5,8 @@ Attribute VB_Name = "mEngine"
 '   =RatesCurve(name, start, end, sofr, scenRange, holRange)
 '        builds ONE named curve directly from the input ranges, stores
 '        its provenance + daily strip -> "RatesCurve.NAME | OK | ..."
-'   =GET(curveCell)        spills the curve: provenance header + the daily
-'                          table (date | rate% | dayFactor | accumFactor)
+'   =CURVEDATA(curveCell)  returns the clean curve name (for referencing)
+'   =CURVERATE(curveCell, date)  the SOFR rate %% in force on that date
 '   =ACCRUE(start, end, amount, type, curveCell)        interest $mm
 '   =SWAP(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 '
@@ -29,15 +29,28 @@ Public Function RatesCurve(ByVal name As String, ByVal startD As Date, ByVal end
 bad: RatesCurve = "#CURVE_ERR: " & Err.Description
 End Function
 
-' Spill the whole curve (header + daily strip incl. accumFactor).
-Public Function GET(curveCell As Range) As Variant
+' Returns the clean curve handle name (e.g. "RatesCurve.curve1"), for
+' referencing the curve in other formulas / cashflow automation.
+Public Function CURVEDATA(curveCell As Range) As Variant
     On Error GoTo bad
     Dim crv As cRatesCurve
     Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
-    If crv Is Nothing Then GET = CVErr(xlErrNA): Exit Function
-    GET = crv.AsArray()
+    If crv Is Nothing Then CURVEDATA = CVErr(xlErrNA): Exit Function
+    CURVEDATA = "RatesCurve." & crv.CurveName
     Exit Function
-bad: GET = CVErr(xlErrValue)
+bad: CURVEDATA = CVErr(xlErrValue)
+End Function
+
+' =CURVERATE(curveCell, date)  -> the SOFR rate (%) in force on that date.
+' The one lookup cashflow tables need: point the row at the curve + a date.
+Public Function CURVERATE(curveCell As Range, ByVal d As Date) As Variant
+    On Error GoTo bad
+    Dim crv As cRatesCurve
+    Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
+    If crv Is Nothing Then CURVERATE = CVErr(xlErrNA): Exit Function
+    CURVERATE = crv.RateOn(d)
+    Exit Function
+bad: CURVERATE = CVErr(xlErrValue)
 End Function
 
 Public Function ACCRUE(ByVal startD As Date, ByVal endD As Date, ByVal amount As Double, _
