@@ -70,15 +70,15 @@ def main():
     mo = wb.Worksheets.Add(After=ws); mo.Name = "MODEL"
     mo.Range("A1").Value = "MODEL — live engine"
     mo.Range("A3").Value = "Curve"
-    mo.Range("B6").Formula = '=RatesCurve("curve1",DATE(2026,6,15),DATE(2030,12,31),3.80,INPUTS!D4:E7,INPUTS!A4:B9)'
+    mo.Range("B6").Formula = '=BuildCurve("curve1",DATE(2026,6,15),DATE(2030,12,31),3.80,INPUTS!D4:E7,INPUTS!A4:B9)'
     mo.Range("A6").Value = "Curve"
 
     rows = [
-        (9,  "Period simple",   '=ACCRUE(DATE(2026,7,1),DATE(2026,10,1),100,"SIMPLE",$B$6)',   0.853750),
-        (10, "Period compound", '=ACCRUE(DATE(2026,7,1),DATE(2026,10,1),100,"COMPOUND",$B$6)', 0.857325),
-        (13, "Swap FIXED", '=SWAP(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"FIXED")', 1.017187),
-        (14, "Swap FLOAT", '=SWAP(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"FLOAT")', 1.142773),
-        (15, "Swap NET",   '=SWAP(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"NET")',  -0.125585),
+        (9,  "Period simple",   '=Accrue(DATE(2026,7,1),DATE(2026,10,1),100,"SIMPLE",$B$6)',   0.853750),
+        (10, "Period compound", '=Accrue(DATE(2026,7,1),DATE(2026,10,1),100,"COMPOUND",$B$6)', 0.857325),
+        (13, "Swap FIXED", '=SwapLeg(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"FIXED")', 1.017187),
+        (14, "Swap FLOAT", '=SwapLeg(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"FLOAT")', 1.142773),
+        (15, "Swap NET",   '=SwapLeg(DATE(2026,7,1),DATE(2026,8,1),375,3.15,$B$6,"NET")',  -0.125585),
     ]
     mo.Range("A8").Value = "ACCRUE"
     mo.Range("A12").Value = "SWAP — $375mm @3.15%, July, receive-fixed"
@@ -91,7 +91,7 @@ def main():
         mo.Range("C%d"%r).NumberFormat = "0.000000"
     mo.Range("C8").Value = "Expected"; mo.Range("D8").Value = "Check"
     mo.Range("A17").Value = "INSPECT — GET spills provenance + daily strip"
-    mo.Range("B18").Formula = "=GET($B$6)"
+    mo.Range("B18").Formula = "=CurveName($B$6)"
     mo.Columns("A").ColumnWidth = 28
     mo.Columns("B:D").ColumnWidth = 14
 

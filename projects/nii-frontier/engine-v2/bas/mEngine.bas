@@ -1,90 +1,125 @@
 Attribute VB_Name = "mEngine"
 ' =====================================================================
-' mEngine - the worksheet functions (the only module that reads cells).
+' mEngine  -  the worksheet functions you type into cells.
+' This is the ONLY module that reads cells. It builds the curve, reads
+' it back, and does the interest math. Every function follows the same
+' shape: fetch the curve object by the name in a cell, then act on it.
 '
-'   =RatesCurve(name, start, end, sofr, scenRange, holRange)
-'        builds ONE named curve directly from the input ranges, stores
-'        its provenance + daily strip -> "RatesCurve.NAME | OK | ..."
-'   =CURVEDATA(curveCell)  returns the clean curve name (for referencing)
-'   =CURVERATE(curveCell, date)  the SOFR rate %% in force on that date
-'   =ACCRUE(start, end, amount, type, curveCell)        interest $mm
-'   =SWAP(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
+' THE FUNCTIONS
+'   BuildCurve(name, start, end, sofr, fedRange, holidayRange)
+'        Builds one named curve straight from the input ranges and
+'        returns a receipt naming it. This is the only builder.
+'   CurveName(curveCell)            the clean curve name, for re-use
+'   CurveRate(curveCell, date)      the SOFR rate in force on that date
+'   Accrue(start, end, amount, type, curveCell)        interest, $mm
+'   SwapLeg(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 '
-' RULE: pass scenRange / holRange / curveCell as CELLS or RANGES, never as
-' typed text - so edits to holidays or moves cascade through the chain.
+' THE ONE RULE
+'   Always pass ranges and the curve handle as CELLS (e.g. $B$6), never
+'   as typed text. A cell is a precedent, so editing a holiday or a Fed
+'   move rebuilds the curve and refreshes everything downstream. Typed
+'   text is invisible to Excel and would go stale.
 ' =====================================================================
 Option Explicit
 
-Public Function RatesCurve(ByVal name As String, ByVal startD As Date, ByVal endD As Date, _
-                           ByVal sofr As Double, scenRange As Range, holRange As Range) As String
-    On Error GoTo bad
-    Dim o As New cRatesCurve
-    o.Init name, startD, endD, sofr, scenRange.Value, holRange.Value, _
-           scenRange.Address(False, False), holRange.Address(False, False)
-    RegSet "RatesCurve." & name, o
-    RatesCurve = "RatesCurve." & name & " | OK | " & o.Days & " days | " & _
-                 Format(sofr, "0.00") & "->" & Format(o.LastRate, "0.00") & _
-                 " | scen " & o.ScenRef & " | hol " & o.HolRef
+' ---------------------------------------------------------------------
+' Build the curve from the raw input ranges and store it by name.
+' The heavy lifting (staircase + daily strip) lives in the cRatesCurve
+' class; this function just passes the cell values in and parks the
+' result in the registry, returning a short receipt to the cell.
+' ---------------------------------------------------------------------
+Public Function BuildCurve(ByVal name As String, ByVal startDate As Date, ByVal endDate As Date, _
+                           ByVal sofr As Double, fedRange As Range, holidayRange As Range) As String
+    On Error GoTo Failed
+    Dim curve As New cRatesCurve
+    curve.Init name, startDate, endDate, sofr, fedRange.Value, holidayRange.Value, _
+               fedRange.Address(False, False), holidayRange.Address(False, False)
+    StoreObject "RatesCurve." & name, curve
+    BuildCurve = "RatesCurve." & name & " | OK | " & curve.Days & " days | " & _
+                 Format(sofr, "0.00") & "->" & Format(curve.LastRate, "0.00")
     Exit Function
-bad: RatesCurve = "#CURVE_ERR: " & Err.Description
+Failed:
+    BuildCurve = "#CURVE_ERR: " & Err.Description
 End Function
 
-' Returns the clean curve handle name (e.g. "RatesCurve.curve1"), for
-' referencing the curve in other formulas / cashflow automation.
-Public Function CURVEDATA(curveCell As Range) As Variant
-    On Error GoTo bad
-    Dim crv As cRatesCurve
-    Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
-    If crv Is Nothing Then CURVEDATA = CVErr(xlErrNA): Exit Function
-    CURVEDATA = "RatesCurve." & crv.CurveName
+' ---------------------------------------------------------------------
+' Return the clean curve name (e.g. "RatesCurve.curve1") so other
+' formulas - like a cashflow table - can refer to the curve tidily.
+' ---------------------------------------------------------------------
+Public Function CurveName(curveCell As Range) As Variant
+    On Error GoTo Failed
+    Dim curve As cRatesCurve
+    Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
+    If curve Is Nothing Then CurveName = CVErr(xlErrNA): Exit Function
+    CurveName = "RatesCurve." & curve.CurveName
     Exit Function
-bad: CURVEDATA = CVErr(xlErrValue)
+Failed:
+    CurveName = CVErr(xlErrValue)
 End Function
 
-' =CURVERATE(curveCell, date)  -> the SOFR rate (%) in force on that date.
-' The one lookup cashflow tables need: point the row at the curve + a date.
-Public Function CURVERATE(curveCell As Range, ByVal d As Date) As Variant
-    On Error GoTo bad
-    Dim crv As cRatesCurve
-    Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
-    If crv Is Nothing Then CURVERATE = CVErr(xlErrNA): Exit Function
-    CURVERATE = crv.RateOn(d)
+' ---------------------------------------------------------------------
+' The point lookup for cashflow rows: the SOFR rate in force on a date.
+' ---------------------------------------------------------------------
+Public Function CurveRate(curveCell As Range, ByVal onDate As Date) As Variant
+    On Error GoTo Failed
+    Dim curve As cRatesCurve
+    Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
+    If curve Is Nothing Then CurveRate = CVErr(xlErrNA): Exit Function
+    CurveRate = curve.RateOn(onDate)
     Exit Function
-bad: CURVERATE = CVErr(xlErrValue)
+Failed:
+    CurveRate = CVErr(xlErrValue)
 End Function
 
-Public Function ACCRUE(ByVal startD As Date, ByVal endD As Date, ByVal amount As Double, _
+' ---------------------------------------------------------------------
+' Interest over [start, end) on an amount.
+'   "SIMPLE"   = add up each day's interest           (sum of rate*days/360)
+'   "COMPOUND" = let interest earn interest, in arrears (the swap-float method)
+' Both just read the pre-built daily strip - no day-walking here.
+' ---------------------------------------------------------------------
+Public Function Accrue(ByVal startDate As Date, ByVal endDate As Date, ByVal amount As Double, _
                        ByVal accrualType As String, curveCell As Range) As Variant
-    On Error GoTo bad
-    Dim crv As cRatesCurve
-    Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
-    If crv Is Nothing Then ACCRUE = CVErr(xlErrNA): Exit Function
+    On Error GoTo Failed
+    Dim curve As cRatesCurve
+    Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
+    If curve Is Nothing Then Accrue = CVErr(xlErrNA): Exit Function
     Select Case UCase$(accrualType)
-        Case "SIMPLE":   ACCRUE = amount * crv.SimpleFactor(startD, endD)
-        Case "COMPOUND": ACCRUE = amount * (crv.CompoundFactor(startD, endD) - 1#)
-        Case Else:       ACCRUE = CVErr(xlErrValue)
+        Case "SIMPLE":   Accrue = amount * curve.SimpleFactor(startDate, endDate)
+        Case "COMPOUND": Accrue = amount * (curve.CompoundFactor(startDate, endDate) - 1#)
+        Case Else:       Accrue = CVErr(xlErrValue)
     End Select
     Exit Function
-bad: ACCRUE = CVErr(xlErrValue)
+Failed:
+    Accrue = CVErr(xlErrValue)
 End Function
 
-Public Function SWAP(ByVal startD As Date, ByVal endD As Date, ByVal notional As Double, _
-                     ByVal fixedRate As Double, curveCell As Range, _
-                     Optional ByVal leg As String = "NET") As Variant
-    On Error GoTo bad
-    Dim crv As cRatesCurve
-    Set crv = RegGet(HandleKey(CStr(curveCell.Value)))
-    If crv Is Nothing Then SWAP = CVErr(xlErrNA): Exit Function
-    Dim s As Date, fx As Double, fl As Double
-    s = crv.Following(startD)
-    fx = notional * fixedRate / 100# * CLng(endD - s) / 360#
-    fl = notional * (crv.CompoundFactor(startD, endD) - 1#)
+' ---------------------------------------------------------------------
+' One month (or period) of a swap. A swap has no math of its own - it is
+' two Accrue-style calls and a subtraction:
+'   fixed leg = notional at the fixed rate (simple)
+'   float leg = notional compounded on the curve (in arrears)
+'   leg = "FIXED" | "FLOAT" | "NET"   (NET = receive-fixed = fixed - float)
+' ---------------------------------------------------------------------
+Public Function SwapLeg(ByVal startDate As Date, ByVal endDate As Date, ByVal notional As Double, _
+                        ByVal fixedRate As Double, curveCell As Range, _
+                        Optional ByVal leg As String = "NET") As Variant
+    On Error GoTo Failed
+    Dim curve As cRatesCurve
+    Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
+    If curve Is Nothing Then SwapLeg = CVErr(xlErrNA): Exit Function
+
+    Dim firstDay As Date, fixedLeg As Double, floatLeg As Double
+    firstDay = curve.Following(startDate)
+    fixedLeg = notional * fixedRate / 100# * CLng(endDate - firstDay) / 360#
+    floatLeg = notional * (curve.CompoundFactor(startDate, endDate) - 1#)
+
     Select Case UCase$(leg)
-        Case "FIXED": SWAP = fx
-        Case "FLOAT": SWAP = fl
-        Case "NET":   SWAP = fx - fl
-        Case Else:    SWAP = CVErr(xlErrValue)
+        Case "FIXED": SwapLeg = fixedLeg
+        Case "FLOAT": SwapLeg = floatLeg
+        Case "NET":   SwapLeg = fixedLeg - floatLeg
+        Case Else:    SwapLeg = CVErr(xlErrValue)
     End Select
     Exit Function
-bad: SWAP = CVErr(xlErrValue)
+Failed:
+    SwapLeg = CVErr(xlErrValue)
 End Function

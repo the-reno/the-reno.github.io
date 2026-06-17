@@ -1,33 +1,48 @@
 Attribute VB_Name = "mRegistry"
 ' =====================================================================
-' mRegistry - the in-memory object store. name -> object.
-' Memory is a cache; the builder formulas on the sheet are the truth
-' (a recalc rebuilds every object). Handles are dotted: "Type.Name".
+' mRegistry  -  the in-memory store of named objects.
+'
+' WHY IT EXISTS
+'   A worksheet cell can only hold text or a number, not an object.
+'   So when a builder formula (RatesCurve) creates a curve, it parks
+'   the actual object HERE, under a name, and returns just the name to
+'   the cell. Any later formula takes that name and asks the store for
+'   the object back. This module is that store - nothing more.
+'
+'   The store lives in memory only. The builder formulas on the sheet
+'   are the real source of data, so a full recalc rebuilds everything.
 ' =====================================================================
 Option Explicit
-Private gReg As Object
 
-Private Sub Ensure()
-    If gReg Is Nothing Then Set gReg = CreateObject("Scripting.Dictionary")
+Private Store As Object                       ' Dictionary: name -> object
+
+' Make sure the dictionary exists before we touch it.
+Private Sub EnsureStore()
+    If Store Is Nothing Then Set Store = CreateObject("Scripting.Dictionary")
 End Sub
 
-Public Sub RegSet(ByVal key As String, obj As Object)
-    Ensure
-    key = LCase$(Trim$(key))
-    If gReg.Exists(key) Then gReg.Remove key   ' rebuild = replace
-    gReg.Add key, obj
+' Save an object under a name. Building again with the same name simply
+' replaces the old object (that is how a recalc refreshes a curve).
+Public Sub StoreObject(ByVal objectName As String, obj As Object)
+    EnsureStore
+    objectName = LCase$(Trim$(objectName))
+    If Store.Exists(objectName) Then Store.Remove objectName
+    Store.Add objectName, obj
 End Sub
 
-Public Function RegGet(ByVal key As String) As Object
-    Ensure
-    key = LCase$(Trim$(key))
-    If gReg.Exists(key) Then Set RegGet = gReg(key)
+' Fetch an object by name. Returns Nothing if it was never built.
+Public Function FetchObject(ByVal objectName As String) As Object
+    EnsureStore
+    objectName = LCase$(Trim$(objectName))
+    If Store.Exists(objectName) Then Set FetchObject = Store(objectName)
 End Function
 
-' A handle cell holds "Type.Name | OK | info". Strip to the dotted key.
-Public Function HandleKey(ByVal handle As String) As String
-    Dim p As Long
-    p = InStr(handle, "|")
-    If p > 0 Then handle = Left$(handle, p - 1)
-    HandleKey = LCase$(Trim$(handle))
+' A handle cell shows "RatesCurve.curve1 | OK | ...info...".
+' The object's real name is just the part before the first "|".
+' This strips the receipt down to that clean name.
+Public Function CleanName(ByVal handleText As String) As String
+    Dim barPos As Long
+    barPos = InStr(handleText, "|")
+    If barPos > 0 Then handleText = Left$(handleText, barPos - 1)
+    CleanName = LCase$(Trim$(handleText))
 End Function

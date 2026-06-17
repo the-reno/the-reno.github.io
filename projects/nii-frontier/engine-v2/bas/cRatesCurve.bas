@@ -1,8 +1,14 @@
 Attribute VB_Name = "cRatesCurve"
 ' === CLASS MODULE ===
-' The one named object. Built directly from input RANGES (scenario moves
-' and holidays) plus SOFR and a horizon. It stores its own provenance
-' (the parameters that built it) AND the daily strip:
+' THE CURVE - the one object with real logic. Built from the input
+' ranges (Fed moves + holidays) plus SOFR and a date range. It does two
+' things, once, at build time:
+'   1) STAIRCASE: start flat at SOFR; each Fed move steps the rate,
+'      effective the next business day, cumulatively.
+'   2) STRIP: walk every business day start->end; record the rate in
+'      force, the day factor (1+rate*days/360), and the running product
+'      (accumFactor). Interest later is just reading this table.
+' It also stores its provenance (what built it) and the daily strip:
 '     date | rate% | dayFactor | accumFactor
 ' Each FOMC move is effective the next business day; rates cumulate on
 ' SOFR; dayFactor = 1 + rate*days/360; accumFactor is the running product
