@@ -138,7 +138,18 @@ Public Function SimpleFactor(ByVal s As Date, ByVal e As Date) As Double
     SimpleFactor = t
 End Function
 
+' ---- range check: is a date within the curve's stripped horizon?
+Public Function IsInRange(ByVal d As Date) As Boolean
+    IsInRange = (d >= mStart And d <= mEnd)
+End Function
+
+' ---- is a date before the curve start (still valid - returns opening SOFR)?
+Public Function IsBeforeStart(ByVal d As Date) As Boolean
+    IsBeforeStart = (d < mStart)
+End Function
+
 ' ---- the rate in force on a single date (the staircase value).
+
 '      Before the first business day in the strip, returns the opening SOFR.
 Public Function RateOn(ByVal d As Date) As Double
     Dim i As Long

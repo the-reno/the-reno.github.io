@@ -59,9 +59,15 @@ Public Function RCurveRate(curveCell As Range, ByVal onDate As Date) As Variant
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
     If curve Is Nothing Then RCurveRate = CVErr(xlErrNA): Exit Function
-    If onDate > curve.EndDate Then
+    ' Use the class's own IsInRange check - avoids any date serial comparison issues.
+    ' Before the curve start: return opening SOFR (rate before any step).
+    ' After the curve end: return a clear error string.
+    If curve.IsBeforeStart(onDate) Then
+        RCurveRate = curve.RateOn(onDate)   ' RateOn already returns mSofr for pre-start dates
+    ElseIf Not curve.IsInRange(onDate) Then
         RCurveRate = "#RATE_ERR: " & Format(onDate, "yyyy-mm-dd") & _
-                     " is past curve end " & Format(curve.EndDate, "yyyy-mm-dd")
+                     " out of curve range " & Format(curve.StartDate, "yyyy-mm-dd") & _
+                     " to " & Format(curve.EndDate, "yyyy-mm-dd")
     Else
         RCurveRate = curve.RateOn(onDate)
     End If
