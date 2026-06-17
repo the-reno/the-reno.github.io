@@ -23,22 +23,52 @@ Attribute VB_Name = "mEngine"
 Option Explicit
 
 ' ---------------------------------------------------------------------
-' RBuildCurve: Build the curve from the raw input ranges and store it.
-' The heavy lifting (staircase + daily strip) lives in cRatesCurve.
-' Returns "RatesCurve.name" on success, "#CURVE_ERR: reason" on failure.
+' RBuildCurve: validate inputs, build the curve, store it by name.
+' Returns "RatesCurve.name" on success, "#CURVE_ERR: reason" on any
+' problem - so errors are visible at the builder cell and cascade as
+' #N/A in every downstream formula that references this cell.
 ' ---------------------------------------------------------------------
 Public Function RBuildCurve(ByVal name As String, _
                             ByVal startDate As Date, ByVal endDate As Date, _
                             ByVal sofr As Double, _
                             fedRange As Range, holidayRange As Range) As String
     On Error GoTo Failed
+
+    ' 1. Horizon check
     If endDate <= startDate Then
         RBuildCurve = "#CURVE_ERR: end date must be after start date"
         Exit Function
     End If
+
+    ' 2. Validate scenario range row by row.
+    '    Column 1 = meeting date (must be date or numeric serial, not text).
+    '    Column 2 = move bps    (must be numeric, not text).
+    '    Completely blank rows are skipped silently (they mean "no meeting here").
+    '    Any text value in a non-blank row is an error - never silent.
+    Dim scenData As Variant
+    scenData = fedRange.Value
+    Dim r As Long, v1 As Variant, v2 As Variant
+    For r = LBound(scenData, 1) To UBound(scenData, 1)
+        v1 = scenData(r, 1)
+        v2 = scenData(r, 2)
+        If v1 = "" And v2 = "" Then GoTo SkipRow    ' blank row - OK
+        If Not (IsDate(v1) Or IsNumeric(v1)) Or v1 = "" Then
+            RBuildCurve = "#CURVE_ERR: scenario row " & r & _
+                          " date is not valid (got: " & CStr(v1) & ")"
+            Exit Function
+        End If
+        If Not IsNumeric(v2) Then
+            RBuildCurve = "#CURVE_ERR: scenario row " & r & _
+                          " move is not numeric (got: " & CStr(v2) & ")"
+            Exit Function
+        End If
+SkipRow:
+    Next r
+
+    ' 3. Build the curve (Init sorts moves by date and strips the daily table)
     Dim curve As New cRatesCurve
     curve.Init name, startDate, endDate, sofr, _
-               fedRange.Value, holidayRange.Value, _
+               scenData, holidayRange.Value, _
                fedRange.Address(False, False), holidayRange.Address(False, False)
     StoreObject "RatesCurve." & name, curve
     RBuildCurve = "RatesCurve." & name
@@ -49,26 +79,20 @@ End Function
 
 ' ---------------------------------------------------------------------
 ' RCurveRate: the SOFR rate in force on a single date.
-'   Before the curve start -> returns the opening SOFR (correct: no
-'     step has occurred yet, rate is still the initial fix).
-'   After the curve end    -> returns a clear error string so the cell
-'     shows the problem rather than silently returning the last rate.
+' Date must be within the curve range - any date outside returns a
+' clear error string. Never silently returns a rate for a bad date.
 ' ---------------------------------------------------------------------
 Public Function RCurveRate(curveCell As Range, ByVal onDate As Variant) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
     If curve Is Nothing Then RCurveRate = CVErr(xlErrNA): Exit Function
-    ' Accept date as Variant to avoid silent locale conversion issues.
-    ' Explicitly convert to VBA Date before any comparison.
     If Not IsDate(onDate) And Not IsNumeric(onDate) Then
         RCurveRate = "#RATE_ERR: invalid date"
         Exit Function
     End If
     Dim d As Date
     d = CDate(onDate)
-    ' Before the curve start: return opening SOFR (rate before any step occurred).
-    ' After the curve end: return a clear error - never silently return the last rate.
     ' Date must be within the curve range. Any date outside returns an error.
     If Not curve.IsInRange(d) Then
         RCurveRate = "#RATE_ERR: " & Format(d, "yyyy-mm-dd") & _
