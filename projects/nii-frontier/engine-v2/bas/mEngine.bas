@@ -9,9 +9,9 @@ Attribute VB_Name = "mEngine"
 '   RBuildCurve(name, start, end, sofr, fedRange, holidayRange)
 '        Builds the curve; returns "RatesCurve.name" when OK,
 '        "#CURVE_ERR: reason" if something is wrong. Downstream
-'        Accrue/CurveRate show #N/A if the curve cell has an error.
+'        RAccrue/RCurveRate show #N/A if the curve cell has an error.
 '   RCurveRate(curveCell, date)      SOFR rate % in force on that date
-'   RAccrue(start, end, amount, type, curveCell)        interest, $mm
+'   RAccrue(start, end, amount, type, curveCell)        interest $mm
 '   RSwapLeg(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 '
 ' THE ONE RULE
@@ -23,42 +23,45 @@ Attribute VB_Name = "mEngine"
 Option Explicit
 
 ' ---------------------------------------------------------------------
-' Build the curve from the raw input ranges and store it by name.
-' The heavy lifting (staircase + daily strip) lives in the cRatesCurve
-' class; this function just passes the cell values in and parks the
-' result in the registry, returning a short receipt to the cell.
+' RBuildCurve: Build the curve from the raw input ranges and store it.
+' The heavy lifting (staircase + daily strip) lives in cRatesCurve.
+' Returns "RatesCurve.name" on success, "#CURVE_ERR: reason" on failure.
 ' ---------------------------------------------------------------------
-Public Function RBuildCurve(ByVal name As String, ByVal startDate As Date, ByVal endDate As Date, _
-                           ByVal sofr As Double, fedRange As Range, holidayRange As Range) As String
+Public Function RBuildCurve(ByVal name As String, _
+                            ByVal startDate As Date, ByVal endDate As Date, _
+                            ByVal sofr As Double, _
+                            fedRange As Range, holidayRange As Range) As String
     On Error GoTo Failed
     If endDate <= startDate Then
         RBuildCurve = "#CURVE_ERR: end date must be after start date"
         Exit Function
     End If
     Dim curve As New cRatesCurve
-    curve.Init name, startDate, endDate, sofr, fedRange.Value, holidayRange.Value, _
+    curve.Init name, startDate, endDate, sofr, _
+               fedRange.Value, holidayRange.Value, _
                fedRange.Address(False, False), holidayRange.Address(False, False)
     StoreObject "RatesCurve." & name, curve
-    BuildCurve = "RatesCurve." & name
+    RBuildCurve = "RatesCurve." & name
     Exit Function
 Failed:
-    BuildCurve = "#CURVE_ERR: " & Err.Description
+    RBuildCurve = "#CURVE_ERR: " & Err.Description
 End Function
 
-
 ' ---------------------------------------------------------------------
-' The point lookup for cashflow rows: the SOFR rate in force on a date.
+' RCurveRate: the SOFR rate in force on a single date.
+'   Before the curve start -> returns the opening SOFR (correct: no
+'     step has occurred yet, rate is still the initial fix).
+'   After the curve end    -> returns a clear error string so the cell
+'     shows the problem rather than silently returning the last rate.
 ' ---------------------------------------------------------------------
 Public Function RCurveRate(curveCell As Range, ByVal onDate As Date) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
     If curve Is Nothing Then RCurveRate = CVErr(xlErrNA): Exit Function
-    ' Before curve start -> return opening SOFR (no step has occurred yet).
-    ' After curve end    -> clear error rather than silently returning last rate.
     If onDate > curve.EndDate Then
-        RCurveRate = "#RATE_ERR: " & Format(onDate,"yyyy-mm-dd") & _
-                     " is past curve end " & Format(curve.EndDate,"yyyy-mm-dd")
+        RCurveRate = "#RATE_ERR: " & Format(onDate, "yyyy-mm-dd") & _
+                     " is past curve end " & Format(curve.EndDate, "yyyy-mm-dd")
     Else
         RCurveRate = curve.RateOn(onDate)
     End If
@@ -68,54 +71,54 @@ Failed:
 End Function
 
 ' ---------------------------------------------------------------------
-' Interest over [start, end) on an amount.
-'   "SIMPLE"   = add up each day's interest           (sum of rate*days/360)
-'   "COMPOUND" = let interest earn interest, in arrears (the swap-float method)
-' Both just read the pre-built daily strip - no day-walking here.
+' RAccrue: interest over [start, end) on an amount.
+'   "SIMPLE"   = sum of each day's rate*days/360 (no compounding)
+'   "COMPOUND" = SOFR in-arrears: interest earns interest daily
+' Both read the pre-built daily strip - no day-walking at call time.
 ' ---------------------------------------------------------------------
-Public Function RAccrue(ByVal startDate As Date, ByVal endDate As Date, ByVal amount As Double, _
-                       ByVal accrualType As String, curveCell As Range) As Variant
+Public Function RAccrue(ByVal startDate As Date, ByVal endDate As Date, _
+                        ByVal amount As Double, ByVal accrualType As String, _
+                        curveCell As Range) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
-    If curve Is Nothing Then Accrue = CVErr(xlErrNA): Exit Function
+    If curve Is Nothing Then RAccrue = CVErr(xlErrNA): Exit Function
     Select Case UCase$(accrualType)
-        Case "SIMPLE":   Accrue = amount * curve.SimpleFactor(startDate, endDate)
-        Case "COMPOUND": Accrue = amount * (curve.CompoundFactor(startDate, endDate) - 1#)
-        Case Else:       Accrue = CVErr(xlErrValue)
+        Case "SIMPLE":   RAccrue = amount * curve.SimpleFactor(startDate, endDate)
+        Case "COMPOUND": RAccrue = amount * (curve.CompoundFactor(startDate, endDate) - 1#)
+        Case Else:       RAccrue = CVErr(xlErrValue)
     End Select
     Exit Function
 Failed:
-    Accrue = CVErr(xlErrValue)
+    RAccrue = CVErr(xlErrValue)
 End Function
 
 ' ---------------------------------------------------------------------
-' One month (or period) of a swap. A swap has no math of its own - it is
-' two Accrue-style calls and a subtraction:
-'   fixed leg = notional at the fixed rate (simple)
-'   float leg = notional compounded on the curve (in arrears)
-'   leg = "FIXED" | "FLOAT" | "NET"   (NET = receive-fixed = fixed - float)
+' RSwapLeg: one period of a swap. No math of its own - two RAccrue-style
+' calls and a subtraction:
+'   fixed leg = notional * fixedRate * days/360  (simple, constant rate)
+'   float leg = notional * (CompoundFactor - 1)  (in-arrears on the curve)
+'   leg = "FIXED" | "FLOAT" | "NET"  (NET = receive-fixed = fixed - float)
 ' ---------------------------------------------------------------------
-Public Function RSwapLeg(ByVal startDate As Date, ByVal endDate As Date, ByVal notional As Double, _
-                        ByVal fixedRate As Double, curveCell As Range, _
-                        Optional ByVal leg As String = "NET") As Variant
+Public Function RSwapLeg(ByVal startDate As Date, ByVal endDate As Date, _
+                         ByVal notional As Double, ByVal fixedRate As Double, _
+                         curveCell As Range, _
+                         Optional ByVal leg As String = "NET") As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
-    If curve Is Nothing Then SwapLeg = CVErr(xlErrNA): Exit Function
-
+    If curve Is Nothing Then RSwapLeg = CVErr(xlErrNA): Exit Function
     Dim firstDay As Date, fixedLeg As Double, floatLeg As Double
-    firstDay = curve.Following(startDate)
-    fixedLeg = notional * fixedRate / 100# * CLng(endDate - firstDay) / 360#
-    floatLeg = notional * (curve.CompoundFactor(startDate, endDate) - 1#)
-
+    firstDay  = curve.Following(startDate)
+    fixedLeg  = notional * fixedRate / 100# * CLng(endDate - firstDay) / 360#
+    floatLeg  = notional * (curve.CompoundFactor(startDate, endDate) - 1#)
     Select Case UCase$(leg)
-        Case "FIXED": SwapLeg = fixedLeg
-        Case "FLOAT": SwapLeg = floatLeg
-        Case "NET":   SwapLeg = fixedLeg - floatLeg
-        Case Else:    SwapLeg = CVErr(xlErrValue)
+        Case "FIXED": RSwapLeg = fixedLeg
+        Case "FLOAT": RSwapLeg = floatLeg
+        Case "NET":   RSwapLeg = fixedLeg - floatLeg
+        Case Else:    RSwapLeg = CVErr(xlErrValue)
     End Select
     Exit Function
 Failed:
-    SwapLeg = CVErr(xlErrValue)
+    RSwapLeg = CVErr(xlErrValue)
 End Function
