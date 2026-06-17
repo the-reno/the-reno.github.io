@@ -54,22 +54,29 @@ End Function
 '   After the curve end    -> returns a clear error string so the cell
 '     shows the problem rather than silently returning the last rate.
 ' ---------------------------------------------------------------------
-Public Function RCurveRate(curveCell As Range, ByVal onDate As Date) As Variant
+Public Function RCurveRate(curveCell As Range, ByVal onDate As Variant) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
     If curve Is Nothing Then RCurveRate = CVErr(xlErrNA): Exit Function
-    ' Use the class's own IsInRange check - avoids any date serial comparison issues.
-    ' Before the curve start: return opening SOFR (rate before any step).
-    ' After the curve end: return a clear error string.
-    If curve.IsBeforeStart(onDate) Then
-        RCurveRate = curve.RateOn(onDate)   ' RateOn already returns mSofr for pre-start dates
-    ElseIf Not curve.IsInRange(onDate) Then
-        RCurveRate = "#RATE_ERR: " & Format(onDate, "yyyy-mm-dd") & _
+    ' Accept date as Variant to avoid silent locale conversion issues.
+    ' Explicitly convert to VBA Date before any comparison.
+    If Not IsDate(onDate) And Not IsNumeric(onDate) Then
+        RCurveRate = "#RATE_ERR: invalid date"
+        Exit Function
+    End If
+    Dim d As Date
+    d = CDate(onDate)
+    ' Before the curve start: return opening SOFR (rate before any step occurred).
+    ' After the curve end: return a clear error - never silently return the last rate.
+    If curve.IsBeforeStart(d) Then
+        RCurveRate = curve.RateOn(d)
+    ElseIf Not curve.IsInRange(d) Then
+        RCurveRate = "#RATE_ERR: " & Format(d, "yyyy-mm-dd") & _
                      " out of curve range " & Format(curve.StartDate, "yyyy-mm-dd") & _
                      " to " & Format(curve.EndDate, "yyyy-mm-dd")
     Else
-        RCurveRate = curve.RateOn(onDate)
+        RCurveRate = curve.RateOn(d)
     End If
     Exit Function
 Failed:
