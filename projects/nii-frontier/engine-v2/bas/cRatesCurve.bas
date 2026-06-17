@@ -42,22 +42,46 @@ Public Sub Init(ByVal nm As String, ByVal startD As Date, ByVal endD As Date, _
     Next i
 
     ' --- staircase knots from the scenario moves (effective next BD, cumulative)
+    ' Dates are sorted ascending before cumulating so out-of-order input
+    ' (e.g. a literal array) still produces the correct staircase.
     Dim kEff() As Date, kRate() As Double, kN As Long, cum As Double, nMoves As Long
     nMoves = UBound(scenData, 1) - LBound(scenData, 1) + 1
     ReDim kEff(0 To nMoves) : ReDim kRate(0 To nMoves)
     kN = 0 : kEff(0) = DateSerial(1900, 1, 1) : kRate(0) = sofr : cum = sofr
+
+    ' Collect valid moves into temporary arrays then sort by date
+    Dim tmpDt() As Date, tmpMv() As Double, tmpN As Long
+    ReDim tmpDt(1 To nMoves) : ReDim tmpMv(1 To nMoves) : tmpN = 0
     For i = LBound(scenData, 1) To UBound(scenData, 1)
-        If IsDate(scenData(i, 1)) Then
+        If IsDate(scenData(i, 1)) Or IsNumeric(scenData(i, 1)) Then
             Dim mv As Double : mv = 0#
             If UBound(scenData, 2) >= 2 Then If IsNumeric(scenData(i, 2)) Then mv = CDbl(scenData(i, 2))
             If mv <> 0# Then
-                cum = cum + mv / 100#
-                kN = kN + 1
-                kEff(kN) = NextBusinessDay(CDate(scenData(i, 1)))
-                kRate(kN) = cum
+                tmpN = tmpN + 1
+                tmpDt(tmpN) = CDate(scenData(i, 1))
+                tmpMv(tmpN) = mv
             End If
         End If
     Next i
+
+    ' Bubble sort by date ascending (small n, simple is fine)
+    Dim si As Long, sj As Long, swpD As Date, swpM As Double
+    For si = 1 To tmpN - 1
+        For sj = 1 To tmpN - si
+            If tmpDt(sj) > tmpDt(sj + 1) Then
+                swpD = tmpDt(sj) : tmpDt(sj) = tmpDt(sj + 1) : tmpDt(sj + 1) = swpD
+                swpM = tmpMv(sj) : tmpMv(sj) = tmpMv(sj + 1) : tmpMv(sj + 1) = swpM
+            End If
+        Next sj
+    Next si
+
+    ' Build the cumulative knots from the sorted moves
+    For si = 1 To tmpN
+        cum = cum + tmpMv(si) / 100#
+        kN = kN + 1
+        kEff(kN) = NextBusinessDay(tmpDt(si))
+        kRate(kN) = cum
+    Next si
 
     ' --- strip every business day start..end with dayFactor and accumFactor
     Dim d As Date, w As Long, acc As Double, cap As Long, r As Double, j As Long
