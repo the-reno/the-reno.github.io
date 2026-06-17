@@ -1,0 +1,18 @@
+NII ENGINE v2 — VBA MODULES
+============================
+Three modules. Paste each into the VBA editor (Alt+F11).
+
+  mRegistry.txt    Insert > Module          rename to mRegistry
+  cRatesCurve.txt  Insert > Class Module    rename to cRatesCurve
+  mEngine.txt      Insert > Module          rename to mEngine
+
+After pasting all three: File > Save As > Macro-Enabled Workbook (.xlsm)
+Then: Debug > Compile VBAProject  (must compile clean before use)
+
+FOUR WORKSHEET FUNCTIONS
+  =RBuildCurve(name, start, end, sofr, fedRange, holidayRange)
+  =RCurveRate(curveCell, date)
+  =RAccrue(start, end, amount, "SIMPLE"|"COMPOUND", curveCell)
+  =RSwapLeg(start, end, notional, fixed, curveCell, "FIXED"|"FLOAT"|"NET")
+
+RULE: pass the curve cell as a CELL reference ($B$6), never typed text.
