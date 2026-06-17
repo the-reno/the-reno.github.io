@@ -31,6 +31,10 @@ Option Explicit
 Public Function RBuildCurve(ByVal name As String, ByVal startDate As Date, ByVal endDate As Date, _
                            ByVal sofr As Double, fedRange As Range, holidayRange As Range) As String
     On Error GoTo Failed
+    If endDate <= startDate Then
+        RBuildCurve = "#CURVE_ERR: end date must be after start date"
+        Exit Function
+    End If
     Dim curve As New cRatesCurve
     curve.Init name, startDate, endDate, sofr, fedRange.Value, holidayRange.Value, _
                fedRange.Address(False, False), holidayRange.Address(False, False)
@@ -49,11 +53,18 @@ Public Function RCurveRate(curveCell As Range, ByVal onDate As Date) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
-    If curve Is Nothing Then CurveRate = CVErr(xlErrNA): Exit Function
-    CurveRate = curve.RateOn(onDate)
+    If curve Is Nothing Then RCurveRate = CVErr(xlErrNA): Exit Function
+    ' Before curve start -> return opening SOFR (no step has occurred yet).
+    ' After curve end    -> clear error rather than silently returning last rate.
+    If onDate > curve.EndDate Then
+        RCurveRate = "#RATE_ERR: " & Format(onDate,"yyyy-mm-dd") & _
+                     " is past curve end " & Format(curve.EndDate,"yyyy-mm-dd")
+    Else
+        RCurveRate = curve.RateOn(onDate)
+    End If
     Exit Function
 Failed:
-    CurveRate = CVErr(xlErrValue)
+    RCurveRate = CVErr(xlErrValue)
 End Function
 
 ' ---------------------------------------------------------------------
