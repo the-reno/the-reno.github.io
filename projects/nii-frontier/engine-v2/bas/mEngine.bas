@@ -69,11 +69,10 @@ Public Function RCurveRate(curveCell As Range, ByVal onDate As Variant) As Varia
     d = CDate(onDate)
     ' Before the curve start: return opening SOFR (rate before any step occurred).
     ' After the curve end: return a clear error - never silently return the last rate.
-    If curve.IsBeforeStart(d) Then
-        RCurveRate = curve.RateOn(d)
-    ElseIf Not curve.IsInRange(d) Then
+    ' Date must be within the curve range. Any date outside returns an error.
+    If Not curve.IsInRange(d) Then
         RCurveRate = "#RATE_ERR: " & Format(d, "yyyy-mm-dd") & _
-                     " out of curve range " & Format(curve.StartDate, "yyyy-mm-dd") & _
+                     " not in curve range " & Format(curve.StartDate, "yyyy-mm-dd") & _
                      " to " & Format(curve.EndDate, "yyyy-mm-dd")
     Else
         RCurveRate = curve.RateOn(d)
