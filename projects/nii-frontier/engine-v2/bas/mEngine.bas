@@ -6,13 +6,13 @@ Attribute VB_Name = "mEngine"
 ' shape: fetch the curve object by the name in a cell, then act on it.
 '
 ' THE FUNCTIONS
-'   BuildCurve(name, start, end, sofr, fedRange, holidayRange)
+'   RBuildCurve(name, start, end, sofr, fedRange, holidayRange)
 '        Builds the curve; returns "RatesCurve.name" when OK,
 '        "#CURVE_ERR: reason" if something is wrong. Downstream
 '        Accrue/CurveRate show #N/A if the curve cell has an error.
-'   CurveRate(curveCell, date)      SOFR rate % in force on that date
-'   Accrue(start, end, amount, type, curveCell)        interest, $mm
-'   SwapLeg(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
+'   RCurveRate(curveCell, date)      SOFR rate % in force on that date
+'   RAccrue(start, end, amount, type, curveCell)        interest, $mm
+'   RSwapLeg(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 '
 ' THE ONE RULE
 '   Always pass ranges and the curve handle as CELLS (e.g. $B$6), never
@@ -28,7 +28,7 @@ Option Explicit
 ' class; this function just passes the cell values in and parks the
 ' result in the registry, returning a short receipt to the cell.
 ' ---------------------------------------------------------------------
-Public Function BuildCurve(ByVal name As String, ByVal startDate As Date, ByVal endDate As Date, _
+Public Function RBuildCurve(ByVal name As String, ByVal startDate As Date, ByVal endDate As Date, _
                            ByVal sofr As Double, fedRange As Range, holidayRange As Range) As String
     On Error GoTo Failed
     Dim curve As New cRatesCurve
@@ -45,7 +45,7 @@ End Function
 ' ---------------------------------------------------------------------
 ' The point lookup for cashflow rows: the SOFR rate in force on a date.
 ' ---------------------------------------------------------------------
-Public Function CurveRate(curveCell As Range, ByVal onDate As Date) As Variant
+Public Function RCurveRate(curveCell As Range, ByVal onDate As Date) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
     Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
@@ -62,7 +62,7 @@ End Function
 '   "COMPOUND" = let interest earn interest, in arrears (the swap-float method)
 ' Both just read the pre-built daily strip - no day-walking here.
 ' ---------------------------------------------------------------------
-Public Function Accrue(ByVal startDate As Date, ByVal endDate As Date, ByVal amount As Double, _
+Public Function RAccrue(ByVal startDate As Date, ByVal endDate As Date, ByVal amount As Double, _
                        ByVal accrualType As String, curveCell As Range) As Variant
     On Error GoTo Failed
     Dim curve As cRatesCurve
@@ -85,7 +85,7 @@ End Function
 '   float leg = notional compounded on the curve (in arrears)
 '   leg = "FIXED" | "FLOAT" | "NET"   (NET = receive-fixed = fixed - float)
 ' ---------------------------------------------------------------------
-Public Function SwapLeg(ByVal startDate As Date, ByVal endDate As Date, ByVal notional As Double, _
+Public Function RSwapLeg(ByVal startDate As Date, ByVal endDate As Date, ByVal notional As Double, _
                         ByVal fixedRate As Double, curveCell As Range, _
                         Optional ByVal leg As String = "NET") As Variant
     On Error GoTo Failed
