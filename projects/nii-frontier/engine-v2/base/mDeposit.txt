@@ -1,0 +1,222 @@
+' =====================================================================
+' mDeposit  -  deposit cashflow skeleton builder
+'
+' RUN: Alt+F8 > BuildDepositLedger
+'
+' Reads client inputs from the INPUTS sheet (see cell map below),
+' writes every deposit event to a LEDGER sheet - one row per event.
+' Rate% and Interest columns are LEFT EMPTY: wire RCurveRate and
+' RAccrue to those columns after connecting a curve.
+'
+' WHAT IT GENERATES
+'   ON  : one PLACE + one MATURE per business day (rate locks per fix)
+'   1M  : PLACE on start, MATURE on next BD after +1 month, repeat
+'   2M  : same, +2 months
+'   3M  : same, +3 months
+'   All maturities roll to the NEXT BUSINESS DAY (following convention).
+'   Rate locks at the PLACEMENT DATE for term deposits (1M/2M/3M).
+'   ON reprices daily so RateDate = each fix date.
+'
+' INPUT CELL MAP (INPUTS sheet)
+'   B4  Start date
+'   B5  Horizon (years: 0.5 / 1 / 1.5 / 2)
+'   B6  ON allocation  ($mm)
+'   B7  1M allocation  ($mm)
+'   B8  2M allocation  ($mm)
+'   B9  3M allocation  ($mm)
+'
+' LEDGER COLUMNS
+'   A  PlaceDate      B  MaturityDate   C  Bucket   D  Event
+'   E  Notional($mm)  F  Tenor(days)    G  RateDate
+'   H  Rate%          I  Interest($mm)
+'   (H and I are blank - filled by RCurveRate / RAccrue after curve wired)
+' =====================================================================
+Option Explicit
+
+' ---- calendar helpers (holiday list read from INPUTS!A14:A30 by default)
+Private Hol As Object
+
+Private Sub LoadHolidays(ws As Worksheet)
+    Set Hol = CreateObject("Scripting.Dictionary")
+    Dim r As Long
+    For r = 14 To 50
+        Dim v As Variant
+        v = ws.Cells(r, 1).Value
+        If v = "" Then Exit For
+        If IsDate(v) Then
+            Dim key As Long: key = CLng(CDate(v))
+            If Not Hol.Exists(key) Then Hol.Add key, True
+        End If
+    Next r
+End Sub
+
+Private Function IsBusinessDay(d As Date) As Boolean
+    Dim w As Long: w = Weekday(d, vbMonday)
+    IsBusinessDay = (w <= 5) And Not Hol.Exists(CLng(d))
+End Function
+
+Private Function Following(d As Date) As Date
+    Do While Not IsBusinessDay(d): d = d + 1: Loop
+    Following = d
+End Function
+
+Private Function NextBD(d As Date) As Date
+    NextBD = Following(d + 1)
+End Function
+
+Private Function AddMonths(d As Date, m As Long) As Date
+    ' Add m calendar months, preserving day (clamp to end of month)
+    Dim y As Long, mo As Long, dy As Long
+    y = Year(d): mo = Month(d): dy = Day(d)
+    mo = mo + m
+    Do While mo > 12: mo = mo - 12: y = y + 1: Loop
+    ' clamp day to last day of month
+    Dim lastDay As Long
+    lastDay = Day(DateSerial(y, mo + 1, 0))
+    If dy > lastDay Then dy = lastDay
+    AddMonths = DateSerial(y, mo, dy)
+End Function
+
+' ---- the main macro
+Public Sub BuildDepositLedger()
+    Dim inp As Worksheet, led As Worksheet
+    On Error GoTo Failed
+
+    ' --- get / create sheets
+    inp = Nothing
+    On Error Resume Next: Set inp = ThisWorkbook.Worksheets("INPUTS"): On Error GoTo Failed
+    If inp Is Nothing Then MsgBox "INPUTS sheet not found.": Exit Sub
+    LoadHolidays inp
+
+    On Error Resume Next
+    Set led = ThisWorkbook.Worksheets("LEDGER")
+    On Error GoTo Failed
+    If led Is Nothing Then
+        Set led = ThisWorkbook.Worksheets.Add(After:=inp)
+        led.Name = "LEDGER"
+    Else
+        led.Cells.Clear
+    End If
+
+    ' --- read inputs
+    Dim startDate As Date, horizonYrs As Double
+    Dim onAmt As Double, m1Amt As Double, m2Amt As Double, m3Amt As Double
+    startDate   = CDate(inp.Range("B4").Value)
+    horizonYrs  = CDbl(inp.Range("B5").Value)
+    onAmt       = CDbl(inp.Range("B6").Value)
+    m1Amt       = CDbl(inp.Range("B7").Value)
+    m2Amt       = CDbl(inp.Range("B8").Value)
+    m3Amt       = CDbl(inp.Range("B9").Value)
+
+    ' convert years to months (0.5=6, 1=12, 1.5=18, 2=24)
+    Dim horizonMonths As Long
+    horizonMonths = CLng(horizonYrs * 12)
+    Dim endDate As Date
+    endDate = AddMonths(startDate, horizonMonths)
+
+    ' --- write ledger header
+    Dim hdr As Variant
+    hdr = Array("PlaceDate","MaturityDate","Bucket","Event","Notional($mm)", _
+                "Tenor(days)","RateDate","Rate%","Interest($mm)")
+    Dim c As Long
+    For c = 0 To UBound(hdr)
+        With led.Cells(1, c + 1)
+            .Value = hdr(c)
+            .Font.Bold = True
+        End With
+    Next c
+
+    Dim row As Long: row = 2
+    startDate = Following(startDate)   ' snap to first business day
+
+    ' =====================================================================
+    ' ON bucket: one PLACE + one MATURE per business day
+    ' RateDate = PlaceDate (rate locks each morning for that overnight)
+    ' =====================================================================
+    If onAmt > 0 Then
+        Dim d As Date: d = startDate
+        Do While d < endDate
+            Dim onMat As Date: onMat = NextBD(d)
+            If onMat > endDate Then onMat = endDate
+            Dim onTenor As Long: onTenor = CLng(onMat - d)
+            ' PLACE
+            WriteRow led, row, d, onMat, "ON", "PLACE", onAmt, onTenor, d: row = row + 1
+            ' MATURE
+            WriteRow led, row, onMat, onMat, "ON", "MATURE", onAmt, 0, d: row = row + 1
+            d = onMat
+            If d >= endDate Then Exit Do
+        Loop
+    End If
+
+    ' =====================================================================
+    ' TERM buckets: 1M / 2M / 3M
+    ' Each placement fixes the rate at PlaceDate; matures at Following(+nM)
+    ' and immediately re-places (ROLLOVER) until horizon.
+    ' =====================================================================
+    Dim buckets(1 To 3) As String
+    Dim amounts(1 To 3) As Double
+    Dim tenorM(1 To 3) As Long
+    buckets(1) = "1M": amounts(1) = m1Amt: tenorM(1) = 1
+    buckets(2) = "2M": amounts(2) = m2Amt: tenorM(2) = 2
+    buckets(3) = "3M": amounts(3) = m3Amt: tenorM(3) = 3
+
+    Dim b As Long
+    For b = 1 To 3
+        If amounts(b) > 0 Then
+            Dim placeD As Date: placeD = startDate
+            Do While placeD < endDate
+                ' maturity = following next BD after +nMonths
+                Dim matD As Date
+                matD = Following(AddMonths(placeD, tenorM(b)))
+                If matD > endDate Then matD = endDate
+                Dim tenor As Long: tenor = CLng(matD - placeD)
+
+                ' PLACE - rate locks at placement date
+                WriteRow led, row, placeD, matD, buckets(b), "PLACE", amounts(b), tenor, placeD
+                row = row + 1
+
+                ' MATURE
+                WriteRow led, row, matD, matD, buckets(b), "MATURE", amounts(b), 0, placeD
+                row = row + 1
+
+                ' If still within horizon, write ROLLOVER and continue
+                If matD < endDate Then
+                    WriteRow led, row, matD, matD, buckets(b), "ROLLOVER", amounts(b), 0, matD
+                    row = row + 1
+                End If
+
+                placeD = matD
+            Loop
+        End If
+    Next b
+
+    ' --- format the ledger
+    led.Columns("A:B").NumberFormat = "yyyy-mm-dd"
+    led.Columns("G").NumberFormat = "yyyy-mm-dd"
+    led.Columns("E").NumberFormat = "#,##0.0"
+    led.Columns("H:I").NumberFormat = "0.000000"
+    led.Columns("A:I").AutoFit
+    led.Activate
+
+    MsgBox "Deposit ledger built: " & (row - 2) & " events written to LEDGER sheet." & _
+           vbNewLine & "Wire Rate% (col H) with =RCurveRate(curve, G2) and " & _
+           "Interest (col I) with =RAccrue(A2,B2,E2,""SIMPLE"",curve) to activate."
+    Exit Sub
+Failed:
+    MsgBox "BuildDepositLedger error: " & Err.Description
+End Sub
+
+' ---- write one ledger row (Rate% and Interest left blank)
+Private Sub WriteRow(led As Worksheet, r As Long, _
+                     placeD As Date, matD As Date, _
+                     bucket As String, evt As String, _
+                     notional As Double, tenor As Long, rateDate As Date)
+    led.Cells(r, 1).Value = placeD       ' PlaceDate
+    led.Cells(r, 2).Value = matD         ' MaturityDate
+    led.Cells(r, 3).Value = bucket       ' Bucket
+    led.Cells(r, 4).Value = evt          ' Event
+    led.Cells(r, 5).Value = notional     ' Notional
+    led.Cells(r, 6).Value = tenor        ' Tenor(days)
+    led.Cells(r, 7).Value = rateDate     ' RateDate (rate locks here)
+    ' cols H (Rate%) and I (Interest) intentionally blank
+End Sub
