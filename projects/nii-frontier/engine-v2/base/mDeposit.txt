@@ -1,22 +1,27 @@
 ' =====================================================================
-' mDeposit  -  deposit daily interest skeleton
+' mDeposit  -  deposit daily accrual skeleton
 '
 ' RUN: Alt+F8 > BuildDepositLedger
 '
-' One row per business day per bucket showing the interest accruing
-' that day. No cash in/out events - pure daily income skeleton.
-' Rate% and Interest($mm) are LEFT BLANK: wire RCurveRate and RAccrue
+' One self-contained row per business day per active bucket.
+' Every column needed to verify the interest independently is present.
+' Rate% and Interest($mm) are LEFT BLANK - wire RCurveRate and RAccrue
 ' to those columns after connecting a curve.
 '
-' MECHANICS
-'   ON  : one row per business day. Tenor = calendar days to next BD
-'         (1 normally, 3 on Fridays, more over holiday bridges).
-'         RateDate = that day (rate fixes each morning).
-'   1M/2M/3M: one row per business day within each deposit period.
-'         Tenor = 1 (each row is one day's accrual).
-'         RateDate = the placement date of that period (rate locked
-'         at inception - a 1M deposit captures the rate at start).
-'         Deposit period rolls to Following(PlaceDate + nMonths).
+' ROW SCHEMA (fully self-contained - auditable without other rows)
+'   StartDate   start of the accrual period
+'   EndDate     end of the accrual period  (= next business day for ON;
+'               = StartDate + 1 day for term buckets daily accrual)
+'   Bucket      ON / 1M / 2M / 3M
+'   Tenor(days) EndDate - StartDate  (explicit, no calculation needed)
+'   RateDate    date the rate is observed from the curve:
+'                 ON  -> StartDate  (overnight fixes each morning)
+'                 1M/2M/3M -> placement date of the current period
+'                             (forward rate locked at inception)
+'   Rate%       BLANK -> =RCurveRate(curveCell, E2)
+'   Notional    the deposit amount ($mm)
+'   Interest    BLANK -> =RAccrue(A2, B2, G2, "SIMPLE", curveCell)
+'               or simply: =G2 * F2/100 * D2/360
 '
 ' INPUT CELL MAP (INPUTS sheet)
 '   B4  Start date
@@ -25,13 +30,7 @@
 '   B7  1M allocation  ($mm)
 '   B8  2M allocation  ($mm)
 '   B9  3M allocation  ($mm)
-'   A14:A30  Holiday dates (one per row, blank row stops reading)
-'
-' LEDGER COLUMNS
-'   A  Date            B  Bucket         C  Notional($mm)
-'   D  Tenor(days)     E  RateDate
-'   F  Rate%           G  Interest($mm)
-'   (F and G are blank - fill with =RCurveRate and =RAccrue)
+'   A14:A30  Holiday dates (one per row, blank stops reading)
 ' =====================================================================
 Option Explicit
 
@@ -74,16 +73,18 @@ Private Function AddMonths(d As Date, m As Long) As Date
     AddMonths = DateSerial(y, mo, dy)
 End Function
 
-' ---- write one daily accrual row
 Private Sub WriteRow(led As Worksheet, r As Long, _
-                     d As Date, bucket As String, notional As Double, _
-                     tenor As Long, rateDate As Date)
-    led.Cells(r, 1).Value = d           ' Date
-    led.Cells(r, 2).Value = bucket      ' Bucket
-    led.Cells(r, 3).Value = notional    ' Notional($mm)
-    led.Cells(r, 4).Value = tenor       ' Tenor(days) - how long this rate applies
-    led.Cells(r, 5).Value = rateDate    ' RateDate - rate locks here
-    ' cols F (Rate%) and G (Interest) intentionally blank
+                     startD As Date, endD As Date, _
+                     bucket As String, tenor As Long, _
+                     rateDate As Date, notional As Double)
+    led.Cells(r, 1).Value = startD      ' StartDate
+    led.Cells(r, 2).Value = endD        ' EndDate
+    led.Cells(r, 3).Value = bucket      ' Bucket
+    led.Cells(r, 4).Value = tenor       ' Tenor(days)
+    led.Cells(r, 5).Value = rateDate    ' RateDate
+    ' col F (Rate%) intentionally blank
+    led.Cells(r, 7).Value = notional    ' Notional($mm)
+    ' col H (Interest) intentionally blank
 End Sub
 
 Public Sub BuildDepositLedger()
@@ -102,22 +103,23 @@ Public Sub BuildDepositLedger()
         led.Cells.Clear
     End If
 
-    ' --- read inputs
+    ' read inputs
     Dim startDate As Date, horizonYrs As Double
     Dim onAmt As Double, m1Amt As Double, m2Amt As Double, m3Amt As Double
-    startDate   = CDate(inp.Range("B4").Value)
-    horizonYrs  = CDbl(inp.Range("B5").Value)
-    onAmt       = CDbl(inp.Range("B6").Value)
-    m1Amt       = CDbl(inp.Range("B7").Value)
-    m2Amt       = CDbl(inp.Range("B8").Value)
-    m3Amt       = CDbl(inp.Range("B9").Value)
+    startDate    = CDate(inp.Range("B4").Value)
+    horizonYrs   = CDbl(inp.Range("B5").Value)
+    onAmt        = CDbl(inp.Range("B6").Value)
+    m1Amt        = CDbl(inp.Range("B7").Value)
+    m2Amt        = CDbl(inp.Range("B8").Value)
+    m3Amt        = CDbl(inp.Range("B9").Value)
     Dim horizonMonths As Long: horizonMonths = CLng(horizonYrs * 12)
-    Dim endDate As Date: endDate = AddMonths(startDate, horizonMonths)
+    Dim endDate As Date:       endDate = AddMonths(startDate, horizonMonths)
     startDate = Following(startDate)
 
-    ' --- header
+    ' header
     Dim hdr As Variant
-    hdr = Array("Date","Bucket","Notional($mm)","Tenor(days)","RateDate","Rate%","Interest($mm)")
+    hdr = Array("StartDate","EndDate","Bucket","Tenor(days)","RateDate", _
+                "Rate%","Notional($mm)","Interest($mm)")
     Dim c As Long
     For c = 0 To UBound(hdr)
         With led.Cells(1, c + 1): .Value = hdr(c): .Font.Bold = True: End With
@@ -125,70 +127,59 @@ Public Sub BuildDepositLedger()
 
     Dim row As Long: row = 2
 
-    ' =====================================================================
-    ' Walk every business day in the horizon.
-    ' For each day, write one row per active bucket.
-    ' =====================================================================
+    ' term bucket state: rate lock date and next maturity
+    Dim m1RD As Date, m1Mat As Date
+    Dim m2RD As Date, m2Mat As Date
+    Dim m3RD As Date, m3Mat As Date
+    If m1Amt > 0 Then m1RD = startDate: m1Mat = Following(AddMonths(startDate, 1))
+    If m2Amt > 0 Then m2RD = startDate: m2Mat = Following(AddMonths(startDate, 2))
+    If m3Amt > 0 Then m3RD = startDate: m3Mat = Following(AddMonths(startDate, 3))
+
+    ' walk every business day
     Dim d As Date: d = startDate
-
-    ' term-bucket state: track the current period's rate-lock date
-    Dim m1RateDate As Date, m1MatDate As Date
-    Dim m2RateDate As Date, m2MatDate As Date
-    Dim m3RateDate As Date, m3MatDate As Date
-
-    ' initialise first period for each term bucket
-    If m1Amt > 0 Then m1RateDate = d: m1MatDate = Following(AddMonths(d, 1))
-    If m2Amt > 0 Then m2RateDate = d: m2MatDate = Following(AddMonths(d, 2))
-    If m3Amt > 0 Then m3RateDate = d: m3MatDate = Following(AddMonths(d, 3))
-
     Do While d < endDate
         Dim nxt As Date: nxt = NextBD(d)
         If nxt > endDate Then nxt = endDate
         Dim onTenor As Long: onTenor = CLng(nxt - d)
 
-        ' ON: tenor = days to next BD (captures bridges naturally)
+        ' ON: StartDate=d, EndDate=nextBD, tenor=1/3/4, RateDate=d
         If onAmt > 0 Then
-            WriteRow led, row, d, "ON", onAmt, onTenor, d: row = row + 1
+            WriteRow led, row, d, nxt, "ON", onTenor, d, onAmt: row = row + 1
         End If
 
-        ' 1M: roll if we've reached or passed the maturity date
+        ' 1M: roll at maturity, RateDate locks at placement
         If m1Amt > 0 Then
-            If d >= m1MatDate And d < endDate Then
-                m1RateDate = d: m1MatDate = Following(AddMonths(d, 1))
-            End If
-            WriteRow led, row, d, "1M", m1Amt, 1, m1RateDate: row = row + 1
+            If d >= m1Mat Then m1RD = d: m1Mat = Following(AddMonths(d, 1))
+            WriteRow led, row, d, nxt, "1M", onTenor, m1RD, m1Amt: row = row + 1
         End If
 
         ' 2M
         If m2Amt > 0 Then
-            If d >= m2MatDate And d < endDate Then
-                m2RateDate = d: m2MatDate = Following(AddMonths(d, 2))
-            End If
-            WriteRow led, row, d, "2M", m2Amt, 1, m2RateDate: row = row + 1
+            If d >= m2Mat Then m2RD = d: m2Mat = Following(AddMonths(d, 2))
+            WriteRow led, row, d, nxt, "2M", onTenor, m2RD, m2Amt: row = row + 1
         End If
 
         ' 3M
         If m3Amt > 0 Then
-            If d >= m3MatDate And d < endDate Then
-                m3RateDate = d: m3MatDate = Following(AddMonths(d, 3))
-            End If
-            WriteRow led, row, d, "3M", m3Amt, 1, m3RateDate: row = row + 1
+            If d >= m3Mat Then m3RD = d: m3Mat = Following(AddMonths(d, 3))
+            WriteRow led, row, d, nxt, "3M", onTenor, m3RD, m3Amt: row = row + 1
         End If
 
         d = nxt
     Loop
 
-    ' --- format
-    led.Columns("A").NumberFormat = "yyyy-mm-dd"
-    led.Columns("E").NumberFormat = "yyyy-mm-dd"
-    led.Columns("C").NumberFormat = "#,##0.0"
-    led.Columns("F:G").NumberFormat = "0.000000"
-    led.Columns("A:G").AutoFit
+    ' format
+    led.Columns("A:B").NumberFormat = "yyyy-mm-dd"
+    led.Columns("E").NumberFormat   = "yyyy-mm-dd"
+    led.Columns("G").NumberFormat   = "#,##0.0"
+    led.Columns("F:F").NumberFormat = "0.0000"
+    led.Columns("H:H").NumberFormat = "0.000000"
+    led.Columns("A:H").AutoFit
     led.Activate
 
-    MsgBox "Deposit ledger built: " & (row - 2) & " rows written to LEDGER." & vbNewLine & _
-           "Wire Rate% (col F) with =RCurveRate(curve,E2)" & vbNewLine & _
-           "and Interest (col G) with =RAccrue(A2,A2+D2,C2,""SIMPLE"",curve)"
+    MsgBox "Deposit ledger built: " & (row - 2) & " rows." & vbNewLine & _
+           "Wire Rate%  (F2): =RCurveRate(curveCell, E2)" & vbNewLine & _
+           "Wire Interest (H2): =G2*F2/100*D2/360"
     Exit Sub
 Failed:
     MsgBox "BuildDepositLedger error: " & Err.Description
