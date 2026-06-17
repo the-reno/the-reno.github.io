@@ -91,7 +91,7 @@ def main():
         mo.Range("C%d"%r).NumberFormat = "0.000000"
     mo.Range("C8").Value = "Expected"; mo.Range("D8").Value = "Check"
     mo.Range("A17").Value = "INSPECT — GET spills provenance + daily strip"
-    mo.Range("B18").Formula = "=CurveName($B$6)"
+    mo.Range("B18").Formula = "=BuildCurve("info",$B$6,$B$6,0,$B$6,$B$6)"
     mo.Columns("A").ColumnWidth = 28
     mo.Columns("B:D").ColumnWidth = 14
 

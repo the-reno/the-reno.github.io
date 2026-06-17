@@ -1,35 +1,29 @@
-NII ENGINE v2 — clear names
-===========================
-The curve is the one named object. Six worksheet functions.
+NII ENGINE v2 — four clean functions
+=====================================
+BuildCurve(name, start, end, sofr, fedRange, holidayRange)
+     Reads the scenario and holiday ranges directly. Returns "RatesCurve.name"
+     when built OK, "#CURVE_ERR: reason" if something is wrong. Downstream
+     Accrue/CurveRate/SwapLeg show #N/A when the curve cell has an error.
 
-BUILD
-  BuildCurve(name, start, end, sofr, fedRange, holidayRange)  -> "RatesCurve.NAME | OK | ..."
-        builds the curve from the input ranges; stores it by name.
+CurveRate(curveCell, date)
+     SOFR rate % in force on that date. The point lookup for cashflow rows.
 
-READ
-  CurveName(curveCell)            -> "RatesCurve.NAME"  (tidy name for re-use)
-  CurveRate(curveCell, date)      -> SOFR rate % in force on that date
+Accrue(start, end, amount, type, curveCell)
+     Interest in $mm. type = "SIMPLE" or "COMPOUND" (in-arrears).
 
-USE
-  Accrue(start, end, amount, type, curveCell)        -> interest $mm   (type: SIMPLE / COMPOUND)
-  SwapLeg(start, end, notional, fixed, curveCell, leg) -> FIXED | FLOAT | NET
+SwapLeg(start, end, notional, fixed, curveCell, leg)
+     leg = "FIXED" | "FLOAT" | "NET". Coordinator: two Accrue calls + sign.
 
 THREE MODULES
-  mRegistry.bas   the in-memory store: StoreObject / FetchObject / CleanName
-                  (a cell holds a name; the object lives here; recalc rebuilds it)
-  cRatesCurve.bas the curve class: staircase + daily strip (rate, dayFactor, accumFactor)
-                  + RateOn(date), SimpleFactor, CompoundFactor
-  mEngine.bas     the six worksheet functions above (the only module that reads cells)
+  mRegistry.bas   StoreObject / FetchObject / CleanName
+  cRatesCurve.bas staircase + daily strip (rate, dayFactor, accumFactor) + RateOn
+  mEngine.bas     the four worksheet functions above
 
-RULE  Pass ranges and the curve handle as CELLS ($B$6), never typed text,
-      so editing a holiday or Fed move cascades through the whole chain.
+RULE  Pass ranges and curveCell as CELLS, never typed text.
+INSTALL  Alt+F11 > File > Import File > import the 3 .bas.
+         cRatesCurve must land under Class Modules. Save as .xlsm, Ctrl+Alt+F9.
 
-INSTALL (any computer with Excel)
-  Alt+F11 > File > Import File... import the 3 .bas from bas/.
-  cRatesCurve imports as a CLASS module (under "Class Modules"); the other
-  two are normal Modules. Save as .xlsm, Ctrl+Alt+F9.
-
-GOLDEN VALUES (verified)
-  Accrue simple 0.853750   Accrue compound 0.857325
-  SwapLeg July 375mm: FIXED 1.017187 | FLOAT 1.142773 | NET -0.125585
-  CurveRate 15-Jul=3.55  30-Jul=3.30  (after the Jul-29 cut takes effect)
+GOLDEN VALUES
+  Accrue simple 0.853750 | compound 0.857325
+  SwapLeg FIXED 1.017187 | FLOAT 1.142773 | NET -0.125585
+  CurveRate 15-Jul=3.55 | 30-Jul=3.30

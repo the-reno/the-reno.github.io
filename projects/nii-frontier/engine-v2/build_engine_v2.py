@@ -92,7 +92,7 @@ def build(path="NII_Engine_v2.xlsx"):
         put(ws,r,5,f,MONO); r+=1
 
     put(ws,r+1,1,"4 · INSPECT — GET spills provenance + the daily strip",SUB); r+=2
-    put(ws,r,1,"Curve table"); put(ws,r,5,"=CurveName($B$6)",MONO); r+=1
+    put(ws,r,1,"Curve table"); put(ws,r,5,"=BuildCurve("info",$B$6,$B$6,0,$B$6,$B$6)",MONO); r+=1
     put(ws,r+1,1,"Spills: header (curve/SOFR), then date | rate% | dayFactor | accumFactor.",Font(name=A,size=9,color="595959"))
     put(ws,r+2,1,"Give it empty room below and to the right.",Font(name=A,size=9,color="595959"))
     for c,w in [("A",28),("B",13),("C",13),("D",8),("E",64)]: ws.column_dimensions[c].width=w

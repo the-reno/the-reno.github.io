@@ -7,10 +7,10 @@ Attribute VB_Name = "mEngine"
 '
 ' THE FUNCTIONS
 '   BuildCurve(name, start, end, sofr, fedRange, holidayRange)
-'        Builds one named curve straight from the input ranges and
-'        returns a receipt naming it. This is the only builder.
-'   CurveName(curveCell)            the clean curve name, for re-use
-'   CurveRate(curveCell, date)      the SOFR rate in force on that date
+'        Builds the curve; returns "RatesCurve.name" when OK,
+'        "#CURVE_ERR: reason" if something is wrong. Downstream
+'        Accrue/CurveRate show #N/A if the curve cell has an error.
+'   CurveRate(curveCell, date)      SOFR rate % in force on that date
 '   Accrue(start, end, amount, type, curveCell)        interest, $mm
 '   SwapLeg(start, end, notional, fixed, curveCell, leg)  FIXED|FLOAT|NET
 '
@@ -35,27 +35,12 @@ Public Function BuildCurve(ByVal name As String, ByVal startDate As Date, ByVal 
     curve.Init name, startDate, endDate, sofr, fedRange.Value, holidayRange.Value, _
                fedRange.Address(False, False), holidayRange.Address(False, False)
     StoreObject "RatesCurve." & name, curve
-    BuildCurve = "RatesCurve." & name & " | OK | " & curve.Days & " days | " & _
-                 Format(sofr, "0.00") & "->" & Format(curve.LastRate, "0.00")
+    BuildCurve = "RatesCurve." & name
     Exit Function
 Failed:
     BuildCurve = "#CURVE_ERR: " & Err.Description
 End Function
 
-' ---------------------------------------------------------------------
-' Return the clean curve name (e.g. "RatesCurve.curve1") so other
-' formulas - like a cashflow table - can refer to the curve tidily.
-' ---------------------------------------------------------------------
-Public Function CurveName(curveCell As Range) As Variant
-    On Error GoTo Failed
-    Dim curve As cRatesCurve
-    Set curve = FetchObject(CleanName(CStr(curveCell.Value)))
-    If curve Is Nothing Then CurveName = CVErr(xlErrNA): Exit Function
-    CurveName = "RatesCurve." & curve.CurveName
-    Exit Function
-Failed:
-    CurveName = CVErr(xlErrValue)
-End Function
 
 ' ---------------------------------------------------------------------
 ' The point lookup for cashflow rows: the SOFR rate in force on a date.
