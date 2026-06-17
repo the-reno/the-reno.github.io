@@ -11,10 +11,10 @@
 '   StartDate   start of this accrual period
 '   EndDate     next business day (= StartDate + 1 or more for bridges)
 '   Bucket      ON / 1M / 2M / 3M
-'   RateDate    date to look up in the curve table:
-'                 ON       -> StartDate (overnight rate fixes each morning)
-'                 1M/2M/3M -> placement date of the current period
-'                             (the forward rate locked at inception)
+'   FwdDate     date to look up in the curve:
+'                 ON       -> StartDate (overnight fixes each morning)
+'                 1M/2M/3M -> Following(placement + n months)
+'                             the forward maturity date; rate observed there
 '   Rate%       BLANK -> wire: =RCurveRate(curveCell, D2)
 '   Notional    deposit amount ($mm)
 '   Interest    BLANK -> wire: =G2*(F2/100)*(B2-A2)/360
@@ -114,7 +114,7 @@ Public Sub BuildDepositLedger()
 
     ' header
     Dim hdr As Variant
-    hdr = Array("StartDate","EndDate","Bucket","RateDate","Rate%","Notional($mm)","Interest($mm)")
+    hdr = Array("StartDate","EndDate","Bucket","FwdDate","Rate%","Notional($mm)","Interest($mm)")
     Dim c As Long
     For c = 0 To UBound(hdr)
         With led.Cells(1, c + 1): .Value = hdr(c): .Font.Bold = True: End With
@@ -126,9 +126,9 @@ Public Sub BuildDepositLedger()
     Dim m1RD As Date, m1Mat As Date
     Dim m2RD As Date, m2Mat As Date
     Dim m3RD As Date, m3Mat As Date
-    If m1Amt > 0 Then m1RD = startDate: m1Mat = Following(AddMonths(startDate, 1))
-    If m2Amt > 0 Then m2RD = startDate: m2Mat = Following(AddMonths(startDate, 2))
-    If m3Amt > 0 Then m3RD = startDate: m3Mat = Following(AddMonths(startDate, 3))
+    If m1Amt > 0 Then m1Mat = Following(AddMonths(startDate, 1)): m1RD = m1Mat
+    If m2Amt > 0 Then m2Mat = Following(AddMonths(startDate, 2)): m2RD = m2Mat
+    If m3Amt > 0 Then m3Mat = Following(AddMonths(startDate, 3)): m3RD = m3Mat
 
     ' walk every business day
     Dim d As Date: d = startDate
@@ -141,21 +141,21 @@ Public Sub BuildDepositLedger()
             WriteRow led, row, d, nxt, "ON", d, onAmt: row = row + 1
         End If
 
-        ' 1M: roll at maturity, RateDate stays at placement date
+        ' 1M: roll at maturity; FwdDate = Following(newPlacement + 1M)
         If m1Amt > 0 Then
-            If d >= m1Mat Then m1RD = d: m1Mat = Following(AddMonths(d, 1))
+            If d >= m1Mat Then m1Mat = Following(AddMonths(d, 1)): m1RD = m1Mat
             WriteRow led, row, d, nxt, "1M", m1RD, m1Amt: row = row + 1
         End If
 
         ' 2M
         If m2Amt > 0 Then
-            If d >= m2Mat Then m2RD = d: m2Mat = Following(AddMonths(d, 2))
+            If d >= m2Mat Then m2Mat = Following(AddMonths(d, 2)): m2RD = m2Mat
             WriteRow led, row, d, nxt, "2M", m2RD, m2Amt: row = row + 1
         End If
 
         ' 3M
         If m3Amt > 0 Then
-            If d >= m3Mat Then m3RD = d: m3Mat = Following(AddMonths(d, 3))
+            If d >= m3Mat Then m3Mat = Following(AddMonths(d, 3)): m3RD = m3Mat
             WriteRow led, row, d, nxt, "3M", m3RD, m3Amt: row = row + 1
         End If
 
@@ -172,7 +172,7 @@ Public Sub BuildDepositLedger()
     led.Activate
 
     MsgBox "Deposit ledger built: " & (row - 2) & " rows." & vbNewLine & _
-           "Wire Rate%  (E2): =RCurveRate(curveCell, D2)" & vbNewLine & _
+           "Wire Rate%  (E2): =RCurveRate(curveCell, D2)  [FwdDate]" & vbNewLine & _
            "Wire Interest (G2): =F2*(E2/100)*(B2-A2)/360"
     Exit Sub
 Failed:
