@@ -1,3 +1,4 @@
+Attribute VB_Name = "mDeposit"
 ' =====================================================================
 ' mDeposit  -  deposit daily accrual skeleton
 '
