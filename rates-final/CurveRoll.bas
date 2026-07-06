@@ -58,18 +58,18 @@ Sub BuildMonthlyFactors()
         out.Cells(outRow, 3).Value = rolls(i)
 
         out.Cells(outRow, 4).Value = PeriodFactor(data, rolls(i - 1), rolls(i), 2)
-        out.Cells(outRow, 5).Value = PeriodFactor(data, rolls(i - 1), rolls(i), 6)
+        out.Cells(outRow, 5).Value = PeriodFactor(data, rolls(i - 1), rolls(i), 3)
 
         If i Mod 2 = 0 Then
-            out.Cells(outRow, 6).Value = PeriodFactor(data, rolls(i - 2), rolls(i), 10)
+            out.Cells(outRow, 6).Value = PeriodFactor(data, rolls(i - 2), rolls(i), 4)
         End If
 
         If i Mod 3 = 0 Then
-            out.Cells(outRow, 7).Value = PeriodFactor(data, rolls(i - 3), rolls(i), 14)
+            out.Cells(outRow, 7).Value = PeriodFactor(data, rolls(i - 3), rolls(i), 5)
         End If
 
         If i Mod 6 = 0 Then
-            out.Cells(outRow, 8).Value = PeriodFactor(data, rolls(i - 6), rolls(i), 18)
+            out.Cells(outRow, 8).Value = PeriodFactor(data, rolls(i - 6), rolls(i), 6)
         End If
 
         outRow = outRow + 1
@@ -105,7 +105,7 @@ Function PeriodFactor(data As Worksheet, startDate As Date, endDate As Date, rat
 
     If IsError(rowNumber) Then Exit Function
 
-    rate = CDbl(data.Cells(rowNumber, rateColumn).Value)
+    rate = CDbl(data.Cells(rowNumber, rateColumn).Value) / 100
     days = endDate - startDate
 
     PeriodFactor = 1 + rate * days / 360
