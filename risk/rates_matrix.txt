@@ -1,0 +1,415 @@
+Option Explicit
+' =====================================================================
+'  Monthly lookback table + daily rate matrix from a daily SOFR curve.
+'  Simple, self-contained: plain loops only.
+'
+'  BOUNDARY RULE (shared by both outputs via BuildBounds):
+'    - Targets are startDate minus k months, anchored to the original
+'      day-of-month (never re-anchored to a snapped date).
+'    - EVERY target, oldest anchor included: rates are captured on an
+'      actual curve date; if the target is not a curve date, step
+'      -1 day BACKWARD until one is found. A boundary therefore never
+'      exceeds its target day of the month.
+'  PERIOD RULE: each period runs [start INCLUDED -> end EXCLUDED).
+'    The end date's fixing belongs to the NEXT period.
+'    The newest boundary is only an end boundary; its row/column
+'    shows the spot fixing for reference.
+' =====================================================================
+
+Function r_MonthlyTable(startDate As Date, tenorYears As Long, curve As Range) As Variant
+    ' curve: first row = headers (Date, ON, 1M, ...), first column = dates ascending.
+    ' Output rows: newest boundary first, oldest last.
+    '   ON  : row 0 = spot fixing at the end boundary;
+    '         other rows = ON compounded over [row date -> next boundary).
+    '   xM  : point-in-time fixing at the row date, every x months.
+    Dim v As Variant, result() As Variant, bound() As Double
+    Dim nRows As Long, nCols As Long, n As Long
+    Dim i As Long, c As Long, m As Long, k As Long, rw As Long
+    Dim hdr As String
+
+    v = TrimmedCurve(curve)
+    nRows = UBound(v, 1)
+    nCols = UBound(v, 2)
+    n = tenorYears * 12
+
+    BuildBounds v, nRows, startDate, n, bound        ' bound(0)=oldest .. bound(n)=newest, 0=invalid
+
+    ReDim result(0 To n + 1, 1 To nCols)
+    For c = 1 To nCols
+        result(0, c) = v(1, c)
+    Next c
+
+    For i = 0 To n                                   ' i=0 newest ... i=n oldest
+        k = n - i
+        For c = 1 To nCols
+            result(i + 1, c) = ""
+        Next c
+        If bound(k) = 0 Then GoTo NextRow
+
+        result(i + 1, 1) = CDate(bound(k))
+        rw = RowOnOrBefore(v, nRows, bound(k))       ' exact row (boundary is a curve date)
+
+        For c = 2 To nCols
+            hdr = CStr(v(1, c))
+            If hdr = "ON" Then
+                If i = 0 Then
+                    result(i + 1, c) = v(rw, c)      ' spot at the end boundary
+                ElseIf bound(k + 1) > bound(k) Then
+                    result(i + 1, c) = r_CompoundON(v, nRows, c, bound(k), bound(k + 1))
+                End If
+            Else
+                m = CLng(Replace(hdr, "M", ""))
+                If i Mod m = 0 Then result(i + 1, c) = v(rw, c)
+            End If
+        Next c
+NextRow:
+    Next i
+
+    r_MonthlyTable = result
+End Function
+
+' =====================================================================
+'  r_AccruedTable - end-of-period view of the same grid.
+'  Same rates as r_MonthlyTable, shown at the END of their period
+'  instead of the start:
+'    - xM columns: the term rate captured at the period start boundary
+'      (the exact value r_MonthlyTable shows there), displayed on the
+'      row x months later where that period ends. Fill schedule
+'      matches r_MonthlyTable (every x months, anchored to the input).
+'    - ON column: the compound of the month ENDING on the row date -
+'      r_MonthlyTable's ON shifted one boundary forward.
+'  So every number in this table also appears in r_MonthlyTable, just
+'  at a different date. The oldest row stays blank (nothing has ended
+'  there yet), as do rows whose period start precedes the window.
+'  Usage: =r_AccruedTable(startDate, tenorYears, curve)  (same args)
+' =====================================================================
+Function r_AccruedTable(startDate As Date, tenorYears As Long, curve As Range) As Variant
+    Dim v As Variant, result() As Variant, bound() As Double
+    Dim nRows As Long, nCols As Long, n As Long
+    Dim i As Long, c As Long, m As Long, k As Long, kS As Long, iStart As Long
+    Dim cON As Long, hdr As String
+
+    v = TrimmedCurve(curve)
+    nRows = UBound(v, 1)
+    nCols = UBound(v, 2)
+    n = tenorYears * 12
+    BuildBounds v, nRows, startDate, n, bound
+
+    cON = 0                                          ' the fixings to compound
+    For c = 2 To nCols
+        If CStr(v(1, c)) = "ON" Then cON = c: Exit For
+    Next c
+
+    ReDim result(0 To n + 1, 1 To nCols)
+    For c = 1 To nCols
+        result(0, c) = v(1, c)
+    Next c
+
+    For i = 0 To n                                   ' i=0 newest ... i=n oldest
+        k = n - i
+        For c = 1 To nCols
+            result(i + 1, c) = ""
+        Next c
+        If bound(k) = 0 Then GoTo NextRow
+        result(i + 1, 1) = CDate(bound(k))
+        If cON = 0 Then GoTo NextRow
+
+        For c = 2 To nCols
+            hdr = CStr(v(1, c))
+            If hdr = "ON" Then m = 1 Else m = CLng(Replace(hdr, "M", ""))
+            If (i Mod m) = 0 Then                        ' scheduled rows only
+                iStart = i + m                           ' period that ends here
+                If iStart <= n Then
+                    kS = n - iStart
+                    If bound(kS) > 0 Then
+                        If bound(k) > bound(kS) Then
+                            If hdr = "ON" Then           ' realized compound of the month
+                                result(i + 1, c) = r_CompoundON(v, nRows, cON, bound(kS), bound(k))
+                            Else                         ' term rate set at the period start
+                                result(i + 1, c) = v(RowOnOrBefore(v, nRows, bound(kS)), c)
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        Next c
+NextRow:
+    Next i
+
+    r_AccruedTable = result
+End Function
+
+' =====================================================================
+'  r_BuildRateMatrix - one column per period, oldest first.
+'  Header = period start date. Rows = ON fixing applied on each
+'  calendar day of the period (carried over weekends). Footer "Rate"
+'  = compound of exactly those daily factors -> matches r_MonthlyTable.
+'  Final column = end boundary: single spot fixing.
+' =====================================================================
+Sub r_BuildRateMatrix()
+    Dim src As Worksheet, out As Worksheet
+    Dim curve As Range, v As Variant, bound() As Double, footer() As Double
+    Dim startDate As Date, tenorYears As Long
+    Dim nRows As Long, n As Long, k As Long, rw As Long, r As Long
+    Dim i As Long, cON As Long, col As Long, nCols As Long
+    Dim dS As Double, dE As Double, effEnd As Double, dayD As Double
+    Dim prod As Double, cnt As Long, maxLen As Long
+
+    ' ---- inputs: same cells the Sheet2 formula uses ----
+    Set src = ThisWorkbook.Sheets("Sheet1")
+    startDate = src.Range("H2").Value
+    tenorYears = src.Range("H3").Value
+    Set curve = src.Range("A:F")
+
+    v = TrimmedCurve(curve)
+    nRows = UBound(v, 1)
+    n = tenorYears * 12
+
+    cON = 0
+    For k = 2 To UBound(v, 2)
+        If CStr(v(1, k)) = "ON" Then cON = k: Exit For
+    Next k
+    If cON = 0 Then MsgBox "No 'ON' column found.": Exit Sub
+
+    BuildBounds v, nRows, startDate, n, bound
+    If bound(n) = 0 Then MsgBox "Start date is beyond the curve.": Exit Sub
+
+    ' ---- output sheet ----
+    On Error Resume Next
+    Set out = ThisWorkbook.Sheets("RateMatrix")
+    On Error GoTo 0
+    If out Is Nothing Then
+        Set out = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+        out.Name = "RateMatrix"
+    Else
+        out.Cells.Clear
+    End If
+
+    ReDim footer(0 To n)
+    maxLen = 1
+    col = 1
+
+    ' ---- one column per valid period, [start incl -> end excl) ----
+    For k = 0 To n - 1
+        If bound(k) > 0 And bound(k + 1) > bound(k) Then
+            dS = bound(k)
+            dE = bound(k + 1)
+            col = col + 1
+            out.Cells(1, col).Value = CDate(dS)
+            out.Cells(1, col).NumberFormat = "yyyy-mm-dd"
+
+            r = RowOnOrBefore(v, nRows, dE - 1)      ' last fixing strictly before dE
+            effEnd = dE
+            If v(r, 1) + 1 < effEnd Then effEnd = v(r, 1) + 1
+            r = RowOnOrBefore(v, nRows, dS)
+            prod = 1: cnt = 0
+            For dayD = dS To effEnd - 1
+                Do While r < nRows
+                    If v(r + 1, 1) > dayD Then Exit Do
+                    r = r + 1
+                Loop
+                cnt = cnt + 1
+                out.Cells(cnt + 1, col).Value = v(r, cON)
+                prod = prod * (1 + v(r, cON) / 100 / 360)
+            Next dayD
+            footer(col - 2) = (prod - 1) * 360 / cnt * 100
+            If cnt > maxLen Then maxLen = cnt
+        End If
+    Next k
+
+    ' ---- final column: end boundary, spot fixing only ----
+    col = col + 1
+    rw = RowOnOrBefore(v, nRows, bound(n))
+    out.Cells(1, col).Value = CDate(bound(n))
+    out.Cells(1, col).NumberFormat = "yyyy-mm-dd"
+    out.Cells(2, col).Value = v(rw, cON)
+    footer(col - 2) = v(rw, cON)
+    nCols = col
+
+    ' ---- day labels + footer row ----
+    out.Cells(1, 1).Value = "Day"
+    For i = 1 To maxLen
+        out.Cells(i + 1, 1).Value = i
+    Next i
+    out.Cells(maxLen + 2, 1).Value = "Rate"
+    For col = 2 To nCols
+        out.Cells(maxLen + 2, col).Value = footer(col - 2)
+        out.Cells(maxLen + 2, col).Font.Bold = True
+    Next col
+    out.Range("A1").CurrentRegion.Columns.AutoFit
+End Sub
+
+' =====================================================================
+'  r_CheckRateMatrix - mechanical audit of the RateMatrix sheet.
+'  For every populated cell it derives the calendar date
+'  (period start + day - 1), looks that date up in the curve fresh
+'  (latest fixing on/before), and compares. Footers are recomputed
+'  from those independently looked-up daily rates. Results go to a
+'  mirror sheet "RateCheck": OK, or the expected value in red.
+'  Comparison tolerance: Excel stores cell values to 15 significant
+'  digits, so a written double can differ from the recomputed one in
+'  the ~13th decimal. TOL passes that storage artifact while still
+'  catching any real error (one wrong day moves a footer by ~0.01+).
+' =====================================================================
+Sub r_CheckRateMatrix()
+    Const TOL As Double = 0.00000001            ' 1e-8
+    Dim src As Worksheet, mx As Worksheet, chk As Worksheet
+    Dim v As Variant, nRows As Long, cON As Long
+    Dim lastCol As Long, footerRow As Long
+    Dim colN As Long, i As Long, k As Long, rw As Long
+    Dim dS As Double, dCell As Double
+    Dim shown As Variant, expected As Double, expFooter As Double
+    Dim prod As Double, cnt As Long
+    Dim nOK As Long, nBad As Long
+
+    Set src = ThisWorkbook.Sheets("Sheet1")
+    v = TrimmedCurve(src.Range("A:F"))
+    nRows = UBound(v, 1)
+    cON = 0
+    For k = 2 To UBound(v, 2)
+        If CStr(v(1, k)) = "ON" Then cON = k: Exit For
+    Next k
+    If cON = 0 Then MsgBox "No 'ON' column found.": Exit Sub
+
+    On Error Resume Next
+    Set mx = ThisWorkbook.Sheets("RateMatrix")
+    On Error GoTo 0
+    If mx Is Nothing Then MsgBox "Run r_BuildRateMatrix first.": Exit Sub
+
+    lastCol = mx.Cells(1, mx.Columns.Count).End(xlToLeft).Column
+    footerRow = mx.Cells(mx.Rows.Count, 1).End(xlUp).Row   ' the "Rate" row
+
+    On Error Resume Next
+    Set chk = ThisWorkbook.Sheets("RateCheck")
+    On Error GoTo 0
+    If chk Is Nothing Then
+        Set chk = ThisWorkbook.Sheets.Add(After:=mx)
+        chk.Name = "RateCheck"
+    Else
+        chk.Cells.Clear
+    End If
+    chk.Cells(1, 1).Value = "Day"
+    For i = 2 To footerRow - 1
+        chk.Cells(i, 1).Value = i - 1
+    Next i
+    chk.Cells(footerRow, 1).Value = "Rate"
+
+    nOK = 0: nBad = 0
+    For colN = 2 To lastCol
+        dS = mx.Cells(1, colN).Value2
+        chk.Cells(1, colN).Value = CDate(dS)
+        chk.Cells(1, colN).NumberFormat = "yyyy-mm-dd"
+
+        prod = 1: cnt = 0: expected = 0
+        For i = 2 To footerRow - 1                        ' ---- day cells ----
+            shown = mx.Cells(i, colN).Value2
+            If Not IsEmpty(shown) Then
+                dCell = dS + (i - 2)                      ' period start + day - 1
+                rw = RowOnOrBefore(v, nRows, dCell)       ' fresh, independent lookup
+                expected = v(rw, cON)
+                cnt = cnt + 1
+                prod = prod * (1 + expected / 100 / 360)
+                If Abs(shown - expected) <= TOL Then
+                    chk.Cells(i, colN).Value = "OK"
+                    nOK = nOK + 1
+                Else
+                    chk.Cells(i, colN).Value = "EXP " & expected
+                    chk.Cells(i, colN).Font.Color = vbRed
+                    nBad = nBad + 1
+                End If
+            End If
+        Next i
+
+        If cnt > 0 Then                                   ' ---- footer ----
+            If colN = lastCol Then                        ' spot column: fixing itself
+                expFooter = expected
+            Else
+                expFooter = (prod - 1) * 360 / cnt * 100
+            End If
+            shown = mx.Cells(footerRow, colN).Value2
+            If Abs(shown - expFooter) <= TOL Then
+                chk.Cells(footerRow, colN).Value = "OK"
+                chk.Cells(footerRow, colN).Font.Bold = True
+                nOK = nOK + 1
+            Else
+                chk.Cells(footerRow, colN).Value = "EXP " & expFooter
+                chk.Cells(footerRow, colN).Font.Color = vbRed
+                chk.Cells(footerRow, colN).Font.Bold = True
+                nBad = nBad + 1
+            End If
+        End If
+    Next colN
+
+    chk.Range("A1").CurrentRegion.Columns.AutoFit
+    MsgBox nOK + nBad & " cells checked: " & nOK & " OK, " & nBad & " mismatches." & _
+           IIf(nBad > 0, " See red cells in RateCheck.", ""), _
+           IIf(nBad > 0, vbExclamation, vbInformation), "RateMatrix check"
+End Sub
+
+Function r_CompoundON(v As Variant, nRows As Long, c As Long, _
+                      ByVal dStart As Double, ByVal dEnd As Double, _
+                      Optional basis As Double = 360) As Variant
+    ' Rolls a deposit day by day over [dStart -> dEnd): dStart included,
+    ' dEnd excluded. Missing days reuse the previous fixing; if the
+    ' curve ends before dEnd, the period stops one day after the last
+    ' available fixing. Returns the simple annualized rate in percent.
+    Dim r As Long, dayD As Double, effEnd As Double, prod As Double
+
+    r_CompoundON = ""
+
+    r = RowOnOrBefore(v, nRows, dEnd - 1)
+    If r = 0 Then Exit Function
+    effEnd = dEnd
+    If v(r, 1) + 1 < effEnd Then effEnd = v(r, 1) + 1
+    If effEnd <= dStart Then Exit Function
+
+    r = RowOnOrBefore(v, nRows, dStart)
+    If r = 0 Then Exit Function
+
+    prod = 1
+    For dayD = dStart To effEnd - 1
+        Do While r < nRows
+            If v(r + 1, 1) > dayD Then Exit Do
+            r = r + 1
+        Loop
+        prod = prod * (1 + v(r, c) / 100 / basis)
+    Next dayD
+
+    r_CompoundON = (prod - 1) * basis / (effEnd - dStart) * 100
+End Function
+
+Private Sub BuildBounds(v As Variant, nRows As Long, startDate As Date, _
+                        n As Long, bound() As Double)
+    ' bound(0) = oldest boundary ... bound(n) = newest. 0 = invalid.
+    ' Every target snaps BACKWARD to the latest curve date on/before it,
+    ' so a boundary never exceeds its target day of the month. Targets
+    ' are anchored to startDate's day-of-month.
+    Dim k As Long, rw As Long
+    ReDim bound(0 To n)
+    For k = 0 To n
+        rw = RowOnOrBefore(v, nRows, CDbl(DateAdd("m", k - n, startDate)))
+        If rw = 0 Then bound(k) = 0 Else bound(k) = v(rw, 1)
+    Next k
+End Sub
+
+Private Function RowOnOrBefore(v As Variant, nRows As Long, d As Double) As Long
+    ' Row index of the latest curve date on/before d. 0 if none.
+    Dim r As Long
+    RowOnOrBefore = 0
+    For r = 2 To nRows
+        If v(r, 1) > d Then Exit Function
+        RowOnOrBefore = r
+    Next r
+End Function
+
+Private Function TrimmedCurve(curve As Range) As Variant
+    ' Reads the curve into an array, cut at the last non-empty date row,
+    ' so full-column references (e.g. A:F) stay fast.
+    Dim ws As Worksheet, lastR As Long
+    Set ws = curve.Worksheet
+    lastR = ws.Cells(ws.Rows.Count, curve.Column).End(xlUp).Row
+    If lastR < curve.Row + 1 Then lastR = curve.Row + 1
+    TrimmedCurve = curve.Resize(lastR - curve.Row + 1).Value2
+End Function
+
+
