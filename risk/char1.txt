@@ -1,0 +1,284 @@
+Option Explicit
+
+Public Sub Create1MDecisionChart()
+
+    Const SHEET_NAME As String = "Sheet15"
+    Const FIRST_ROLL_ROW As Long = 3
+    
+    Dim ws As Worksheet
+    Dim lastRawRow As Long
+    Dim lastRollRow As Long
+    Dim outputRow As Long
+    Dim sourceRow As Long
+    
+    Dim rollDate As Date
+    Dim maturityDate As Date
+    Dim onAtStart As Double
+    Dim oneMonthRate As Double
+    Dim realizedON As Variant
+    
+    Dim chartObject As chartObject
+    Dim chartName As String
+    
+    Set ws = ThisWorkbook.Worksheets(SHEET_NAME)
+    
+    lastRawRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    lastRollRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row
+    
+    'Clear previous output.
+    ws.Range("W:Z").ClearContents
+    
+    ws.Range("W2").Value = "Roll Date"
+    ws.Range("X2").Value = "ON at T0"
+    ws.Range("Y2").Value = "1M at T0"
+    ws.Range("Z2").Value = "Realized Compounded ON"
+    
+    outputRow = 3
+    
+    For sourceRow = FIRST_ROLL_ROW To lastRollRow
+        
+        If IsDate(ws.Cells(sourceRow, "I").Value) Then
+            
+            rollDate = CDate(ws.Cells(sourceRow, "I").Value)
+            maturityDate = DateAdd("m", 1, rollDate)
+            
+            If IsNumeric(ws.Cells(sourceRow, "J").Value) And _
+               IsNumeric(ws.Cells(sourceRow, "K").Value) Then
+                
+                onAtStart = CDbl(ws.Cells(sourceRow, "J").Value)
+                oneMonthRate = CDbl(ws.Cells(sourceRow, "K").Value)
+                
+                realizedON = CompoundedONRate( _
+                    ws, _
+                    rollDate, _
+                    maturityDate, _
+                    lastRawRow)
+                
+                'Only include completed investment periods.
+                If Not IsError(realizedON) Then
+                    
+                    ws.Cells(outputRow, "W").Value = rollDate
+                    ws.Cells(outputRow, "X").Value = onAtStart
+                    ws.Cells(outputRow, "Y").Value = oneMonthRate
+                    ws.Cells(outputRow, "Z").Value = realizedON
+                    
+                    outputRow = outputRow + 1
+                    
+                End If
+            End If
+        End If
+        
+    Next sourceRow
+    
+    If outputRow = 3 Then
+        MsgBox "No completed 1M periods were found.", vbExclamation
+        Exit Sub
+    End If
+    
+    'Format calculation table.
+    ws.Range("W3:W" & outputRow - 1).NumberFormat = "mmm-yy"
+    ws.Range("X3:Z" & outputRow - 1).NumberFormat = "0.000%"
+    
+    'Convert percentage-point data such as 3.65 into Excel percentage values.
+    ws.Range("X3:Z" & outputRow - 1).Value = _
+        ws.Evaluate("IF(ROW(X3:Z" & outputRow - 1 & ")," & _
+                    "X3:Z" & outputRow - 1 & "/100)")
+    
+    ws.Range("W2:Z2").Font.Bold = True
+    ws.Columns("W:Z").AutoFit
+    
+    chartName = "cht1MDecision"
+    
+    On Error Resume Next
+    ws.ChartObjects(chartName).Delete
+    On Error GoTo 0
+    
+    Set chartObject = ws.ChartObjects.Add( _
+        Left:=ws.Range("W10").Left, _
+        Top:=ws.Range("W10").Top, _
+        Width:=850, _
+        Height:=420)
+    
+    chartObject.Name = chartName
+    
+    With chartObject.Chart
+        
+        .ChartType = xlXYScatter
+        
+        Do While .SeriesCollection.Count > 0
+            .SeriesCollection(1).Delete
+        Loop
+        
+        'ON rate at the decision date.
+        With .SeriesCollection.NewSeries
+            .Name = "ON at Decision Date"
+            .XValues = ws.Range("W3:W" & outputRow - 1)
+            .Values = ws.Range("X3:X" & outputRow - 1)
+            .ChartType = xlXYScatter
+            .MarkerStyle = xlMarkerStyleCircle
+            .MarkerSize = 6
+            .Format.Line.Visible = msoFalse
+            .MarkerForegroundColor = RGB(31, 78, 121)
+            .MarkerBackgroundColor = RGB(255, 255, 255)
+        End With
+        
+        '1M term rate available at the decision date.
+        With .SeriesCollection.NewSeries
+            .Name = "1M Rate at Decision Date"
+            .XValues = ws.Range("W3:W" & outputRow - 1)
+            .Values = ws.Range("Y3:Y" & outputRow - 1)
+            .ChartType = xlXYScatter
+            .MarkerStyle = xlMarkerStyleCircle
+            .MarkerSize = 7
+            .Format.Line.Visible = msoFalse
+            .MarkerForegroundColor = RGB(31, 78, 121)
+            .MarkerBackgroundColor = RGB(31, 78, 121)
+        End With
+        
+        'Effective compounded ON realized over the following month.
+        With .SeriesCollection.NewSeries
+            .Name = "Realized Compounded ON"
+            .XValues = ws.Range("W3:W" & outputRow - 1)
+            .Values = ws.Range("Z3:Z" & outputRow - 1)
+            .ChartType = xlXYScatter
+            .MarkerStyle = xlMarkerStyleDiamond
+            .MarkerSize = 7
+            .Format.Line.Visible = msoFalse
+            .MarkerForegroundColor = RGB(110, 110, 110)
+            .MarkerBackgroundColor = RGB(110, 110, 110)
+        End With
+        
+        .HasTitle = True
+        .ChartTitle.Text = _
+            "1M Strategy – Decision Date Perspective"
+        
+        .HasLegend = True
+        .Legend.Position = xlLegendPositionBottom
+        
+        With .Axes(xlCategory)
+    .HasTitle = True
+    .AxisTitle.Text = "Roll Date"
+    .TickLabels.NumberFormat = "mmm-yy"
+    .MajorUnit = 91
+    .MinimumScale = CDbl(Application.Min(ws.Range("W3:W" & outputRow - 1)))
+    .MaximumScale = CDbl(Application.Max(ws.Range("W3:W" & outputRow - 1)))
+        End With
+        
+        With .Axes(xlValue)
+            .HasTitle = True
+            .AxisTitle.Text = "Annualized Rate"
+            .TickLabels.NumberFormat = "0.00%"
+            .HasMajorGridlines = True
+        End With
+        
+    End With
+    
+    MsgBox "The 1M decision-date chart was created.", vbInformation
+
+End Sub
+
+
+Private Function CompoundedONRate( _
+    ByVal ws As Worksheet, _
+    ByVal startDate As Date, _
+    ByVal maturityDate As Date, _
+    ByVal lastRawRow As Long) As Variant
+
+    Dim rawRow As Long
+    Dim rateDate As Date
+    Dim nextRateDate As Date
+    Dim accrualStart As Date
+    Dim accrualEnd As Date
+    
+    Dim onRate As Double
+    Dim dayCount As Long
+    Dim totalDays As Long
+    Dim growthFactor As Double
+    Dim effectiveReturn As Double
+    
+    'The raw data must extend through maturity.
+    If Not IsDate(ws.Cells(lastRawRow, "A").Value) Then
+        CompoundedONRate = CVErr(xlErrNA)
+        Exit Function
+    End If
+    
+    If CDate(ws.Cells(lastRawRow, "A").Value) < maturityDate Then
+        CompoundedONRate = CVErr(xlErrNA)
+        Exit Function
+    End If
+    
+    growthFactor = 1#
+    totalDays = DateDiff("d", startDate, maturityDate)
+    
+    If totalDays <= 0 Then
+        CompoundedONRate = CVErr(xlErrValue)
+        Exit Function
+    End If
+    
+    For rawRow = 2 To lastRawRow
+        
+        If IsDate(ws.Cells(rawRow, "A").Value) And _
+           IsNumeric(ws.Cells(rawRow, "B").Value) Then
+            
+            rateDate = CDate(ws.Cells(rawRow, "A").Value)
+            
+            If rawRow < lastRawRow And _
+               IsDate(ws.Cells(rawRow + 1, "A").Value) Then
+                
+                nextRateDate = CDate(ws.Cells(rawRow + 1, "A").Value)
+            Else
+                nextRateDate = maturityDate
+            End If
+            
+            accrualStart = LaterDate(rateDate, startDate)
+            accrualEnd = EarlierDate(nextRateDate, maturityDate)
+            
+            If accrualEnd > accrualStart Then
+                
+                dayCount = DateDiff("d", accrualStart, accrualEnd)
+                onRate = CDbl(ws.Cells(rawRow, "B").Value) / 100#
+                
+                growthFactor = growthFactor * _
+                    (1# + onRate * dayCount / 360#)
+                
+            End If
+            
+            If rateDate >= maturityDate Then Exit For
+            
+        End If
+        
+    Next rawRow
+    
+    effectiveReturn = growthFactor - 1#
+    
+    'Annualized effective rate on an ACT/360 basis.
+    CompoundedONRate = effectiveReturn * 360# / totalDays * 100#
+
+End Function
+
+
+Private Function LaterDate( _
+    ByVal date1 As Date, _
+    ByVal date2 As Date) As Date
+
+    If date1 > date2 Then
+        LaterDate = date1
+    Else
+        LaterDate = date2
+    End If
+
+End Function
+
+
+Private Function EarlierDate( _
+    ByVal date1 As Date, _
+    ByVal date2 As Date) As Date
+
+    If date1 < date2 Then
+        EarlierDate = date1
+    Else
+        EarlierDate = date2
+    End If
+
+End Function
+
