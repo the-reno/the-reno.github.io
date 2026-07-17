@@ -1,0 +1,397 @@
+Attribute VB_Name = "RDailyFlowUDF"
+Option Explicit
+
+' Worksheet formula:
+'   =r_dailyflow(last_date, years, amount, curve_range)
+'
+' Example:
+'   =r_dailyflow(B4, B5, B6, Curve!A1:F1500)
+'
+' curve_range must contain columns:
+'   date, ON, 1M, 2M, 3M, 6M
+'
+' The function returns a dynamic spilled array with one row per
+' calendar date per tenor. It does not write to sheets.
+
+Private Type RatePoint
+    CurveDate As Date
+    ONRate As Double
+    M1Rate As Double
+    M2Rate As Double
+    M3Rate As Double
+    M6Rate As Double
+End Type
+
+Private Type RollPoint
+    Tenor As String
+    RollNo As Long
+    StartDate As Date
+    RateDate As Date
+    MaturityTargetDate As Date
+    ActualEndDate As Date
+    RateUsed As Double
+    AccrualDays As Long
+    StartingCash As Double
+    InterestEarned As Double
+    EndingCash As Double
+End Type
+
+Private UdfRates() As RatePoint
+Private UdfRateCount As Long
+Private UdfRolls() As RollPoint
+Private UdfRollCount As Long
+
+Public Function r_dailyflow(ByVal last_date As Variant, ByVal years As Double, ByVal amount As Double, ByVal curve As Range) As Variant
+    On Error GoTo Fail
+
+    Dim lastDate As Date, targetDay As Long, lookbackMonths As Long
+    Dim targetStartDate As Date, actualStartDate As Date, actualEndDate As Date
+    Dim tenor As Variant, totalDays As Long, outRows As Long
+    Dim result() As Variant, r As Long, d As Date, rp As RollPoint
+    Dim isInvested As Boolean, isRollingDate As Boolean
+
+    lastDate = CDate(last_date)
+    targetDay = Day(lastDate)
+    lookbackMonths = CLng(Round(years * 12#, 0))
+    LoadRatesFromRange curve
+    actualEndDate = PreviousCurveDate(lastDate)
+    targetStartDate = AddMonthsPreserveDay(lastDate, -lookbackMonths, targetDay)
+    actualStartDate = PreviousCurveDate(targetStartDate)
+
+    UdfRollCount = 0
+    Erase UdfRolls
+    For Each tenor In Array("ON", "1M", "2M", "3M", "6M")
+        SimulateTenor CStr(tenor), actualStartDate, targetStartDate, actualEndDate, lastDate, amount, targetDay
+    Next tenor
+
+    totalDays = DateDiff("d", actualStartDate, actualEndDate) + 1
+    outRows = totalDays * 5 + 1
+    ReDim result(1 To outRows, 1 To 12)
+
+    result(1, 1) = "calendar date"
+    result(1, 2) = "tenor"
+    result(1, 3) = "position date"
+    result(1, 4) = "initial cash"
+    result(1, 5) = "final cash"
+    result(1, 6) = "rate used"
+    result(1, 7) = "interest earned"
+    result(1, 8) = "rolling date"
+    result(1, 9) = "decision"
+    result(1, 10) = "active roll number"
+    result(1, 11) = "rate date used"
+    result(1, 12) = "maturity target date"
+
+    r = 2
+    For d = actualStartDate To actualEndDate
+        For Each tenor In Array("ON", "1M", "2M", "3M", "6M")
+            If FindRollForCalendarDate(CStr(tenor), d, rp, isInvested, isRollingDate) Then
+                result(r, 1) = d
+                result(r, 2) = CStr(tenor)
+                result(r, 3) = PreviousCurveDate(d)
+                result(r, 4) = DailyInitialCash(rp, d)
+                result(r, 5) = DailyFinalCash(rp, d)
+                result(r, 6) = rp.RateUsed
+                result(r, 7) = DailyInterestEarned(rp, d, isInvested)
+                result(r, 8) = isRollingDate
+                result(r, 9) = DailyDecision(rp, d, isInvested, isRollingDate)
+                result(r, 10) = rp.RollNo
+                result(r, 11) = rp.RateDate
+                result(r, 12) = rp.MaturityTargetDate
+            End If
+            r = r + 1
+        Next tenor
+    Next d
+
+    r_dailyflow = result
+    Exit Function
+
+Fail:
+    r_dailyflow = CVErr(xlErrValue)
+End Function
+
+Private Sub LoadRatesFromRange(ByVal curve As Range)
+    Dim data As Variant, startRow As Long, i As Long, outIdx As Long
+    Dim cDate As Long, cON As Long, c1M As Long, c2M As Long, c3M As Long, c6M As Long
+    data = curve.Value2
+    If Not IsArray(data) Then Err.Raise vbObjectError + 100, , "Curve range must include date, ON, 1M, 2M, 3M, 6M columns."
+
+    If IsDateValue(data(1, 1)) Then
+        startRow = 1
+        cDate = 1: cON = 2: c1M = 3: c2M = 4: c3M = 5: c6M = 6
+    Else
+        startRow = 2
+        cDate = FindHeaderColumn(data, "date")
+        cON = FindHeaderColumn(data, "ON")
+        c1M = FindHeaderColumn(data, "1M")
+        c2M = FindHeaderColumn(data, "2M")
+        c3M = FindHeaderColumn(data, "3M")
+        c6M = FindHeaderColumn(data, "6M")
+    End If
+
+    UdfRateCount = UBound(data, 1) - startRow + 1
+    If UdfRateCount <= 0 Then Err.Raise vbObjectError + 101, , "Curve range has no rate rows."
+    ReDim UdfRates(1 To UdfRateCount)
+    outIdx = 0
+    For i = startRow To UBound(data, 1)
+        If Len(CStr(data(i, cDate))) > 0 Then
+            outIdx = outIdx + 1
+            UdfRates(outIdx).CurveDate = ToDate(data(i, cDate))
+            UdfRates(outIdx).ONRate = NormalizeRate(data(i, cON))
+            UdfRates(outIdx).M1Rate = NormalizeRate(data(i, c1M))
+            UdfRates(outIdx).M2Rate = NormalizeRate(data(i, c2M))
+            UdfRates(outIdx).M3Rate = NormalizeRate(data(i, c3M))
+            UdfRates(outIdx).M6Rate = NormalizeRate(data(i, c6M))
+        End If
+    Next i
+    UdfRateCount = outIdx
+    ReDim Preserve UdfRates(1 To UdfRateCount)
+    SortRatesByDate
+End Sub
+
+Private Function FindHeaderColumn(ByRef data As Variant, ByVal headerName As String) As Long
+    Dim j As Long
+    For j = 1 To UBound(data, 2)
+        If UCase$(Trim$(CStr(data(1, j)))) = UCase$(headerName) Then
+            FindHeaderColumn = j
+            Exit Function
+        End If
+    Next j
+    Err.Raise vbObjectError + 102, , "Missing curve column: " & headerName
+End Function
+
+Private Function IsDateValue(ByVal v As Variant) As Boolean
+    If IsDate(v) Then
+        IsDateValue = True
+    ElseIf IsNumeric(v) Then
+        IsDateValue = (CDbl(v) > 20000# And CDbl(v) < 80000#)
+    End If
+End Function
+
+Private Function ToDate(ByVal v As Variant) As Date
+    If IsDate(v) Then
+        ToDate = CDate(v)
+    Else
+        ToDate = DateSerial(1899, 12, 30) + CDbl(v)
+    End If
+End Function
+
+Private Function NormalizeRate(ByVal v As Variant) As Double
+    NormalizeRate = CDbl(v)
+    If Abs(NormalizeRate) > 1# Then NormalizeRate = NormalizeRate / 100#
+End Function
+
+Private Sub SortRatesByDate()
+    Dim i As Long, j As Long, tmp As RatePoint
+    For i = 1 To UdfRateCount - 1
+        For j = i + 1 To UdfRateCount
+            If UdfRates(j).CurveDate < UdfRates(i).CurveDate Then
+                tmp = UdfRates(i): UdfRates(i) = UdfRates(j): UdfRates(j) = tmp
+            End If
+        Next j
+    Next i
+End Sub
+
+Private Sub SimulateTenor(ByVal tenor As String, ByVal actualStartDate As Date, ByVal targetStartDate As Date, ByVal actualEndDate As Date, ByVal lastDate As Date, ByVal amount As Double, ByVal targetDay As Long)
+    Dim cash As Double, investStart As Date, rollNo As Long
+    Dim maturityTarget As Date, actualEnd As Date, rateDate As Date, rateUsed As Double
+    Dim targets As Collection, i As Long
+    cash = amount
+    investStart = actualStartDate
+    rollNo = 1
+
+    If tenor = "ON" Then
+        Do While investStart < actualEndDate
+            rateDate = PreviousCurveDate(investStart)
+            rateUsed = GetRateForTenor(rateDate, tenor)
+            actualEnd = NextCurveDate(investStart)
+            If actualEnd > actualEndDate Then actualEnd = actualEndDate
+            AddRoll tenor, rollNo, investStart, rateDate, actualEnd, actualEnd, rateUsed, cash
+            cash = UdfRolls(UdfRollCount).EndingCash
+            investStart = actualEnd
+            rollNo = rollNo + 1
+        Loop
+        Exit Sub
+    End If
+
+    Set targets = BuildTenorTargets(targetStartDate, lastDate, TenorMonths(tenor), targetDay)
+    For i = 2 To targets.Count
+        If investStart >= actualEndDate Then Exit For
+        maturityTarget = CDate(targets(i))
+        actualEnd = PreviousCurveDate(maturityTarget)
+        If actualEnd <= investStart Then actualEnd = NextCurveDate(investStart)
+        If actualEnd > actualEndDate Then actualEnd = actualEndDate
+        rateDate = PreviousCurveDate(investStart)
+        rateUsed = GetRateForTenor(rateDate, tenor)
+        AddRoll tenor, rollNo, investStart, rateDate, maturityTarget, actualEnd, rateUsed, cash
+        cash = UdfRolls(UdfRollCount).EndingCash
+        investStart = actualEnd
+        rollNo = rollNo + 1
+    Next i
+End Sub
+
+Private Sub AddRoll(ByVal tenor As String, ByVal rollNo As Long, ByVal startDate As Date, ByVal rateDate As Date, ByVal maturityTarget As Date, ByVal actualEnd As Date, ByVal rateUsed As Double, ByVal cash As Double)
+    Dim days As Long, interest As Double
+    UdfRollCount = UdfRollCount + 1
+    If UdfRollCount = 1 Then ReDim UdfRolls(1 To 1) Else ReDim Preserve UdfRolls(1 To UdfRollCount)
+    days = DateDiff("d", startDate, actualEnd)
+    interest = cash * rateUsed * days / 360#
+    With UdfRolls(UdfRollCount)
+        .Tenor = tenor
+        .RollNo = rollNo
+        .StartDate = startDate
+        .RateDate = rateDate
+        .MaturityTargetDate = maturityTarget
+        .ActualEndDate = actualEnd
+        .RateUsed = rateUsed
+        .AccrualDays = days
+        .StartingCash = cash
+        .InterestEarned = interest
+        .EndingCash = cash + interest
+    End With
+End Sub
+
+Private Function FindRollForCalendarDate(ByVal tenor As String, ByVal calendarDate As Date, ByRef outRoll As RollPoint, ByRef isInvested As Boolean, ByRef isRollingDate As Boolean) As Boolean
+    Dim i As Long, lastCompleted As Long
+    isInvested = False
+    isRollingDate = False
+    For i = 1 To UdfRollCount
+        If UdfRolls(i).Tenor = tenor And UdfRolls(i).StartDate = calendarDate Then
+            outRoll = UdfRolls(i)
+            isInvested = (calendarDate < UdfRolls(i).ActualEndDate)
+            isRollingDate = True
+            FindRollForCalendarDate = True
+            Exit Function
+        End If
+    Next i
+    For i = 1 To UdfRollCount
+        If UdfRolls(i).Tenor = tenor Then
+            If calendarDate >= UdfRolls(i).StartDate And calendarDate <= UdfRolls(i).ActualEndDate Then
+                outRoll = UdfRolls(i)
+                isInvested = (calendarDate < UdfRolls(i).ActualEndDate)
+                isRollingDate = (calendarDate = UdfRolls(i).StartDate)
+                FindRollForCalendarDate = True
+                Exit Function
+            End If
+            If UdfRolls(i).ActualEndDate < calendarDate Then lastCompleted = i
+        End If
+    Next i
+    If lastCompleted > 0 Then
+        outRoll = UdfRolls(lastCompleted)
+        FindRollForCalendarDate = True
+    End If
+End Function
+
+Private Function DailyInitialCash(ByVal rp As RollPoint, ByVal calendarDate As Date) As Double
+    If calendarDate > rp.ActualEndDate Then DailyInitialCash = rp.EndingCash Else DailyInitialCash = rp.StartingCash
+End Function
+
+Private Function DailyFinalCash(ByVal rp As RollPoint, ByVal calendarDate As Date) As Double
+    If calendarDate >= rp.ActualEndDate Then
+        DailyFinalCash = rp.EndingCash
+    Else
+        DailyFinalCash = rp.StartingCash + rp.StartingCash * rp.RateUsed * DateDiff("d", rp.StartDate, calendarDate) / 360#
+    End If
+End Function
+
+Private Function DailyInterestEarned(ByVal rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean) As Double
+    If calendarDate < rp.StartDate Then
+        DailyInterestEarned = 0#
+    ElseIf calendarDate >= rp.ActualEndDate Then
+        DailyInterestEarned = rp.InterestEarned
+    ElseIf isInvested Then
+        DailyInterestEarned = rp.StartingCash * rp.RateUsed * DateDiff("d", rp.StartDate, calendarDate) / 360#
+    Else
+        DailyInterestEarned = 0#
+    End If
+End Function
+
+Private Function DailyDecision(ByVal rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean, ByVal isRollingDate As Boolean) As String
+    If isRollingDate Then
+        DailyDecision = "Roll/start investment"
+    ElseIf calendarDate = rp.ActualEndDate Then
+        DailyDecision = "Maturity/cash available"
+    ElseIf isInvested Then
+        DailyDecision = "Hold existing investment"
+    Else
+        DailyDecision = "No active position"
+    End If
+End Function
+
+Private Function BuildTenorTargets(ByVal startTarget As Date, ByVal endTarget As Date, ByVal monthsStep As Long, ByVal targetDay As Long) As Collection
+    Dim reverseTargets As New Collection, currentDate As Date, i As Long
+    Set BuildTenorTargets = New Collection
+    currentDate = endTarget
+    Do While currentDate >= startTarget
+        reverseTargets.Add currentDate
+        currentDate = AddMonthsPreserveDay(currentDate, -monthsStep, targetDay)
+    Loop
+    For i = reverseTargets.Count To 1 Step -1
+        BuildTenorTargets.Add reverseTargets(i)
+    Next i
+End Function
+
+Private Function AddMonthsPreserveDay(ByVal sourceDate As Date, ByVal months As Long, ByVal targetDay As Long) As Date
+    Dim y As Long, m As Long, lastDay As Long
+    y = Year(sourceDate)
+    m = Month(sourceDate) + months
+    Do While m > 12
+        y = y + 1
+        m = m - 12
+    Loop
+    Do While m < 1
+        y = y - 1
+        m = m + 12
+    Loop
+    lastDay = Day(DateSerial(y, m + 1, 0))
+    AddMonthsPreserveDay = DateSerial(y, m, WorksheetFunction.Min(targetDay, lastDay))
+End Function
+
+Private Function PreviousCurveDate(ByVal targetDate As Date) As Date
+    Dim i As Long
+    For i = UdfRateCount To 1 Step -1
+        If UdfRates(i).CurveDate <= targetDate Then
+            PreviousCurveDate = UdfRates(i).CurveDate
+            Exit Function
+        End If
+    Next i
+    Err.Raise vbObjectError + 103, , "No curve date exists on or before " & Format$(targetDate, "yyyy-mm-dd")
+End Function
+
+Private Function NextCurveDate(ByVal targetDate As Date) As Date
+    Dim i As Long
+    For i = 1 To UdfRateCount
+        If UdfRates(i).CurveDate > targetDate Then
+            NextCurveDate = UdfRates(i).CurveDate
+            Exit Function
+        End If
+    Next i
+    NextCurveDate = UdfRates(UdfRateCount).CurveDate
+End Function
+
+Private Function GetRateForTenor(ByVal rateDate As Date, ByVal tenor As String) As Double
+    Dim i As Long
+    For i = 1 To UdfRateCount
+        If UdfRates(i).CurveDate = rateDate Then
+            Select Case tenor
+                Case "ON": GetRateForTenor = UdfRates(i).ONRate
+                Case "1M": GetRateForTenor = UdfRates(i).M1Rate
+                Case "2M": GetRateForTenor = UdfRates(i).M2Rate
+                Case "3M": GetRateForTenor = UdfRates(i).M3Rate
+                Case "6M": GetRateForTenor = UdfRates(i).M6Rate
+                Case Else: Err.Raise vbObjectError + 104, , "Unsupported tenor: " & tenor
+            End Select
+            Exit Function
+        End If
+    Next i
+    Err.Raise vbObjectError + 105, , "Rate date not found: " & Format$(rateDate, "yyyy-mm-dd")
+End Function
+
+Private Function TenorMonths(ByVal tenor As String) As Long
+    Select Case tenor
+        Case "1M": TenorMonths = 1
+        Case "2M": TenorMonths = 2
+        Case "3M": TenorMonths = 3
+        Case "6M": TenorMonths = 6
+        Case Else: TenorMonths = 0
+    End Select
+End Function
