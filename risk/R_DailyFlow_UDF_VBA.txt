@@ -7,23 +7,19 @@ Option Explicit
 ' Curve columns:
 '   Date | ON | 1M | 2M | 3M | 6M
 '
+' Rate convention:
+'   Rates are plain numbers such as 3.55, not 0.0355.
+'   Interest = Cash * Rate / 100 * Days / 360.
+'
 ' Roll convention:
-'   1. last_date is the exact common final maturity date.
-'   2. Fixed-tenor schedules are built backward from last_date.
-'   3. Actual roll date = latest curve date on or before the target.
-'   4. The lookback date is only a boundary, not an artificial roll.
-'   5. The first retained roll is the first scheduled roll on or after
-'      the requested lookback boundary.
-'   6. Roll flag is TRUE only on an actual investment/reinvestment date.
-'   7. The final maturity date is not flagged as a new roll.
-'   8. ON rolls on each actual curve date before final maturity.
-'
-' Output:
-'   One row per calendar day. Each tenor is shown in its own five columns:
-'   Rate | Maturity | Interest Earned | Value | Roll
-'
-' Rates may be stored as 3.55 or 3.55%.
-' Rates are normalized to decimal form internally.
+'   - last_date must exist exactly in the curve.
+'   - Fixed-tenor schedules are built backward from last_date.
+'   - Actual roll date is the latest curve date on or before the target.
+'   - The lookback date is only a boundary.
+'   - A roll date uses the rate from that same curve date.
+'   - Roll is TRUE on the opening/reinvestment date only.
+'   - Final maturity is not a new roll.
+'   - ON rolls on every actual curve date before final maturity.
 
 Private Type RatePoint
     CurveDate As Date
@@ -37,15 +33,11 @@ End Type
 Private UdfRates() As RatePoint
 Private UdfRateCount As Long
 
-' Schedule array columns.
 Private Const S_START As Long = 1
 Private Const S_MATURITY As Long = 2
-Private Const S_TARGET As Long = 3
-Private Const S_RATE_DATE As Long = 4
-Private Const S_RATE As Long = 5
-Private Const S_START_CASH As Long = 6
-Private Const S_END_CASH As Long = 7
-Private Const S_ROLL_NO As Long = 8
+Private Const S_RATE As Long = 3
+Private Const S_START_CASH As Long = 4
+Private Const S_END_CASH As Long = 5
 
 Public Function r_dailyflow( _
     ByVal last_date As Variant, _
@@ -58,12 +50,11 @@ Public Function r_dailyflow( _
     Dim analysisEnd As Date
     Dim requestedStart As Date
     Dim analysisStart As Date
-    Dim targetDay As Long
     Dim lookbackMonths As Long
-    Dim totalDays As Long
-    Dim result() As Variant
     Dim schedules(1 To 5) As Variant
     Dim tenorNames(1 To 5) As String
+    Dim result() As Variant
+    Dim totalDays As Long
     Dim d As Date
     Dim dayRow As Long
     Dim tenorIndex As Long
@@ -87,15 +78,14 @@ Public Function r_dailyflow( _
 
     analysisEnd = ToDate(last_date)
 
-    If Not IsExactCurveDate(analysisEnd) Then
+    If CurveIndex(analysisEnd) = 0 Then
         Err.Raise vbObjectError + 4, , _
             "The analysis date must exist exactly in the curve: " & _
             Format$(analysisEnd, "yyyy-mm-dd")
     End If
 
-    targetDay = Day(analysisEnd)
     lookbackMonths = CLng(Round(years * 12#, 0))
-    requestedStart = AddMonthsPreserveDay(analysisEnd, -lookbackMonths, targetDay)
+    requestedStart = DateAdd("m", -lookbackMonths, analysisEnd)
 
     tenorNames(1) = "ON"
     tenorNames(2) = "1M"
@@ -104,16 +94,15 @@ Public Function r_dailyflow( _
     tenorNames(5) = "6M"
 
     schedules(1) = BuildONSchedule(requestedStart, analysisEnd, amount)
-    schedules(2) = BuildFixedSchedule(requestedStart, analysisEnd, 1, "1M", amount, targetDay)
-    schedules(3) = BuildFixedSchedule(requestedStart, analysisEnd, 2, "2M", amount, targetDay)
-    schedules(4) = BuildFixedSchedule(requestedStart, analysisEnd, 3, "3M", amount, targetDay)
-    schedules(5) = BuildFixedSchedule(requestedStart, analysisEnd, 6, "6M", amount, targetDay)
+    schedules(2) = BuildFixedSchedule(requestedStart, analysisEnd, 1, "1M", amount)
+    schedules(3) = BuildFixedSchedule(requestedStart, analysisEnd, 2, "2M", amount)
+    schedules(4) = BuildFixedSchedule(requestedStart, analysisEnd, 3, "3M", amount)
+    schedules(5) = BuildFixedSchedule(requestedStart, analysisEnd, 6, "6M", amount)
 
     analysisStart = EarliestScheduleStart(schedules)
 
     If analysisStart = 0 Then
-        Err.Raise vbObjectError + 5, , _
-            "No valid roll schedule exists inside the requested period."
+        Err.Raise vbObjectError + 5, , "No valid schedule exists in the requested period."
     End If
 
     totalDays = DateDiff("d", analysisStart, analysisEnd) + 1
@@ -174,13 +163,7 @@ Private Sub LoadRatesFromRange(ByVal curve As Range)
     Dim lastRow As Long
     Dim startRow As Long
     Dim i As Long
-    Dim outIdx As Long
-    Dim dateCol As Long
-    Dim onCol As Long
-    Dim m1Col As Long
-    Dim m2Col As Long
-    Dim m3Col As Long
-    Dim m6Col As Long
+    Dim n As Long
 
     If curve.Columns.Count < 6 Then
         Err.Raise vbObjectError + 10, , _
@@ -199,41 +182,29 @@ Private Sub LoadRatesFromRange(ByVal curve As Range)
 
     If IsDateValue(data(1, 1)) Then
         startRow = 1
-        dateCol = 1
-        onCol = 2
-        m1Col = 3
-        m2Col = 4
-        m3Col = 5
-        m6Col = 6
     Else
         startRow = 2
-        dateCol = FindHeaderColumn(data, "date")
-        onCol = FindHeaderColumn(data, "ON")
-        m1Col = FindHeaderColumn(data, "1M")
-        m2Col = FindHeaderColumn(data, "2M")
-        m3Col = FindHeaderColumn(data, "3M")
-        m6Col = FindHeaderColumn(data, "6M")
     End If
 
     ReDim UdfRates(1 To UBound(data, 1) - startRow + 1)
-    outIdx = 0
+    n = 0
 
     For i = startRow To UBound(data, 1)
-        If Len(Trim$(CStr(data(i, dateCol)))) > 0 Then
-            outIdx = outIdx + 1
-            UdfRates(outIdx).CurveDate = ToDate(data(i, dateCol))
-            UdfRates(outIdx).ONRate = NormalizeRate(data(i, onCol))
-            UdfRates(outIdx).M1Rate = NormalizeRate(data(i, m1Col))
-            UdfRates(outIdx).M2Rate = NormalizeRate(data(i, m2Col))
-            UdfRates(outIdx).M3Rate = NormalizeRate(data(i, m3Col))
-            UdfRates(outIdx).M6Rate = NormalizeRate(data(i, m6Col))
+        If Len(Trim$(CStr(data(i, 1)))) > 0 Then
+            n = n + 1
+            UdfRates(n).CurveDate = ToDate(data(i, 1))
+            UdfRates(n).ONRate = ReadRate(data(i, 2))
+            UdfRates(n).M1Rate = ReadRate(data(i, 3))
+            UdfRates(n).M2Rate = ReadRate(data(i, 4))
+            UdfRates(n).M3Rate = ReadRate(data(i, 5))
+            UdfRates(n).M6Rate = ReadRate(data(i, 6))
         End If
     Next i
 
-    UdfRateCount = outIdx
+    UdfRateCount = n
 
     If UdfRateCount = 0 Then
-        Err.Raise vbObjectError + 11, , "Curve contains no valid rate rows."
+        Err.Raise vbObjectError + 11, , "Curve contains no valid rows."
     End If
 
     ReDim Preserve UdfRates(1 To UdfRateCount)
@@ -248,13 +219,13 @@ Private Function BuildONSchedule( _
     Dim firstIndex As Long
     Dim lastIndex As Long
     Dim count As Long
+    Dim schedule() As Variant
     Dim i As Long
     Dim rowNo As Long
     Dim startDate As Date
-    Dim endDate As Date
-    Dim rateUsed As Double
+    Dim maturityDate As Date
     Dim cash As Double
-    Dim temp() As Variant
+    Dim rateUsed As Double
 
     firstIndex = FirstCurveIndexOnOrAfter(requestedStart)
     lastIndex = CurveIndex(analysisEnd)
@@ -265,7 +236,7 @@ Private Function BuildONSchedule( _
     End If
 
     count = lastIndex - firstIndex
-    ReDim temp(1 To count, 1 To 8)
+    ReDim schedule(1 To count, 1 To 5)
 
     cash = amount
     rowNo = 0
@@ -273,23 +244,21 @@ Private Function BuildONSchedule( _
     For i = firstIndex To lastIndex - 1
         rowNo = rowNo + 1
         startDate = UdfRates(i).CurveDate
-        endDate = UdfRates(i + 1).CurveDate
+        maturityDate = UdfRates(i + 1).CurveDate
         rateUsed = UdfRates(i).ONRate
 
-        temp(rowNo, S_START) = startDate
-        temp(rowNo, S_MATURITY) = endDate
-        temp(rowNo, S_TARGET) = endDate
-        temp(rowNo, S_RATE_DATE) = startDate
-        temp(rowNo, S_RATE) = rateUsed
-        temp(rowNo, S_START_CASH) = cash
-        temp(rowNo, S_END_CASH) = cash + _
-            cash * rateUsed * DateDiff("d", startDate, endDate) / 360#
-        temp(rowNo, S_ROLL_NO) = rowNo
+        schedule(rowNo, S_START) = startDate
+        schedule(rowNo, S_MATURITY) = maturityDate
+        schedule(rowNo, S_RATE) = rateUsed
+        schedule(rowNo, S_START_CASH) = cash
+        schedule(rowNo, S_END_CASH) = cash + _
+            cash * rateUsed / 100# * _
+            DateDiff("d", startDate, maturityDate) / 360#
 
-        cash = temp(rowNo, S_END_CASH)
+        cash = schedule(rowNo, S_END_CASH)
     Next i
 
-    BuildONSchedule = temp
+    BuildONSchedule = schedule
 End Function
 
 Private Function BuildFixedSchedule( _
@@ -297,39 +266,34 @@ Private Function BuildFixedSchedule( _
     ByVal analysisEnd As Date, _
     ByVal monthsStep As Long, _
     ByVal tenor As String, _
-    ByVal amount As Double, _
-    ByVal targetDay As Long) As Variant
+    ByVal amount As Double) As Variant
 
     Const MAX_ROLLS As Long = 2000
 
     Dim backwardDates(1 To MAX_ROLLS) As Date
-    Dim backwardTargets(1 To MAX_ROLLS) As Date
-    Dim retainedDates() As Date
-    Dim retainedTargets() As Date
-    Dim schedule() As Variant
     Dim currentMaturity As Date
     Dim targetRoll As Date
     Dim actualRoll As Date
     Dim count As Long
     Dim keepCount As Long
+    Dim retainedDates() As Date
+    Dim schedule() As Variant
     Dim i As Long
-    Dim cash As Double
     Dim maturityDate As Date
-    Dim targetMaturity As Date
+    Dim cash As Double
     Dim rateUsed As Double
 
     currentMaturity = analysisEnd
     count = 0
 
     Do
-        targetRoll = AddMonthsPreserveDay(currentMaturity, -monthsStep, targetDay)
+        targetRoll = DateAdd("m", -monthsStep, currentMaturity)
         actualRoll = PreviousCurveDate(targetRoll)
 
         If actualRoll >= currentMaturity Then Exit Do
 
         count = count + 1
         backwardDates(count) = actualRoll
-        backwardTargets(count) = currentMaturity
         currentMaturity = actualRoll
 
         If actualRoll < requestedStart Then Exit Do
@@ -342,9 +306,7 @@ Private Function BuildFixedSchedule( _
         If backwardDates(i) >= requestedStart Then
             keepCount = keepCount + 1
             ReDim Preserve retainedDates(1 To keepCount)
-            ReDim Preserve retainedTargets(1 To keepCount)
             retainedDates(keepCount) = backwardDates(i)
-            retainedTargets(keepCount) = backwardTargets(i)
         End If
     Next i
 
@@ -353,7 +315,7 @@ Private Function BuildFixedSchedule( _
         Exit Function
     End If
 
-    ReDim schedule(1 To keepCount, 1 To 8)
+    ReDim schedule(1 To keepCount, 1 To 5)
     cash = amount
 
     For i = 1 To keepCount
@@ -363,18 +325,15 @@ Private Function BuildFixedSchedule( _
             maturityDate = analysisEnd
         End If
 
-        targetMaturity = retainedTargets(i)
         rateUsed = GetRateForTenor(retainedDates(i), tenor)
 
         schedule(i, S_START) = retainedDates(i)
         schedule(i, S_MATURITY) = maturityDate
-        schedule(i, S_TARGET) = targetMaturity
-        schedule(i, S_RATE_DATE) = retainedDates(i)
         schedule(i, S_RATE) = rateUsed
         schedule(i, S_START_CASH) = cash
         schedule(i, S_END_CASH) = cash + _
-            cash * rateUsed * DateDiff("d", retainedDates(i), maturityDate) / 360#
-        schedule(i, S_ROLL_NO) = i
+            cash * rateUsed / 100# * _
+            DateDiff("d", retainedDates(i), maturityDate) / 360#
 
         cash = schedule(i, S_END_CASH)
     Next i
@@ -388,23 +347,41 @@ Private Function FindScheduleRow( _
     ByRef isRoll As Boolean) As Long
 
     Dim i As Long
+    Dim firstRow As Long
+    Dim lastRow As Long
 
     FindScheduleRow = 0
     isRoll = False
 
     If IsEmpty(schedule) Then Exit Function
 
-    For i = LBound(schedule, 1) To UBound(schedule, 1)
-        If calendarDate >= CDate(schedule(i, S_START)) And _
-           calendarDate <= CDate(schedule(i, S_MATURITY)) Then
+    firstRow = LBound(schedule, 1)
+    lastRow = UBound(schedule, 1)
 
-            isRoll = (calendarDate = CDate(schedule(i, S_START)) And _
-                      calendarDate < CDate(schedule(i, S_MATURITY)))
+    'First give priority to an exact new roll date.
+    'This prevents the preceding position from supplying yesterday's rate.
+    For i = firstRow To lastRow
+        If calendarDate = CDate(schedule(i, S_START)) Then
+            FindScheduleRow = i
+            isRoll = (calendarDate < CDate(schedule(i, S_MATURITY)))
+            Exit Function
+        End If
+    Next i
 
+    'Between roll dates, keep the rate fixed from the current position.
+    For i = firstRow To lastRow
+        If calendarDate > CDate(schedule(i, S_START)) And _
+           calendarDate < CDate(schedule(i, S_MATURITY)) Then
             FindScheduleRow = i
             Exit Function
         End If
     Next i
+
+    'The common final date is maturity only, not a new roll.
+    If calendarDate = CDate(schedule(lastRow, S_MATURITY)) Then
+        FindScheduleRow = lastRow
+        isRoll = False
+    End If
 End Function
 
 Private Function PositionInterest( _
@@ -431,7 +408,7 @@ Private Function PositionInterest( _
     accrualEnd = calendarDate
     If accrualEnd > maturityDate Then accrualEnd = maturityDate
 
-    PositionInterest = startCash * rateUsed * _
+    PositionInterest = startCash * rateUsed / 100# * _
         DateDiff("d", startDate, accrualEnd) / 360#
 End Function
 
@@ -487,17 +464,51 @@ Private Function CurveIndex(ByVal targetDate As Date) As Long
     Next i
 End Function
 
-Private Function FindHeaderColumn(ByRef data As Variant, ByVal headerName As String) As Long
-    Dim j As Long
+Private Function PreviousCurveDate(ByVal targetDate As Date) As Date
+    Dim i As Long
 
-    For j = 1 To UBound(data, 2)
-        If UCase$(Trim$(CStr(data(1, j)))) = UCase$(headerName) Then
-            FindHeaderColumn = j
+    For i = UdfRateCount To 1 Step -1
+        If UdfRates(i).CurveDate <= targetDate Then
+            PreviousCurveDate = UdfRates(i).CurveDate
             Exit Function
         End If
-    Next j
+    Next i
 
-    Err.Raise vbObjectError + 20, , "Missing curve column: " & headerName
+    Err.Raise vbObjectError + 20, , _
+        "No curve date exists on or before " & Format$(targetDate, "yyyy-mm-dd")
+End Function
+
+Private Function GetRateForTenor( _
+    ByVal rateDate As Date, _
+    ByVal tenor As String) As Double
+
+    Dim i As Long
+
+    i = CurveIndex(rateDate)
+
+    If i = 0 Then
+        Err.Raise vbObjectError + 21, , _
+            "Rate date not found: " & Format$(rateDate, "yyyy-mm-dd")
+    End If
+
+    Select Case tenor
+        Case "ON": GetRateForTenor = UdfRates(i).ONRate
+        Case "1M": GetRateForTenor = UdfRates(i).M1Rate
+        Case "2M": GetRateForTenor = UdfRates(i).M2Rate
+        Case "3M": GetRateForTenor = UdfRates(i).M3Rate
+        Case "6M": GetRateForTenor = UdfRates(i).M6Rate
+        Case Else
+            Err.Raise vbObjectError + 22, , "Unsupported tenor: " & tenor
+    End Select
+End Function
+
+Private Function ReadRate(ByVal v As Variant) As Double
+    If IsError(v) Or IsEmpty(v) Or Not IsNumeric(v) Then
+        Err.Raise vbObjectError + 23, , _
+            "Curve contains a blank or nonnumeric rate."
+    End If
+
+    ReadRate = CDbl(v)
 End Function
 
 Private Function IsDateValue(ByVal v As Variant) As Boolean
@@ -516,19 +527,6 @@ Private Function ToDate(ByVal v As Variant) As Date
     End If
 End Function
 
-Private Function NormalizeRate(ByVal v As Variant) As Double
-    If IsError(v) Or IsEmpty(v) Or Not IsNumeric(v) Then
-        Err.Raise vbObjectError + 21, , _
-            "Curve contains a blank or nonnumeric rate."
-    End If
-
-    NormalizeRate = CDbl(v)
-
-    If Abs(NormalizeRate) > 1# Then
-        NormalizeRate = NormalizeRate / 100#
-    End If
-End Function
-
 Private Sub SortRatesByDate()
     Dim i As Long
     Dim j As Long
@@ -544,76 +542,3 @@ Private Sub SortRatesByDate()
         Next j
     Next i
 End Sub
-
-Private Function IsExactCurveDate(ByVal targetDate As Date) As Boolean
-    IsExactCurveDate = (CurveIndex(targetDate) > 0)
-End Function
-
-Private Function PreviousCurveDate(ByVal targetDate As Date) As Date
-    Dim i As Long
-
-    For i = UdfRateCount To 1 Step -1
-        If UdfRates(i).CurveDate <= targetDate Then
-            PreviousCurveDate = UdfRates(i).CurveDate
-            Exit Function
-        End If
-    Next i
-
-    Err.Raise vbObjectError + 22, , _
-        "No curve date exists on or before " & Format$(targetDate, "yyyy-mm-dd")
-End Function
-
-Private Function GetRateForTenor( _
-    ByVal rateDate As Date, _
-    ByVal tenor As String) As Double
-
-    Dim i As Long
-
-    i = CurveIndex(rateDate)
-
-    If i = 0 Then
-        Err.Raise vbObjectError + 23, , _
-            "Rate date not found: " & Format$(rateDate, "yyyy-mm-dd")
-    End If
-
-    Select Case tenor
-        Case "ON": GetRateForTenor = UdfRates(i).ONRate
-        Case "1M": GetRateForTenor = UdfRates(i).M1Rate
-        Case "2M": GetRateForTenor = UdfRates(i).M2Rate
-        Case "3M": GetRateForTenor = UdfRates(i).M3Rate
-        Case "6M": GetRateForTenor = UdfRates(i).M6Rate
-        Case Else
-            Err.Raise vbObjectError + 24, , "Unsupported tenor: " & tenor
-    End Select
-End Function
-
-Private Function AddMonthsPreserveDay( _
-    ByVal sourceDate As Date, _
-    ByVal months As Long, _
-    ByVal targetDay As Long) As Date
-
-    Dim y As Long
-    Dim m As Long
-    Dim lastDay As Long
-
-    y = Year(sourceDate)
-    m = Month(sourceDate) + months
-
-    Do While m > 12
-        y = y + 1
-        m = m - 12
-    Loop
-
-    Do While m < 1
-        y = y - 1
-        m = m + 12
-    Loop
-
-    lastDay = Day(DateSerial(y, m + 1, 0))
-
-    If targetDay > lastDay Then
-        AddMonthsPreserveDay = DateSerial(y, m, lastDay)
-    Else
-        AddMonthsPreserveDay = DateSerial(y, m, targetDay)
-    End If
-End Function
