@@ -281,11 +281,11 @@ Private Function FindRollForCalendarDate(ByVal tenor As String, ByVal calendarDa
     End If
 End Function
 
-Private Function DailyInitialCash(ByVal rp As RollPoint, ByVal calendarDate As Date) As Double
+Private Function DailyInitialCash(ByRef rp As RollPoint, ByVal calendarDate As Date) As Double
     If calendarDate > rp.ActualEndDate Then DailyInitialCash = rp.EndingCash Else DailyInitialCash = rp.StartingCash
 End Function
 
-Private Function DailyFinalCash(ByVal rp As RollPoint, ByVal calendarDate As Date) As Double
+Private Function DailyFinalCash(ByRef rp As RollPoint, ByVal calendarDate As Date) As Double
     If calendarDate >= rp.ActualEndDate Then
         DailyFinalCash = rp.EndingCash
     Else
@@ -293,7 +293,7 @@ Private Function DailyFinalCash(ByVal rp As RollPoint, ByVal calendarDate As Dat
     End If
 End Function
 
-Private Function DailyInterestEarned(ByVal rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean) As Double
+Private Function DailyInterestEarned(ByRef rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean) As Double
     If calendarDate < rp.StartDate Then
         DailyInterestEarned = 0#
     ElseIf calendarDate >= rp.ActualEndDate Then
@@ -305,7 +305,7 @@ Private Function DailyInterestEarned(ByVal rp As RollPoint, ByVal calendarDate A
     End If
 End Function
 
-Private Function DailyDecision(ByVal rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean, ByVal isRollingDate As Boolean) As String
+Private Function DailyDecision(ByRef rp As RollPoint, ByVal calendarDate As Date, ByVal isInvested As Boolean, ByVal isRollingDate As Boolean) As String
     If isRollingDate Then
         DailyDecision = "Roll/start investment"
     ElseIf calendarDate = rp.ActualEndDate Then
