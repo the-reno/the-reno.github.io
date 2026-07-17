@@ -111,21 +111,21 @@ End Function
 
 Private Sub LoadRatesFromRange(ByVal curve As Range)
     Dim data As Variant, startRow As Long, i As Long, outIdx As Long
-    Dim cDate As Long, cON As Long, c1M As Long, c2M As Long, c3M As Long, c6M As Long
+    Dim dateCol As Long, onCol As Long, m1Col As Long, m2Col As Long, m3Col As Long, m6Col As Long
     data = curve.Value2
     If Not IsArray(data) Then Err.Raise vbObjectError + 100, , "Curve range must include date, ON, 1M, 2M, 3M, 6M columns."
 
     If IsDateValue(data(1, 1)) Then
         startRow = 1
-        cDate = 1: cON = 2: c1M = 3: c2M = 4: c3M = 5: c6M = 6
+        dateCol = 1: onCol = 2: m1Col = 3: m2Col = 4: m3Col = 5: m6Col = 6
     Else
         startRow = 2
-        cDate = FindHeaderColumn(data, "date")
-        cON = FindHeaderColumn(data, "ON")
-        c1M = FindHeaderColumn(data, "1M")
-        c2M = FindHeaderColumn(data, "2M")
-        c3M = FindHeaderColumn(data, "3M")
-        c6M = FindHeaderColumn(data, "6M")
+        dateCol = FindHeaderColumn(data, "date")
+        onCol = FindHeaderColumn(data, "ON")
+        m1Col = FindHeaderColumn(data, "1M")
+        m2Col = FindHeaderColumn(data, "2M")
+        m3Col = FindHeaderColumn(data, "3M")
+        m6Col = FindHeaderColumn(data, "6M")
     End If
 
     UdfRateCount = UBound(data, 1) - startRow + 1
@@ -133,14 +133,14 @@ Private Sub LoadRatesFromRange(ByVal curve As Range)
     ReDim UdfRates(1 To UdfRateCount)
     outIdx = 0
     For i = startRow To UBound(data, 1)
-        If Len(CStr(data(i, cDate))) > 0 Then
+        If Len(CStr(data(i, dateCol))) > 0 Then
             outIdx = outIdx + 1
-            UdfRates(outIdx).CurveDate = ToDate(data(i, cDate))
-            UdfRates(outIdx).ONRate = NormalizeRate(data(i, cON))
-            UdfRates(outIdx).M1Rate = NormalizeRate(data(i, c1M))
-            UdfRates(outIdx).M2Rate = NormalizeRate(data(i, c2M))
-            UdfRates(outIdx).M3Rate = NormalizeRate(data(i, c3M))
-            UdfRates(outIdx).M6Rate = NormalizeRate(data(i, c6M))
+            UdfRates(outIdx).CurveDate = ToDate(data(i, dateCol))
+            UdfRates(outIdx).ONRate = NormalizeRate(data(i, onCol))
+            UdfRates(outIdx).M1Rate = NormalizeRate(data(i, m1Col))
+            UdfRates(outIdx).M2Rate = NormalizeRate(data(i, m2Col))
+            UdfRates(outIdx).M3Rate = NormalizeRate(data(i, m3Col))
+            UdfRates(outIdx).M6Rate = NormalizeRate(data(i, m6Col))
         End If
     Next i
     UdfRateCount = outIdx
