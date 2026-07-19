@@ -31,7 +31,7 @@
   <header class="top"><a href="/">ronu.one</a><span>temporary frame · then / now</span></header>
   <section class="frame" id="frame" aria-label="A visual transition from an earlier football-field memory to a present-day reflective view">
     <img class="layer young" id="young" alt="Earlier memory: friends watching a football game at night">
-    <img class="layer present" id="present" alt="Present reflection: an anonymous figure looking toward the Manhattan skyline">
+    <img class="layer present" id="present" alt="Present reflection: an anonymous figure looking toward the Manhattan skyline" src="/assets/present-reflection.webp">
     <div class="grain"></div>
   </section>
   <footer class="footer"><span>move · scroll · tap</span><div class="meter"><span></span></div></footer>
@@ -39,7 +39,6 @@
 <script>
   const frame=document.getElementById('frame');
   const young=document.getElementById('young');
-  const present=document.getElementById('present');
   let mix=0,target=0,auto=true,direction=1;
 
   fetch('/').then(r=>r.text()).then(html=>{
@@ -47,13 +46,6 @@
     const source=doc.querySelector('.maker-artifact img');
     if(source?.src) young.src=source.src;
   }).catch(()=>{});
-
-  fetch('https://raw.githubusercontent.com/the-reno/the-reno.github.io/0bdcf1a85ccdf125f3c89e0092d1cc2007ad1189/docs/memory-transition.html')
-    .then(r=>r.text()).then(html=>{
-      const doc=new DOMParser().parseFromString(html,'text/html');
-      const source=doc.querySelector('.present');
-      if(source?.src) present.src=source.src;
-    }).catch(()=>{});
 
   const setTarget=v=>{auto=false;target=Math.max(0,Math.min(1,v))};
   frame.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){const r=frame.getBoundingClientRect();setTarget((e.clientX-r.left)/r.width)}});
