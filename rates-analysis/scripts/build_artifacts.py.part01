@@ -1,0 +1,164 @@
+from __future__ import annotations
+
+import base64
+import gzip
+import math
+import shutil
+import zipfile
+from bisect import bisect_right
+from calendar import monthrange
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from statistics import stdev
+
+import matplotlib.pyplot as plt
+from openpyxl import Workbook
+from openpyxl.chart import BarChart, LineChart, Reference, ScatterChart, Series
+from openpyxl.styles import Alignment, Font, PatternFill
+
+ROOT = Path(__file__).resolve().parent.parent
+SOURCE = ROOT / "source"
+OUT = ROOT
+TENORS = ["ON", "1M", "2M", "3M", "6M"]
+MONTHS = {"ON": 0, "1M": 1, "2M": 2, "3M": 3, "6M": 6}
+NOTIONAL = 100_000_000.0
+START = date(2023, 1, 31)
+END = date(2025, 12, 31)
+NAVY = "123B5D"
+BLUE = "2F75B5"
+PALE = "EAF1F6"
+WHITE = "FFFFFF"
+
+
+def reconstruct_vba() -> Path:
+    parts = sorted(SOURCE.glob("Rates_Analysis_Final.bas.gz.b64.part*"))
+    if not parts:
+        raise RuntimeError("VBA source parts were not found")
+    encoded = "".join(part.read_text(encoding="ascii").strip() for part in parts)
+    raw = gzip.decompress(base64.b64decode(encoded))
+    target = OUT / "Rates_Analysis_Final.bas"
+    target.write_bytes(raw)
+    return target
+
+
+def build_curve() -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    current = date(2023, 1, 2)
+    business_row = 0
+    while current <= END:
+        if current.weekday() < 5:
+            business_row += 1
+            x = business_row / 252.0
+            on = 4.15 + 0.85 * math.sin(x * 2.2) + 0.35 * math.cos(x * 0.75)
+            slope = 0.06 + 0.24 * math.sin(x * 1.35) - 0.08 * math.cos(x * 0.55)
+            rows.append({
+                "Date": current,
+                "ON": round(on, 4),
+                "1M": round(on + slope * 0.25, 4),
+                "2M": round(on + slope * 0.45, 4),
+                "3M": round(on + slope * 0.65, 4),
+                "6M": round(on + slope, 4),
+            })
+        current += timedelta(days=1)
+    return rows
+
+
+def month_end(value: date) -> bool:
+    return value.day == monthrange(value.year, value.month)[1]
+
+
+def add_months(anchor: date, months: int) -> date:
+    total = anchor.year * 12 + anchor.month - 1 + months
+    year, month0 = divmod(total, 12)
+    month = month0 + 1
+    last = monthrange(year, month)[1]
+    day = last if month_end(anchor) else min(anchor.day, last)
+    return date(year, month, day)
+
+
+def simulate(curve: list[dict[str, object]]) -> tuple[list[dict[str, object]], dict[str, list[dict[str, object]]], list[dict[str, object]]]:
+    dates = [row["Date"] for row in curve]
+
+    def latest_index(target: date) -> int:
+        idx = bisect_right(dates, target) - 1
+        if idx < 0:
+            raise ValueError(f"No curve date on or before {target}")
+        return idx
+
+    def next_date(target: date) -> date | None:
+        idx = bisect_right(dates, target)
+        return dates[idx] if idx < len(dates) else None
+
+    effective_start = dates[latest_index(START)]
+    transactions: list[dict[str, object]] = []
+    daily_by_tenor: dict[str, list[dict[str, object]]] = {}
+
+    for tenor in TENORS:
+        daily: list[dict[str, object]] = []
+        principal = NOTIONAL
+        actual_start = effective_start
+        tx_id = 1
+
+        while actual_start <= END:
+            rate_row = curve[latest_index(actual_start)]
+            rate = float(rate_row[tenor])
+            if tenor == "ON":
+                target_roll = actual_start + timedelta(days=1)
+                actual_roll = next_date(actual_start)
+            else:
+                target_roll = add_months(START, tx_id * MONTHS[tenor])
+                actual_roll = dates[latest_index(target_roll)] if target_roll <= dates[-1] else None
+            if actual_roll is not None and actual_roll <= actual_start:
+                raise ValueError(f"Invalid roll for {tenor} at {actual_start}")
+
+            completed = actual_roll is not None and actual_roll <= END
+            contract_end = actual_roll or target_roll
+            days = max((contract_end - actual_start).days, 0)
+            daily_interest = principal * rate / 100.0 / 360.0
+            full_interest = daily_interest * days
+            transactions.append({
+                "Tenor": tenor,
+                "Transaction ID": tx_id,
+                "Start": actual_start,
+                "Target Roll": target_roll,
+                "Actual Roll": actual_roll,
+                "Rate (%)": rate,
+                "Days": days,
+                "Opening Notional": principal,
+                "Period Interest": full_interest,
+                "Closing Notional": principal + full_interest,
+                "Status": "COMPLETED" if completed else "OPEN AT ANALYSIS END",
+            })
+
+            accrual_end = min(END, actual_roll - timedelta(days=1)) if actual_roll else END
+            current = actual_start
+            while current <= accrual_end:
+                accrued_days = (current - actual_start).days + 1
+                daily.append({
+                    "Date": current,
+                    "Transaction ID": tx_id,
+                    "Rate (%)": rate,
+                    "Opening Notional": principal,
+                    "Daily Interest": daily_interest,
+                    "Accrued Interest": daily_interest * accrued_days,
+                    "Economic Balance": principal + daily_interest * accrued_days,
+                    "Roll Date": actual_roll,
+                })
+                current += timedelta(days=1)
+
+            if not completed:
+                break
+            principal += full_interest
+            actual_start = actual_roll
+            tx_id += 1
+
+        daily_by_tenor[tenor] = daily
+
+    performance: list[dict[str, object]] = []
+    number_days = (END - effective_start).days + 1
+    for tenor in TENORS:
+        ending = float(daily_by_tenor[tenor][-1]["Economic Balance"])
+        performance.append({
+            "Tenor": tenor,
+            "Ending Value": ending,
+            "Total Interest": ending - NOTIONAL,
