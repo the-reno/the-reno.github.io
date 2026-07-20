@@ -1,0 +1,47 @@
+name: Fix Maker image
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-maker-image.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore embedded Manhattan image and remove image link
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64, re, subprocess
+
+          old = subprocess.check_output([
+              'git','show','0bdcf1a85ccdf125f3c89e0092d1cc2007ad1189:docs/memory-transition.html'
+          ], text=True)
+          m = re.search(r'<img class="layer present"[^>]*src="data:image/webp;base64,([^"]+)"', old)
+          if not m:
+              raise SystemExit('Embedded present image not found in historical page')
+
+          asset = Path('docs/assets/present-reflection.webp')
+          asset.parent.mkdir(parents=True, exist_ok=True)
+          asset.write_bytes(base64.b64decode(m.group(1)))
+
+          index = Path('docs/index.html')
+          html = index.read_text()
+          html = html.replace("<div class=\"card maker-card\" onclick=\"location.href='/Maker/'\">", "<div class=\"card maker-card\">")
+          html = html.replace("<div class=\"card maker-card\" onclick=\"location.href=\'/Maker/\'\">", "<div class=\"card maker-card\">")
+          index.write_text(html)
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html docs/assets/present-reflection.webp
+          git commit -m "Fix Maker Manhattan image and remove image link" || exit 0
+          git push
