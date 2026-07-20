@@ -1,4 +1,4 @@
-# Historical Cash Investment Analysis
+# Historical Cash Investment Analysis — Version 2
 
 Public Excel/VBA model for corporate cash-investment analysis across ON, 1M, 2M, 3M and 6M tenors.
 
