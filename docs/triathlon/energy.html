@@ -6,95 +6,205 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
 <link rel="privacy-policy" href="/privacy/" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Energy · Triathlon</title>
+<meta name="description" content="How molecular reactions, sensory feedback, and system stress become endurance." />
+<title>From Chaos to Motion · Triathlon</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a0a;--panel:#111;--line:#242424;--text:#777;--soft:#aaa;--bright:#efefef;--gold:#c69257;--blue:#7fa4c2;--green:#86a879}
+:root{--bg:#0a0a0a;--panel:#111;--line:#242424;--text:#787878;--soft:#aaa;--bright:#efefef;--gold:#c69257;--blue:#7898b2;--green:#829b77;--red:#a87369}
+html{scroll-behavior:smooth}
 body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;align-items:flex-start;justify-content:center;padding:2rem}
-.page{max-width:760px;width:100%;border:1px solid #1f1f1f;border-radius:10px;background:var(--panel);padding:3rem 2.75rem}
-.kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:1.25rem}
-h1{font-family:'Instrument Serif',serif;font-size:3.6rem;font-weight:400;color:var(--bright);line-height:1;letter-spacing:-.02em;margin-bottom:1.6rem}
-h2{font-family:'Instrument Serif',serif;font-size:1.9rem;font-weight:400;color:#d8d8d8;line-height:1.2;margin:2.7rem 0 1rem}
-h3{font-size:13px;font-weight:400;color:#d2d2d2;margin-bottom:.55rem}
-p{font-size:12.5px;line-height:1.78;color:var(--text);margin-bottom:1.05rem}
-strong{color:#bdbdbd;font-weight:400}
-.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:.65rem;margin:1.8rem 0 1.4rem;padding:1.3rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.flow-node{text-align:center;color:#aaa;font-size:10px;line-height:1.4}.flow-icon{width:56px;height:56px;border:1px solid #3a3a3a;border-radius:50%;margin:0 auto .55rem;display:grid;place-items:center;color:#bdbdbd;font-size:13px}.flow-icon.atp{border-color:#704d2c;color:var(--gold)}.arrow{color:#555;font-size:18px}
-.reaction{margin:1.25rem 0 1.45rem;padding:1.15rem 1.2rem;border:1px solid var(--line);border-radius:8px;background:#0d0d0d;text-align:center}.formula{color:#d7d7d7;font-size:14px;letter-spacing:.02em}.formula .accent{color:var(--gold)}.reaction small{display:block;margin-top:.65rem;color:#555;font-size:9.5px;line-height:1.55}
-.molecule{display:flex;align-items:center;justify-content:center;gap:.45rem;margin-bottom:1rem;flex-wrap:wrap}.part{min-width:35px;height:35px;padding:0 .55rem;border:1px solid #393939;border-radius:50%;display:grid;place-items:center;color:#aaa;font-size:10px}.bond{width:18px;height:1px;background:#444}.part.p{border-color:#765638;color:#d09b60}.part.o{border-color:#506879;color:#8eb1ca}.part.c{border-color:#445443;color:#91ae89}
-.systems{display:grid;gap:.75rem;margin-top:1.2rem}.system{border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.25rem;display:grid;grid-template-columns:130px 1fr;gap:1.15rem;align-items:center}.system-tag{font-size:9px;text-transform:uppercase;letter-spacing:.12em;margin-top:.45rem}.system:nth-child(1) .system-tag,.system:nth-child(1) .eq{color:var(--gold)}.system:nth-child(2) .system-tag,.system:nth-child(2) .eq{color:var(--blue)}.system:nth-child(3) .system-tag,.system:nth-child(3) .eq{color:var(--green)}.eq{font-size:11px;line-height:1.55}.system p{margin:0;font-size:11.5px;line-height:1.7}
-.chain{border-left:1px solid #2a2a2a;padding-left:1.15rem;margin:1.6rem 0;color:#999;line-height:1.9}
-.note{margin-top:2rem;padding-top:1.6rem;border-top:1px solid var(--line)}
-.back{display:inline-block;margin-top:1rem;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none}.back:hover{color:var(--bright)}
-@media(max-width:650px){body{padding:.75rem}.page{padding:2rem 1.35rem;border-radius:8px}h1{font-size:3rem}h2{font-size:1.65rem}.flow{grid-template-columns:1fr auto 1fr;row-gap:1.25rem}.flow .arrow:nth-of-type(2),.flow .arrow:nth-of-type(3){display:none}.flow-node:nth-of-type(3),.flow-node:nth-of-type(4){grid-column:auto}.system{grid-template-columns:1fr;gap:.7rem}.system p{font-size:11px}.reaction{padding:1rem .65rem}.formula{font-size:12px}}
+.page{max-width:780px;width:100%;border:1px solid #1f1f1f;border-radius:10px;background:var(--panel);padding:3.2rem 2.9rem}
+.kicker,.scale{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#4b4b4b}
+.kicker{margin-bottom:1.2rem}.scale{margin-bottom:.75rem}
+h1{font-family:'Instrument Serif',serif;font-size:4rem;font-weight:400;color:var(--bright);line-height:.98;letter-spacing:-.025em;margin-bottom:1.25rem}
+.deck{font-family:'Instrument Serif',serif;font-size:1.42rem;line-height:1.35;color:#b9b9b9;margin-bottom:2rem;max-width:620px}
+h2{font-family:'Instrument Serif',serif;font-size:2rem;font-weight:400;color:#d8d8d8;line-height:1.15;margin:3rem 0 1rem}
+h3{font-size:12px;font-weight:400;color:#c8c8c8;margin-bottom:.45rem;letter-spacing:.02em}
+p{font-size:12.3px;line-height:1.8;color:var(--text);margin-bottom:1.05rem}
+strong{color:#bdbdbd;font-weight:400}.quiet{color:#5f5f5f}.fact{color:#a9a9a9}
+.line{height:1px;background:var(--line);margin:2.3rem 0}
+.definition{border-left:1px solid #343434;padding-left:1.15rem;margin:1.5rem 0 2.2rem;color:#8f8f8f}
+.definition p{margin:0;font-size:11.5px}
+.molecule-stage{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#0d0d0d;padding:1.6rem;margin:1.5rem 0}
+.particles{position:absolute;inset:0;opacity:.38;background-image:radial-gradient(circle at 14% 20%,#9b7046 0 1px,transparent 1.5px),radial-gradient(circle at 76% 28%,#6c8294 0 1px,transparent 1.5px),radial-gradient(circle at 35% 72%,#6f8467 0 1px,transparent 1.5px),radial-gradient(circle at 89% 80%,#8f665f 0 1px,transparent 1.5px);background-size:91px 89px,117px 109px,103px 97px,131px 127px}
+.reaction{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;min-height:94px}
+.chem{border:1px solid #363636;border-radius:999px;padding:.65rem .9rem;color:#bdbdbd;font-size:11px;background:#101010}.chem.atp{border-color:#6b4d30;color:#d1a06a}.chem.pi{border-color:#486073;color:#8baec8}.chem.energy{border-color:#52604d;color:#93ae86}.symbol{color:#505050;font-size:16px}
+.caption{position:relative;z-index:1;border-top:1px solid #1f1f1f;padding-top:.85rem;margin-top:.25rem;color:#575757;font-size:9.5px;line-height:1.6;text-align:center}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:1.4rem 0}.step{border:1px solid var(--line);border-radius:8px;padding:1rem .85rem;min-height:116px}.step-no{font-size:9px;color:#4e4e4e;margin-bottom:.6rem}.step h3{font-size:10.5px}.step p{font-size:9.6px;line-height:1.6;margin:0;color:#666}
+.state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin:1.4rem 0}.state{border-top:1px solid #303030;padding:.85rem .2rem .3rem}.state span{display:block}.state .name{color:#aaa;font-size:10px;margin-bottom:.35rem}.state .change{color:#5f5f5f;font-size:9px;line-height:1.5}.up{color:var(--red)}.down{color:var(--blue)}
+.signal-map{display:grid;grid-template-columns:1fr 36px 1.15fr 36px 1fr;align-items:stretch;gap:.3rem;margin:1.5rem 0}.signal-col{border:1px solid var(--line);border-radius:8px;padding:1rem}.signal-col.center{border-color:#35302a}.signal-col h3{font-size:10.5px}.signal-col p{font-size:9.4px;line-height:1.65;margin:.45rem 0 0}.signal-arrow{display:grid;place-items:center;color:#484848;font-size:17px}
+.signal-list{list-style:none}.signal-list li{font-size:9.3px;line-height:1.55;color:#696969;padding:.3rem 0;border-bottom:1px solid #1e1e1e}.signal-list li:last-child{border-bottom:0}.signal-list b{color:#a7a7a7;font-weight:400}
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin:1.45rem 0}.loop-node{border:1px solid var(--line);border-radius:50%;aspect-ratio:1;display:grid;place-items:center;text-align:center;padding:.55rem;font-size:8.7px;line-height:1.45;color:#8a8a8a;position:relative}.loop-node:not(:last-child)::after{content:'→';position:absolute;right:-.5rem;color:#494949}.loop-node:last-child::after{content:'↺';position:absolute;right:-.45rem;bottom:-.3rem;color:#494949;font-size:14px}
+.chain{border-left:1px solid #2e2e2e;padding-left:1.1rem;margin:1.35rem 0}.chain div{font-size:10px;line-height:1.65;color:#6d6d6d;padding:.12rem 0}.chain .accent{color:#aaa}
+.caveat{border:1px solid #2a2a2a;border-radius:8px;padding:1rem 1.05rem;margin:1.5rem 0}.caveat p{font-size:10px;line-height:1.65;margin:0;color:#626262}
+.sources{margin-top:2.8rem;padding-top:1.5rem;border-top:1px solid var(--line)}.sources summary{cursor:pointer;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#686868}.sources ol{margin:1rem 0 0 1.25rem}.sources li{font-size:9px;line-height:1.55;color:#555;margin:.55rem 0}.sources a{color:#777;text-decoration:none}.sources a:hover{color:#aaa}
+.note{margin-top:2.2rem;padding-top:1.7rem;border-top:1px solid var(--line)}
+.back{display:inline-block;margin-top:1.2rem;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none}.back:hover{color:var(--bright)}
+@media(max-width:680px){body{padding:.75rem}.page{padding:2.1rem 1.35rem;border-radius:8px}h1{font-size:3.15rem}.deck{font-size:1.2rem}h2{font-size:1.72rem;margin-top:2.5rem}p{font-size:11.4px;line-height:1.73}.steps{grid-template-columns:1fr 1fr}.state-grid{grid-template-columns:1fr 1fr}.signal-map{grid-template-columns:1fr}.signal-arrow{height:28px;transform:rotate(90deg)}.loop{grid-template-columns:1fr 1fr}.loop-node:not(:last-child)::after{display:none}.loop-node{aspect-ratio:auto;min-height:90px;border-radius:8px}.reaction{gap:.5rem}.chem{font-size:10px;padding:.55rem .7rem}}
 </style>
 </head>
 <body>
 <main class="page">
 <p class="kicker">// 01 · endurance</p>
-<h1>Energy.</h1>
+<h1>From chaos<br />to motion.</h1>
+<p class="deck">How molecular reactions become movement, system stress, and eventually the experience we call endurance.</p>
 
-<p>I see endurance as a system.</p>
-<p>The muscles need energy. Oxygen must reach them. Heat must be controlled. Fuel must remain available.</p>
-<p>Endurance is the ability to keep this whole system working as pressure increases.</p>
+<p>A triathlon looks organized from the outside: a body follows a course, holds a pace, and moves toward a finish line.</p>
+<p>At the molecular level, there is no race. There are electrical gradients, collisions, diffusion, chemical reactions, and proteins changing shape. None of these parts knows that the body is swimming, cycling, or running.</p>
+<p>The movement appears only when many small processes operate together.</p>
 
-<h2>Movement starts with ATP</h2>
-<p>Muscles cannot use food directly. They use a molecule called <strong>ATP</strong>.</p>
-<p>ATP is a small packet of energy the muscle can spend immediately.</p>
-
-<div class="flow" aria-label="Fuel and oxygen create ATP, which powers muscle contraction and movement">
-  <div class="flow-node"><div class="flow-icon">fuel</div>stored energy</div>
-  <div class="arrow">+</div>
-  <div class="flow-node"><div class="flow-icon">O₂</div>oxygen</div>
-  <div class="arrow">→</div>
-  <div class="flow-node"><div class="flow-icon atp">ATP</div>usable energy</div>
-  <div class="arrow">→</div>
-  <div class="flow-node"><div class="flow-icon">move</div>contraction</div>
+<div class="definition">
+<p><strong>“Chaos” here does not mean pure randomness.</strong> It describes a system with many connected variables, feedback loops, delays, and changing conditions. In mathematics, chaos has a stricter definition; not every variation in physiology is evidence of mathematical chaos.</p>
 </div>
 
-<p>ATP has three phosphate groups. When the last phosphate separates, energy is released.</p>
+<section>
+<p class="scale">scale 01 · molecule</p>
+<h2>Energy is transferred locally</h2>
+<p>Muscle uses ATP as its immediate energy source. ATP binds to molecular machinery, is split into ADP and inorganic phosphate, and changes how proteins interact.</p>
+
+<div class="molecule-stage" aria-label="ATP hydrolysis reaction">
+<div class="particles" aria-hidden="true"></div>
 <div class="reaction">
-  <div class="molecule" aria-hidden="true"><span class="part">A</span><span class="bond"></span><span class="part p">P</span><span class="bond"></span><span class="part p">P</span><span class="bond"></span><span class="part p">P</span></div>
-  <div class="formula">ATP → ADP + Pᵢ + <span class="accent">energy</span></div>
-  <small>Three phosphates become two phosphates plus one free phosphate. The released energy helps the muscle contract.</small>
+<span class="chem atp">ATP</span><span class="symbol">+</span><span class="chem">H₂O</span><span class="symbol">→</span><span class="chem">ADP</span><span class="symbol">+</span><span class="chem pi">Pᵢ</span><span class="symbol">+</span><span class="chem energy">available energy</span>
+</div>
+<div class="caption">A simplified representation of ATP hydrolysis. Cells couple this reaction to processes that require energy.</div>
 </div>
 
-<p>The body stores only a few seconds of ATP. It must therefore rebuild ATP continuously while we move.</p>
+<p>The body stores little ATP compared with the amount used during exercise, so ATP is continuously regenerated through phosphocreatine, glycolysis, and mitochondrial metabolism.</p>
+<p class="fact">During fatigue, total muscle ATP is usually buffered rather than falling to zero. Changes in ADP, inorganic phosphate, hydrogen ions, calcium handling, oxygen delivery, and other variables alter how efficiently force can be produced.</p>
+</section>
 
-<h2>Three ways to rebuild it</h2>
-<p>All three systems work together. What changes is which one contributes the most.</p>
+<section>
+<p class="scale">scale 02 · protein</p>
+<h2>A chemical event becomes force</h2>
+<p>An electrical signal reaches a muscle fiber and triggers calcium release. Calcium changes the position of regulatory proteins on actin. Myosin can then attach, pull, detach when ATP binds, and reset after ATP is hydrolyzed.</p>
 
-<div class="systems">
-  <section class="system">
-    <div><h3>1. ATP–PC</h3><div class="system-tag">immediate power</div><div class="eq">PCr + ADP → ATP + Cr</div></div>
-    <p>Phosphocreatine gives a phosphate to ADP, rebuilding ATP almost instantly. It supports starts, jumps, short climbs, and explosive efforts for roughly 0–10 seconds.</p>
-  </section>
-
-  <section class="system">
-    <div><h3>2. Glycolytic</h3><div class="system-tag">fast energy from sugar</div><div class="eq">glucose → pyruvate + ATP</div></div>
-    <p>Glucose is broken into smaller molecules and releases energy quickly. This supports hard efforts lasting from several seconds to about two minutes.</p>
-  </section>
-
-  <section class="system">
-    <div><h3>3. Aerobic</h3><div class="system-tag">long-duration support</div><div class="eq">fuel + O₂ → CO₂ + H₂O + ATP</div></div>
-    <p>Oxygen helps the body extract much more energy from carbohydrates and fat. This process is slower, but it can continue for hours and becomes the main system in triathlon.</p>
-  </section>
+<div class="steps" aria-label="Simplified muscle contraction cycle">
+<div class="step"><div class="step-no">01</div><h3>Signal</h3><p>An electrical impulse travels along the muscle membrane.</p></div>
+<div class="step"><div class="step-no">02</div><h3>Calcium</h3><p>Calcium is released inside the fiber and exposes binding sites.</p></div>
+<div class="step"><div class="step-no">03</div><h3>Pull</h3><p>Myosin interacts with actin and generates a small movement.</p></div>
+<div class="step"><div class="step-no">04</div><h3>Reset</h3><p>ATP allows detachment and prepares myosin for another cycle.</p></div>
 </div>
 
-<h2>One continuous system</h2>
-<p>A triathlon is not three isolated sports. What happens in the swim changes the bike. What happens on the bike changes the run.</p>
-<p>A hard effort early may feel manageable, but it can consume glycogen faster, create more heat, and increase muscular fatigue. The cost often appears later.</p>
-<p class="chain"><strong>The goal is not to maximize every section.</strong><br />The goal is to manage the whole race.</p>
+<p>One cycle is microscopic. Large force emerges because many molecular motors cycle across many sarcomeres, fibers, and motor units.</p>
+</section>
 
-<h2>The endurance idea</h2>
-<p>As speed or power rises, the internal cost also rises. The heart works harder. Breathing increases. Fuel is consumed faster. Heat accumulates. Movement gradually becomes less efficient.</p>
-<p>Elite athletes follow the same biological rules. Their advantage is efficiency: for the same external output, the internal cost is lower.</p>
+<section>
+<p class="scale">scale 03 · local state</p>
+<h2>Every contraction changes its environment</h2>
+<p>Muscle activity does not produce only movement. It changes the chemical and physical state around the working fibers.</p>
+
+<div class="state-grid">
+<div class="state"><span class="name">ATP turnover</span><span class="change"><span class="up">ADP and Pᵢ rise</span> as ATP is used and regenerated.</span></div>
+<div class="state"><span class="name">Oxygen</span><span class="change"><span class="down">Local availability can fall</span> when demand rises faster than delivery.</span></div>
+<div class="state"><span class="name">Carbon dioxide</span><span class="change"><span class="up">Production rises</span> with oxidative metabolism.</span></div>
+<div class="state"><span class="name">Acidity</span><span class="change">Hydrogen-ion balance changes during intense work.</span></div>
+<div class="state"><span class="name">Temperature</span><span class="change"><span class="up">Heat rises</span> because most metabolic energy does not become external work.</span></div>
+<div class="state"><span class="name">Mechanical strain</span><span class="change">Force, stretch, pressure, and vibration change continuously.</span></div>
+</div>
+
+<p>No single change is “fatigue.” Together, they alter force production, energy cost, blood flow, breathing, sensation, and the ability to continue at the same output.</p>
+</section>
+
+<section>
+<p class="scale">scale 04 · signal</p>
+<h2>The body reports its changing state</h2>
+<p>The brain does not directly observe ATP, heat, pressure, or muscle strain. Specialized sensory pathways convert local changes into nerve impulses.</p>
+
+<div class="signal-map" aria-label="Signals from the body are integrated by the nervous system and change the body's response">
+<div class="signal-col">
+<h3>Local conditions</h3>
+<ul class="signal-list">
+<li><b>Muscle:</b> force, stretch, metabolites</li>
+<li><b>Blood:</b> pressure, oxygen, carbon dioxide, pH</li>
+<li><b>Skin and core:</b> temperature</li>
+<li><b>Fluid system:</b> concentration and volume</li>
+</ul>
+</div>
+<div class="signal-arrow">→</div>
+<div class="signal-col center">
+<h3>Nervous-system integration</h3>
+<p>Signals reach the spinal cord, brainstem, and higher brain regions. They are combined with feedforward “central command,” prior experience, motivation, expected duration, and the intended movement.</p>
+</div>
+<div class="signal-arrow">→</div>
+<div class="signal-col">
+<h3>System response</h3>
+<ul class="signal-list">
+<li><b>Ventilation:</b> depth and frequency change</li>
+<li><b>Circulation:</b> heart rate, pressure, blood distribution</li>
+<li><b>Motor output:</b> recruitment and neural drive change</li>
+<li><b>Behavior:</b> pace, technique, drinking, cooling</li>
+</ul>
+</div>
+</div>
+
+<p>Group III and IV sensory fibers in working muscle are one important part of this feedback. Mechanical and chemical conditions increase their firing. Their signals help raise circulation and ventilation, supporting oxygen delivery, while also contributing to discomfort and reductions in voluntary motor drive during demanding exercise.</p>
+<p>There is no single “fatigue sensor.” The conscious experience of effort and fatigue emerges from integration across multiple pathways and brain regions.</p>
+</section>
+
+<section>
+<p class="scale">scale 05 · feedback</p>
+<h2>The system changes itself</h2>
+<p>Once a signal changes breathing, blood flow, muscle recruitment, or pace, it also changes the molecular conditions that produced the signal.</p>
+
+<div class="loop" aria-label="Example feedback loop during exercise">
+<div class="loop-node">muscle<br />work</div>
+<div class="loop-node">chemical and<br />mechanical change</div>
+<div class="loop-node">sensory<br />feedback</div>
+<div class="loop-node">circulation,<br />breathing, drive</div>
+</div>
+
+<p>This is not a straight chain. It is a network of overlapping loops.</p>
+
+<div class="chain">
+<div>More force increases ATP turnover and heat.</div>
+<div>Heat changes blood distribution and sweating.</div>
+<div>Sweating changes body water and plasma volume.</div>
+<div>Lower plasma volume can raise cardiovascular strain.</div>
+<div>Higher strain changes sensory feedback and perceived effort.</div>
+<div class="accent">A pacing decision then changes force again.</div>
+</div>
+
+<p>The effect of a small change depends on timing, intensity, training state, temperature, hydration, fuel availability, and what happens next. That context dependence is one reason endurance cannot be explained by one molecule or one organ.</p>
+</section>
+
+<section>
+<p class="scale">scale 06 · athlete</p>
+<h2>Triathlon makes the coupling visible</h2>
+<p>A triathlon is one continuous physiological process, even though it contains three sports.</p>
+<p>The swim changes temperature, breathing, muscle recruitment, and fuel use before the bike begins. Bike intensity changes glycogen use, heat storage, fluid balance, and neuromuscular condition before the run begins.</p>
+<p>A short acceleration may be absorbed with little consequence. The same acceleration repeated in heat, with falling fluid volume and limited carbohydrate availability, may produce a much larger downstream cost.</p>
+<p>The body does not wait for one component to fail. It continuously adjusts output, circulation, ventilation, and behavior as its internal state changes.</p>
+</section>
+
+<section>
+<p class="scale">scale 07 · emergence</p>
+<h2>Endurance is an outcome</h2>
+<p>Endurance is not located in ATP, a mitochondrion, a muscle, or the brain.</p>
+<p>It emerges from molecular reactions, electrical signals, sensory feedback, organ responses, movement efficiency, pacing, and decisions operating together over time.</p>
+<p>No molecule understands the race. No sensory fiber measures “endurance.” No single brain region calculates the final result.</p>
 
 <div class="note">
-<p><strong>Endurance is not simply the ability to suffer.</strong></p>
-<p>It is the ability to keep rebuilding and using energy while the whole system operates under pressure.</p>
+<p><strong>The visible athlete is the temporary order produced by the entire system.</strong></p>
+<p>Endurance is how long that order can be maintained while the conditions inside it continue to change.</p>
 </div>
+</section>
+
+<div class="caveat">
+<p>This page simplifies a large and actively researched field. Terms such as fatigue, effort, central command, interoception, and nonlinear regulation describe related but distinct processes. The evidence supports distributed feedback and feedforward control; it does not establish one universal “governor” or a single mechanism that explains every form of exercise limitation.</p>
+</div>
+
+<details class="sources">
+<summary>Selected scientific sources</summary>
+<ol>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4315934/" rel="noopener noreferrer">Calcium, ATP, actin, and myosin in muscle contraction</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6656370/" rel="noopener noreferrer">Bioenergetic basis of skeletal-muscle fatigue</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7492373/" rel="noopener noreferrer">Group III/IV muscle afferent feedback and endurance performance</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4000959/" rel="noopener noreferrer">Central command and peripheral feedback in cardiovascular regulation</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5033663/" rel="noopener noreferrer">Neural contributions to muscle fatigue</a></li>
+</ol>
+</details>
 
 <a class="back" href="/triathlon/">← Current triathlon page</a>
 </main>
