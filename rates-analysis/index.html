@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historical Cash Investment Analysis</title>
+  <meta name="description" content="Public Excel and VBA model for historical corporate cash investment analysis.">
+  <style>
+    :root{--navy:#123b5d;--blue:#2f75b5;--ink:#243746;--muted:#687887;--line:#d8e1e8;--pale:#eef4f8;--white:#fff}
+    *{box-sizing:border-box}body{margin:0;background:#f6f8fa;color:var(--ink);font:15px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:920px;margin:0 auto;padding:56px 24px 80px}.hero{background:var(--navy);color:var(--white);padding:40px;border-radius:14px}
+    h1{font-size:34px;line-height:1.1;margin:0 0 12px}h2{font-size:21px;margin:38px 0 14px}.hero p{max-width:700px;margin:0;color:#dce8f0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:22px}.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:20px}
+    .card h3{margin:0 0 7px;font-size:16px}.card p{margin:0 0 14px;color:var(--muted);font-size:13px}.button{display:inline-block;background:var(--blue);color:var(--white);text-decoration:none;padding:9px 13px;border-radius:7px;font-weight:650}
+    code{background:var(--pale);padding:2px 5px;border-radius:4px}ol{padding-left:22px}.note{background:var(--pale);border-left:4px solid var(--blue);padding:15px 18px;margin-top:24px}
+    img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--white)}footer{margin-top:42px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Historical Cash Investment Analysis</h1>
+    <p>An Excel and VBA model for corporate treasury analysis across ON, 1M, 2M, 3M and 6M deposits. The daily accrual ledger drives rolling returns, term-premium analysis, volatility and the historical efficient frontier.</p>
+  </section>
+
+  <h2>Download files</h2>
+  <section class="grid">
+    <article class="card"><h3>Complete package</h3><p>VBA source, templates, tested simulation model, dashboard preview and test report.</p><a class="button" href="Rates_Analysis_Final_Package.zip">Download ZIP</a></article>
+    <article class="card"><h3>VBA source</h3><p>Import the module into desktop Excel to create and calculate the spreadsheet.</p><a class="button" href="Rates_Analysis_Final.bas">Download BAS</a></article>
+    <article class="card"><h3>Blank template</h3><p>Input structure for the analysis dates, notional, allocation step and curve data.</p><a class="button" href="Rates_Model_Blank_Template.xlsx">Download XLSX</a></article>
+    <article class="card"><h3>Simulation model</h3><p>Deterministic test workbook with populated calculations, charts and reconciliations.</p><a class="button" href="Rates_Model_Simulation_Test.xlsx">Download XLSX</a></article>
+    <article class="card"><h3>Test results</h3><p>Automated checks for daily coverage, strategy count and interest reconciliation.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
+    <article class="card"><h3>Documentation</h3><p>Inputs, conventions, model structure and Excel instructions.</p><a class="button" href="README.md">Read README</a></article>
+  </section>
+
+  <h2>Use in Excel</h2>
+  <ol>
+    <li>Open a blank macro-enabled workbook.</li>
+    <li>Import <code>Rates_Analysis_Final.bas</code> through the VBA editor.</li>
+    <li>Run <code>CreateBlankRatesModel</code>.</li>
+    <li>Enter the analysis inputs and paste the curve with headers <code>Date | ON | 1M | 2M | 3M | 6M</code>.</li>
+    <li>Run <code>BuildRatesAnalysisModel</code>.</li>
+  </ol>
+  <div class="note">Rates are entered as percentage points: <strong>1.54 means 1.54%</strong>. The model uses ACT/360, reinvests interest and applies the latest prior curve date when a target date is unavailable.</div>
+
+  <h2>Dashboard preview</h2>
+  <img src="Rates_Model_Simulation_Dashboard.png" alt="Historical cash investment analysis dashboard preview">
+
+  <footer>Historical analysis only. Results are not a forecast and do not include credit limits, early-withdrawal economics, execution costs or accounting treatment.</footer>
+</main>
+</body>
+</html>
