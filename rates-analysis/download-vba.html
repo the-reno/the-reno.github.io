@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Download Rates Analysis VBA v2</title>
+  <style>
+    body{margin:0;background:#f6f8fa;color:#243746;font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{max-width:700px;margin:0 auto;padding:70px 24px}.box{background:#fff;border:1px solid #d8e1e8;border-radius:14px;padding:32px}
+    h1{margin:0 0 12px;font-size:28px;color:#123b5d}.button{border:0;border-radius:8px;padding:12px 18px;background:#2f75b5;color:#fff;font-weight:700;cursor:pointer}
+    .button:disabled{opacity:.55;cursor:wait}#status{margin-top:16px;color:#687887}code{background:#eef4f8;padding:2px 5px;border-radius:4px}
+  </style>
+</head>
+<body>
+<main><section class="box">
+  <h1>Rates Analysis VBA — Version 2</h1>
+  <p>This page reconstructs the complete VBA module from the public source chunks and downloads it as <code>Rates_Analysis_Final_v2.bas</code>.</p>
+  <button id="download" class="button">Build and download VBA</button>
+  <div id="status">Ready.</div>
+</section></main>
+<script>
+const button=document.getElementById('download');
+const status=document.getElementById('status');
+button.addEventListener('click',async()=>{
+  button.disabled=true;
+  try{
+    status.textContent='Reading public source parts…';
+    const prefix='source/Rates_Analysis_Final.bas.gz.b64.part';
+    const parts=[];
+    for(let i=1;i<=5;i++){
+      const response=await fetch(prefix+String(i).padStart(2,'0'),{cache:'no-store'});
+      if(!response.ok)throw new Error('Unable to read source part '+i);
+      parts.push((await response.text()).trim());
+    }
+    status.textContent='Reconstructing VBA module…';
+    const binary=atob(parts.join(''));
+    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    if(!('DecompressionStream' in window))throw new Error('This browser does not support gzip reconstruction. Use rebuild-vba.ps1 or rebuild_vba.py from the public folder.');
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const blob=await new Response(stream).blob();
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download='Rates_Analysis_Final_v2.bas';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    status.textContent='Download created successfully.';
+  }catch(error){
+    status.textContent=error.message;
+  }finally{
+    button.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
