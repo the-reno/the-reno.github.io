@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="referrer" content="no-referrer" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+<link rel="privacy-policy" href="/privacy/" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Energy · Triathlon</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--panel:#111;--line:#242424;--text:#777;--soft:#aaa;--bright:#efefef;--gold:#c69257;--blue:#7fa4c2;--green:#86a879}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;align-items:flex-start;justify-content:center;padding:2rem}
+.page{max-width:760px;width:100%;border:1px solid #1f1f1f;border-radius:10px;background:var(--panel);padding:3rem 2.75rem}
+.kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:1.25rem}
+h1{font-family:'Instrument Serif',serif;font-size:3.6rem;font-weight:400;color:var(--bright);line-height:1;letter-spacing:-.02em;margin-bottom:1.6rem}
+h2{font-family:'Instrument Serif',serif;font-size:1.9rem;font-weight:400;color:#d8d8d8;line-height:1.2;margin:2.7rem 0 1rem}
+h3{font-size:13px;font-weight:400;color:#d2d2d2;margin-bottom:.55rem}
+p{font-size:12.5px;line-height:1.78;color:var(--text);margin-bottom:1.05rem}
+strong{color:#bdbdbd;font-weight:400}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:.65rem;margin:1.8rem 0 1.4rem;padding:1.3rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.flow-node{text-align:center;color:#aaa;font-size:10px;line-height:1.4}.flow-icon{width:56px;height:56px;border:1px solid #3a3a3a;border-radius:50%;margin:0 auto .55rem;display:grid;place-items:center;color:#bdbdbd;font-size:13px}.flow-icon.atp{border-color:#704d2c;color:var(--gold)}.arrow{color:#555;font-size:18px}
+.reaction{margin:1.25rem 0 1.45rem;padding:1.15rem 1.2rem;border:1px solid var(--line);border-radius:8px;background:#0d0d0d;text-align:center}.formula{color:#d7d7d7;font-size:14px;letter-spacing:.02em}.formula .accent{color:var(--gold)}.reaction small{display:block;margin-top:.65rem;color:#555;font-size:9.5px;line-height:1.55}
+.molecule{display:flex;align-items:center;justify-content:center;gap:.45rem;margin-bottom:1rem;flex-wrap:wrap}.part{min-width:35px;height:35px;padding:0 .55rem;border:1px solid #393939;border-radius:50%;display:grid;place-items:center;color:#aaa;font-size:10px}.bond{width:18px;height:1px;background:#444}.part.p{border-color:#765638;color:#d09b60}.part.o{border-color:#506879;color:#8eb1ca}.part.c{border-color:#445443;color:#91ae89}
+.systems{display:grid;gap:.75rem;margin-top:1.2rem}.system{border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.25rem;display:grid;grid-template-columns:130px 1fr;gap:1.15rem;align-items:center}.system-tag{font-size:9px;text-transform:uppercase;letter-spacing:.12em;margin-top:.45rem}.system:nth-child(1) .system-tag,.system:nth-child(1) .eq{color:var(--gold)}.system:nth-child(2) .system-tag,.system:nth-child(2) .eq{color:var(--blue)}.system:nth-child(3) .system-tag,.system:nth-child(3) .eq{color:var(--green)}.eq{font-size:11px;line-height:1.55}.system p{margin:0;font-size:11.5px;line-height:1.7}
+.chain{border-left:1px solid #2a2a2a;padding-left:1.15rem;margin:1.6rem 0;color:#999;line-height:1.9}
+.note{margin-top:2rem;padding-top:1.6rem;border-top:1px solid var(--line)}
+.back{display:inline-block;margin-top:1rem;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none}.back:hover{color:var(--bright)}
+@media(max-width:650px){body{padding:.75rem}.page{padding:2rem 1.35rem;border-radius:8px}h1{font-size:3rem}h2{font-size:1.65rem}.flow{grid-template-columns:1fr auto 1fr;row-gap:1.25rem}.flow .arrow:nth-of-type(2),.flow .arrow:nth-of-type(3){display:none}.flow-node:nth-of-type(3),.flow-node:nth-of-type(4){grid-column:auto}.system{grid-template-columns:1fr;gap:.7rem}.system p{font-size:11px}.reaction{padding:1rem .65rem}.formula{font-size:12px}}
+</style>
+</head>
+<body>
+<main class="page">
+<p class="kicker">// 01 · endurance</p>
+<h1>Energy.</h1>
+
+<p>I see endurance as a system.</p>
+<p>The muscles need energy. Oxygen must reach them. Heat must be controlled. Fuel must remain available.</p>
+<p>Endurance is the ability to keep this whole system working as pressure increases.</p>
+
+<h2>Movement starts with ATP</h2>
+<p>Muscles cannot use food directly. They use a molecule called <strong>ATP</strong>.</p>
+<p>ATP is a small packet of energy the muscle can spend immediately.</p>
+
+<div class="flow" aria-label="Fuel and oxygen create ATP, which powers muscle contraction and movement">
+  <div class="flow-node"><div class="flow-icon">fuel</div>stored energy</div>
+  <div class="arrow">+</div>
+  <div class="flow-node"><div class="flow-icon">O₂</div>oxygen</div>
+  <div class="arrow">→</div>
+  <div class="flow-node"><div class="flow-icon atp">ATP</div>usable energy</div>
+  <div class="arrow">→</div>
+  <div class="flow-node"><div class="flow-icon">move</div>contraction</div>
+</div>
+
+<p>ATP has three phosphate groups. When the last phosphate separates, energy is released.</p>
+<div class="reaction">
+  <div class="molecule" aria-hidden="true"><span class="part">A</span><span class="bond"></span><span class="part p">P</span><span class="bond"></span><span class="part p">P</span><span class="bond"></span><span class="part p">P</span></div>
+  <div class="formula">ATP → ADP + Pᵢ + <span class="accent">energy</span></div>
+  <small>Three phosphates become two phosphates plus one free phosphate. The released energy helps the muscle contract.</small>
+</div>
+
+<p>The body stores only a few seconds of ATP. It must therefore rebuild ATP continuously while we move.</p>
+
+<h2>Three ways to rebuild it</h2>
+<p>All three systems work together. What changes is which one contributes the most.</p>
+
+<div class="systems">
+  <section class="system">
+    <div><h3>1. ATP–PC</h3><div class="system-tag">immediate power</div><div class="eq">PCr + ADP → ATP + Cr</div></div>
+    <p>Phosphocreatine gives a phosphate to ADP, rebuilding ATP almost instantly. It supports starts, jumps, short climbs, and explosive efforts for roughly 0–10 seconds.</p>
+  </section>
+
+  <section class="system">
+    <div><h3>2. Glycolytic</h3><div class="system-tag">fast energy from sugar</div><div class="eq">glucose → pyruvate + ATP</div></div>
+    <p>Glucose is broken into smaller molecules and releases energy quickly. This supports hard efforts lasting from several seconds to about two minutes.</p>
+  </section>
+
+  <section class="system">
+    <div><h3>3. Aerobic</h3><div class="system-tag">long-duration support</div><div class="eq">fuel + O₂ → CO₂ + H₂O + ATP</div></div>
+    <p>Oxygen helps the body extract much more energy from carbohydrates and fat. This process is slower, but it can continue for hours and becomes the main system in triathlon.</p>
+  </section>
+</div>
+
+<h2>One continuous system</h2>
+<p>A triathlon is not three isolated sports. What happens in the swim changes the bike. What happens on the bike changes the run.</p>
+<p>A hard effort early may feel manageable, but it can consume glycogen faster, create more heat, and increase muscular fatigue. The cost often appears later.</p>
+<p class="chain"><strong>The goal is not to maximize every section.</strong><br />The goal is to manage the whole race.</p>
+
+<h2>The endurance idea</h2>
+<p>As speed or power rises, the internal cost also rises. The heart works harder. Breathing increases. Fuel is consumed faster. Heat accumulates. Movement gradually becomes less efficient.</p>
+<p>Elite athletes follow the same biological rules. Their advantage is efficiency: for the same external output, the internal cost is lower.</p>
+
+<div class="note">
+<p><strong>Endurance is not simply the ability to suffer.</strong></p>
+<p>It is the ability to keep rebuilding and using energy while the whole system operates under pressure.</p>
+</div>
+
+<a class="back" href="/triathlon/">← Current triathlon page</a>
+</main>
+</body>
+</html>
