@@ -23,19 +23,19 @@
     <p>An Excel and VBA model for ON, 1M, 2M, 3M and 6M deposits. It combines daily accrual economics, daily rolling reinvestment-rate risk, term-premium analysis, aligned earnings volatility and a fully described historical efficient frontier.</p>
   </section>
 
-  <h2>Download files</h2>
+  <h2>Version 2 resources</h2>
   <section class="grid">
-    <article class="card"><h3>Complete package</h3><p>VBA source, templates, tested simulation model, dashboard preview and test report.</p><a class="button" href="Rates_Analysis_Final_Package.zip">Download ZIP</a></article>
-    <article class="card"><h3>VBA source</h3><p>Import the module into desktop Excel to create and calculate the complete spreadsheet.</p><a class="button" href="Rates_Analysis_Final.bas">Download BAS</a></article>
-    <article class="card"><h3>Blank template</h3><p>Input structure for analysis dates, notional, frontier step and the historical curve.</p><a class="button" href="Rates_Model_Blank_Template.xlsx">Download XLSX</a></article>
-    <article class="card"><h3>Simulation model</h3><p>Deterministic test workbook with daily reset scenarios, frontier descriptions and eight dashboard charts.</p><a class="button" href="Rates_Model_Simulation_Test.xlsx">Download XLSX</a></article>
-    <article class="card"><h3>Test results</h3><p>Automated checks covering accrual rows, reset scenarios, frontier points and reconciliations.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
-    <article class="card"><h3>Revision notes</h3><p>Details of the daily rolling reinvestment module and efficient-frontier classifications.</p><a class="button" href="REVISION_NOTES_v2.md">Read v2 notes</a></article>
+    <article class="card"><h3>VBA version 2</h3><p>Reconstruct and download the complete revised VBA module directly in the browser.</p><a class="button" href="download-vba.html">Download VBA v2</a></article>
+    <article class="card"><h3>Revision notes</h3><p>Daily rolling reinvestment analysis, reset volatility and frontier classifications.</p><a class="button" href="REVISION_NOTES_v2.md">Read v2 notes</a></article>
+    <article class="card"><h3>Test results</h3><p>Validated accrual rows, reset scenarios, transactions, frontier descriptions and risk statistics.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
+    <article class="card"><h3>Documentation</h3><p>Inputs, conventions, methodology and Excel instructions.</p><a class="button" href="README.md">Read README</a></article>
+    <article class="card"><h3>Python reconstruction</h3><p>Alternative source reconstruction script for macOS, Linux or Windows with Python.</p><a class="button" href="rebuild_vba.py">Download script</a></article>
+    <article class="card"><h3>PowerShell reconstruction</h3><p>Alternative source reconstruction script for Windows PowerShell.</p><a class="button" href="rebuild-vba.ps1">Download script</a></article>
   </section>
 
   <h2>What changed</h2>
   <ul>
-    <li>Every eligible curve date is now a real start-date scenario for each tenor.</li>
+    <li>Every eligible curve date is a real start-date scenario for every tenor.</li>
     <li>The model compares the same-tenor rate at the start with the rate available at actual maturity.</li>
     <li>Reset volatility remains in basis points without tenor normalization or annualization.</li>
     <li>Every efficient-frontier point has a rank, segment, description, allocation summary, WAM and liquidity profile.</li>
@@ -43,10 +43,11 @@
 
   <h2>Use in Excel</h2>
   <ol>
+    <li>Download the version 2 VBA module above.</li>
     <li>Open a blank macro-enabled workbook.</li>
-    <li>Import <code>Rates_Analysis_Final.bas</code> through the VBA editor.</li>
+    <li>Import <code>Rates_Analysis_Final_v2.bas</code> through the VBA editor.</li>
     <li>Run <code>CreateBlankRatesModel</code>.</li>
-    <li>Enter the analysis inputs and paste the curve with headers <code>Date | ON | 1M | 2M | 3M | 6M</code>.</li>
+    <li>Enter the inputs and paste the curve with headers <code>Date | ON | 1M | 2M | 3M | 6M</code>.</li>
     <li>Run <code>BuildRatesAnalysisModel</code>.</li>
   </ol>
   <div class="note">Rates are entered as percentage points: <strong>1.54 means 1.54%</strong>. The model uses ACT/360, reinvests interest and applies the latest prior curve date when a target date is unavailable.</div>
