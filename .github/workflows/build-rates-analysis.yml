@@ -1,0 +1,70 @@
+name: Build rates analysis files
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "rates-analysis/source/**"
+      - "rates-analysis/scripts/**"
+      - "rates-analysis/README.md"
+      - "rates-analysis/index.html"
+      - ".github/workflows/build-rates-analysis.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade openpyxl matplotlib
+
+      - name: Reconstruct build script
+        shell: bash
+        run: |
+          cat rates-analysis/scripts/build_artifacts.py.gz.b64.part* > /tmp/build_artifacts.b64
+          python - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+
+          encoded = Path('/tmp/build_artifacts.b64').read_text(encoding='ascii')
+          raw = gzip.decompress(base64.b64decode(encoded))
+          Path('rates-analysis/scripts/build_artifacts.py').write_bytes(raw)
+          PY
+
+      - name: Build and test Excel artifacts
+        run: python rates-analysis/scripts/build_artifacts.py
+
+      - name: Commit generated files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            rates-analysis/Rates_Analysis_Final.bas \
+            rates-analysis/Rates_Model_Blank_Template.xlsx \
+            rates-analysis/Rates_Model_Simulation_Test.xlsx \
+            rates-analysis/Rates_Model_Simulation_Dashboard.png \
+            rates-analysis/TEST_RESULTS.md \
+            rates-analysis/Rates_Analysis_Final_Package.zip
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "Build rates analysis artifacts [skip ci]"
+            git push
+          fi
