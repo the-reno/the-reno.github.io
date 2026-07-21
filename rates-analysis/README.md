@@ -1,13 +1,23 @@
-# Historical Cash Investment Analysis — Actual-Curve Version 3
+# Historical Cash Investment Analysis — Split VBA Modules Version 4
 
 Public Excel/VBA model for corporate cash-investment analysis across ON, 1M, 2M, 3M and 6M tenors.
 
-## Main VBA procedures
+The recommended installation now uses two separate VBA modules:
 
-- `CreateBlankRatesModel` — creates the spreadsheet structure.
-- `BuildRatesAnalysisModel` — validates inputs and rebuilds the calculations, tables and eight dashboard charts.
+- `Rates_Analysis_Structure.bas` — creates and formats the workbook.
+- `Rates_Analysis_Model.bas` — reads the curve and calculates the complete model.
+
+## Structure-module procedures
+
+- `CreateRatesAnalysisStructure` — resets and creates all model worksheets.
+- `CreateBlankRatesModel` — backward-compatible alias.
+- `EnsureRatesAnalysisStructure` — creates missing sheets without clearing existing inputs.
+
+## Model-module procedures
+
+- `BuildRatesAnalysisModel` — validates inputs and rebuilds calculations, tables, frontier descriptions and eight dashboard charts.
 - `LoadSimulationData` — loads deterministic test data.
-- `RunRatesModelSelfTest` — builds the simulation and runs reconciliation checks.
+- `RunRatesModelSelfTest` — builds the simulation and runs structural and reconciliation checks.
 
 ## User inputs
 
@@ -26,7 +36,7 @@ In the `Curve` worksheet, use these exact headers:
 Date | ON | 1M | 2M | 3M | 6M
 ```
 
-Rates use percentage-point format: `1.54` means `1.54%`.
+Rates use percentage-point format: `4.31` means `4.31%`.
 
 ## Rolling-strategy engine
 
@@ -38,19 +48,20 @@ Rates use percentage-point format: `1.54` means `1.54%`.
 
 ## Daily rolling reinvestment risk
 
-Every **calendar date** is treated as a possible cash-availability scenario:
+Every eligible **curve date** is treated as a valid investment start:
 
-- actual investment start: first curve date on or after the scenario date;
-- target maturity: scenario date plus tenor, month-end aware;
+- start rate: the same-tenor rate on that curve date;
+- target maturity: start date plus tenor, month-end aware;
 - actual maturity: latest curve date on or before the target;
-- reset: same-tenor maturity rate minus same-tenor start rate, in basis points;
-- ON: actual start to the next available curve date.
+- maturity rate: same-tenor rate at actual maturity;
+- reset: maturity rate minus start rate, in basis points;
+- ON: start date to the next available curve date.
 
-The observations overlap intentionally because each calendar date represents a separate possible investment decision. Reset volatility is the sample standard deviation of these full-horizon reset changes. It is not annualized or divided by tenor length.
+The observations overlap intentionally because each curve date represents a separate possible investment decision. Reset volatility is the sample standard deviation of these full-horizon reset changes. It is not annualized or divided by tenor length.
 
 ## Earnings volatility and efficient frontier
 
-Aligned complete-month economic returns remain the basis for earnings volatility, covariance and the efficient frontier. Daily reset risk is not used as the covariance input because it answers a different question.
+Aligned month-end economic returns remain the basis for earnings volatility, covariance and the efficient frontier. Daily reset risk is not used as the covariance input because it answers a different question.
 
 Every efficient-frontier point includes:
 
@@ -62,32 +73,31 @@ Every efficient-frontier point includes:
 
 The segments range from **Minimum Volatility** through **Defensive**, **Conservative**, **Balanced**, **Return Oriented** and **Maximum Historical Return**. These are historical descriptions, not recommendations.
 
-## Actual-curve correction
+## Corrected chart logic
 
-The version 3 correction fixed two important issues:
+- Historical-rate charts retain actual Excel dates and use chronological time-scale axes.
+- Monthly observations use the last available curve observation in each month.
+- No chart observation extends beyond the selected analysis end date.
+- Reset-volatility charts compare the full maturity horizon for 1M, 2M, 3M and 6M; ON remains available as a separate reference statistic.
 
-1. the rolling-reset sheet was still displaying simulation results instead of the uploaded curve;
-2. month labels such as `Jan-23` were being converted by Excel into unintended calendar dates, creating serial-number axes and an incorrect sequence.
+## Public files
 
-See [`ACTUAL_CURVE_REVISION_v3.md`](ACTUAL_CURVE_REVISION_v3.md) for the recalculated results and validation details.
+- `Rates_Analysis_Structure.bas` — workbook creation and formatting.
+- `Rates_Analysis_Model.bas` — calculation, reset-risk, frontier and chart engine.
+- `Rates_Analysis_Split_Modules_v4.zip` — both modules and installation documentation.
+- `SPLIT_MODULES_v4.md` — detailed installation and methodology.
+- `ACTUAL_CURVE_REVISION_v3.md` — actual uploaded-curve findings and validation details.
 
-## Generated files
-
-- `Rates_Analysis_Final.bas` — current VBA source reconstructed from the version 3 source parts.
-- `Rates_Model_Blank_Template.xlsx` — empty input structure.
-- `Rates_Model_Simulation_Test.xlsx` — deterministic simulation with calculations and tests.
-- `Rates_Model_Simulation_Dashboard.png` — simulation dashboard preview.
-- `TEST_RESULTS.md` — automated simulation reconciliation results.
-- `ACTUAL_CURVE_REVISION_v3.md` — actual uploaded-curve findings and correction details.
-- `Rates_Analysis_Final_Package.zip` — public package.
+The earlier combined files remain in the folder for version history.
 
 ## Excel instructions
 
 1. Open a blank macro-enabled workbook in desktop Excel.
 2. Press `Alt + F11`.
-3. Select **File → Import File** and import `Rates_Analysis_Final.bas`.
-4. Run `CreateBlankRatesModel`.
-5. Enter the inputs and paste the curve.
-6. Run `BuildRatesAnalysisModel`.
+3. Select **File → Import File** and import `Rates_Analysis_Structure.bas`.
+4. Import `Rates_Analysis_Model.bas`.
+5. Run `CreateRatesAnalysisStructure`.
+6. Enter the input values and paste the curve.
+7. Run `BuildRatesAnalysisModel`.
 
-The public workflow reconstructs the current VBA module after generating the simulation artifacts.
+The public workflow reconstructs both VBA modules, runs static procedure checks and publishes the downloadable files. Desktop Excel compilation is still required before production use.
