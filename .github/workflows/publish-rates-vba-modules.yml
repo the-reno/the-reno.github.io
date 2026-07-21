@@ -1,0 +1,139 @@
+name: Publish split rates VBA modules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "rates-analysis/source/Rates_Analysis_Model.bas.gz.b64.part*"
+      - "rates-analysis/source/Rates_Analysis_Structure.bas.gz.b64.part*"
+      - "rates-analysis/SPLIT_MODULES_v4.md"
+      - ".github/workflows/publish-rates-vba-modules.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Reconstruct VBA modules
+        shell: bash
+        run: |
+          cat rates-analysis/source/Rates_Analysis_Model.bas.gz.b64.part* > /tmp/model.b64
+          cat rates-analysis/source/Rates_Analysis_Structure.bas.gz.b64.part* > /tmp/structure.b64
+          python - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+
+          sources = [
+              ("Rates_Analysis_Model.bas", Path("/tmp/model.b64")),
+              ("Rates_Analysis_Structure.bas", Path("/tmp/structure.b64")),
+          ]
+
+          output_dir = Path("rates-analysis")
+          for filename, encoded_path in sources:
+              encoded = encoded_path.read_text(encoding="ascii")
+              raw = gzip.decompress(base64.b64decode(encoded))
+              (output_dir / filename).write_bytes(raw)
+          PY
+
+      - name: Run static VBA checks
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          required = {
+              "rates-analysis/Rates_Analysis_Structure.bas": [
+                  "CreateRatesAnalysisStructure",
+                  "EnsureRatesAnalysisStructure",
+              ],
+              "rates-analysis/Rates_Analysis_Model.bas": [
+                  "BuildRatesAnalysisModel",
+                  "RunRatesModelSelfTest",
+              ],
+          }
+
+          for path_text, required_names in required.items():
+              path = Path(path_text)
+              text = path.read_text(encoding="utf-8-sig")
+
+              subs = re.findall(
+                  r"(?im)^\s*(?:Public|Private)?\s*Sub\s+(\w+)", text
+              )
+              functions = re.findall(
+                  r"(?im)^\s*(?:Public|Private)?\s*Function\s+(\w+)", text
+              )
+              end_subs = len(re.findall(r"(?im)^\s*End\s+Sub\s*$", text))
+              end_functions = len(
+                  re.findall(r"(?im)^\s*End\s+Function\s*$", text)
+              )
+
+              if len(subs) != end_subs:
+                  raise SystemExit(
+                      f"{path.name}: Sub count {len(subs)} != End Sub {end_subs}"
+                  )
+              if len(functions) != end_functions:
+                  raise SystemExit(
+                      f"{path.name}: Function count {len(functions)} != "
+                      f"End Function {end_functions}"
+                  )
+
+              names = subs + functions
+              duplicates = sorted({name for name in names if names.count(name) > 1})
+              if duplicates:
+                  raise SystemExit(f"{path.name}: duplicate procedures {duplicates}")
+
+              if re.search(r"(?i)\.Value\s*=\s*Array\s*\(", text):
+                  raise SystemExit(
+                      f"{path.name}: unsafe one-dimensional range array write"
+                  )
+
+              for required_name in required_names:
+                  if required_name not in names:
+                      raise SystemExit(
+                          f"{path.name}: missing required procedure {required_name}"
+                      )
+
+              print(
+                  f"PASS {path.name}: {len(subs)} Subs, "
+                  f"{len(functions)} Functions"
+              )
+          PY
+
+      - name: Build public ZIP package
+        shell: bash
+        run: |
+          cd rates-analysis
+          zip -j Rates_Analysis_Split_Modules_v4.zip \
+            Rates_Analysis_Structure.bas \
+            Rates_Analysis_Model.bas \
+            SPLIT_MODULES_v4.md
+
+      - name: Commit generated files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            rates-analysis/Rates_Analysis_Structure.bas \
+            rates-analysis/Rates_Analysis_Model.bas \
+            rates-analysis/Rates_Analysis_Split_Modules_v4.zip
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "Publish split rates VBA modules [skip ci]"
+            git push
+          fi
