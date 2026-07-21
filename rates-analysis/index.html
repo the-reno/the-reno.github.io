@@ -20,40 +20,41 @@
 <main>
   <section class="hero">
     <h1>Historical Cash Investment Analysis</h1>
-    <p>An Excel and VBA model for ON, 1M, 2M, 3M and 6M deposits. It combines daily accrual economics, daily rolling reinvestment-rate risk, term-premium analysis, aligned earnings volatility and a fully described historical efficient frontier.</p>
+    <p>An Excel and VBA model for ON, 1M, 2M, 3M and 6M deposits. Version 3 corrects the chart timeline, rebuilds daily reinvestment risk from the curve and describes every historical efficient-frontier point.</p>
   </section>
 
-  <h2>Version 2 resources</h2>
+  <h2>Actual-curve version 3</h2>
   <section class="grid">
-    <article class="card"><h3>VBA version 2</h3><p>Reconstruct and download the complete revised VBA module directly in the browser.</p><a class="button" href="download-vba.html">Download VBA v2</a></article>
-    <article class="card"><h3>Revision notes</h3><p>Daily rolling reinvestment analysis, reset volatility and frontier classifications.</p><a class="button" href="REVISION_NOTES_v2.md">Read v2 notes</a></article>
-    <article class="card"><h3>Test results</h3><p>Validated accrual rows, reset scenarios, transactions, frontier descriptions and risk statistics.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
+    <article class="card"><h3>VBA version 3</h3><p>Reconstruct and download the corrected VBA module directly in the browser.</p><a class="button" href="download-vba.html">Download VBA v3</a></article>
+    <article class="card"><h3>Actual-curve revision</h3><p>Corrected date logic, uploaded-curve results, reset statistics and validation.</p><a class="button" href="ACTUAL_CURVE_REVISION_v3.md">Read v3 results</a></article>
     <article class="card"><h3>Documentation</h3><p>Inputs, conventions, methodology and Excel instructions.</p><a class="button" href="README.md">Read README</a></article>
-    <article class="card"><h3>Python reconstruction</h3><p>Alternative source reconstruction script for macOS, Linux or Windows with Python.</p><a class="button" href="rebuild_vba.py">Download script</a></article>
-    <article class="card"><h3>PowerShell reconstruction</h3><p>Alternative source reconstruction script for Windows PowerShell.</p><a class="button" href="rebuild-vba.ps1">Download script</a></article>
+    <article class="card"><h3>Simulation tests</h3><p>Automated deterministic tests for the public model structure.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
   </section>
 
-  <h2>What changed</h2>
+  <h2>Corrected logic</h2>
   <ul>
-    <li>Every eligible curve date is a real start-date scenario for every tenor.</li>
-    <li>The model compares the same-tenor rate at the start with the rate available at actual maturity.</li>
-    <li>Reset volatility remains in basis points without tenor normalization or annualization.</li>
-    <li>Every efficient-frontier point has a rank, segment, description, allocation summary, WAM and liquidity profile.</li>
+    <li>Every calendar date is a possible cash-availability scenario.</li>
+    <li>The actual start is the first available curve date on or after the scenario date.</li>
+    <li>The actual maturity is the latest curve date on or before the tenor target.</li>
+    <li>The same-tenor maturity rate is compared with the same-tenor start rate.</li>
+    <li>Reset volatility remains in basis points without annualization or tenor normalization.</li>
+    <li>The efficient frontier uses aligned complete-month strategy returns and remains separate from reinvestment reset risk.</li>
+    <li>Every frontier point includes a rank, segment, description, allocation summary, WAM and liquidity profile.</li>
   </ul>
 
   <h2>Use in Excel</h2>
   <ol>
-    <li>Download the version 2 VBA module above.</li>
+    <li>Download the version 3 VBA module above.</li>
     <li>Open a blank macro-enabled workbook.</li>
-    <li>Import <code>Rates_Analysis_Final_v2.bas</code> through the VBA editor.</li>
+    <li>Import <code>Rates_Analysis_Final_v3.bas</code> through the VBA editor.</li>
     <li>Run <code>CreateBlankRatesModel</code>.</li>
     <li>Enter the inputs and paste the curve with headers <code>Date | ON | 1M | 2M | 3M | 6M</code>.</li>
     <li>Run <code>BuildRatesAnalysisModel</code>.</li>
   </ol>
-  <div class="note">Rates are entered as percentage points: <strong>1.54 means 1.54%</strong>. The model uses ACT/360, reinvests interest and applies the latest prior curve date when a target date is unavailable.</div>
+  <div class="note">Rates are entered as percentage points: <strong>1.54 means 1.54%</strong>. The rolling strategy uses ACT/360. The daily reset analysis uses next-available start and prior-available maturity dates.</div>
 
-  <h2>Dashboard preview</h2>
-  <img src="Rates_Model_Simulation_Dashboard.png" alt="Historical cash investment analysis dashboard preview">
+  <h2>Simulation dashboard preview</h2>
+  <img src="Rates_Model_Simulation_Dashboard.png" alt="Historical cash investment analysis simulation dashboard preview">
 
   <footer>Historical analysis only. Results are not a forecast and do not include credit limits, early-withdrawal economics, execution costs or accounting treatment.</footer>
 </main>
