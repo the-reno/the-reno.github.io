@@ -20,38 +20,41 @@
 <main>
   <section class="hero">
     <h1>Historical Cash Investment Analysis</h1>
-    <p>An Excel and VBA model for ON, 1M, 2M, 3M and 6M deposits. Version 3 corrects the chart timeline, rebuilds daily reinvestment risk from the curve and describes every historical efficient-frontier point.</p>
+    <p>The corrected actual-curve model is now separated into one VBA module that creates the workbook structure and another that calculates rolling results, daily reinvestment risk, efficient-frontier descriptions and eight charts.</p>
   </section>
 
-  <h2>Actual-curve version 3</h2>
+  <h2>Split VBA modules — version 4</h2>
   <section class="grid">
-    <article class="card"><h3>VBA version 3</h3><p>Reconstruct and download the corrected VBA module directly in the browser.</p><a class="button" href="download-vba.html">Download VBA v3</a></article>
-    <article class="card"><h3>Actual-curve revision</h3><p>Corrected date logic, uploaded-curve results, reset statistics and validation.</p><a class="button" href="ACTUAL_CURVE_REVISION_v3.md">Read v3 results</a></article>
-    <article class="card"><h3>Documentation</h3><p>Inputs, conventions, methodology and Excel instructions.</p><a class="button" href="README.md">Read README</a></article>
-    <article class="card"><h3>Simulation tests</h3><p>Automated deterministic tests for the public model structure.</p><a class="button" href="TEST_RESULTS.md">View tests</a></article>
+    <article class="card"><h3>Complete package</h3><p>Both VBA modules and installation documentation.</p><a class="button" href="Rates_Analysis_Split_Modules_v4.zip">Download ZIP</a></article>
+    <article class="card"><h3>Workbook structure</h3><p>Creates and formats Inputs, Curve, analysis sheets, dashboard and test structure.</p><a class="button" href="Rates_Analysis_Structure.bas">Download structure BAS</a></article>
+    <article class="card"><h3>Calculation model</h3><p>Runs the curve engine, rolling accruals, reset analysis, frontier and charts.</p><a class="button" href="Rates_Analysis_Model.bas">Download model BAS</a></article>
+    <article class="card"><h3>Installation guide</h3><p>Required inputs, calculation conventions and import sequence.</p><a class="button" href="SPLIT_MODULES_v4.md">Read guide</a></article>
+    <article class="card"><h3>Actual-curve revision</h3><p>Corrected date logic, uploaded-curve results, reset statistics and validation.</p><a class="button" href="ACTUAL_CURVE_REVISION_v3.md">Read results</a></article>
+    <article class="card"><h3>Full documentation</h3><p>Model methodology, risk definitions and public-file history.</p><a class="button" href="README.md">Read README</a></article>
   </section>
 
   <h2>Corrected logic</h2>
   <ul>
-    <li>Every calendar date is a possible cash-availability scenario.</li>
-    <li>The actual start is the first available curve date on or after the scenario date.</li>
+    <li>Every eligible curve date is a valid daily investment start.</li>
     <li>The actual maturity is the latest curve date on or before the tenor target.</li>
     <li>The same-tenor maturity rate is compared with the same-tenor start rate.</li>
     <li>Reset volatility remains in basis points without annualization or tenor normalization.</li>
-    <li>The efficient frontier uses aligned complete-month strategy returns and remains separate from reinvestment reset risk.</li>
+    <li>Historical-rate charts retain actual Excel dates and chronological time-scale axes.</li>
+    <li>The efficient frontier uses aligned month-end strategy returns and remains separate from reinvestment reset risk.</li>
     <li>Every frontier point includes a rank, segment, description, allocation summary, WAM and liquidity profile.</li>
   </ul>
 
   <h2>Use in Excel</h2>
   <ol>
-    <li>Download the version 3 VBA module above.</li>
+    <li>Download the complete package or both BAS files above.</li>
     <li>Open a blank macro-enabled workbook.</li>
-    <li>Import <code>Rates_Analysis_Final_v3.bas</code> through the VBA editor.</li>
-    <li>Run <code>CreateBlankRatesModel</code>.</li>
+    <li>Import <code>Rates_Analysis_Structure.bas</code> through the VBA editor.</li>
+    <li>Import <code>Rates_Analysis_Model.bas</code>.</li>
+    <li>Run <code>CreateRatesAnalysisStructure</code>.</li>
     <li>Enter the inputs and paste the curve with headers <code>Date | ON | 1M | 2M | 3M | 6M</code>.</li>
     <li>Run <code>BuildRatesAnalysisModel</code>.</li>
   </ol>
-  <div class="note">Rates are entered as percentage points: <strong>1.54 means 1.54%</strong>. The rolling strategy uses ACT/360. The daily reset analysis uses next-available start and prior-available maturity dates.</div>
+  <div class="note">Rates are entered as percentage points: <strong>4.31 means 4.31%</strong>. The rolling strategy uses ACT/360. The two modules must be imported into the same workbook.</div>
 
   <h2>Simulation dashboard preview</h2>
   <img src="Rates_Model_Simulation_Dashboard.png" alt="Historical cash investment analysis simulation dashboard preview">
