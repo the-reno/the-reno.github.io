@@ -8,6 +8,7 @@ on:
       - "rates-analysis/scripts/**"
       - "rates-analysis/README.md"
       - "rates-analysis/index.html"
+      - "rates-analysis/ACTUAL_CURVE_REVISION_v3.md"
       - ".github/workflows/build-rates-analysis.yml"
   workflow_dispatch:
 
@@ -49,6 +50,20 @@ jobs:
 
       - name: Build and test Excel artifacts
         run: python rates-analysis/scripts/build_artifacts.py
+
+      - name: Reconstruct current actual-curve VBA
+        shell: bash
+        run: |
+          cat rates-analysis/source/v3/Rates_Analysis_Final_v3.bas.gz.b64.part* > /tmp/rates_v3.b64
+          python - <<'PY'
+          import base64
+          import gzip
+          from pathlib import Path
+
+          encoded = Path('/tmp/rates_v3.b64').read_text(encoding='ascii')
+          raw = gzip.decompress(base64.b64decode(encoded))
+          Path('rates-analysis/Rates_Analysis_Final.bas').write_bytes(raw)
+          PY
 
       - name: Commit generated files
         shell: bash
