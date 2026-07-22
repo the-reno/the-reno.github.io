@@ -28,19 +28,17 @@
     .maker-card .maker-loading{font-size:12px;color:#686868;letter-spacing:.02em;margin-top:2.2rem}
     .maker-artifact{position:absolute;right:24px;bottom:24px;width:292px;height:122px;border:0;border-radius:5px;background:#0d0d0d;overflow:hidden;box-shadow:none;contain:layout paint;isolation:isolate}
     .maker-artifact::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.18));pointer-events:none}
-    .maker-artifact img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:none;transform:translateZ(0) scale(1.01);backface-visibility:hidden;opacity:0;will-change:opacity}
+    .maker-artifact img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:none;backface-visibility:hidden;opacity:0;will-change:opacity}
     .maker-artifact .young{object-position:center 54%;animation:youngFade 8.4s ease-in-out infinite}
     .maker-artifact .present{object-position:68% 54%;animation:presentFade 8.4s ease-in-out infinite}
-    .maker-artifact .runner{object-position:center center;transform:translateZ(0);animation:runnerFade 8.4s ease-in-out infinite}
+    .maker-artifact .runner{object-position:center center;animation:runnerFade 8.4s ease-in-out infinite}
     @keyframes youngFade{0%,25%{opacity:.94}31%,95%{opacity:0}100%{opacity:.94}}
     @keyframes presentFade{0%,27%{opacity:0}34%,58%{opacity:.94}65%,100%{opacity:0}}
     @keyframes runnerFade{0%,60%{opacity:0}67%,90%{opacity:.94}97%,100%{opacity:0}}
     @media(max-width:600px){.maker-artifact .young{object-position:57% 54%}.maker-artifact .present{object-position:73% 54%}.maker-artifact .runner{object-position:center center}}
     @media(prefers-reduced-motion:reduce){.card{transition:none}.maker-artifact .young,.maker-artifact .present{animation:none;opacity:0}.maker-artifact .runner{animation:none;opacity:.94}}
     .arrow{position:absolute;top:50%;transform:translateY(-50%);background:none;border:none;color:#333;font-size:2rem;cursor:pointer;z-index:100;padding:1rem;transition:color .2s;font-family:'DM Mono',monospace;line-height:1}
-    .arrow:hover{color:#888}
-    .arrow.left{left:1rem}
-    .arrow.right{right:1rem}
+    .arrow:hover{color:#888}.arrow.left{left:1rem}.arrow.right{right:1rem}
     .dots{display:flex;gap:6px;margin-top:2rem}
     .dot{width:5px;height:5px;border-radius:50%;background:#1f1f1f;transition:background .2s,transform .2s;cursor:pointer}
     .dot.active{background:#555;transform:scale(1.35)}
@@ -52,7 +50,7 @@
     <div class="card triathlon-card"><p class="greeting">// 01 · endurance</p><h1><em>Triathlon.</em></h1><p class="card-body">How the body keeps moving under pressure.</p><a class="feature-link" href="/triathlon/">Explore · Endurance →</a></div>
     <div class="card"><p class="greeting">// 02 · inquiry</p><h1><em>Science.</em></h1><p class="card-body">From dice probabilities to gravity, traffic waves and fragile systems.</p><a class="feature-link" href="/Science/prediction.html">Explore · The Complexity of Prediction →</a><a class="feature-link" href="/Science/forest-fire-model.html">Explore · The Spark →</a><a class="feature-link" href="/Science/traffic-jam.html">Explore · Phantom Traffic Jam →</a></div>
     <div class="card"><p class="greeting">// 03 · finance</p><h1><em>Markets.</em></h1><p class="card-body">Sharp edges.</p></div>
-    <div class="card maker-card"><p class="greeting">// 04 · Maker</p><p class="maker-loading">loading...</p><div class="maker-artifact" aria-hidden="true"><img class="young" src="/assets/young-memory.svg" width="584" height="244" loading="eager" decoding="async" fetchpriority="low" alt="Earlier memory watching a football game"><img class="present" src="/assets/present-reflection.webp" width="900" height="450" loading="eager" decoding="async" fetchpriority="low" alt="Present reflective night view toward Manhattan"><img class="runner" src="/assets/runner-card-final.svg?v=20260722d" width="292" height="122" loading="eager" decoding="async" fetchpriority="low" alt="Night runner moving beside the waterfront"></div></div>
+    <div class="card maker-card"><p class="greeting">// 04 · Maker</p><p class="maker-loading">loading...</p><div class="maker-artifact" aria-hidden="true"><img class="young" src="/assets/young-memory.svg" width="584" height="244" loading="eager" decoding="async" fetchpriority="low" alt="Earlier memory watching a football game"><img class="present" src="/assets/present-reflection.webp" width="900" height="450" loading="eager" decoding="async" fetchpriority="low" alt="Present reflective night view toward Manhattan"><img class="runner" src="/assets/runner-card.jpg?v=20260722e" width="292" height="122" loading="eager" decoding="async" fetchpriority="low" alt="Night runner moving beside the waterfront"></div></div>
     <button class="arrow left" id="prev" aria-label="Previous card">‹</button>
     <button class="arrow right" id="next" aria-label="Next card">›</button>
   </div>
@@ -63,8 +61,7 @@
     const dotsEl=document.getElementById('dots');
     const total=cards.length;
     const positions=[{x:-540,rotY:42,scale:.72,opacity:.35,z:-200},{x:-240,rotY:28,scale:.85,opacity:.60,z:-100},{x:0,rotY:0,scale:1,opacity:1,z:0},{x:240,rotY:-28,scale:.85,opacity:.60,z:-100},{x:540,rotY:-42,scale:.72,opacity:.35,z:-200}];
-    let current=0;
-    let touchStartX=0;
+    let current=0;let touchStartX=0;
     const dots=Array.from({length:total},(_,i)=>{const dot=document.createElement('div');dot.className='dot'+(i===0?' active':'');dot.onclick=()=>goTo(i);dotsEl.appendChild(dot);return dot});
     function goTo(index){current=((index%total)+total)%total;requestAnimationFrame(()=>{cards.forEach((card,i)=>{let slot=i-current;if(slot<-2)slot+=total;if(slot>2)slot-=total;const pos=positions[slot+2];card.style.transform=`translate3d(${pos.x}px,0,${pos.z}px) rotateY(${pos.rotY}deg) scale(${pos.scale})`;card.style.opacity=pos.opacity;card.style.filter=slot===0?'none':'brightness(0.6)';card.style.zIndex=10-Math.abs(slot);card.style.pointerEvents=slot===0?'auto':'none'});dots.forEach((dot,i)=>dot.classList.toggle('active',i===current))})}
     document.getElementById('prev').addEventListener('click',()=>goTo(current-1));
