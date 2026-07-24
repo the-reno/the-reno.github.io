@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Build a simplified mechanical model of the human body and compare running movement." />
+  <title>Body Mechanics · Ronu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles/body-mechanics.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="brand">Ronu.</a>
+    <a href="/triathlon/" class="back-link">← Endurance</a>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro">
+      <p class="eyebrow">// body mechanics</p>
+      <h1>Running is a moving balance of mass.</h1>
+      <p>Define a simplified body, change its movement, and observe its center of mass and rotational balance.</p>
+    </section>
+
+    <section class="workspace" aria-label="Body mechanics simulator">
+      <aside class="panel inputs-panel">
+        <h2>Body inputs</h2>
+        <form id="body-form" novalidate>
+          <fieldset>
+            <legend>Total body</legend>
+            <label>Height <span><input id="total-height" name="totalHeightCm" type="number" min="80" max="240" step="0.1" value="178" /> cm</span></label>
+            <label>Weight <span><input id="total-mass" name="totalMassKg" type="number" min="20" max="250" step="0.1" value="78" /> kg</span></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Segments</legend>
+            <div class="segment-header"><span>Part</span><span>Length cm</span><span>Weight %</span></div>
+            <div id="segment-inputs"></div>
+          </fieldset>
+
+          <div id="mass-summary" class="mass-summary" aria-live="polite"></div>
+        </form>
+      </aside>
+
+      <section class="panel runner-panel">
+        <div class="panel-heading">
+          <h2>Mechanical model</h2>
+          <div class="controls">
+            <button id="play-toggle" type="button">Play</button>
+            <label>Cadence <input id="cadence" type="range" min="120" max="220" value="170" /> <output id="cadence-output">170</output></label>
+          </div>
+        </div>
+        <svg id="runner-view" viewBox="0 0 600 620" role="img" aria-label="Simplified animated runner">
+          <line class="ground" x1="40" y1="560" x2="560" y2="560" />
+          <g id="runner-segments"></g>
+          <circle id="whole-body-com" class="whole-body-com" r="7" />
+        </svg>
+      </section>
+
+      <aside class="panel results-panel">
+        <h2>Mechanical data</h2>
+        <dl id="results"></dl>
+        <p class="method-note">This model reports mechanical relationships. It does not estimate muscle force, injury risk, or running economy.</p>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module" src="./scripts/app.js"></script>
+</body>
+</html>
