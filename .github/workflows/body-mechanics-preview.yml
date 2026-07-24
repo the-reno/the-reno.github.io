@@ -1,0 +1,41 @@
+name: Body Mechanics Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/body-mechanics-structure
+    paths:
+      - 'docs/triathlon/body-mechanics/**'
+      - '.github/workflows/body-mechanics-preview.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: body-mechanics-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload preview site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy preview
+        id: deployment
+        uses: actions/deploy-pages@v4
