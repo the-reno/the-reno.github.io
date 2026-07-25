@@ -4,7 +4,7 @@ export const SEGMENT_DEFINITIONS=Object.freeze([
   {id:'pelvis',label:'Pelvis',lengthCm:20,massPercent:12,parent:null},
   {id:'upperArm',label:'Upper arm · each',lengthCm:31,massPercent:3,parent:'torso',paired:true},
   {id:'forearmHand',label:'Forearm + hand · each',lengthCm:42,massPercent:2,parent:'upperArm',paired:true},
-  {id:'thigh',label:'Thigh · each',lengthCm:47,massPercent:10,parent:'pelvis',paired:true},
+  {id:'thigh',label:'Thigh · each',lengthCm:47,massPercent:11.5,parent:'pelvis',paired:true},
   {id:'lowerLeg',label:'Lower leg · each',lengthCm:44,massPercent:5,parent:'thigh',paired:true},
   {id:'foot',label:'Foot · each',lengthCm:27,massPercent:1.5,parent:'lowerLeg',paired:true}
 ]);
