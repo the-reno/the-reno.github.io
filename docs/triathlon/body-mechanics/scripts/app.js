@@ -15,26 +15,55 @@ const runnerGroup=document.getElementById('runner-segments');
 const comMarker=document.getElementById('whole-body-com');
 const results=document.getElementById('results');
 
-let segments=[];let model;let phase=0;let playing=false;let lastTime=performance.now();
+let segments=[];
+let model;
+let phase=0;
+let playing=false;
+let lastTime=performance.now();
 
 function rebuild(){
-  model=createBodyModel({totalHeightCm:Number(totalHeight.value),totalMassKg:Number(totalMass.value),segments});
+  model=createBodyModel({
+    totalHeightCm:Number(totalHeight.value),
+    totalMassKg:Number(totalMass.value),
+    segments
+  });
   const valid=renderMassSummary(massSummary,segments,model.totalMassKg);
   playToggle.disabled=!valid;
+  if(!valid&&playing){playing=false;playToggle.textContent='Play';}
   renderFrame();
 }
+
 function renderFrame(){
   if(!model)return;
-  const center=renderRunner(runnerGroup,comMarker,model,gaitAngles(phase));
-  results.innerHTML=`<dt>Body mass</dt><dd>${model.totalMassKg.toFixed(1)} kg</dd><dt>Weight force</dt><dd>${weightForce(model.totalMassKg).toFixed(1)} N</dd><dt>Center of mass X</dt><dd>${center.x.toFixed(1)} px</dd><dt>Center of mass Y</dt><dd>${center.y.toFixed(1)} px</dd><dt>Cadence</dt><dd>${cadence.value} spm</dd>`;
+  const frame=renderRunner(runnerGroup,comMarker,model,gaitAngles(phase));
+  const comHeightCm=(frame.groundY-frame.center.y)/frame.scale*100;
+  const comOffsetCm=(frame.center.x-frame.pelvisCenter.x)/frame.scale*100;
+  results.innerHTML=`
+    <dt>Body mass</dt><dd>${model.totalMassKg.toFixed(1)} kg</dd>
+    <dt>Weight force</dt><dd>${weightForce(model.totalMassKg).toFixed(1)} N</dd>
+    <dt>COM height</dt><dd>${comHeightCm.toFixed(1)} cm</dd>
+    <dt>COM from pelvis</dt><dd>${comOffsetCm>=0?'+':''}${comOffsetCm.toFixed(1)} cm</dd>
+    <dt>Support side</dt><dd>${frame.supportSide}</dd>
+    <dt>Cadence</dt><dd>${cadence.value} spm</dd>`;
 }
+
 function animate(now){
-  const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;
-  if(playing){phase=(phase+dt*phaseRateFromCadence(Number(cadence.value)))%1;renderFrame();}
+  const deltaTime=Math.min((now-lastTime)/1000,.05);
+  lastTime=now;
+  if(playing){
+    phase=(phase+deltaTime*phaseRateFromCadence(Number(cadence.value)))%1;
+    renderFrame();
+  }
   requestAnimationFrame(animate);
 }
+
 segments=mountBodyForm(segmentInputs,next=>{segments=next;rebuild();});
 [totalHeight,totalMass].forEach(input=>input.addEventListener('input',rebuild));
 cadence.addEventListener('input',()=>{cadenceOutput.value=cadence.value;renderFrame();});
-playToggle.addEventListener('click',()=>{playing=!playing;playToggle.textContent=playing?'Pause':'Play';});
-rebuild();requestAnimationFrame(animate);
+playToggle.addEventListener('click',()=>{
+  playing=!playing;
+  playToggle.textContent=playing?'Pause':'Play';
+});
+
+rebuild();
+requestAnimationFrame(animate);
