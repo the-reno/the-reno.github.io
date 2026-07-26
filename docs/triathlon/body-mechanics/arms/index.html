@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Explore how arm proportions, elbow position, swing amplitude and timing balance running rotation." />
+  <title>Arm Mechanics · Ronu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles/arm-mechanics.css?v=20260725a" />
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">Ronu.</a><a class="back" href="/triathlon/body-mechanics/">← Body Mechanics</a></header>
+  <main class="shell">
+    <section class="intro"><p class="eyebrow">// body mechanics · arms</p><h1>Balance rotation with less unnecessary motion.</h1><p>Change arm proportions and movement. The model compares arm angular momentum with a simplified lower-body reference and searches for a combination that reduces residual rotation without excessive shoulder demand.</p></section>
+    <section class="workspace">
+      <aside class="panel inputs">
+        <h2>Arm inputs</h2>
+        <fieldset><legend>1 · Body</legend>
+          <label>Height <span><input id="height" type="number" min="120" max="230" step="0.1" value="178" /> cm</span></label>
+          <label>Weight <span><input id="weight" type="number" min="30" max="250" step="0.1" value="78" /> kg</span></label>
+          <label>Both arms <span><input id="arms-mass" type="number" min="4" max="16" step="0.1" value="10" /> %</span></label>
+        </fieldset>
+        <fieldset><legend>2 · Proportions</legend>
+          <label>Arm length <select id="arm-length"><option value="small">Small</option><option value="average" selected>Average</option><option value="large">Large</option></select></label>
+          <label>Forearm proportion <select id="forearm"><option value="small">Small</option><option value="average" selected>Average</option><option value="large">Large</option></select></label>
+        </fieldset>
+        <fieldset><legend>3 · Movement</legend>
+          <label>Elbow profile <select id="elbow-profile"><option value="compact">Compact</option><option value="neutral" selected>Neutral</option><option value="open">Open</option></select></label>
+          <label>Swing amplitude <select id="amplitude"><option value="small">Small</option><option value="average" selected>Average</option><option value="large">Large</option></select></label>
+          <label>Timing <select id="timing"><option value="early">Slightly early</option><option value="synchronized" selected>Synchronized</option><option value="late">Slightly late</option></select></label>
+          <label>Cadence <span><input id="cadence" type="range" min="120" max="220" value="170" /><output id="cadence-output">170</output></span></label>
+        </fieldset>
+        <div id="validation" class="validation valid" aria-live="polite"></div>
+      </aside>
+
+      <section class="panel visual">
+        <div class="visual-header"><h2>Movement and balance</h2><div class="controls"><button id="play-toggle">Play</button><span>One complete stride</span></div></div>
+        <div class="views">
+          <div class="view-card"><p>Side view · lever arms</p><svg id="side-view" viewBox="0 0 600 360" role="img" aria-label="Side view of both arms"></svg></div>
+          <div class="view-card"><p>Top view · rotation proxy</p><svg id="top-view" viewBox="0 0 600 360" role="img" aria-label="Top view of arm counter rotation"><defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#aaa" /></marker></defs></svg></div>
+        </div>
+        <h3>Angular momentum through the stride</h3>
+        <svg id="momentum-trace" viewBox="0 0 540 120" role="img" aria-label="Arm, leg and residual angular momentum"></svg>
+        <div class="legend"><span>Reference legs</span><span>Arms</span><span>Residual</span></div>
+      </section>
+
+      <aside class="panel results"><h2>Mechanical comparison</h2><dl id="results"></dl><div id="suggestion" class="suggestion"></div><p class="note">The lower-body curve is a simplified reference model, not measured force-plate or motion-capture data. “Suggested” means the lowest combined residual momentum, shoulder torque and positive-work proxy among the tested profiles.</p></aside>
+    </section>
+  </main>
+  <script type="module" src="./scripts/app.js?v=20260725a"></script>
+</body>
+</html>
