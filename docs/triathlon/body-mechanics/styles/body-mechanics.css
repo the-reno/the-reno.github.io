@@ -18,7 +18,9 @@ body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monos
 .intro{max-width:760px;margin-bottom:34px}
 .eyebrow{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#555}
 .intro h1{font-family:'Instrument Serif',serif;font-size:clamp(2.4rem,5vw,5rem);font-weight:400;line-height:.98;color:var(--text);margin:.5rem 0 1rem}
-.intro>p:last-child{max-width:720px;line-height:1.8;color:var(--muted)}
+.intro>p:last-of-type{max-width:720px;line-height:1.8;color:var(--muted)}
+.module-link{display:inline-block;margin-top:.8rem;padding:.75rem 0;border-top:1px solid #242424;color:#999;text-decoration:none;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;transition:color .2s,padding-left .2s}
+.module-link:hover,.module-link:focus-visible{color:var(--text);padding-left:.25rem;outline:none}
 .workspace{display:grid;grid-template-columns:minmax(280px,350px) minmax(420px,1fr) minmax(260px,330px);gap:16px;align-items:start}
 .panel{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:20px;min-width:0}
 .panel h2{font-family:'Instrument Serif',serif;font-size:1.6rem;font-weight:400;color:var(--text);margin:0 0 18px}
