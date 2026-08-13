@@ -11,8 +11,7 @@
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monospace;min-height:100vh}
 .site-header{display:flex;justify-content:space-between;align-items:center;max-width:1500px;margin:0 auto;padding:24px 28px}
-.brand,.back-link{color:var(--text);text-decoration:none}
-.brand{font-family:'Instrument Serif',serif;font-size:1.7rem}
+.back-link{color:var(--text);text-decoration:none}
 .back-link{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .app-shell{max-width:1500px;margin:0 auto;padding:20px 28px 48px}
 .intro{max-width:760px;margin-bottom:34px}
