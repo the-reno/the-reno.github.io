@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+  <link rel="privacy-policy" href="/privacy/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Temporary preview — a mechanical model of a runner in motion, built from the body's core rotational axes." />
+  <title>Body Mechanics · Ronu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles/body-mechanics.css?v=20260814-preview" />
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="back-link">← Ronu</a>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro">
+      <p class="eyebrow">// body mechanics</p>
+      <h1>Running is a moving balance of mass.</h1>
+      <p>A mechanical model of a runner, built from the body's core rotational axes.</p>
+      <a class="module-link" href="/triathlon/body-mechanics/arms/">Open · Arm Mechanics →</a>
+    </section>
+
+    <section class="stage-wrap" aria-label="Animated mechanical runner model">
+      <svg id="runner-view" viewBox="0 0 600 620" role="img" aria-label="Mechanical model of a running human, animated">
+        <line class="ground" x1="40" y1="548" x2="560" y2="548" />
+        <line id="vertical-axis" class="vertical-axis" />
+        <g id="runner-segments"></g>
+        <circle id="whole-body-com" class="whole-body-com" r="7" />
+      </svg>
+      <p class="axis-caption">Hip · Knee · Ankle · Shoulder · Elbow — the runner's primary rotational axes</p>
+    </section>
+  </main>
+
+  <script type="module" src="./scripts/app.js?v=20260814-preview"></script>
+</body>
+</html>
