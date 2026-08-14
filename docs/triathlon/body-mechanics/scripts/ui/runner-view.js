@@ -15,6 +15,7 @@ function shifted(point,dy){return{x:point.x,y:point.y+dy};}
 
 export function renderRunner(group,comMarker,model,angles){
   const torsoLength=segmentLength(model,'torso');
+  const neckLength=segmentLength(model,'neck');
   const headLength=segmentLength(model,'head');
   const upperArmLength=segmentLength(model,'upperArm');
   const forearmLength=segmentLength(model,'forearmHand');
@@ -26,7 +27,8 @@ export function renderRunner(group,comMarker,model,angles){
   const pelvisCenterRaw={x:CENTER_X,y:300-(angles.pelvisLift||0)};
   const torsoTopRaw=endpoint(pelvisCenterRaw,torsoLength,Math.PI-angles.torso);
   const shoulderCenterRaw=pointAlong(torsoTopRaw,pelvisCenterRaw,.16);
-  const headCenterRaw=endpoint(torsoTopRaw,headLength*.48,Math.PI-angles.torso);
+  const neckTopRaw=endpoint(torsoTopRaw,neckLength,Math.PI-angles.torso);
+  const headCenterRaw=endpoint(neckTopRaw,headLength*.48,Math.PI-angles.torso);
   const shoulderHalf=totalHeightPx*.245/2;
   const hipHalf=totalHeightPx*.19/2;
   const leftShoulderRaw={x:shoulderCenterRaw.x-shoulderHalf,y:shoulderCenterRaw.y};
@@ -48,7 +50,7 @@ export function renderRunner(group,comMarker,model,angles){
   const supportFoot=angles.supportSide==='left'?leftFootRaw:rightFootRaw;
   const verticalShift=GROUND_Y-Math.max(supportFoot.heel.y,supportFoot.toe.y);
   const move=point=>shifted(point,verticalShift);
-  const pelvisCenter=move(pelvisCenterRaw),torsoTop=move(torsoTopRaw),shoulderCenter=move(shoulderCenterRaw),headCenter=move(headCenterRaw);
+  const pelvisCenter=move(pelvisCenterRaw),torsoTop=move(torsoTopRaw),shoulderCenter=move(shoulderCenterRaw),neckTop=move(neckTopRaw),headCenter=move(headCenterRaw);
   const leftShoulder=move(leftShoulderRaw),rightShoulder=move(rightShoulderRaw),leftHip=move(leftHipRaw),rightHip=move(rightHipRaw);
   const leftElbow=move(leftElbowRaw),rightElbow=move(rightElbowRaw),leftHand=move(leftHandRaw),rightHand=move(rightHandRaw);
   const leftKnee=move(leftKneeRaw),rightKnee=move(rightKneeRaw);
@@ -75,6 +77,7 @@ export function renderRunner(group,comMarker,model,angles){
   drawLine(group,'right-foot',rightHeel,rightToe,'body-segment back-segment foot-segment');
   drawPolygon(group,'torso-shape',[leftShoulder,rightShoulder,rightHip,leftHip],'torso-shape');
   drawLine(group,'torso',pelvisCenter,torsoTop,'spine-line');
+  drawLine(group,'neck',torsoTop,neckTop,'neck-segment');
   drawLine(group,'left-upper-arm',leftShoulder,leftElbow);
   drawLine(group,'left-forearm',leftElbow,leftHand);
   drawLine(group,'left-thigh',leftHip,leftKnee);
@@ -85,7 +88,7 @@ export function renderRunner(group,comMarker,model,angles){
   for(const[id,position]of [['left-shoulder-joint',leftShoulder],['right-shoulder-joint',rightShoulder],['left-elbow-joint',leftElbow],['right-elbow-joint',rightElbow],['left-hip-joint',leftHip],['right-hip-joint',rightHip],['left-knee-joint',leftKnee],['right-knee-joint',rightKnee],['left-ankle-joint',leftAnkle],['right-ankle-joint',rightAnkle]])drawCircle(group,id,position,6,'joint');
 
   const weightedSegments=[
-    {massKg:segmentMass(model,'head'),com:headCenter},{massKg:segmentMass(model,'torso'),com:pointAlong(pelvisCenter,torsoTop,.5)},{massKg:segmentMass(model,'pelvis'),com:pelvisCenter},
+    {massKg:segmentMass(model,'head'),com:headCenter},{massKg:segmentMass(model,'neck'),com:pointAlong(torsoTop,neckTop,.5)},{massKg:segmentMass(model,'torso'),com:pointAlong(pelvisCenter,torsoTop,.5)},{massKg:segmentMass(model,'pelvis'),com:pelvisCenter},
     {massKg:segmentMass(model,'upperArm'),com:pointAlong(leftShoulder,leftElbow,.5)},{massKg:segmentMass(model,'upperArm'),com:pointAlong(rightShoulder,rightElbow,.5)},
     {massKg:segmentMass(model,'forearmHand'),com:pointAlong(leftElbow,leftHand,.5)},{massKg:segmentMass(model,'forearmHand'),com:pointAlong(rightElbow,rightHand,.5)},
     {massKg:segmentMass(model,'thigh'),com:pointAlong(leftHip,leftKnee,.5)},{massKg:segmentMass(model,'thigh'),com:pointAlong(rightHip,rightKnee,.5)},
