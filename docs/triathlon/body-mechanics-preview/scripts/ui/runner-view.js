@@ -35,8 +35,8 @@ export function renderRunner(group,comMarker,model,angles){
 
   const leftElbowRaw=endpoint(leftShoulderRaw,upperArmLength,angles.leftShoulder);
   const rightElbowRaw=endpoint(rightShoulderRaw,upperArmLength,angles.rightShoulder);
-  const leftHandRaw=endpoint(leftElbowRaw,forearmLength,angles.leftShoulder+(Math.PI-angles.leftElbow));
-  const rightHandRaw=endpoint(rightElbowRaw,forearmLength,angles.rightShoulder-(Math.PI-angles.rightElbow));
+  const leftHandRaw=endpoint(leftElbowRaw,forearmLength,angles.leftShoulder+angles.leftElbow);
+  const rightHandRaw=endpoint(rightElbowRaw,forearmLength,angles.rightShoulder-angles.rightElbow);
   const leftKneeRaw=endpoint(leftHipRaw,thighLength,angles.leftHip);
   const rightKneeRaw=endpoint(rightHipRaw,thighLength,angles.rightHip);
   const leftAnkleRaw=endpoint(leftKneeRaw,lowerLegLength,angles.leftHip-angles.leftKnee);
