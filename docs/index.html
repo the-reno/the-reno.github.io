@@ -15,14 +15,14 @@
     body{min-height:100vh;background:#0a0a0a;color:#a8a8a8;font-family:'DM Mono',monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
     .stage{position:relative;width:100vw;height:420px;perspective:1100px;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
     .card{position:absolute;width:340px;height:318px;border:1px solid #1f1f1f;border-radius:8px;padding:2.5rem 2.25rem;background:#111;transition:transform .55s cubic-bezier(.4,0,.2,1),opacity .55s ease,filter .55s ease;transform-style:preserve-3d;transform-origin:center center;user-select:none;overflow:hidden;contain:layout paint;will-change:transform,opacity,filter}
-    .greeting{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:1rem}
-    h1{font-family:'Instrument Serif',serif;font-size:2.6rem;font-weight:400;color:#efefef;line-height:1;letter-spacing:-.02em;margin-bottom:1.25rem}
+    .greeting{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:.7rem}
+    h1{font-family:'Instrument Serif',serif;font-size:2.6rem;font-weight:400;color:#efefef;line-height:1;letter-spacing:-.02em;margin-bottom:.9rem}
     h1 em{font-style:italic;color:#555}
-    .card-body{font-size:12px;line-height:1.9;color:#666;margin-bottom:1.1rem;min-height:72px}
-    .triathlon-card .card-body{font-size:15px;line-height:1.65;color:#737373}
+    .card-body{font-size:12px;line-height:1.7;color:#666;margin-bottom:.7rem;min-height:52px}
+    .triathlon-card .card-body{font-size:14px;line-height:1.5;color:#737373;min-height:44px}
     .divider{height:1px;background:#1f1f1f;margin-bottom:1.25rem}
     .tag{font-size:11px;color:#444;letter-spacing:.05em}
-    .feature-link{display:flex;align-items:center;justify-content:space-between;margin-top:.7rem;padding:.7rem 0;border-top:1px solid #1f1f1f;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8d8d;text-decoration:none;pointer-events:auto;position:relative;z-index:999;transition:color .2s,padding-left .2s}
+    .feature-link{display:flex;align-items:center;justify-content:space-between;margin-top:0;padding:.32rem 0;border-top:1px solid #1f1f1f;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#8d8d8d;text-decoration:none;pointer-events:auto;position:relative;z-index:999;transition:color .2s,padding-left .2s}
     .feature-link:hover,.feature-link:focus-visible{color:#efefef;padding-left:.25rem;outline:none}
     .maker-card .greeting{color:#4b4b4b}
     .maker-card .maker-loading{font-size:12px;color:#686868;letter-spacing:.02em;margin-top:2.2rem}
@@ -47,8 +47,8 @@
 <body>
   <div class="stage" id="stage">
     <div class="card"><p class="greeting">// hello, world</p><h1>I'm <em>Ronu.</em></h1><p class="card-body">Welcome to my lab.</p><div class="divider"></div><p class="tag">triathlon · science · markets</p></div>
-    <div class="card triathlon-card"><p class="greeting">// 01 · endurance</p><h1><em>Triathlon.</em></h1><p class="card-body">How the body keeps moving under pressure.</p><a class="feature-link" href="/triathlon/">Explore · Endurance →</a><a class="feature-link" href="/triathlon/body-mechanics/">Open · Body Mechanics Simulator →</a></div>
-    <div class="card"><p class="greeting">// 02 · inquiry</p><h1><em>Science.</em></h1><p class="card-body">From dice probabilities to gravity, traffic waves and fragile systems.</p><a class="feature-link" href="/Science/prediction.html">Explore · The Complexity of Prediction →</a><a class="feature-link" href="/Science/forest-fire-model.html">Explore · The Spark →</a><a class="feature-link" href="/Science/traffic-jam.html">Explore · Phantom Traffic Jam →</a></div>
+    <div class="card triathlon-card"><p class="greeting">// 01 · endurance</p><h1><em>Triathlon.</em></h1><p class="card-body">How the body keeps moving under pressure.</p><a class="feature-link" href="/triathlon/">Explore · Endurance →</a><a class="feature-link" href="/triathlon/body-mechanics/">Body Mechanics →</a><a class="feature-link" href="/triathlon/body-mechanics/arms/">Arm Mechanics →</a><a class="feature-link" href="/triathlon/energy.html">Chaos to Motion →</a></div>
+    <div class="card"><p class="greeting">// 02 · inquiry</p><h1><em>Science.</em></h1><p class="card-body">From dice probabilities to gravity, traffic waves and fragile systems.</p><a class="feature-link" href="/Science/prediction.html">Prediction →</a><a class="feature-link" href="/Science/forest-fire-model.html">The Spark →</a><a class="feature-link" href="/Science/traffic-jam.html">Traffic Jam →</a><a class="feature-link" href="/Science/dice.html">Dice & Storm →</a></div>
     <div class="card"><p class="greeting">// 03 · finance</p><h1><em>Markets.</em></h1><p class="card-body">Sharp edges.</p></div>
     <div class="card maker-card"><p class="greeting">// 04 · Maker</p><p class="maker-loading">loading...</p><div class="maker-artifact" aria-hidden="true"><img class="young" src="/assets/young-memory.svg" width="584" height="244" loading="eager" decoding="async" fetchpriority="low" alt="Earlier memory watching a football game"><img class="present" src="/assets/present-reflection.webp?v=20260805" width="900" height="450" loading="eager" decoding="async" fetchpriority="low" alt="Present reflective night view toward Manhattan"><img class="runner" src="/assets/runner-card.jpg?v=20260805" width="292" height="122" loading="eager" decoding="async" fetchpriority="low" alt="Night runner moving beside the waterfront"></div></div>
     <button class="arrow left" id="prev" aria-label="Previous card">‹</button>
