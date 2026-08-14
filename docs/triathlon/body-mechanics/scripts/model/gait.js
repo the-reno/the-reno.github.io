@@ -1,14 +1,16 @@
 const DEG=Math.PI/180;
 
 const LEG_KEYFRAMES=Object.freeze([
-  {phase:0.00,hip:22,knee:18,foot:-4,lift:0,label:'initial contact'},
-  {phase:0.12,hip:10,knee:34,foot:2,lift:2,label:'loading'},
-  {phase:0.25,hip:-8,knee:28,foot:8,lift:5,label:'mid stance'},
-  {phase:0.40,hip:-24,knee:42,foot:18,lift:3,label:'toe off'},
-  {phase:0.55,hip:-12,knee:92,foot:-12,lift:8,label:'early swing'},
-  {phase:0.70,hip:18,knee:68,foot:-8,lift:11,label:'mid swing'},
-  {phase:0.86,hip:32,knee:34,foot:-6,lift:5,label:'late swing'},
-  {phase:1.00,hip:22,knee:18,foot:-4,lift:0,label:'initial contact'}
+  {phase:0.00,hip:25,knee:10,foot:-4,lift:0,label:'initial contact'},
+  {phase:0.10,hip:12,knee:28,foot:2,lift:2,label:'loading'},
+  {phase:0.25,hip:0,knee:18,foot:6,lift:4,label:'mid stance'},
+  {phase:0.38,hip:-14,knee:22,foot:12,lift:2,label:'mid stance'},
+  {phase:0.46,hip:-20,knee:38,foot:18,lift:3,label:'toe off'},
+  {phase:0.55,hip:5,knee:85,foot:-10,lift:9,label:'early swing'},
+  {phase:0.68,hip:25,knee:95,foot:-14,lift:12,label:'mid swing'},
+  {phase:0.80,hip:35,knee:45,foot:-8,lift:7,label:'late swing'},
+  {phase:0.92,hip:30,knee:15,foot:-2,lift:2,label:'late swing'},
+  {phase:1.00,hip:25,knee:10,foot:-4,lift:0,label:'initial contact'}
 ]);
 
 function wrapPhase(value){return((value%1)+1)%1;}
@@ -42,8 +44,8 @@ export function gaitAngles(phase){
     torso:(6+1.2*Math.sin(normalized*Math.PI*2-Math.PI/4))*DEG,
     leftShoulder:(-30*wave)*DEG,
     rightShoulder:(30*wave)*DEG,
-    leftElbow:(82+7*Math.cos(normalized*Math.PI*2))*DEG,
-    rightElbow:(82-7*Math.cos(normalized*Math.PI*2))*DEG,
+    leftElbow:(78+18*Math.cos(normalized*Math.PI*2))*DEG,
+    rightElbow:(78-18*Math.cos(normalized*Math.PI*2))*DEG,
     leftHip:leftLeg.hip,
     rightHip:rightLeg.hip,
     leftKnee:leftLeg.knee,
