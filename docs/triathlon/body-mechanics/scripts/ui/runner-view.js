@@ -7,6 +7,18 @@ const CENTER_X=300;
 function svgElement(name,attributes={}){const element=document.createElementNS('http://www.w3.org/2000/svg',name);for(const[key,value]of Object.entries(attributes))element.setAttribute(key,value);return element;}
 function drawLine(group,id,start,end,className='body-segment'){let line=group.querySelector(`#${id}`);if(!line){line=svgElement('line',{id});group.appendChild(line);}line.setAttribute('class',className);line.setAttribute('x1',start.x);line.setAttribute('y1',start.y);line.setAttribute('x2',end.x);line.setAttribute('y2',end.y);}
 function drawPolygon(group,id,points,className){let poly=group.querySelector(`#${id}`);if(!poly){poly=svgElement('polygon',{id});group.appendChild(poly);}poly.setAttribute('class',className);poly.setAttribute('points',points.map(p=>`${p.x},${p.y}`).join(' '));}
+function drawLimb(group,id,start,end,startWidth,endWidth,className='limb'){
+  const dx=end.x-start.x,dy=end.y-start.y;
+  const length=Math.hypot(dx,dy)||1;
+  const px=-dy/length,py=dx/length;
+  const points=[
+    {x:start.x+px*startWidth/2,y:start.y+py*startWidth/2},
+    {x:end.x+px*endWidth/2,y:end.y+py*endWidth/2},
+    {x:end.x-px*endWidth/2,y:end.y-py*endWidth/2},
+    {x:start.x-px*startWidth/2,y:start.y-py*startWidth/2}
+  ];
+  drawPolygon(group,id,points,className);
+}
 function drawCircle(group,id,center,radius,className){let circle=group.querySelector(`#${id}`);if(!circle){circle=svgElement('circle',{id});group.appendChild(circle);}circle.setAttribute('class',className);circle.setAttribute('cx',center.x);circle.setAttribute('cy',center.y);circle.setAttribute('r',radius);}
 function segmentLength(model,id){return(model.segments.find(segment=>segment.id===id)?.lengthCm||1)/100*SCALE;}
 function segmentMass(model,id){return model.segments.find(segment=>segment.id===id)?.massKg||0;}
@@ -28,7 +40,7 @@ export function renderRunner(group,comMarker,model,angles){
   const torsoTopRaw=endpoint(pelvisCenterRaw,torsoLength,Math.PI-angles.torso);
   const shoulderCenterRaw=pointAlong(torsoTopRaw,pelvisCenterRaw,.16);
   const neckTopRaw=endpoint(torsoTopRaw,neckLength,Math.PI-angles.torso);
-  const headCenterRaw=endpoint(neckTopRaw,headLength*.48,Math.PI-angles.torso);
+  const headCenterRaw=endpoint(neckTopRaw,headLength*.38,Math.PI-angles.torso);
   const shoulderHalf=totalHeightPx*.245/2;
   const hipHalf=totalHeightPx*.19/2;
   const leftShoulderRaw={x:shoulderCenterRaw.x-shoulderHalf,y:shoulderCenterRaw.y};
@@ -70,18 +82,23 @@ export function renderRunner(group,comMarker,model,angles){
   const leftAnkle=leftGrounded.ankle,leftHeel=leftGrounded.heel,leftToe=leftGrounded.toe;
   const rightAnkle=rightGrounded.ankle,rightHeel=rightGrounded.heel,rightToe=rightGrounded.toe;
 
-  drawLine(group,'right-upper-arm',rightShoulder,rightElbow,'body-segment back-segment');
-  drawLine(group,'right-forearm',rightElbow,rightHand,'body-segment back-segment');
-  drawLine(group,'right-thigh',rightHip,rightKnee,'body-segment back-segment');
-  drawLine(group,'right-lower-leg',rightKnee,rightAnkle,'body-segment back-segment');
+  const W=f=>totalHeightPx*f;
+  const wThighTop=W(.084),wThighBot=W(.062),wShankTop=W(.062),wShankBot=W(.032);
+  const wArmTop=W(.070),wArmBot=W(.048),wForeTop=W(.048),wForeBot=W(.028);
+  const wNeck=W(.055);
+
+  drawLimb(group,'right-upper-arm',rightShoulder,rightElbow,wArmTop,wArmBot,'limb back-limb');
+  drawLimb(group,'right-forearm',rightElbow,rightHand,wForeTop,wForeBot,'limb back-limb');
+  drawLimb(group,'right-thigh',rightHip,rightKnee,wThighTop,wThighBot,'limb back-limb');
+  drawLimb(group,'right-lower-leg',rightKnee,rightAnkle,wShankTop,wShankBot,'limb back-limb');
   drawLine(group,'right-foot',rightHeel,rightToe,'body-segment back-segment foot-segment');
   drawPolygon(group,'torso-shape',[leftShoulder,rightShoulder,rightHip,leftHip],'torso-shape');
   drawLine(group,'torso',pelvisCenter,torsoTop,'spine-line');
-  drawLine(group,'neck',torsoTop,neckTop,'neck-segment');
-  drawLine(group,'left-upper-arm',leftShoulder,leftElbow);
-  drawLine(group,'left-forearm',leftElbow,leftHand);
-  drawLine(group,'left-thigh',leftHip,leftKnee);
-  drawLine(group,'left-lower-leg',leftKnee,leftAnkle);
+  drawLimb(group,'neck',shoulderCenter,neckTop,wNeck*1.15,wNeck*.92,'limb');
+  drawLimb(group,'left-upper-arm',leftShoulder,leftElbow,wArmTop,wArmBot,'limb');
+  drawLimb(group,'left-forearm',leftElbow,leftHand,wForeTop,wForeBot,'limb');
+  drawLimb(group,'left-thigh',leftHip,leftKnee,wThighTop,wThighBot,'limb');
+  drawLimb(group,'left-lower-leg',leftKnee,leftAnkle,wShankTop,wShankBot,'limb');
   drawLine(group,'left-foot',leftHeel,leftToe,'body-segment foot-segment');
   drawCircle(group,'head-shape',headCenter,headLength*.42,'head-shape');
 

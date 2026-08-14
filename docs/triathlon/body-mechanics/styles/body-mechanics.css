@@ -25,14 +25,13 @@ body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monos
 .ground{stroke:#252525;stroke-width:2}
 .vertical-axis{stroke:#333;stroke-width:1;stroke-dasharray:4 5}
 .body-segment{stroke:#c4c4c4;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
-.foot-segment{stroke-width:7}
+.foot-segment{stroke-width:13}
 .torso-shape{fill:url(#torsoGradient);stroke:#8f8f8f;stroke-width:1.5;stroke-linejoin:round}
+.limb{fill:#c4c4c4;stroke:#8a8a8a;stroke-width:2;stroke-linejoin:round}
+.limb.back-limb{fill:#6d6d6d;stroke:#4f4f4f}
 .spine-line{stroke:#8a8a8a;stroke-width:4;stroke-linecap:round;opacity:.5}
-.neck-segment{stroke:#b0b0b0;stroke-width:9;stroke-linecap:round}
 .back-segment{stroke:#6d6d6d;stroke-width:9}
-.structural-line{stroke:#8a8a8a;stroke-width:7;stroke-linecap:round}
-.structural-line.back-segment{stroke:#6d6d6d;stroke-width:7}
-.head-shape{fill:#181818;stroke:#c4c4c4;stroke-width:7}
+.head-shape{fill:#c4c4c4;stroke:#8a8a8a;stroke-width:2}
 .joint{fill:var(--bg);stroke:#e0e0e0;stroke-width:3}
 .whole-body-com{fill:#fff;stroke:#0a0a0a;stroke-width:3}
 @media(max-width:720px){.site-header,.app-shell{padding-left:16px;padding-right:16px}.stage-wrap{padding:16px}}
