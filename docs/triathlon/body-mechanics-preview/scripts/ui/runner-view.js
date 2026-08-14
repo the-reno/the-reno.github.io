@@ -72,9 +72,11 @@ export function renderRunner(group,comMarker,model,angles){
   drawLine(group,'right-thigh',rightHip,rightKnee,'body-segment back-segment');
   drawLine(group,'right-lower-leg',rightKnee,rightAnkle,'body-segment back-segment');
   drawLine(group,'right-foot',rightHeel,rightToe,'body-segment back-segment foot-segment');
+  drawLine(group,'right-torso-side',rightShoulder,rightHip,'structural-line back-segment');
   drawLine(group,'torso',pelvisCenter,torsoTop,'body-segment torso-segment');
   drawLine(group,'shoulder-line',leftShoulder,rightShoulder,'structural-line');
   drawLine(group,'pelvis-line',leftHip,rightHip,'structural-line');
+  drawLine(group,'left-torso-side',leftShoulder,leftHip,'structural-line');
   drawLine(group,'left-upper-arm',leftShoulder,leftElbow);
   drawLine(group,'left-forearm',leftElbow,leftHand);
   drawLine(group,'left-thigh',leftHip,leftKnee);

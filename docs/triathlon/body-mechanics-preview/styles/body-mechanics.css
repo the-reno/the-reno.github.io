@@ -29,6 +29,7 @@ body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monos
 .torso-segment{stroke-width:15}
 .back-segment{stroke:#6d6d6d;stroke-width:9}
 .structural-line{stroke:#8a8a8a;stroke-width:7;stroke-linecap:round}
+.structural-line.back-segment{stroke:#6d6d6d;stroke-width:7}
 .head-shape{fill:#181818;stroke:#c4c4c4;stroke-width:7}
 .joint{fill:var(--bg);stroke:#e0e0e0;stroke-width:2.5}
 .whole-body-com{fill:#fff;stroke:#0a0a0a;stroke-width:3}
