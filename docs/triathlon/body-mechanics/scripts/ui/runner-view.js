@@ -39,7 +39,7 @@ export function renderRunner(group,comMarker,model,angles){
   const pelvisCenterRaw={x:CENTER_X,y:300-(angles.pelvisLift||0)};
   const torsoTopRaw=endpoint(pelvisCenterRaw,torsoLength,Math.PI-angles.torso);
   const shoulderCenterRaw=pointAlong(torsoTopRaw,pelvisCenterRaw,.16);
-  const neckTopRaw=endpoint(torsoTopRaw,neckLength,Math.PI-angles.torso);
+  const neckTopRaw=endpoint(shoulderCenterRaw,neckLength,Math.PI-angles.torso);
   const headCenterRaw=endpoint(neckTopRaw,headLength*.38,Math.PI-angles.torso);
   const shoulderHalf=totalHeightPx*.245/2;
   const hipHalf=totalHeightPx*.19/2;
@@ -85,7 +85,7 @@ export function renderRunner(group,comMarker,model,angles){
   const W=f=>totalHeightPx*f;
   const wThighTop=W(.084),wThighBot=W(.062),wShankTop=W(.062),wShankBot=W(.032);
   const wArmTop=W(.070),wArmBot=W(.048),wForeTop=W(.048),wForeBot=W(.028);
-  const wNeck=W(.055);
+  const wNeck=W(.046);
 
   drawLimb(group,'right-upper-arm',rightShoulder,rightElbow,wArmTop,wArmBot,'limb back-limb');
   drawLimb(group,'right-forearm',rightElbow,rightHand,wForeTop,wForeBot,'limb back-limb');
