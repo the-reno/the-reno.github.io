@@ -9,5 +9,5 @@ export function createBodyModel(){
     lengthCm:REFERENCE_HEIGHT_CM*LENGTH_RATIOS[id],
     massKg:REFERENCE_MASS_KG*MASS_PERCENT[id]/100
   }));
-  return{segments};
+  return{totalHeightCm:REFERENCE_HEIGHT_CM,segments};
 }

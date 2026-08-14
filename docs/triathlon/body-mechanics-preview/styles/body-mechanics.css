@@ -25,6 +25,7 @@ body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monos
 .ground{stroke:#252525;stroke-width:2}
 .vertical-axis{stroke:#333;stroke-width:1;stroke-dasharray:4 5}
 .body-segment{stroke:#c4c4c4;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.foot-segment{stroke-width:7}
 .torso-segment{stroke-width:15}
 .back-segment{stroke:#6d6d6d;stroke-width:9}
 .structural-line{stroke:#8a8a8a;stroke-width:7;stroke-linecap:round}
