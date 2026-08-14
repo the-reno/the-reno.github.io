@@ -1,16 +1,20 @@
 const DEG=Math.PI/180;
 
 const LEG_KEYFRAMES=Object.freeze([
-  {phase:0.00,hip:25,knee:10,foot:-4,lift:0,label:'initial contact'},
-  {phase:0.10,hip:12,knee:28,foot:2,lift:2,label:'loading'},
-  {phase:0.25,hip:0,knee:18,foot:6,lift:4,label:'mid stance'},
-  {phase:0.38,hip:-14,knee:22,foot:12,lift:2,label:'mid stance'},
-  {phase:0.46,hip:-20,knee:38,foot:18,lift:3,label:'toe off'},
-  {phase:0.55,hip:5,knee:85,foot:-10,lift:9,label:'early swing'},
-  {phase:0.68,hip:25,knee:95,foot:-14,lift:12,label:'mid swing'},
-  {phase:0.80,hip:35,knee:45,foot:-8,lift:7,label:'late swing'},
-  {phase:0.92,hip:30,knee:15,foot:-2,lift:2,label:'late swing'},
-  {phase:1.00,hip:25,knee:10,foot:-4,lift:0,label:'initial contact'}
+  // Values grounded in published running-gait kinematics (Physiopedia: Running Biomechanics):
+  // hip 50° flexion at heel strike -> 10° hyperextension after toe-off -> 55° peak flexion in late swing;
+  // knee 40° at heel strike -> 60° loading peak -> 125° peak flexion at mid-swing -> 40° for landing;
+  // ankle ~10° dorsiflexion at strike -> ~25° dorsiflexion peak -> plantarflexes through stance ->
+  // ~25° plantarflexion peak at toe-off -> back to ~10° dorsiflexion for landing.
+  {phase:0.00,hip:50,knee:40,foot:-10,lift:0,label:'initial contact'},
+  {phase:0.08,hip:42,knee:60,foot:-18,lift:2,label:'loading response'},
+  {phase:0.30,hip:10,knee:22,foot:8,lift:4,label:'mid stance'},
+  {phase:0.45,hip:-5,knee:8,foot:16,lift:1,label:'terminal stance'},
+  {phase:0.52,hip:-10,knee:26,foot:22,lift:3,label:'toe off'},
+  {phase:0.65,hip:16,knee:88,foot:2,lift:10,label:'initial swing'},
+  {phase:0.78,hip:38,knee:125,foot:-14,lift:14,label:'mid swing'},
+  {phase:0.90,hip:55,knee:40,foot:-10,lift:4,label:'terminal swing'},
+  {phase:1.00,hip:50,knee:40,foot:-10,lift:0,label:'initial contact'}
 ]);
 
 function wrapPhase(value){return((value%1)+1)%1;}
