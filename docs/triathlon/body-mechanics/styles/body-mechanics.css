@@ -26,12 +26,13 @@ body{margin:0;background:var(--bg);color:var(--soft);font-family:'DM Mono',monos
 .vertical-axis{stroke:#333;stroke-width:1;stroke-dasharray:4 5}
 .body-segment{stroke:#c4c4c4;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
 .foot-segment{stroke-width:7}
-.torso-segment{stroke-width:15}
+.torso-shape{fill:url(#torsoGradient);stroke:#8f8f8f;stroke-width:1.5;stroke-linejoin:round}
+.spine-line{stroke:#8a8a8a;stroke-width:4;stroke-linecap:round;opacity:.5}
 .back-segment{stroke:#6d6d6d;stroke-width:9}
 .structural-line{stroke:#8a8a8a;stroke-width:7;stroke-linecap:round}
 .structural-line.back-segment{stroke:#6d6d6d;stroke-width:7}
 .head-shape{fill:#181818;stroke:#c4c4c4;stroke-width:7}
-.joint{fill:var(--bg);stroke:#e0e0e0;stroke-width:2.5}
+.joint{fill:var(--bg);stroke:#e0e0e0;stroke-width:3}
 .whole-body-com{fill:#fff;stroke:#0a0a0a;stroke-width:3}
 @media(max-width:720px){.site-header,.app-shell{padding-left:16px;padding-right:16px}.stage-wrap{padding:16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

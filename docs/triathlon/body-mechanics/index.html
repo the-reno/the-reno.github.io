@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles/body-mechanics.css?v=20260814e" />
+  <link rel="stylesheet" href="./styles/body-mechanics.css?v=20260814f" />
 </head>
 <body>
   <header class="site-header">
@@ -28,6 +28,13 @@
 
     <section class="stage-wrap" aria-label="Animated mechanical runner model">
       <svg id="runner-view" viewBox="20 0 560 610" role="img" aria-label="Mechanical model of a running human, animated">
+        <defs>
+          <linearGradient id="torsoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#d6d6d6" />
+            <stop offset="55%" stop-color="#aeaeae" />
+            <stop offset="100%" stop-color="#6d6d6d" />
+          </linearGradient>
+        </defs>
         <line class="ground" x1="40" y1="548" x2="560" y2="548" />
         <line id="vertical-axis" class="vertical-axis" />
         <g id="runner-segments"></g>
@@ -37,6 +44,6 @@
     </section>
   </main>
 
-  <script type="module" src="./scripts/app.js?v=20260814e"></script>
+  <script type="module" src="./scripts/app.js?v=20260814f"></script>
 </body>
 </html>

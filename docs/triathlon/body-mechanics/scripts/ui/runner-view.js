@@ -6,6 +6,7 @@ const CENTER_X=300;
 
 function svgElement(name,attributes={}){const element=document.createElementNS('http://www.w3.org/2000/svg',name);for(const[key,value]of Object.entries(attributes))element.setAttribute(key,value);return element;}
 function drawLine(group,id,start,end,className='body-segment'){let line=group.querySelector(`#${id}`);if(!line){line=svgElement('line',{id});group.appendChild(line);}line.setAttribute('class',className);line.setAttribute('x1',start.x);line.setAttribute('y1',start.y);line.setAttribute('x2',end.x);line.setAttribute('y2',end.y);}
+function drawPolygon(group,id,points,className){let poly=group.querySelector(`#${id}`);if(!poly){poly=svgElement('polygon',{id});group.appendChild(poly);}poly.setAttribute('class',className);poly.setAttribute('points',points.map(p=>`${p.x},${p.y}`).join(' '));}
 function drawCircle(group,id,center,radius,className){let circle=group.querySelector(`#${id}`);if(!circle){circle=svgElement('circle',{id});group.appendChild(circle);}circle.setAttribute('class',className);circle.setAttribute('cx',center.x);circle.setAttribute('cy',center.y);circle.setAttribute('r',radius);}
 function segmentLength(model,id){return(model.segments.find(segment=>segment.id===id)?.lengthCm||1)/100*SCALE;}
 function segmentMass(model,id){return model.segments.find(segment=>segment.id===id)?.massKg||0;}
@@ -72,11 +73,8 @@ export function renderRunner(group,comMarker,model,angles){
   drawLine(group,'right-thigh',rightHip,rightKnee,'body-segment back-segment');
   drawLine(group,'right-lower-leg',rightKnee,rightAnkle,'body-segment back-segment');
   drawLine(group,'right-foot',rightHeel,rightToe,'body-segment back-segment foot-segment');
-  drawLine(group,'right-torso-side',rightShoulder,rightHip,'structural-line back-segment');
-  drawLine(group,'torso',pelvisCenter,torsoTop,'body-segment torso-segment');
-  drawLine(group,'shoulder-line',leftShoulder,rightShoulder,'structural-line');
-  drawLine(group,'pelvis-line',leftHip,rightHip,'structural-line');
-  drawLine(group,'left-torso-side',leftShoulder,leftHip,'structural-line');
+  drawPolygon(group,'torso-shape',[leftShoulder,rightShoulder,rightHip,leftHip],'torso-shape');
+  drawLine(group,'torso',pelvisCenter,torsoTop,'spine-line');
   drawLine(group,'left-upper-arm',leftShoulder,leftElbow);
   drawLine(group,'left-forearm',leftElbow,leftHand);
   drawLine(group,'left-thigh',leftHip,leftKnee);
