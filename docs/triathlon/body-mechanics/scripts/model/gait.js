@@ -37,14 +37,13 @@ export function gaitAngles(phase){
   const rightLeg=interpolateLeg(normalized);
   const leftLeg=interpolateLeg(normalized+.5);
   const wave=Math.sin(normalized*Math.PI*2);
-  const doubleWave=Math.sin(normalized*Math.PI*4);
   const supportSide=normalized<.5?'right':'left';
   const supportLeg=supportSide==='right'?rightLeg:leftLeg;
   return{
     phase:normalized,
     phaseName:supportLeg.label,
     supportSide,
-    pelvisLift:3+2.5*doubleWave,
+    pelvisLift:Math.max(rightLeg.lift,leftLeg.lift)*.55,
     torso:(6+1.2*Math.sin(normalized*Math.PI*2-Math.PI/4))*DEG,
     leftShoulder:(-30*wave)*DEG,
     rightShoulder:(30*wave)*DEG,
