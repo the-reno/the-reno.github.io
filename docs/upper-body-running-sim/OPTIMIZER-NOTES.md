@@ -1,1 +1,0 @@
-Temporary development note for the upper-body running optimizer. The optimizer preserves cadence and leg lift, then searches arm swing, elbow angle, arm frequency, arm timing, and torso response. Scores are relative educational mechanics proxies, not laboratory measures.
