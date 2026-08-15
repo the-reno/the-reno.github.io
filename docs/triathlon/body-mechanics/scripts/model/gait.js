@@ -18,25 +18,44 @@ const LEG_KEYFRAMES=Object.freeze([
 ]);
 
 function wrapPhase(value){return((value%1)+1)%1;}
-function smooth(value){return value*value*(3-2*value);}
 
+// Periodic Catmull-Rom (finite-difference tangents, non-uniform spacing).
+// Unlike per-segment smoothstep, velocity stays continuous through every
+// keyframe, so the motion flows instead of pulsing at each pose.
+const UNIQUE_KEYFRAMES=LEG_KEYFRAMES.slice(0,-1);
+function keyframeAt(index){
+  const n=UNIQUE_KEYFRAMES.length;
+  const wrapped=((index%n)+n)%n;
+  const cycleOffset=Math.floor(index/n);
+  const kf=UNIQUE_KEYFRAMES[wrapped];
+  return{phase:kf.phase+cycleOffset,hip:kf.hip,knee:kf.knee,foot:kf.foot,lift:kf.lift,label:kf.label};
+}
 function interpolateLeg(phase){
   const value=wrapPhase(phase);
-  let start=LEG_KEYFRAMES[0];
-  let end=LEG_KEYFRAMES.at(-1);
-  for(let index=0;index<LEG_KEYFRAMES.length-1;index+=1){
-    if(value>=LEG_KEYFRAMES[index].phase&&value<=LEG_KEYFRAMES[index+1].phase){start=LEG_KEYFRAMES[index];end=LEG_KEYFRAMES[index+1];break;}
+  const n=UNIQUE_KEYFRAMES.length;
+  let seg=n-1;
+  for(let index=0;index<n;index+=1){
+    const next=keyframeAt(index+1);
+    if(value>=UNIQUE_KEYFRAMES[index].phase&&value<next.phase){seg=index;break;}
   }
-  const ratio=smooth((value-start.phase)/(end.phase-start.phase||1));
-  const blend=key=>start[key]+(end[key]-start[key])*ratio;
-  return{hip:blend('hip')*DEG,knee:blend('knee')*DEG,foot:blend('foot')*DEG,lift:blend('lift'),label:ratio<.5?start.label:end.label};
+  const p0=keyframeAt(seg-1),p1=keyframeAt(seg),p2=keyframeAt(seg+1),p3=keyframeAt(seg+2);
+  const t=(value-p1.phase)/(p2.phase-p1.phase);
+  const t2=t*t,t3=t2*t;
+  const h00=2*t3-3*t2+1,h10=t3-2*t2+t,h01=-2*t3+3*t2,h11=t3-t2;
+  const span=p2.phase-p1.phase;
+  const blend=key=>{
+    const m1=((p2[key]-p1[key])/(p2.phase-p1.phase)+(p1[key]-p0[key])/(p1.phase-p0.phase))/2*span;
+    const m2=((p3[key]-p2[key])/(p3.phase-p2.phase)+(p2[key]-p1[key])/(p2.phase-p1.phase))/2*span;
+    return h00*p1[key]+h10*m1+h01*p2[key]+h11*m2;
+  };
+  return{hip:blend('hip')*DEG,knee:blend('knee')*DEG,foot:blend('foot')*DEG,lift:blend('lift'),label:t<.5?p1.label:p2.label};
 }
 
 export function gaitAngles(phase){
   const normalized=wrapPhase(phase);
   const rightLeg=interpolateLeg(normalized);
   const leftLeg=interpolateLeg(normalized+.5);
-  const wave=Math.sin(normalized*Math.PI*2);
+  const wave=Math.sin((normalized-.15)*Math.PI*2);
   const supportSide=normalized<.5?'right':'left';
   const supportLeg=supportSide==='right'?rightLeg:leftLeg;
   return{
