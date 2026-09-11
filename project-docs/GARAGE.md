@@ -20,6 +20,7 @@ The known leaf interpretation gives 254 cm per bay and 43.8 cm side infill on ea
 ## Behavior and boundaries
 
 - 3D orbit/cutaway; orthographic front and plan; camera located inside for the interior view.
+- Basic photo survey plots nine camera positions (P01–P09) over the 3D model. The orange camera marks where to stand, the dashed arrow marks where to aim, and the panel gives the approximate distance, angle, lens, orientation, and required coverage.
 - Preset views, zoom, reset, mouse/keyboard/touch controls, door opening, framing visibility, and dimensions.
 - Proposed charcoal/timber/light door finishes; existing doors remain schematic timber.
 - Editing dimensions rebuilds the model and plan for the current session only. No automatic persistence, task-completion tracking, remote uploads, or browser storage. Print the applied brief to retain a record.
@@ -27,6 +28,12 @@ The known leaf interpretation gives 254 cm per bay and 43.8 cm side infill on ea
 - The floor plan, reference image, survey form, and execution guide remain available without WebGL.
 - Execution is a planning checklist, not structural, electrical, legal, or building-code advice.
 - No external font/script requests or new services.
+
+## Basic photo survey
+
+Start with P01–P09 only: one straight front, two exterior front corners, five interior shell views, and one overall floor view. Use a landscape phone photo at 1× with the camera about 5 ft / 1.5 m high unless the displayed instruction says otherwise. P04 may use 0.5× only when 1× cannot include the whole interior. Keep the phone level, do not use portrait mode or digital zoom, and associate each uploaded image with its displayed ID.
+
+The plotted positions are starting references derived from the current schematic dimensions. Move as needed for safe footing, traffic, stored objects, glare, and physical obstructions while preserving the requested aim and coverage. Detail photos are intentionally deferred until these nine images are reviewed, so the next capture list can target only missing evidence.
 
 ## Image provenance
 
@@ -37,7 +44,7 @@ Prompt summary: realistic front-left oblique view of an approximately 20-by-21.5
 ## Validation
 
 - JavaScript syntax checked.
-- Node DOM/WebGL-stub smoke checks cover initialization, both layouts, four views, projection matrices, true interior camera location, hidden plan headers, finishes, opening doors, navigation, measurement validation, print-draft consistency, plan label spacing, and two-finger gestures.
+- Node DOM/WebGL-stub smoke checks cover initialization, both layouts, four views, projection matrices, true interior camera location, hidden plan headers, finishes, opening doors, navigation, measurement validation, print-draft consistency, plan label spacing, two-finger gestures, and all nine photo-survey positions.
 - Repository validator reports only pre-existing CSP/privacy metadata omissions on unrelated pages; no new garage-path errors.
 - Live browser rendering/print QA has not been performed in this edit. Stub checks do not validate GPU shader rendering or browser download behavior.
 

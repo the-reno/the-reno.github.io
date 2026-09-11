@@ -33,15 +33,27 @@
             <canvas id="scene" tabindex="0" aria-label="Garage 3D model. Arrow keys rotate. Plus and minus zoom. Zero resets. Use view buttons for front, interior or floor plan."></canvas>
             <svg id="dimensions" class="dimension-overlay" aria-hidden="true"></svg>
             <div class="viewer-chip">MODEL / <span id="drawing-view">3D</span></div>
+            <div id="photo-map-label" class="photo-map-label" hidden>PHOTO POSITION / <strong>P01</strong></div>
             <div id="model-warning" class="model-warning">Door arrangement & height are provisional</div>
             <div class="zoom-controls" aria-label="Camera controls"><button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button id="reset-view" title="Fit model" aria-label="Fit model">⌂</button></div>
             <div id="fallback" class="fallback" hidden><h3>3D is unavailable in this browser</h3><p>You can still use the measured plan, design reference, and execution guide.</p><button class="button" data-go="measure">Open measured plan</button></div>
           </div>
           <div class="camera-bar" aria-label="Camera presets"><button data-view="orbit" class="active" aria-pressed="true"><span aria-hidden="true">◇</span> 3D</button><button data-view="front" aria-pressed="false"><span aria-hidden="true">▤</span> Front</button><button data-view="inside" aria-pressed="false"><span aria-hidden="true">⊓</span> Inside</button><button data-view="plan" aria-pressed="false"><span aria-hidden="true">▦</span> Floor plan</button></div>
           <div class="viewer-foot"><p>One finger rotates · two fingers pan / pinch to zoom<br><span>Mouse: drag to rotate · Shift-drag to pan · scroll to zoom</span></p><button id="download-view" class="text-button">Save view as PNG ↗</button></div>
+          <section id="photo-survey" class="photo-survey" hidden aria-labelledby="photo-title">
+            <header><div><p class="eyebrow">BASIC PHOTO SURVEY</p><h3 id="photo-title">P01 · Front / straight</h3></div><span id="photo-progress" class="tag">1 / 9</span></header>
+            <div id="photo-strip" class="photo-strip" role="tablist" aria-label="Required photo"></div>
+            <div class="shot-instruction">
+              <dl><div><dt>Stand</dt><dd id="photo-position"></dd></div><div><dt>Aim</dt><dd id="photo-aim"></dd></div><div><dt>Camera</dt><dd id="photo-camera"></dd></div></dl>
+              <p id="photo-capture"></p>
+            </div>
+            <div class="photo-actions"><button id="photo-prev" class="button secondary">← Previous</button><button id="photo-next" class="button">Next photo →</button><button id="photo-close" class="text-button">Close survey</button></div>
+            <p class="photo-note">Before uploading, associate each image with its ID: <strong>P01, P02…</strong> We will add detail photos only after reviewing this basic set.</p>
+          </section>
         </div>
         <aside class="inspector" aria-label="Model settings">
           <div class="inspector-block"><p class="eyebrow">DESIGN DIRECTION</p><h3>Keep the left. Rework the right.</h3><p>Retain paired doors on the left. Close the right bay with a wall and a separate entrance. Keep the center post.</p><button class="text-button" data-go="design">See the design reference →</button></div>
+          <div class="inspector-block photo-start"><p class="eyebrow">PHOTO SURVEY</p><h3>Start with 9 images.</h3><p>The 3D model shows where to stand and where to aim. Capture only this basic set first.</p><button id="photo-start" class="button">Plot photo positions →</button></div>
           <fieldset class="inspector-block"><legend>Display</legend><label class="toggle"><span>Cutaway walls<small>See inside without obstructions</small></span><input id="cutaway" type="checkbox" checked></label><label class="toggle"><span>Overhead framing<small>Schematic, not a structural design</small></span><input id="framing" type="checkbox"></label><label class="toggle"><span>Dimensions</span><input id="show-dimensions" type="checkbox" checked></label><label class="toggle"><span>Open doors<small>Illustrative outward swing</small></span><input id="open-doors" type="checkbox"></label></fieldset>
           <div class="inspector-block"><p class="eyebrow">WORKING FOOTPRINT</p><p class="big-measure" id="footprint">20 × 21.5 <span>ft</span></p><p class="small" id="floor-area">430 sq ft · 39.95 m²</p><button class="text-button" data-go="measure">Review measurements →</button></div>
           <p class="caution">Planning model only. Confirm openings, height, materials, and structure on site before ordering or building.</p>

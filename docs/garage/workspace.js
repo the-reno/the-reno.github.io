@@ -8,7 +8,7 @@
   const FT = 0.3048;
   const BASE = {width:20, depth:21.5, doorWidth:127, doorHeight:226, post:14, height:260, doorBasis:'leaf'};
   let dimensions = {...BASE};
-  const state = {page:'model', mode:'proposed', view:'orbit', finish:'charcoal', cutaway:true, framing:false, dims:true, open:false};
+  const state = {page:'model', mode:'proposed', view:'orbit', finish:'charcoal', cutaway:true, framing:false, dims:true, open:false, photo:false, photoIndex:0};
   const camera = {yaw:-0.64, pitch:0.61, zoom:1, panX:0, panY:0};
   const format = (n, dp=2) => Number(n.toFixed(dp)).toString();
   const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
@@ -20,6 +20,20 @@
   function metrics(d=dimensions) {
     const W=d.width*FT, D=d.depth*FT, H=d.height/100, P=d.post/100, leaf=d.doorWidth/100/(d.doorBasis==='opening'?2:1), bay=2*leaf, DH=d.doorHeight/100;
     return {W,D,H,P,leaf,bay,DH,T:0.14,side:(W-P-2*bay)/2,entryW:Math.min(.9144,bay*.7),entryH:Math.min(2.032,DH-.06)};
+  }
+  function photoShots(){
+    const g=metrics(),F=g.D/2+g.T/2,eye=1.52;
+    return [
+      {id:'P01',title:'Front / straight',position:[0,eye,F+8],target:[0,g.H*.52,F],stand:'Centered in front, about 26 ft (8 m) from the doors.',aim:'Straight at the center of the façade (0°).',camera:'1× · landscape · phone level at 5 ft.',capture:'Include the entire front, roof edges and about 2 ft of margin.',inside:false,yaw:-.62},
+      {id:'P02',title:'Front-left / 45°',position:[-g.W/2-5,eye,F+5],target:[0,g.H*.5,F],stand:'About 23 ft (7 m) diagonally from the front-left corner.',aim:'Toward the center of the front at approximately 45°.',camera:'1× · landscape · phone level at 5 ft.',capture:'Include the front, left wall and complete roof outline.',inside:false,yaw:.62},
+      {id:'P03',title:'Front-right / 45°',position:[g.W/2+5,eye,F+5],target:[0,g.H*.5,F],stand:'About 23 ft (7 m) diagonally from the front-right corner.',aim:'Toward the center of the front at approximately 45°.',camera:'1× · landscape · phone level at 5 ft.',capture:'Include the front, right wall and complete roof outline.',inside:false,yaw:-.62},
+      {id:'P04',title:'Inside / entrance to rear',position:[0,eye,g.D/2-.45],target:[0,1.35,-g.D/2],stand:'Centered just inside the garage entrance.',aim:'Straight toward the center of the rear wall.',camera:'1× · landscape · phone level at 5 ft.',capture:'Include both side walls, floor edges and overhead framing. Use 0.5× only if 1× cannot fit the space.',inside:true,yaw:-.72},
+      {id:'P05',title:'Inside / rear to front',position:[0,eye,-g.D/2+.45],target:[0,1.35,g.D/2],stand:'Centered near the rear wall.',aim:'Straight toward the doors and center post.',camera:'1× · landscape · phone level at 5 ft.',capture:'Include both openings, the center post and the floor-to-wall connections.',inside:true,yaw:2.55},
+      {id:'P06',title:'Inside / left wall',position:[g.W/2-.4,eye,0],target:[-g.W/2,1.35,0],stand:'Near the center of the right wall.',aim:'Perpendicular to the center of the left wall (90°).',camera:'1× · landscape · phone level at 5 ft.',capture:'Include the complete left wall from floor to overhead structure.',inside:true,yaw:.78},
+      {id:'P07',title:'Inside / right wall',position:[-g.W/2+.4,eye,0],target:[g.W/2,1.35,0],stand:'Near the center of the left wall.',aim:'Perpendicular to the center of the right wall (90°).',camera:'1× · landscape · phone level at 5 ft.',capture:'Include the complete right wall from floor to overhead structure.',inside:true,yaw:-.78},
+      {id:'P08',title:'Ceiling / overhead',position:[0,1.45,0],target:[0,g.H,0],stand:'At the approximate center of the garage.',aim:'Straight upward at the center of the overhead structure.',camera:'1× · landscape; keep the phone centered.',capture:'Include the direction and spacing of the main framing. Do not take individual connection details yet.',inside:true,yaw:-.72,framing:true},
+      {id:'P09',title:'Floor / overall',position:[0,eye,g.D/2-.45],target:[0,0,-g.D*.2],stand:'Centered just inside the entrance.',aim:'Down toward the middle of the floor at about 30°.',camera:'1× · landscape; avoid digital zoom.',capture:'Include the threshold, both floor edges and the rear floor line.',inside:true,yaw:-.72}
+    ];
   }
   function validate(d) {
     const ranges={width:[15,40],depth:[10,50],doorWidth:[60,350],doorHeight:[180,350],post:[8,60],height:[200,450]};
@@ -56,12 +70,40 @@
   }
   function updateLabels(){
     const labels={orbit:state.cutaway?'3D cutaway':'3D exterior',front:'Front elevation',inside:'Interior view',plan:'Orthographic floor plan'};
-    $('view-name').textContent=labels[state.view]+' · '+state.mode+' layout';
-    $('drawing-view').textContent={orbit:'3D',front:'FRONT',inside:'INSIDE',plan:'PLAN'}[state.view];
+    $('view-name').textContent=state.photo?'Photo survey · '+photoShots()[state.photoIndex].id:labels[state.view]+' · '+state.mode+' layout';
+    $('drawing-view').textContent=state.photo?'PHOTO':{orbit:'3D',front:'FRONT',inside:'INSIDE',plan:'PLAN'}[state.view];
     $('footprint').innerHTML=format(dimensions.width)+' × '+format(dimensions.depth)+' <span>ft</span>';
     $('floor-area').textContent=format(dimensions.width*dimensions.depth)+' sq ft · '+format(dimensions.width*dimensions.depth*FT*FT)+' m²';
     $('model-warning').textContent=state.view==='plan'?'Centered post, wall thickness & door swings are provisional':'Door arrangement, height & material appearance are provisional';
   }
+  let photoRestore=null;
+  function syncDisplayControls(){
+    for(const [id,key] of [['cutaway','cutaway'],['framing','framing'],['show-dimensions','dims'],['open-doors','open']]){$(id).checked=state[key];$(id).disabled=state.photo}
+    all('[data-mode]').forEach(b=>{const active=b.dataset.mode===state.mode;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));b.disabled=state.photo});
+    all('[data-view]').forEach(b=>{const active=b.dataset.view===state.view;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));b.disabled=state.photo});
+  }
+  function renderPhotoStrip(){
+    $('photo-strip').replaceChildren(...photoShots().map((shot,index)=>{const button=document.createElement('button');button.type='button';button.textContent=shot.id;button.dataset.photoIndex=index;button.setAttribute('role','tab');button.setAttribute('aria-label',shot.id+' '+shot.title);button.addEventListener('click',()=>setPhotoShot(index));return button}));
+  }
+  function setPhotoShot(index){
+    const shots=photoShots();state.photoIndex=clamp(index,0,shots.length-1);const shot=shots[state.photoIndex];
+    state.photo=true;state.mode='existing';state.view='orbit';state.cutaway=shot.inside;state.framing=Boolean(shot.framing);state.dims=false;state.open=false;
+    camera.yaw=shot.yaw;camera.pitch=shot.inside?.78:.62;camera.zoom=1;camera.panX=0;camera.panY=0;
+    rebuild();syncDisplayControls();updateLabels();drawPlan();
+    document.querySelector('.viewer-column').classList.add('photo-survey-active');$('photo-survey').hidden=false;$('photo-map-label').hidden=false;$('photo-map-label').querySelector('strong').textContent=shot.id;
+    $('photo-title').textContent=shot.id+' · '+shot.title;$('photo-progress').textContent=(state.photoIndex+1)+' / '+shots.length;$('photo-position').textContent=shot.stand;$('photo-aim').textContent=shot.aim;$('photo-camera').textContent=shot.camera;$('photo-capture').textContent=shot.capture;
+    all('[data-photo-index]').forEach(b=>{const active=Number(b.dataset.photoIndex)===state.photoIndex;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));if(active&&b.scrollIntoView)b.scrollIntoView({block:'nearest',inline:'center'})});
+    $('photo-prev').disabled=state.photoIndex===0;$('photo-next').textContent=state.photoIndex===shots.length-1?'Finish basic set':'Next photo →';requestRender();
+  }
+  function startPhotoSurvey(){
+    if(!state.photo)photoRestore={mode:state.mode,view:state.view,cutaway:state.cutaway,framing:state.framing,dims:state.dims,open:state.open};
+    setPhotoShot(0);$('photo-survey').scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+  function closePhotoSurvey(){
+    if(!state.photo)return;state.photo=false;document.querySelector('.viewer-column').classList.remove('photo-survey-active');$('photo-survey').hidden=true;$('photo-map-label').hidden=true;
+    if(photoRestore)Object.assign(state,photoRestore);photoRestore=null;syncDisplayControls();rebuild();setView(state.view);drawPlan();requestRender();
+  }
+  $('photo-start').addEventListener('click',startPhotoSurvey);$('photo-prev').addEventListener('click',()=>setPhotoShot(state.photoIndex-1));$('photo-next').addEventListener('click',()=>state.photoIndex===photoShots().length-1?closePhotoSurvey():setPhotoShot(state.photoIndex+1));$('photo-close').addEventListener('click',closePhotoSurvey);renderPhotoStrip();
   all('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
   all('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
   for(const [id,key] of [['cutaway','cutaway'],['framing','framing'],['show-dimensions','dims'],['open-doors','open']])$(id).addEventListener('change',()=>{state[key]=$(id).checked;if(key==='open')rebuild();updateLabels();requestRender()});
@@ -176,12 +218,13 @@
     if(state.view==='plan'){halfH=Math.max((D+1.5)/2,(W+1.6)/(2*aspect))/camera.zoom;target=[camera.panX,0,camera.panY];eye=[camera.panX,30,camera.panY];up=[0,0,-1];projection=ortho(halfH,aspect)}
     else if(state.view==='front'){halfH=Math.max((H+1.2)/2,(W+.9)/(2*aspect))/camera.zoom;target=[camera.panX,H/2+camera.panY,0];eye=[camera.panX,H/2+camera.panY,30];projection=ortho(halfH,aspect)}
     else if(state.view==='inside'){const yaw=camera.yaw,dy=Math.sin(camera.pitch);eye=[clamp(camera.panX,-W/2+.2,W/2-.2),clamp(1.6+camera.panY,.35,H-.2),-D/2+.7];target=[eye[0]+Math.sin(yaw)*6,eye[1]+dy*6,eye[2]+Math.cos(yaw)*Math.cos(camera.pitch)*6];projection=perspective(clamp(1.12/camera.zoom,.45,1.5),aspect,.03,100)}
-    else{const radius=Math.hypot(W+.7,D+.7,H+.5)/2,angle=Math.min(.64,Math.atan(Math.tan(.64)*aspect)),distance=radius/Math.sin(angle)*1.15/camera.zoom;target=[camera.panX,H*.38+camera.panY,0];eye=[target[0]+Math.sin(camera.yaw)*Math.cos(camera.pitch)*distance,target[1]+Math.sin(camera.pitch)*distance,Math.cos(camera.yaw)*Math.cos(camera.pitch)*distance];projection=perspective(1.28,aspect,.05,150)}
+    else{let radius=Math.hypot(W+.7,D+.7,H+.5)/2,centerX=0,centerZ=0;if(state.photo){const shot=photoShots()[state.photoIndex],xs=[-W/2,W/2,shot.position[0],shot.target[0]],zs=[-D/2,D/2,shot.position[2],shot.target[2]],spanX=Math.max(...xs)-Math.min(...xs),spanZ=Math.max(...zs)-Math.min(...zs);centerX=(Math.max(...xs)+Math.min(...xs))/2;centerZ=(Math.max(...zs)+Math.min(...zs))/2;radius=Math.max(radius,Math.hypot(spanX,spanZ,H+.5)/2)}const angle=Math.min(.64,Math.atan(Math.tan(.64)*aspect)),distance=radius/Math.sin(angle)*1.15/camera.zoom;target=[centerX+camera.panX,H*.38+camera.panY,centerZ];eye=[target[0]+Math.sin(camera.yaw)*Math.cos(camera.pitch)*distance,target[1]+Math.sin(camera.pitch)*distance,target[2]+Math.cos(camera.yaw)*Math.cos(camera.pitch)*distance];projection=perspective(1.28,aspect,.05,150)}
     return {vp:mul(projection,lookAt(eye,target,up)),eye,target};
   }
   function isVisible(o,eye){
     if(o.group==='framing')return state.framing&&state.view!=='plan';
     if(state.view==='plan'&&(o.group==='ground'||o.group==='header'))return false;
+    if(state.photo&&photoShots()[state.photoIndex].inside&&eye[2]>0&&['front','header','doors'].includes(o.group))return false;
     if(state.view==='orbit'&&state.cutaway){if(o.group==='left'&&eye[0]<0)return false;if(o.group==='right'&&eye[0]>0)return false;if(o.group==='back'&&eye[2]<0)return false;}
     return true;
   }
@@ -197,13 +240,21 @@
   }
   requestRender=()=>{if(!frame&&!contextLost)frame=requestAnimationFrame(render)};
   function project(point,vp,w,h){const a=[...point,1],clip=[0,0,0,0];for(let r=0;r<4;r++)for(let k=0;k<4;k++)clip[r]+=vp[k*4+r]*a[k];if(clip[3]<=0)return null;return[(clip[0]/clip[3]+1)*w/2,(1-clip[1]/clip[3])*h/2,clip[2]/clip[3]]}
+  function drawPhotoMarker(svg,vp,w,h){
+    const shot=photoShots()[state.photoIndex],p=project(shot.position,vp,w,h),q=project(shot.target,vp,w,h);if(!p||!q||p[2]>1||q[2]>1)return;
+    const dx=q[0]-p[0],dy=q[1]-p[1],length=Math.hypot(dx,dy);if(length<5)return;const ux=dx/length,uy=dy/length,tip=[q[0],q[1]],base=[q[0]-ux*13,q[1]-uy*13],nx=-uy*5,ny=ux*5;
+    const group=node('g',{'font-family':'system-ui,sans-serif'});group.appendChild(node('line',{x1:p[0],y1:p[1],x2:base[0],y2:base[1],stroke:'#b45f24','stroke-width':2.4,'stroke-dasharray':'7 5'}));group.appendChild(node('polygon',{points:tip[0]+','+tip[1]+' '+(base[0]+nx)+','+(base[1]+ny)+' '+(base[0]-nx)+','+(base[1]-ny),fill:'#b45f24'}));group.appendChild(node('circle',{cx:q[0],cy:q[1],r:4,fill:'#fff',stroke:'#b45f24','stroke-width':2}));group.appendChild(node('circle',{cx:p[0],cy:p[1],r:17,fill:'#a95825',stroke:'#fff','stroke-width':2}));group.appendChild(node('rect',{x:p[0]-9,y:p[1]-6,width:18,height:12,rx:2,fill:'#fff'}));group.appendChild(node('circle',{cx:p[0],cy:p[1],r:3.3,fill:'#a95825'}));group.appendChild(node('path',{d:'M '+(p[0]+9)+' '+(p[1]-3)+' L '+(p[0]+14)+' '+(p[1]-7)+' L '+(p[0]+14)+' '+(p[1]+7)+' L '+(p[0]+9)+' '+(p[1]+3)+' Z',fill:'#fff'}));group.appendChild(node('rect',{x:p[0]-25,y:p[1]+23,width:50,height:21,rx:4,fill:'#fffaf3',stroke:'#d5aa84'}));group.appendChild(node('text',{x:p[0],y:p[1]+38,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#8a461c'},shot.id));svg.appendChild(group);
+  }
   function drawDimensions(vp,w,h){
-    const svg=$('dimensions');svg.replaceChildren();svg.setAttribute('viewBox','0 0 '+w+' '+h);if(!state.dims||state.view==='inside')return;
+    const svg=$('dimensions');svg.replaceChildren();svg.setAttribute('viewBox','0 0 '+w+' '+h);
     const {W,D,H}=metrics();
     function dimension(a,b,text){const p=project(a,vp,w,h),q=project(b,vp,w,h);if(!p||!q||p[2]>1||q[2]>1)return;const dx=q[0]-p[0],dy=q[1]-p[1],length=Math.hypot(dx,dy);if(length<40)return;const nx=-dy/length*4,ny=dx/length*4;const group=node('g',{stroke:'#5e7168','stroke-width':1.1});group.appendChild(node('line',{x1:p[0],y1:p[1],x2:q[0],y2:q[1]}));for(const t of[p,q])group.appendChild(node('line',{x1:t[0]-nx,y1:t[1]-ny,x2:t[0]+nx,y2:t[1]+ny}));const lx=(p[0]+q[0])/2,ly=(p[1]+q[1])/2-9;if(lx<30||lx>w-30||ly<25||ly>h-45)return;const tw=text.length*7+14;group.appendChild(node('rect',{x:lx-tw/2,y:ly-12,width:tw,height:20,fill:'#e8ede6',stroke:'none',rx:3}));group.appendChild(node('text',{x:lx,y:ly+2,'text-anchor':'middle','font-family':'system-ui,sans-serif','font-size':12,fill:'#43564d',stroke:'none'},text));svg.appendChild(group)}
-    dimension([-W/2,0,D/2+.38],[W/2,0,D/2+.38],format(dimensions.width)+' ft / '+format(W)+' m');
-    if(state.view==='front')dimension([W/2+.24,0,D/2],[W/2+.24,H,D/2],format(H)+' m (est.)');
-    else dimension([-W/2-.36,0,-D/2],[-W/2-.36,0,D/2],format(dimensions.depth)+' ft / '+format(D)+' m');
+    if(state.dims&&state.view!=='inside'){
+      dimension([-W/2,0,D/2+.38],[W/2,0,D/2+.38],format(dimensions.width)+' ft / '+format(W)+' m');
+      if(state.view==='front')dimension([W/2+.24,0,D/2],[W/2+.24,H,D/2],format(H)+' m (est.)');
+      else dimension([-W/2-.36,0,-D/2],[-W/2-.36,0,D/2],format(dimensions.depth)+' ft / '+format(D)+' m');
+    }
+    if(state.photo)drawPhotoMarker(svg,vp,w,h);
   }
   function zoomBy(factor){camera.zoom=clamp(camera.zoom*factor,.55,2.3);requestRender()}
   $('zoom-in').addEventListener('click',()=>zoomBy(1.15));$('zoom-out').addEventListener('click',()=>zoomBy(1/1.15));$('reset-view').addEventListener('click',()=>setView(state.view));
