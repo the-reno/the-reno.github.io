@@ -2,137 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="privacy-policy" href="/privacy/">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Garage Study · Ronu</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111315'/%3E%3Cpath d='M6 25V12l10-6 10 6v13M10 25V14h12v11M15 14v11' fill='none' stroke='%23d6b16f' stroke-width='2'/%3E%3C/svg%3E">
-  <style>
-    :root{color-scheme:dark;--ink:#ece8df;--muted:#9a9b96;--line:rgba(255,255,255,.13);--panel:rgba(17,19,21,.82);--gold:#d6b16f;--bg:#090b0c}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    body{overflow:hidden}
-    button{font:inherit}
-    .app{height:100%;position:relative;isolation:isolate}
-    canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;background:radial-gradient(circle at 53% 38%,#263039 0,#14191d 44%,#090b0c 82%)}
-    canvas:active{cursor:grabbing}
-    .topbar{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:22px 24px;pointer-events:none}
-    .brand{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-    .brand strong{color:var(--ink);font-weight:500}
-    .status{font-size:.72rem;color:#a9b9aa;border:1px solid rgba(159,192,166,.24);background:rgba(28,42,31,.62);border-radius:999px;padding:8px 12px}
-    .panel{position:absolute;left:24px;bottom:24px;width:min(350px,calc(100vw - 48px));padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.28)}
-    h1{font-family:Georgia,'Times New Roman',serif;font-size:1.65rem;font-weight:400;letter-spacing:-.02em;margin:0 0 5px}
-    .sub{margin:0 0 17px;color:var(--muted);font-size:.76rem;line-height:1.55}
-    .switcher,.views{display:grid;gap:7px}.switcher{grid-template-columns:1fr 1fr;margin-bottom:13px}.views{grid-template-columns:repeat(3,1fr)}
-    button{min-height:40px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.035);color:#a8aaa6;cursor:pointer;font-size:.72rem;transition:.18s ease}
-    button:hover,button:focus-visible{border-color:rgba(214,177,111,.58);color:var(--ink);outline:none}
-    button.active{background:var(--gold);border-color:var(--gold);color:#17130c}
-    .specs{position:absolute;right:24px;bottom:24px;width:240px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 17px;backdrop-filter:blur(16px)}
-    .specs-title{margin:0 0 10px;color:var(--muted);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
-    dl{display:grid;grid-template-columns:1fr auto;gap:8px 14px;margin:0;font-size:.72rem}dt{color:#777b7c}dd{margin:0;color:#d8d5cd;text-align:right}
-    .hint{position:absolute;right:24px;top:68px;font-size:.68rem;color:#73787a;text-align:right;line-height:1.6;pointer-events:none}
-    .fallback{display:none;position:absolute;inset:25% 20%;padding:2rem;background:#151719;border:1px solid var(--line);border-radius:12px;text-align:center}
-    .fallback h1{margin-bottom:.7rem}.fallback p{color:var(--muted);line-height:1.6}
-    @media(max-width:720px){.topbar{padding:15px 16px}.status{display:none}.panel{left:12px;bottom:12px;width:calc(100vw - 24px);padding:14px}.specs{display:none}.hint{right:16px;top:52px}.sub{margin-bottom:12px}h1{font-size:1.35rem}.switcher{margin-bottom:8px}button{min-height:42px}}
-    @media(prefers-reduced-motion:reduce){button{transition:none}}
-  </style>
+  <title>Garage · Renovation workspace | Ronu</title>
+  <meta name="description" content="Garage renovation study: interactive model, dimensions, design direction, and execution sequence. Concept model, not construction drawings.">
+  <link rel="stylesheet" href="./workspace.css?v=2">
+  <script src="./workspace.js?v=2" defer></script>
 </head>
 <body>
-<main class="app">
-  <canvas id="scene" aria-label="Interactive three-dimensional model of the garage. Drag to orbit and pinch or scroll to zoom."></canvas>
-  <header class="topbar"><div class="brand"><strong>Ronu</strong> / garage study</div><div class="status">working model · dimensions verified</div></header>
-  <div class="hint">drag to orbit<br>pinch or scroll to zoom</div>
-  <section class="panel" aria-label="Garage model controls">
-    <h1>The garage, in space.</h1>
-    <p class="sub" id="mode-copy">Existing shell with two timber vehicle doors and exposed structure.</p>
-    <div class="switcher" role="group" aria-label="Design state">
-      <button class="active" data-mode="existing" aria-pressed="true">Existing</button>
-      <button data-mode="proposed" aria-pressed="false">Proposed</button>
-    </div>
-    <div class="views" role="group" aria-label="Camera view">
-      <button data-view="front">Front</button><button data-view="inside">Inside</button><button data-view="plan">Plan</button>
-    </div>
-  </section>
-  <aside class="specs" aria-label="Known dimensions">
-    <p class="specs-title">Known dimensions</p>
-    <dl><dt>Width</dt><dd>20 ft</dd><dt>Depth</dt><dd>21.5 ft</dd><dt>Door panels</dt><dd>127 × 226 cm</dd><dt>Center post</dt><dd>14 cm</dd></dl>
-  </aside>
-  <section class="fallback" id="fallback"><h1>3D view unavailable</h1><p>This browser could not start the interactive model. Try opening the page in a current version of Safari, Chrome, or Edge.</p></section>
-</main>
-<script>
-(()=>{
-  'use strict';
-  const canvas=document.getElementById('scene');
-  const gl=canvas.getContext('webgl',{antialias:true,alpha:true});
-  if(!gl){canvas.style.display='none';document.getElementById('fallback').style.display='block';return}
-
-  const V=`attribute vec3 p;attribute vec3 n;uniform mat4 mvp;uniform mat4 model;varying vec3 normal;varying vec3 world;void main(){world=(model*vec4(p,1.)).xyz;normal=mat3(model)*n;gl_Position=mvp*vec4(p,1.);}`;
-  const F=`precision mediump float;varying vec3 normal;varying vec3 world;uniform vec4 color;void main(){vec3 N=normalize(normal);vec3 L=normalize(vec3(-.45,.8,.35));float d=max(dot(N,L),0.);float ambient=.46;float fade=clamp(1.-length(world.xz)*.012,.68,1.);gl_FragColor=vec4(color.rgb*(ambient+d*.54)*fade,color.a);}`;
-  function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
-  const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,V));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(prog);gl.useProgram(prog);
-  const P=gl.getAttribLocation(prog,'p'),N=gl.getAttribLocation(prog,'n'),MVP=gl.getUniformLocation(prog,'mvp'),MODEL=gl.getUniformLocation(prog,'model'),COLOR=gl.getUniformLocation(prog,'color');
-  const cube=[];
-  const faces=[[[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],[[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]],[[1,0,0],[[1,-1,1],[1,-1,-1],[1,1,-1],[1,1,1]]],[[-1,0,0],[[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]]],[[0,1,0],[[-1,1,1],[1,1,1],[1,1,-1],[-1,1,-1]]],[[0,-1,0],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]]]];
-  for(const [n,q] of faces)for(const i of [0,1,2,0,2,3])cube.push(...q[i],...n);
-  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(cube),gl.STATIC_DRAW);gl.enableVertexAttribArray(P);gl.vertexAttribPointer(P,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(N);gl.vertexAttribPointer(N,3,gl.FLOAT,false,24,12);
-
-  const I=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-  const mul=(a,b)=>{const o=Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o};
-  const perspective=(fov,aspect,near,far)=>{const f=1/Math.tan(fov/2),nf=1/(near-far);return[f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0]};
-  const lookAt=(e,t,u)=>{let z=norm(sub(e,t)),x=norm(cross(u,z)),y=cross(z,x);return[x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1]};
-  const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)};
-  function model(x,y,z,sx,sy,sz,ry=0){const c=Math.cos(ry),s=Math.sin(ry);return[c*sx,0,-s*sx,0,0,sy,0,0,s*sz,0,c*sz,0,x,y,z,1]}
-  const rgba=h=>{if(Array.isArray(h))return h;const v=parseInt(h.slice(1),16);return[(v>>16&255)/255,(v>>8&255)/255,(v&255)/255,1]};
-  const objects=[];const box=(x,y,z,sx,sy,sz,c,ry=0,group='all')=>objects.push({m:model(x,y,z,sx/2,sy/2,sz/2,ry),c:rgba(c),group});
-  const W=20,D=21.5,H=9.2,T=.22,doorW=4.167,doorH=7.415,post=.459;
-  // concrete slab and aged timber shell
-  box(0,-.18,0,W+.7,.35,D+.7,'#727879');
-  box(-W/2,4.4,0,T,8.8,D,'#6d5a43');box(W/2,4.4,0,T,8.8,D,'#6d5a43');box(0,4.4,-D/2,W,8.8,T,'#66523e');
-  // studs and roof joists
-  for(let z=-D/2+1;z<D/2;z+=2) {box(-W/2+.05,4.4,z,.28,8.5,.3,'#8d7454');box(W/2-.05,4.4,z,.28,8.5,.3,'#8d7454')}
-  for(let x=-W/2+.5;x<W/2;x+=2)box(x,H,-.1,.28,.34,D,'#8f7655');
-  for(let x=-W/2+1;x<W/2;x+=2)box(x,8.7,-D/2+.08,.28,.32,.35,'#927959');
-  // front frame and exact center post
-  box(0,4.4,D/2,post,8.8,.3,'#7e6548');box(0,8.25,D/2,W,.55,.35,'#7e6548');
-  // existing pair of timber doors
-  const dx=doorW/2+post/2;
-  for(const x of [-dx,dx]){
-    box(x,doorH/2,D/2+.12,doorW-.08,doorH,.18,'#6d5940',0,'existing');
-    for(let yy=.65;yy<doorH;yy+=1.18)box(x,yy,D/2+.25,doorW-.22,.1,.12,'#a08359',0,'existing');
-    box(x-doorW/2+.17,doorH/2,D/2+.26,.13,doorH-.2,.13,'#a08359',0,'existing');box(x+doorW/2-.17,doorH/2,D/2+.26,.13,doorH-.2,.13,'#a08359',0,'existing');
-  }
-  // proposed: retain a refined left carriage door; infill right and add person door
-  box(-dx,doorH/2,D/2+.13,doorW-.08,doorH,.2,'#323b40',0,'proposed');
-  box(-dx,doorH/2,D/2+.27,.12,doorH-.2,.12,'#b9a071',0,'proposed');
-  for(let yy=.7;yy<doorH;yy+=1.32)box(-dx,yy,D/2+.27,doorW-.22,.09,.12,'#b9a071',0,'proposed');
-  box(5.15,4.05,D/2+.03,9.25,8.1,.34,'#a5a49d',0,'proposed');
-  box(5.65,3.55,D/2+.25,3.05,7.1,.22,'#30393d',0,'proposed');
-  box(4.85,3.85,D/2+.39,.22,.22,.12,'#d6b16f',0,'proposed');
-  // datum grid
-  for(let x=-10;x<=10;x+=2){box(x,.025,0,.025,.03,D,'#91989a')}for(let z=-10;z<=10;z+=2){box(0,.027,z,W,.03,.025,'#91989a')}
-
-  let mode='existing',yaw=-.68,pitch=.33,dist=31,target=[0,3.7,0],drag=null,pinch=0;
-  function render(){
-    const dpr=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
-    gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-    const cp=Math.cos(pitch),eye=[target[0]+Math.sin(yaw)*cp*dist,target[1]+Math.sin(pitch)*dist,target[2]+Math.cos(yaw)*cp*dist];
-    const vp=mul(perspective(Math.PI/4,w/h,.1,120),lookAt(eye,target,[0,1,0]));
-    for(const o of objects){if(o.group!=='all'&&o.group!==mode)continue;gl.uniformMatrix4fv(MODEL,false,o.m);gl.uniformMatrix4fv(MVP,false,mul(vp,o.m));gl.uniform4fv(COLOR,o.c);gl.drawArrays(gl.TRIANGLES,0,36)}
-    requestAnimationFrame(render)
-  }
-  function setView(name){const views={front:[0,.12,33,0,3.6,0],inside:[3.74,.25,25,0,3.7,2.4],plan:[0,1.38,34,0,0,0]};const v=views[name];yaw=v[0];pitch=v[1];dist=v[2];target=[v[3],v[4],v[5]];document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name))}
-  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-pressed',on)});document.getElementById('mode-copy').textContent=mode==='existing'?'Existing shell with two timber vehicle doors and exposed structure.':'Left carriage door retained; right opening becomes an insulated wall with a person door.'}));
-  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-  canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag=[e.clientX,e.clientY,yaw,pitch]});
-  canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag[2]-(e.clientX-drag[0])*.008;pitch=Math.max(-.05,Math.min(1.45,drag[3]+(e.clientY-drag[1])*.006));document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'))});
-  canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
-  canvas.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(14,Math.min(52,dist+e.deltaY*.025))},{passive:false});
-  canvas.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});
-  canvas.addEventListener('touchmove',e=>{if(e.touches.length===2){const p=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);dist=Math.max(14,Math.min(52,dist+(pinch-p)*.04));pinch=p}},{passive:true});
-  render();
-})();
-</script>
+  <header class="masthead">
+    <div class="identity"><span class="monogram" aria-hidden="true">r.</span><div><p class="eyebrow">RONU / PROJECT 01</p><h1>Garage renovation</h1></div></div>
+    <div class="head-actions"><span class="tag">Concept study</span><button id="print-project" class="button secondary">Print brief</button></div>
+  </header>
+  <nav class="workspace-nav" aria-label="Renovation workspace">
+    <button data-page="model" class="active" aria-current="page"><span>01</span> Space & views</button>
+    <button data-page="design"><span>02</span> Design</button>
+    <button data-page="measure"><span>03</span> Measurements</button>
+    <button data-page="build"><span>04</span> Execution</button>
+  </nav>
+  <main>
+    <section id="page-model" class="page active" aria-labelledby="model-title">
+      <div class="workspace-grid">
+        <div class="viewer-column">
+          <div class="view-bar"><div><h2 id="model-title">Explore the space</h2><span class="small" id="view-name">3D cutaway · proposed layout</span></div><div class="segmented" aria-label="Layout"><button data-mode="existing" aria-pressed="false">Existing</button><button data-mode="proposed" class="active" aria-pressed="true">Proposed</button></div></div>
+          <div class="viewer" id="viewer">
+            <canvas id="scene" tabindex="0" aria-label="Garage 3D model. Arrow keys rotate. Plus and minus zoom. Zero resets. Use view buttons for front, interior or floor plan."></canvas>
+            <svg id="dimensions" class="dimension-overlay" aria-hidden="true"></svg>
+            <div class="viewer-chip">MODEL / <span id="drawing-view">3D</span></div>
+            <div id="model-warning" class="model-warning">Door arrangement & height are provisional</div>
+            <div class="zoom-controls" aria-label="Camera controls"><button id="zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button id="zoom-out" title="Zoom out" aria-label="Zoom out">−</button><button id="reset-view" title="Fit model" aria-label="Fit model">⌂</button></div>
+            <div id="fallback" class="fallback" hidden><h3>3D is unavailable in this browser</h3><p>You can still use the measured plan, design reference, and execution guide.</p><button class="button" data-go="measure">Open measured plan</button></div>
+          </div>
+          <div class="camera-bar" aria-label="Camera presets"><button data-view="orbit" class="active" aria-pressed="true"><span aria-hidden="true">◇</span> 3D</button><button data-view="front" aria-pressed="false"><span aria-hidden="true">▤</span> Front</button><button data-view="inside" aria-pressed="false"><span aria-hidden="true">⊓</span> Inside</button><button data-view="plan" aria-pressed="false"><span aria-hidden="true">▦</span> Floor plan</button></div>
+          <div class="viewer-foot"><p>One finger rotates · two fingers pan / pinch to zoom<br><span>Mouse: drag to rotate · Shift-drag to pan · scroll to zoom</span></p><button id="download-view" class="text-button">Save view as PNG ↗</button></div>
+        </div>
+        <aside class="inspector" aria-label="Model settings">
+          <div class="inspector-block"><p class="eyebrow">DESIGN DIRECTION</p><h3>Keep the left. Rework the right.</h3><p>Retain paired doors on the left. Close the right bay with a wall and a separate entrance. Keep the center post.</p><button class="text-button" data-go="design">See the design reference →</button></div>
+          <fieldset class="inspector-block"><legend>Display</legend><label class="toggle"><span>Cutaway walls<small>See inside without obstructions</small></span><input id="cutaway" type="checkbox" checked></label><label class="toggle"><span>Overhead framing<small>Schematic, not a structural design</small></span><input id="framing" type="checkbox"></label><label class="toggle"><span>Dimensions</span><input id="show-dimensions" type="checkbox" checked></label><label class="toggle"><span>Open doors<small>Illustrative outward swing</small></span><input id="open-doors" type="checkbox"></label></fieldset>
+          <div class="inspector-block"><p class="eyebrow">WORKING FOOTPRINT</p><p class="big-measure" id="footprint">20 × 21.5 <span>ft</span></p><p class="small" id="floor-area">430 sq ft · 39.95 m²</p><button class="text-button" data-go="measure">Review measurements →</button></div>
+          <p class="caution">Planning model only. Confirm openings, height, materials, and structure on site before ordering or building.</p>
+        </aside>
+      </div>
+    </section>
+    <section id="page-design" class="page content-page" aria-labelledby="design-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">02 / DESIGN</p><h2 id="design-title">Modern details. Classic proportions.</h2><p>One clear direction, ready to refine against the actual garage.</p></div><button class="button" data-go="model">Explore in 3D →</button></div>
+      <div class="design-grid">
+        <figure class="concept-figure"><button id="enlarge-image" class="image-button" aria-label="Enlarge architectural concept image"><img src="./concept.jpg" width="1536" height="1024" alt="Illustrative garage renovation with paired charcoal carriage doors on the left, retained center post, and a separate entrance in an infilled right bay."><span>Enlarge ↗</span></button><figcaption><strong>AI-generated design reference.</strong> Not a photo of your garage. Roof, glazing, finishes, and proportions are illustrative; this image does not change with model settings.</figcaption></figure>
+        <div class="design-options">
+          <article class="decision"><span class="number">01</span><div><h3>Left bay / paired doors</h3><p>Simple vertical boards, restrained trim, and dark hardware. Hinged doors remain the working concept.</p></div></article>
+          <article class="decision"><span class="number">02</span><div><h3>Right bay / wall + entry</h3><p>A separate pedestrian entrance. Exact width, position, threshold, and wall build-up still need design confirmation.</p></div></article>
+          <article class="decision"><span class="number">03</span><div><h3>Inside / a clean shell</h3><p>Light wall finishes and a neutral floor. Plan insulation and services only after checking the existing condition.</p></div></article>
+          <fieldset class="finish-options"><legend>Try a door finish in the 3D model</legend><div class="finish-row"><button class="swatch active" data-finish="charcoal" aria-pressed="true"><span class="charcoal"></span>Charcoal</button><button class="swatch" data-finish="timber" aria-pressed="false"><span class="timber"></span>Timber</button><button class="swatch" data-finish="light" aria-pressed="false"><span class="light"></span>Light</button></div><p class="small" id="finish-status">Charcoal selected · applies to the proposed model</p></fieldset>
+        </div>
+      </div>
+      <div class="note-strip"><strong>Original photos</strong><p>The earlier garage photos are not included in this version. Use this as a design study until those photos and an on-site survey are matched to the model.</p></div>
+    </section>
+    <section id="page-measure" class="page content-page" aria-labelledby="measure-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">03 / SURVEY</p><h2 id="measure-title">Measure first. Model second.</h2><p>Your supplied measurements are the baseline. Assumptions stay visible.</p></div><button class="button secondary" data-go="model">Back to the model →</button></div>
+      <div class="measurement-grid">
+        <div class="plan-card"><div class="card-heading"><h3>Working floor plan</h3><span class="tag">Not for construction</span></div><svg id="survey-plan" viewBox="0 0 640 680" role="img" aria-label="Garage floor plan with width, depth, and front openings"></svg><p class="small">Front entrance is at the bottom. Width/depth are treated as clear internal dimensions; reference faces, wall thickness, swings, and centered post location need confirmation.</p></div>
+        <form id="measurement-form" class="measurement-form">
+          <h3>Model dimensions</h3><p class="small">Changes apply to this session only. Print the brief to keep a record.</p>
+          <label>Width <span>supplied: 20 ft</span><div class="unit-input"><input id="input-width" name="width" type="number" value="20" min="15" max="40" step="0.01" required><b>ft</b></div></label>
+          <label>Depth <span>supplied: 21.5 ft</span><div class="unit-input"><input id="input-depth" name="depth" type="number" value="21.5" min="10" max="50" step="0.01" required><b>ft</b></div></label>
+          <div class="input-pair"><label>Door width <span>supplied: 127 cm</span><div class="unit-input"><input id="input-door-width" name="doorWidth" type="number" value="127" min="60" max="350" step="0.1" required><b>cm</b></div></label><label>Door height <span>supplied: 226 cm</span><div class="unit-input"><input id="input-door-height" name="doorHeight" type="number" value="226" min="180" max="350" step="0.1" required><b>cm</b></div></label></div>
+          <label>“Each door” means <span>interpretation not confirmed</span><select id="input-door-basis" name="doorBasis"><option value="leaf">One leaf — two leaves per bay</option><option value="opening">Full opening — split into two leaves</option></select></label>
+          <div class="input-pair"><label>Center post <span>supplied: 14 cm</span><div class="unit-input"><input id="input-post" name="post" type="number" value="14" min="8" max="60" step="0.1" required><b>cm</b></div></label><label>Wall height <span>estimate: 260 cm</span><div class="unit-input"><input id="input-height" name="height" type="number" value="260" min="200" max="450" step="0.1" required><b>cm</b></div></label></div>
+          <p class="form-error" id="measurement-error" role="alert"></p><div class="form-actions"><button class="button" type="submit">Apply to model</button><button class="button secondary" id="reset-measurements" type="button">Restore baseline</button></div>
+          <p id="measurement-status" class="small" role="status">Baseline loaded. The 127 cm width is provisionally treated as one leaf.</p>
+        </form>
+      </div>
+      <div class="survey-checklist"><h3>Still to confirm on site</h3><div class="checklist-grid"><p>□ Both clear opening widths and heights</p><p>□ Whether 127 cm describes a leaf or an opening</p><p>□ Post position, headers, and framing condition</p><p>□ Wall / ceiling heights and roof construction</p><p>□ Windows, services, and any other openings</p><p>□ Slab level, moisture, and drainage</p></div></div>
+    </section>
+    <section id="page-build" class="page content-page" aria-labelledby="build-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">04 / EXECUTION</p><h2 id="build-title">A sequence you can build around.</h2><p>Planning gates, not a construction specification. No work is recorded as completed.</p></div><button class="button secondary" id="print-execution">Print checklist</button></div>
+      <div class="build-layout"><div class="phases">
+        <details open><summary><span class="phase-number">01</span><span><strong>Survey & document</strong><small>Start here</small></span></summary><div class="phase-body"><p>□ Measure the shell, each opening, the center post, and overhead structure.</p><p>□ Photograph every wall, floor, ceiling, doors, and areas of damage.</p><p>□ Mark services and anything that must stay accessible.</p><div class="gate"><b>Ready when</b>One measured plan matches the actual garage.</div></div></details>
+        <details><summary><span class="phase-number">02</span><span><strong>Confirm scope & approvals</strong><small>Before purchasing</small></span></summary><div class="phase-body"><p>□ Confirm intended use, left doors, right entrance, and insulation scope.</p><p>□ Ask the local building department which approvals and inspections apply.</p><p>□ Have the center post, headers, and relevant structure assessed before any alteration.</p><div class="gate"><b>Ready when</b>Scope, responsibilities, approvals, and design drawings are agreed.</div></div></details>
+        <details><summary><span class="phase-number">03</span><span><strong>Make the existing shell sound</strong><small>Before covering surfaces</small></span></summary><div class="phase-body"><p>□ Investigate water entry, decay, pests, and the condition of the slab.</p><p>□ Agree needed repairs and safe handling of unknown existing materials.</p><p>□ Record any measurements that change after repairs.</p><div class="gate"><b>Ready when</b>The existing shell is ready for the agreed renovation work.</div></div></details>
+        <details><summary><span class="phase-number">04</span><span><strong>Resolve doors & right-bay infill</strong><small>Use final opening measurements</small></span></summary><div class="phase-body"><p>□ Finalize leaf sizes, weight, hinges, latches, seals, and the threshold.</p><p>□ Confirm the entry door size, swing, and position in the right bay.</p><p>□ Have the infill, flashing, and connection details checked for the project.</p><div class="gate"><b>Ready when</b>Reviewed details and final measurements support ordering and installation.</div></div></details>
+        <details><summary><span class="phase-number">05</span><span><strong>Services, insulation & finishes</strong><small>Coordinate before closing walls</small></span></summary><div class="phase-body"><p>□ Plan electrical and any ventilation or heating needs with qualified trades.</p><p>□ Select the wall and ceiling assembly for the intended use and existing conditions.</p><p>□ Complete applicable inspections before covering work; then finish walls and floor.</p><div class="gate"><b>Ready when</b>Required checks are complete and surfaces are finished.</div></div></details>
+        <details><summary><span class="phase-number">06</span><span><strong>Check & hand over</strong><small>Close out the project</small></span></summary><div class="phase-body"><p>□ Check every door, latch, seal, threshold, and access route.</p><p>□ Record outstanding items and final approvals where required.</p><p>□ Keep final photos, specifications, receipts, and maintenance notes together.</p><div class="gate"><b>Ready when</b>The agreed scope is complete and the project record is up to date.</div></div></details>
+      </div><aside class="build-sidebar"><p class="eyebrow">CURRENT DESIGN BRIEF</p><h3>Retain the structure.<br>Improve the enclosure.</h3><dl><dt>Left side</dt><dd>Paired hinged doors</dd><dt>Right side</dt><dd>Infill + entry door</dd><dt>Center post</dt><dd>Retain; assess before alterations</dd><dt>Interior</dt><dd>Floor, walls & ceiling</dd><dt>Door finish</dt><dd id="brief-finish">Charcoal · working choice</dd></dl><p class="caution">The model does not establish structural adequacy, code compliance, insulation performance, or material quantities.</p><div class="next-step"><span class="eyebrow">NEXT PRACTICAL STEP</span><h3>Complete the opening survey.</h3><p>Confirm what the 127 cm door measurement describes before sizing doors or infill.</p><button class="text-button" data-go="measure">Open survey →</button></div></aside></div>
+    </section>
+  </main>
+  <footer class="site-footer"><span>Ronu / Garage · working study</span><span>Unlisted, not private. Anyone with the address can open this page.</span></footer>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="image-dialog"><button id="close-image" class="button secondary">Close ×</button><img src="./concept.jpg" width="1536" height="1024" alt="Enlarged illustrative garage renovation concept"><p>AI-generated reference — not a survey or construction drawing.</p></dialog>
 </body>
 </html>
