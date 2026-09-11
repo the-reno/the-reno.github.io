@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <link rel="privacy-policy" href="/privacy/">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Garage Study · Ronu</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111315'/%3E%3Cpath d='M6 25V12l10-6 10 6v13M10 25V14h12v11M15 14v11' fill='none' stroke='%23d6b16f' stroke-width='2'/%3E%3C/svg%3E">
+  <style>
+    :root{color-scheme:dark;--ink:#ece8df;--muted:#9a9b96;--line:rgba(255,255,255,.13);--panel:rgba(17,19,21,.82);--gold:#d6b16f;--bg:#090b0c}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    body{overflow:hidden}
+    button{font:inherit}
+    .app{height:100%;position:relative;isolation:isolate}
+    canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;background:radial-gradient(circle at 53% 38%,#263039 0,#14191d 44%,#090b0c 82%)}
+    canvas:active{cursor:grabbing}
+    .topbar{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:22px 24px;pointer-events:none}
+    .brand{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+    .brand strong{color:var(--ink);font-weight:500}
+    .status{font-size:.72rem;color:#a9b9aa;border:1px solid rgba(159,192,166,.24);background:rgba(28,42,31,.62);border-radius:999px;padding:8px 12px}
+    .panel{position:absolute;left:24px;bottom:24px;width:min(350px,calc(100vw - 48px));padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    h1{font-family:Georgia,'Times New Roman',serif;font-size:1.65rem;font-weight:400;letter-spacing:-.02em;margin:0 0 5px}
+    .sub{margin:0 0 17px;color:var(--muted);font-size:.76rem;line-height:1.55}
+    .switcher,.views{display:grid;gap:7px}.switcher{grid-template-columns:1fr 1fr;margin-bottom:13px}.views{grid-template-columns:repeat(3,1fr)}
+    button{min-height:40px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.035);color:#a8aaa6;cursor:pointer;font-size:.72rem;transition:.18s ease}
+    button:hover,button:focus-visible{border-color:rgba(214,177,111,.58);color:var(--ink);outline:none}
+    button.active{background:var(--gold);border-color:var(--gold);color:#17130c}
+    .specs{position:absolute;right:24px;bottom:24px;width:240px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 17px;backdrop-filter:blur(16px)}
+    .specs-title{margin:0 0 10px;color:var(--muted);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
+    dl{display:grid;grid-template-columns:1fr auto;gap:8px 14px;margin:0;font-size:.72rem}dt{color:#777b7c}dd{margin:0;color:#d8d5cd;text-align:right}
+    .hint{position:absolute;right:24px;top:68px;font-size:.68rem;color:#73787a;text-align:right;line-height:1.6;pointer-events:none}
+    .fallback{display:none;position:absolute;inset:25% 20%;padding:2rem;background:#151719;border:1px solid var(--line);border-radius:12px;text-align:center}
+    .fallback h1{margin-bottom:.7rem}.fallback p{color:var(--muted);line-height:1.6}
+    @media(max-width:720px){.topbar{padding:15px 16px}.status{display:none}.panel{left:12px;bottom:12px;width:calc(100vw - 24px);padding:14px}.specs{display:none}.hint{right:16px;top:52px}.sub{margin-bottom:12px}h1{font-size:1.35rem}.switcher{margin-bottom:8px}button{min-height:42px}}
+    @media(prefers-reduced-motion:reduce){button{transition:none}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <canvas id="scene" aria-label="Interactive three-dimensional model of the garage. Drag to orbit and pinch or scroll to zoom."></canvas>
+  <header class="topbar"><div class="brand"><strong>Ronu</strong> / garage study</div><div class="status">working model · dimensions verified</div></header>
+  <div class="hint">drag to orbit<br>pinch or scroll to zoom</div>
+  <section class="panel" aria-label="Garage model controls">
+    <h1>The garage, in space.</h1>
+    <p class="sub" id="mode-copy">Existing shell with two timber vehicle doors and exposed structure.</p>
+    <div class="switcher" role="group" aria-label="Design state">
+      <button class="active" data-mode="existing" aria-pressed="true">Existing</button>
+      <button data-mode="proposed" aria-pressed="false">Proposed</button>
+    </div>
+    <div class="views" role="group" aria-label="Camera view">
+      <button data-view="front">Front</button><button data-view="inside">Inside</button><button data-view="plan">Plan</button>
+    </div>
+  </section>
+  <aside class="specs" aria-label="Known dimensions">
+    <p class="specs-title">Known dimensions</p>
+    <dl><dt>Width</dt><dd>20 ft</dd><dt>Depth</dt><dd>21.5 ft</dd><dt>Door panels</dt><dd>127 × 226 cm</dd><dt>Center post</dt><dd>14 cm</dd></dl>
+  </aside>
+  <section class="fallback" id="fallback"><h1>3D view unavailable</h1><p>This browser could not start the interactive model. Try opening the page in a current version of Safari, Chrome, or Edge.</p></section>
+</main>
+<script>
+(()=>{
+  'use strict';
+  const canvas=document.getElementById('scene');
+  const gl=canvas.getContext('webgl',{antialias:true,alpha:true});
+  if(!gl){canvas.style.display='none';document.getElementById('fallback').style.display='block';return}
+
+  const V=`attribute vec3 p;attribute vec3 n;uniform mat4 mvp;uniform mat4 model;varying vec3 normal;varying vec3 world;void main(){world=(model*vec4(p,1.)).xyz;normal=mat3(model)*n;gl_Position=mvp*vec4(p,1.);}`;
+  const F=`precision mediump float;varying vec3 normal;varying vec3 world;uniform vec4 color;void main(){vec3 N=normalize(normal);vec3 L=normalize(vec3(-.45,.8,.35));float d=max(dot(N,L),0.);float ambient=.46;float fade=clamp(1.-length(world.xz)*.012,.68,1.);gl_FragColor=vec4(color.rgb*(ambient+d*.54)*fade,color.a);}`;
+  function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+  const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,V));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(prog);gl.useProgram(prog);
+  const P=gl.getAttribLocation(prog,'p'),N=gl.getAttribLocation(prog,'n'),MVP=gl.getUniformLocation(prog,'mvp'),MODEL=gl.getUniformLocation(prog,'model'),COLOR=gl.getUniformLocation(prog,'color');
+  const cube=[];
+  const faces=[[[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],[[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]],[[1,0,0],[[1,-1,1],[1,-1,-1],[1,1,-1],[1,1,1]]],[[-1,0,0],[[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]]],[[0,1,0],[[-1,1,1],[1,1,1],[1,1,-1],[-1,1,-1]]],[[0,-1,0],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]]]];
+  for(const [n,q] of faces)for(const i of [0,1,2,0,2,3])cube.push(...q[i],...n);
+  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(cube),gl.STATIC_DRAW);gl.enableVertexAttribArray(P);gl.vertexAttribPointer(P,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(N);gl.vertexAttribPointer(N,3,gl.FLOAT,false,24,12);
+
+  const I=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+  const mul=(a,b)=>{const o=Array(16).fill(0);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o};
+  const perspective=(fov,aspect,near,far)=>{const f=1/Math.tan(fov/2),nf=1/(near-far);return[f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0]};
+  const lookAt=(e,t,u)=>{let z=norm(sub(e,t)),x=norm(cross(u,z)),y=cross(z,x);return[x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,e),-dot(y,e),-dot(z,e),1]};
+  const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const l=Math.hypot(...a)||1;return a.map(v=>v/l)};
+  function model(x,y,z,sx,sy,sz,ry=0){const c=Math.cos(ry),s=Math.sin(ry);return[c*sx,0,-s*sx,0,0,sy,0,0,s*sz,0,c*sz,0,x,y,z,1]}
+  const rgba=h=>{if(Array.isArray(h))return h;const v=parseInt(h.slice(1),16);return[(v>>16&255)/255,(v>>8&255)/255,(v&255)/255,1]};
+  const objects=[];const box=(x,y,z,sx,sy,sz,c,ry=0,group='all')=>objects.push({m:model(x,y,z,sx/2,sy/2,sz/2,ry),c:rgba(c),group});
+  const W=20,D=21.5,H=9.2,T=.22,doorW=4.167,doorH=7.415,post=.459;
+  // concrete slab and aged timber shell
+  box(0,-.18,0,W+.7,.35,D+.7,'#727879');
+  box(-W/2,4.4,0,T,8.8,D,'#6d5a43');box(W/2,4.4,0,T,8.8,D,'#6d5a43');box(0,4.4,-D/2,W,8.8,T,'#66523e');
+  // studs and roof joists
+  for(let z=-D/2+1;z<D/2;z+=2) {box(-W/2+.05,4.4,z,.28,8.5,.3,'#8d7454');box(W/2-.05,4.4,z,.28,8.5,.3,'#8d7454')}
+  for(let x=-W/2+.5;x<W/2;x+=2)box(x,H,-.1,.28,.34,D,'#8f7655');
+  for(let x=-W/2+1;x<W/2;x+=2)box(x,8.7,-D/2+.08,.28,.32,.35,'#927959');
+  // front frame and exact center post
+  box(0,4.4,D/2,post,8.8,.3,'#7e6548');box(0,8.25,D/2,W,.55,.35,'#7e6548');
+  // existing pair of timber doors
+  const dx=doorW/2+post/2;
+  for(const x of [-dx,dx]){
+    box(x,doorH/2,D/2+.12,doorW-.08,doorH,.18,'#6d5940',0,'existing');
+    for(let yy=.65;yy<doorH;yy+=1.18)box(x,yy,D/2+.25,doorW-.22,.1,.12,'#a08359',0,'existing');
+    box(x-doorW/2+.17,doorH/2,D/2+.26,.13,doorH-.2,.13,'#a08359',0,'existing');box(x+doorW/2-.17,doorH/2,D/2+.26,.13,doorH-.2,.13,'#a08359',0,'existing');
+  }
+  // proposed: retain a refined left carriage door; infill right and add person door
+  box(-dx,doorH/2,D/2+.13,doorW-.08,doorH,.2,'#323b40',0,'proposed');
+  box(-dx,doorH/2,D/2+.27,.12,doorH-.2,.12,'#b9a071',0,'proposed');
+  for(let yy=.7;yy<doorH;yy+=1.32)box(-dx,yy,D/2+.27,doorW-.22,.09,.12,'#b9a071',0,'proposed');
+  box(5.15,4.05,D/2+.03,9.25,8.1,.34,'#a5a49d',0,'proposed');
+  box(5.65,3.55,D/2+.25,3.05,7.1,.22,'#30393d',0,'proposed');
+  box(4.85,3.85,D/2+.39,.22,.22,.12,'#d6b16f',0,'proposed');
+  // datum grid
+  for(let x=-10;x<=10;x+=2){box(x,.025,0,.025,.03,D,'#91989a')}for(let z=-10;z<=10;z+=2){box(0,.027,z,W,.03,.025,'#91989a')}
+
+  let mode='existing',yaw=-.68,pitch=.33,dist=31,target=[0,3.7,0],drag=null,pinch=0;
+  function render(){
+    const dpr=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*dpr)),h=Math.max(1,Math.round(canvas.clientHeight*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+    gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    const cp=Math.cos(pitch),eye=[target[0]+Math.sin(yaw)*cp*dist,target[1]+Math.sin(pitch)*dist,target[2]+Math.cos(yaw)*cp*dist];
+    const vp=mul(perspective(Math.PI/4,w/h,.1,120),lookAt(eye,target,[0,1,0]));
+    for(const o of objects){if(o.group!=='all'&&o.group!==mode)continue;gl.uniformMatrix4fv(MODEL,false,o.m);gl.uniformMatrix4fv(MVP,false,mul(vp,o.m));gl.uniform4fv(COLOR,o.c);gl.drawArrays(gl.TRIANGLES,0,36)}
+    requestAnimationFrame(render)
+  }
+  function setView(name){const views={front:[0,.12,33,0,3.6,0],inside:[3.74,.25,25,0,3.7,2.4],plan:[0,1.38,34,0,0,0]};const v=views[name];yaw=v[0];pitch=v[1];dist=v[2];target=[v[3],v[4],v[5]];document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name))}
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-pressed',on)});document.getElementById('mode-copy').textContent=mode==='existing'?'Existing shell with two timber vehicle doors and exposed structure.':'Left carriage door retained; right opening becomes an insulated wall with a person door.'}));
+  document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+  canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag=[e.clientX,e.clientY,yaw,pitch]});
+  canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag[2]-(e.clientX-drag[0])*.008;pitch=Math.max(-.05,Math.min(1.45,drag[3]+(e.clientY-drag[1])*.006));document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'))});
+  canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(14,Math.min(52,dist+e.deltaY*.025))},{passive:false});
+  canvas.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});
+  canvas.addEventListener('touchmove',e=>{if(e.touches.length===2){const p=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);dist=Math.max(14,Math.min(52,dist+(pinch-p)*.04));pinch=p}},{passive:true});
+  render();
+})();
+</script>
+</body>
+</html>
