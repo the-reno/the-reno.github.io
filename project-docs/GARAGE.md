@@ -67,7 +67,7 @@ Primary references and detailed scope are in `GARAGE-FRONT-DIY.md` and visible o
 - `node scripts/check_garage.cjs`: initialization, both layouts, four camera views, finite projection/geometry, true inside camera, roof visibility, right-biased entry, window sizes, openings, navigation, dimension validation, printing state, gestures and photo markers.
 - `GARAGE_NO_WEBGL=1 node scripts/check_garage.cjs`: repeat interactions with a forced unavailable WebGL context and assert the software geometry/export status.
 - `python scripts/check_site.py`: currently reports only pre-existing CSP/privacy metadata omissions on six unrelated demo routes; no garage reference errors.
-- Live desktop browser verified navigation, front SVG plan/diagram, guide expansion and budget. The test browser could not initialize WebGL; GPU output and PNG download are not certified by this check. Software fallback is checked separately. Stub tests do not certify physical accuracy or structural capacity.
+- Live desktop browser verified navigation, front SVG plan/diagram, guide expansion, budget and software 3D with cutaway/door controls. The test browser could not initialize WebGL; GPU output and PNG download are not certified by this check. Software exterior mode omits hidden internal framing to avoid painter-order bleed-through. Stub tests do not certify physical accuracy or structural capacity.
 
 ## Next release gate
 

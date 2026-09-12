@@ -9,7 +9,7 @@
   const BASE = {width:20, depth:21.5, doorWidth:127, doorHeight:226, post:14, height:260, doorBasis:'leaf'};
   let dimensions = {...BASE};
   const state = {page:'model', mode:'proposed', view:'orbit', finish:'charcoal', cutaway:false, roof:true, framing:true, dims:true, open:false, photo:false, photoIndex:0};
-  const camera = {yaw:-0.64, pitch:0.61, zoom:1, panX:0, panY:0};
+  const camera = {yaw:-0.64, pitch:0.40, zoom:1, panX:0, panY:0};
   const format = (n, dp=2) => Number(n.toFixed(dp)).toString();
   const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
   const title = s => s.charAt(0).toUpperCase()+s.slice(1);
@@ -66,7 +66,7 @@
   }
   function setView(view) {
     state.view=view;camera.zoom=1;camera.panX=0;camera.panY=0;
-    camera.yaw=view==='orbit'?-.64:0;camera.pitch=view==='orbit'?.61:0;
+    camera.yaw=view==='orbit'?-.64:0;camera.pitch=view==='orbit'?.40:0;
     all('[data-view]').forEach(b=>{const active=b.dataset.view===view;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
     syncDisplayControls();
     updateLabels();requestRender();
@@ -272,7 +272,7 @@
     // Course-width stepped gable fill follows the roof; diagonal white fascia
     // hides the small course-end steps while remaining dependency-free geometry.
     for(const[z,group]of[[roofFront,'gable-front'],[-D/2-T/2,'gable-back']]){
-      for(let y=H;y<ridge;y+=.17){const ht=Math.min(.17,ridge-y),width=W*(1-(y+ht-H)/(ridge-H));box(0,y+ht/2,z,width,ht,.075,wall,group,1)}
+      for(let y=H;y<ridge;y+=.035){const ht=Math.min(.035,ridge-y),width=W*(1-(y+ht-H)/(ridge-H));box(0,y+ht/2,z,width,ht,.075,wall,group,1)}
       beam([-halfRoof,eave-.16,z+.055],[0,ridge+.08,z+.055],.13,.07,trim,group);
       beam([0,ridge+.08,z+.055],[halfRoof,eave-.16,z+.055],.13,.07,trim,group);
     }
@@ -320,7 +320,7 @@
     if(state.view==='plan'){halfH=Math.max((D+1.5)/2,(W+1.6)/(2*aspect))/camera.zoom;target=[camera.panX,0,camera.panY];eye=[camera.panX,30,camera.panY];up=[0,0,-1];projection=ortho(halfH,aspect)}
     else if(state.view==='front'){halfH=Math.max((ridge+1.05)/2,(W+1.1)/(2*aspect))/camera.zoom;target=[camera.panX,ridge/2+camera.panY,0];eye=[camera.panX,ridge/2+camera.panY,30];projection=ortho(halfH,aspect)}
     else if(state.view==='inside'){const yaw=camera.yaw,dy=Math.sin(camera.pitch);eye=[clamp(camera.panX,-W/2+.2,W/2-.2),clamp(1.6+camera.panY,.35,H-.2),-D/2+.7];target=[eye[0]+Math.sin(yaw)*6,eye[1]+dy*6,eye[2]+Math.cos(yaw)*Math.cos(camera.pitch)*6];projection=perspective(clamp(1.12/camera.zoom,.45,1.5),aspect,.03,100)}
-    else{let radius=Math.hypot(W+.8,D+1,ridge+.3)/2,centerX=0,centerZ=0;if(state.photo){const shot=photoShots()[state.photoIndex],xs=[-W/2,W/2,shot.position[0],shot.target[0]],zs=[-D/2,D/2,shot.position[2],shot.target[2]],spanX=Math.max(...xs)-Math.min(...xs),spanZ=Math.max(...zs)-Math.min(...zs);centerX=(Math.max(...xs)+Math.min(...xs))/2;centerZ=(Math.max(...zs)+Math.min(...zs))/2;radius=Math.max(radius,Math.hypot(spanX,spanZ,ridge+.3)/2)}const angle=Math.min(.64,Math.atan(Math.tan(.64)*aspect)),distance=radius/Math.sin(angle)*1.12/camera.zoom;target=[centerX+camera.panX,ridge*.39+camera.panY,centerZ];eye=[target[0]+Math.sin(camera.yaw)*Math.cos(camera.pitch)*distance,target[1]+Math.sin(camera.pitch)*distance,target[2]+Math.cos(camera.yaw)*Math.cos(camera.pitch)*distance];projection=perspective(1.28,aspect,.05,150)}
+    else{let radius=Math.hypot(W+.8,D+1,ridge+.3)/2,centerX=0,centerZ=0;if(state.photo){const shot=photoShots()[state.photoIndex],xs=[-W/2,W/2,shot.position[0],shot.target[0]],zs=[-D/2,D/2,shot.position[2],shot.target[2]],spanX=Math.max(...xs)-Math.min(...xs),spanZ=Math.max(...zs)-Math.min(...zs);centerX=(Math.max(...xs)+Math.min(...xs))/2;centerZ=(Math.max(...zs)+Math.min(...zs))/2;radius=Math.max(radius,Math.hypot(spanX,spanZ,ridge+.3)/2)}const angle=Math.min(.64,Math.atan(Math.tan(.64)*aspect)),distance=radius/Math.sin(angle)*(state.photo?1.12:.86)/camera.zoom;target=[centerX+camera.panX,ridge*.39+camera.panY,centerZ];eye=[target[0]+Math.sin(camera.yaw)*Math.cos(camera.pitch)*distance,target[1]+Math.sin(camera.pitch)*distance,target[2]+Math.cos(camera.yaw)*Math.cos(camera.pitch)*distance];projection=perspective(1.28,aspect,.05,150)}
     return {vp:mul(projection,lookAt(eye,target,up)),eye,target};
   }
   function isVisible(o,eye){
@@ -345,6 +345,11 @@
     const faces=[[4,5,6,7],[1,0,3,2],[5,1,2,6],[0,4,7,3],[7,6,2,3],[0,1,5,4]],polygons=[],sun=norm([-.4,.85,.5]);
     for(const o of objects){
       if(!isVisible(o,eye))continue;
+      // A painter renderer cannot perfectly depth-resolve intersecting long
+      // members behind opaque panels. Do not draw hidden internal structure
+      // through an exterior enclosure; cutaway/inside remain the inspection views.
+      const exterior=state.view==='front'||state.view==='orbit'&&!state.cutaway;
+      if(exterior&&(o.group.endsWith(':framing')||o.group==='post'||state.roof&&o.group==='framing'))continue;
       const world=corners.map(p=>[0,1,2].map(r=>o.m[r]*p[0]+o.m[4+r]*p[1]+o.m[8+r]*p[2]+o.m[12+r]));
       for(const face of faces){
         const points=face.map(i=>world[i]),normal=norm(cross(sub(points[1],points[0]),sub(points[2],points[0]))),center=[0,1,2].map(i=>points.reduce((sum,p)=>sum+p[i],0)/4);
