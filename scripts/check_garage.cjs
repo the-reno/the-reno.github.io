@@ -57,4 +57,7 @@ assert(/id="front-budget"/.test(html));assert(html.includes('$1,808–3,559'));
 assert(!html.includes('Start with 9 images.'));
 if(softwareTest){a.state.page='model';a.render();assert(byId['software-scene'].children.length>0,'software geometry rendered');assert(byId['download-view'].disabled);assert(byId['renderer-status'].textContent.includes('Software 3D'));}else assert(draws>0);
 assert(!byId.fallback.hidden===false);
+// Fit the entire baseline model (including slab/ground) with UI breathing room.
+click('[data-view]','orbit');a.state.open=false;a.state.cutaway=false;a.rebuild();
+for(const aspect of[.7,1,1.65,2.5]){const vp=a.projection(aspect).vp;for(const o of a.objects())for(const x of[-1,1])for(const y of[-1,1])for(const z of[-1,1]){const m=o.m,p=a.project([m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14]],vp,aspect*570,570);assert(p&&p[0]>10&&p[0]<aspect*570-10&&p[1]>30&&p[1]<535,'default geometry must fit '+aspect)}}
 console.log('PASS: initialization, both layouts, 4 camera views, projection matrices, true interior camera, plan header visibility, finishes, opening doors, navigation, valid/invalid dimensions, print draft safety, large plan label spacing, two-finger gestures, nine photo positions, roof/window/front-layout geometry and budget presence. Draw calls:',draws);
