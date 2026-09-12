@@ -1,53 +1,73 @@
 # Garage renovation workspace
 
-Standalone page: `/garage/`. No homepage, section index, sitemap, hosting, or navigation changes are part of this feature. It is public but unlisted, with `noindex,nofollow,noarchive`; this is not access control.
+Standalone page: `/garage/`. No homepage, section index, sitemap or navigation changes. Public but unlisted with `noindex,nofollow,noarchive`; this is not access control.
 
 ## Files
 
-- `docs/garage/index.html`: four workspace sections and the project brief.
-- `docs/garage/workspace.css`: responsive layout and printable brief/checklist.
-- `docs/garage/workspace.js`: dependency-free WebGL model, technical SVG floor plan, interactions, and PNG export.
-- `docs/garage/concept.jpg`: illustrative design reference.
+- `docs/garage/index.html`: model, design, measurements and front DIY guide.
+- `docs/garage/workspace.css`: responsive workspace and printable guide.
+- `docs/garage/workspace.js`: dependency-free WebGL model, SVG plan, photo-position overlays and PNG export.
+- `docs/garage/concept.jpg`: older AI-generated inspiration, explicitly not the updated geometry.
+- `project-docs/GARAGE-FRONT-DIY.md`: source-backed work packages, tools, materials, allowances and release gates.
+- `scripts/check_garage.cjs`: dependency-free DOM/WebGL-stub regression test.
 
-## Measurement provenance
+## Scope — September 2026 update
 
-User-supplied: width 20 ft, depth 21.5 ft, “127 x 226 cm each door”, center post 14 cm. These are not independently verified survey dimensions.
+Cost-focused front renovation: repair the left paired leaves only where the structural frames are sound; retain the centered front post and existing header; enclose the right bay with matching blue-gray siding and a stock solid insulated steel prehung entrance toward the far right. Entry swing inward is provisional. Existing timber interior, windows and roof remain; no roof/member removal, whole-garage insulation or electrical implementation in this phase.
 
-Working assumptions: width/depth are clear internal dimensions; two bays have two leaves each; 127 cm describes a leaf; post is centered; wall height 260 cm; wall thickness 14 cm. Both interpretations of door width can be selected. Pedestrian entry is provisionally 91.44 cm wide by 203.2 cm high (constrained to fit if model dimensions change). Roof shape, member sizing, windows, connections, leaf clearances, material performance, and site conditions have not been established.
+## Provenance: measurements, observations and assumptions
 
-The known leaf interpretation gives 254 cm per bay and 43.8 cm side infill on each end of the 609.6 cm frontage. Do not use these inferred dimensions to order or build. Existing materials are schematic, and the earlier original garage photos are not embedded.
+User-supplied dimensions: 20 ft width, 21.5 ft depth, “127 × 226 cm each door,” center post 14 cm. User subsequently confirms post and windows centered and entry to the right. These are not independent field measurements.
 
-## Behavior and boundaries
+Reviewed photos establish four glazed X-trim carriage leaves, blue-gray exterior/white trim, centered rear window, right-side window, exposed framing, gable roof and lower sloping front roof, and a front interior post/beam arrangement. Photos show deterioration, but do not establish remaining timber strength, slab condition, leak absence, structural capacity or safe fastener locations.
 
-- 3D orbit/cutaway; orthographic front and plan; camera located inside for the interior view.
-- Basic photo survey plots nine camera positions (P01–P09) over the 3D model. The orange camera marks where to stand, the dashed arrow marks where to aim, and the panel gives the approximate distance, angle, lens, orientation, and required coverage.
-- Preset views, zoom, reset, mouse/keyboard/touch controls, door opening, framing visibility, and dimensions.
-- Proposed charcoal/timber/light door finishes; existing doors remain schematic timber.
-- Editing dimensions rebuilds the model and plan for the current session only. No automatic persistence, task-completion tracking, remote uploads, or browser storage. Print the applied brief to retain a record.
-- PNG exports include visible dimension overlays and a concept-only caption.
-- The floor plan, reference image, survey form, and execution guide remain available without WebGL.
-- Execution is a planning checklist, not structural, electrical, legal, or building-code advice.
-- No external font/script requests or new services.
+Assumptions explicitly retained:
 
-## Basic photo survey
+- Width/depth interpreted as clear internal dimensions; 127 cm interpreted as one leaf (alternate full-bay interpretation remains selectable).
+- Wall height 260 cm; wall thickness 14 cm.
+- Rear/right windows represented as 30 × 36 in with a 95 cm sill; centered by user instruction. No left opening assumed.
+- Roof ridge = wall height + 0.34 × width; main front roof setback 85 cm. Both inferred, not measured pitch/setback.
+- Rafter/stud repetition, ties, bracing and internal post/beam location are schematic; no engineered member schedule.
+- Far-right nominal 36 × 80 in entrance (may be constrained for alternate dimensions), with an 18 cm schematic right return. Actual jamb depth, rough opening, threshold support, frame/trim dimensions and swing need the selected SKU and site measurements.
+- Slab represented as flat; crack cause, slab thickness, slope, drainage and hidden conditions unknown.
 
-Start with P01–P09 only: one straight front, two exterior front corners, five interior shell views, and one overall floor view. Use a landscape phone photo at 1× with the camera about 5 ft / 1.5 m high unless the displayed instruction says otherwise. P04 may use 0.5× only when 1× cannot include the whole interior. Keep the phone level, do not use portrait mode or digital zoom, and associate each uploaded image with its displayed ID.
+Baseline arithmetic: each bay approximately 254 cm; side infill 43.8 cm each; 20 × 21.5 ft floor = 430 sq ft. Existing leaf dimensions do not establish clear openings or final cut sizes.
 
-The plotted positions are starting references derived from the current schematic dimensions. Move as needed for safe footing, traffic, stored objects, glare, and physical obstructions while preserving the requested aim and coverage. Detail photos are intentionally deferred until these nine images are reviewed, so the next capture list can target only missing evidence.
+The model is suitable for preliminary spatial discussion, not a verified structural record or construction drawing. Centered positions do not certify any member's structural role. Infill attachments, wind/bracing requirements and slab adequacy require review.
 
-## Image provenance
+## Behavior
 
-Created once with built-in image generation, then encoded as a JPEG for page delivery.
+- Defaults to a complete proposed exterior with roof; existing/proposed layouts, front/interior/plan presets, orbit, zoom, pan, reset and keyboard/touch controls.
+- Roof toggle reveals pitched framing; cutaway/inside/plan views hide the roof automatically. Framing toggle includes studs and overhead members. Floor-supported post is not removed by this toggle.
+- True wall voids for the centered rear/right windows; side/rear timber retained in both modes.
+- Six-pane left carriage doors retain geometry while paint changes. Left leaves swing out; stock right entry swings inward. SVG plan and model share entry/window coordinates.
+- Inputs rebuild the model/plan for this session only. No storage or server uploads.
+- Print rejects unapplied measurement drafts; execution print expands work packages.
+- PNG includes displayed overlays plus planning-only caption. The fixed front diagram and budget are baseline references; they do not recalculate with model dimensions.
+- The plan and DIY content remain available without WebGL.
+- No new dependencies, trackers or external service requests. Source links open only on navigation.
 
-Prompt summary: realistic front-left oblique view of an approximately 20-by-21.5-ft detached garage, modern-classic renovation; paired charcoal carriage doors with modest glazed upper panels on the left, retained light-trim center post, right bay infilled with charcoal horizontal siding and a pedestrian entrance; light trim, restrained dark hardware, simple pitched shingle roof, concrete drive, daylight. No people, cars, text, UI, or measurements. It is visual inspiration, not a replica of verified existing conditions. Roof, landscape, and glazing are illustrative. The fixed reference image does not update with interactive model settings.
+## Photo survey
+
+P01–P05 and P08 reviewed; P06/P07/P09 deferred by agreement. X01 is an additional front interior view. No further general photos requested. The original nine standing/aiming positions remain optional reference aids, clearly tagged reviewed or deferred.
+
+Source photos were reviewed in the conversation and are not republished on this public page. Exact camera location/distances are starting references; safe access and required coverage take priority.
+
+## Front DIY guide and budget
+
+The guide gives scoped actions, tools, provisional purchase allowances and done-when gates. It does not release heavy-door joinery, anchor spacing, wind-bracing details or a final cut list from photos. Old paint/siding assessment, local approvals, timber condition, slab attachments and door-SKU instructions are prerequisites to disturbance and ordering.
+
+Materials allowance $1,350–$2,610; tools $150–$350; approximate 7% tax reserve $105–$207; 15% materials contingency $203–$392. Calculated total $1,808–$3,559, rounded planning allowance $1,850–$3,600. Only door price examples were observed online; other lines are estimator allowances. Assumes core tools available and limited repair of sound left frames. Full left-door replacement, abatement/testing, permits/design, structural/slab/drainage repair, paid labor, delivery and interior/thermal/electrical work excluded.
+
+Primary references and detailed scope are in `GARAGE-FRONT-DIY.md` and visible on the execution page.
 
 ## Validation
 
-- JavaScript syntax checked.
-- Node DOM/WebGL-stub smoke checks cover initialization, both layouts, four views, projection matrices, true interior camera location, hidden plan headers, finishes, opening doors, navigation, measurement validation, print-draft consistency, plan label spacing, two-finger gestures, and all nine photo-survey positions.
-- Repository validator reports only pre-existing CSP/privacy metadata omissions on unrelated pages; no new garage-path errors.
-- Live browser rendering/print QA has not been performed in this edit. Stub checks do not validate GPU shader rendering or browser download behavior.
+- `node --check docs/garage/workspace.js`.
+- `node scripts/check_garage.cjs`: initialization, both layouts, four camera views, finite projection/geometry, true inside camera, roof visibility, right-biased entry, window sizes, openings, navigation, dimension validation, printing state, gestures and photo markers.
+- `python scripts/check_site.py`: currently reports only pre-existing CSP/privacy metadata omissions on six unrelated demo routes; no garage reference errors.
+- Stub tests do not certify GPU appearance, browser downloads, physical accuracy or structural capacity. Browser visual QA is recorded separately when available.
 
-## Next fidelity step
+## Next release gate
 
-Match original photos and a measured opening survey to the shell; confirm measurement reference faces, door leaf interpretation, post position, heights, windows, and existing framing before developing construction details.
+One front-only field survey: clear openings at three heights/widths, diagonals, threshold/driveway levels, right jamb return, left leaf/frame/hinge condition and safe material identification. Select exact entry unit and confirm approvals/attachments before publishing cut sizes or ordering.
