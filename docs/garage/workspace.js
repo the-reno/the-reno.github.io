@@ -295,7 +295,7 @@
     box(0,(H-.25)/2,roofFront,P,H-.25,P,timber,'post',1);
   }
 
-  const canvas=$('scene');let gl,program,locations,contextLost=false;
+  const canvas=$('scene');let gl,program,locations,contextLost=false,softwareMode=false;
   const vertexSource='attribute vec3 p;attribute vec3 n;uniform mat4 mvp;uniform mat4 model;varying vec3 normal;varying vec3 world;void main(){world=(model*vec4(p,1.0)).xyz;normal=normalize(mat3(model)*n);gl_Position=mvp*vec4(p,1.0);}';
   const fragmentSource='precision mediump float;varying vec3 normal;varying vec3 world;uniform vec3 color;uniform float material;float noise(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}void main(){vec3 N=normalize(normal);float sun=max(dot(N,normalize(vec3(-0.4,0.85,0.5))),0.0);float light=0.72+sun*0.27;float grain=0.0;if(material>0.5&&material<1.5){grain=(noise(vec2(world.x*33.0+world.z*35.0,world.y*3.0))-0.5)*0.075;}if(material>1.5){grain=(noise(world.xz*320.0)-0.5)*0.055;if(N.y>0.8){vec2 lines=abs(fract(world.xz)-0.5);float grid=step(0.497,max(lines.x,lines.y));grain-=grid*0.035;}}float foot=1.0-0.11*exp(-max(world.y,0.0)*3.0);gl_FragColor=vec4((color+grain)*light*foot,1.0);}';
   function initGL(){
@@ -307,7 +307,14 @@
     for(const[n,q]of faces)for(const i of[0,1,2,0,2,3])cube.push(...q[i],...n);
     const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(cube),gl.STATIC_DRAW);gl.enableVertexAttribArray(locations.p);gl.vertexAttribPointer(locations.p,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(locations.n);gl.vertexAttribPointer(locations.n,3,gl.FLOAT,false,24,12);
   }
-  function failGL(){contextLost=true;$('fallback').hidden=false;$('dimensions').replaceChildren();$('download-view').disabled=true}
+  function rendererStatus(message){if($('renderer-status'))$('renderer-status').textContent=message}
+  function failGL(reason){
+    contextLost=true;softwareMode=Boolean($('software-scene'));$('fallback').hidden=softwareMode;$('dimensions').replaceChildren();$('download-view').disabled=true;
+    $('download-view').title='Image export requires WebGL. The interactive software model remains available.';
+    const detail=reason&&typeof reason.message==='string'?reason.message:'WebGL context unavailable';
+    if(softwareMode){$('software-scene').removeAttribute('hidden');rendererStatus('Software 3D · image export unavailable · '+detail);requestRender()}
+    else rendererStatus('3D unavailable · '+detail);
+  }
   function projection(aspect){
     const g=metrics(),{W,D,H,ridge}=g;let eye,target,projection,up=[0,1,0],halfH;
     if(state.view==='plan'){halfH=Math.max((D+1.5)/2,(W+1.6)/(2*aspect))/camera.zoom;target=[camera.panX,0,camera.panY];eye=[camera.panX,30,camera.panY];up=[0,0,-1];projection=ortho(halfH,aspect)}
@@ -328,16 +335,44 @@
     return true;
   }
   let frame=0,lastVP;
+  // CPU fallback uses the very same model matrices, camera and visibility rules.
+  // For each cuboid only camera-facing faces are drawn, far-to-near. It avoids
+  // requesting a second canvas context after a failed/blocked WebGL context.
+  function renderSoftware(vp,eye,w,h){
+    const svg=$('software-scene');if(!svg)return;
+    svg.setAttribute('viewBox','0 0 '+w+' '+h);svg.removeAttribute('hidden');
+    const corners=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+    const faces=[[4,5,6,7],[1,0,3,2],[5,1,2,6],[0,4,7,3],[7,6,2,3],[0,1,5,4]],polygons=[],sun=norm([-.4,.85,.5]);
+    for(const o of objects){
+      if(!isVisible(o,eye))continue;
+      const world=corners.map(p=>[0,1,2].map(r=>o.m[r]*p[0]+o.m[4+r]*p[1]+o.m[8+r]*p[2]+o.m[12+r]));
+      for(const face of faces){
+        const points=face.map(i=>world[i]),normal=norm(cross(sub(points[1],points[0]),sub(points[2],points[0]))),center=[0,1,2].map(i=>points.reduce((sum,p)=>sum+p[i],0)/4);
+        if(dot(normal,sub(eye,center))<=0)continue;
+        const projected=points.map(p=>project(p,vp,w,h));
+        // Faces crossing the near plane are omitted rather than stretched
+        // across the screen. Interior cameras stay within the clear volume.
+        if(projected.some(p=>!p||p[2]<-1||p[2]>1))continue;
+        if(projected.every(p=>p[0]<0)||projected.every(p=>p[0]>w)||projected.every(p=>p[1]<0)||projected.every(p=>p[1]>h))continue;
+        const light=(.72+Math.max(0,dot(normal,sun))*.27)*(1-.11*Math.exp(-Math.max(center[1],0)*3));
+        const rgb=o.color.map(v=>Math.round(clamp(v*light,0,1)*255));
+        polygons.push({depth:projected.reduce((sum,p)=>sum+p[2],0)/4,points:projected.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' '),fill:'rgb('+rgb.join(',')+')'});
+      }
+    }
+    polygons.sort((a,b)=>b.depth-a.depth);
+    svg.replaceChildren(...polygons.map(p=>node('polygon',{points:p.points,fill:p.fill,stroke:p.fill,'stroke-width':.35,'stroke-linejoin':'round'})));
+  }
   function render(){
-    frame=0;if(!gl||contextLost||document.hidden||state.page!=='model')return;
+    frame=0;if((!softwareMode&&(!gl||contextLost))||document.hidden||state.page!=='model')return;
     const cw=canvas.clientWidth,ch=canvas.clientHeight;if(!cw||!ch)return;
     const dpr=Math.min(window.devicePixelRatio||1,2),w=Math.round(cw*dpr),h=Math.round(ch*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
-    gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.clearColor(.91,.93,.90,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);
     const {vp,eye}=projection(cw/ch);lastVP=vp;
+    if(softwareMode){renderSoftware(vp,eye,cw,ch);drawDimensions(vp,cw,ch);return}
+    gl.viewport(0,0,w,h);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.clearColor(.91,.93,.90,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);
     for(const o of objects){if(!isVisible(o,eye))continue;gl.uniformMatrix4fv(locations.model,false,o.m);gl.uniformMatrix4fv(locations.mvp,false,mul(vp,o.m));gl.uniform3fv(locations.color,o.color);gl.uniform1f(locations.material,o.material);gl.drawArrays(gl.TRIANGLES,0,36)}
     drawDimensions(vp,cw,ch);
   }
-  requestRender=()=>{if(!frame&&!contextLost)frame=requestAnimationFrame(render)};
+  requestRender=()=>{if(!frame&&(!contextLost||softwareMode))frame=requestAnimationFrame(render)};
   function project(point,vp,w,h){const a=[...point,1],clip=[0,0,0,0];for(let r=0;r<4;r++)for(let k=0;k<4;k++)clip[r]+=vp[k*4+r]*a[k];if(clip[3]<=0)return null;return[(clip[0]/clip[3]+1)*w/2,(1-clip[1]/clip[3])*h/2,clip[2]/clip[3]]}
   function drawPhotoMarker(svg,vp,w,h){
     const shot=photoShots()[state.photoIndex],p=project(shot.position,vp,w,h),q=project(shot.target,vp,w,h);if(!p||!q||p[2]>1||q[2]>1)return;
@@ -365,7 +400,7 @@
   for(const event of['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>pointers.delete(e.pointerId));
   canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(-e.deltaY*.001))},{passive:false});
   canvas.addEventListener('keydown',e=>{const actions={ArrowLeft:()=>rotate(-15,0),ArrowRight:()=>rotate(15,0),ArrowUp:()=>rotate(0,-15),ArrowDown:()=>rotate(0,15),'+':()=>zoomBy(1.15),'=':()=>zoomBy(1.15),'-':()=>zoomBy(1/1.15),'0':()=>setView(state.view)};if(actions[e.key]){e.preventDefault();actions[e.key]();requestRender()}});
-  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();failGL()});canvas.addEventListener('webglcontextrestored',()=>{try{initGL();contextLost=false;$('fallback').hidden=true;$('download-view').disabled=false;requestRender()}catch{failGL()}});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();failGL(new Error('WebGL context lost'))});canvas.addEventListener('webglcontextrestored',()=>{try{initGL();contextLost=false;softwareMode=false;if($('software-scene'))$('software-scene').setAttribute('hidden','');$('fallback').hidden=true;$('download-view').disabled=false;$('download-view').removeAttribute('title');rendererStatus('WebGL 3D');requestRender()}catch(error){failGL(error)}});
   window.addEventListener('resize',requestRender);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0}else requestRender()});
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(requestRender).observe(canvas);
   $('download-view').addEventListener('click',()=>{
@@ -378,6 +413,6 @@
     }else save();
   });
   rebuild();drawPlan();updateLabels();syncDisplayControls();
-  try{initGL()}catch{failGL()}
+  try{initGL();rendererStatus('WebGL 3D')}catch(error){failGL(error)}
   activatePage(location.hash.slice(1)||'model',false);requestRender();
 })();

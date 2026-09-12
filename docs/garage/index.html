@@ -10,8 +10,8 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111315'/%3E%3Cpath d='M6 25V12l10-6 10 6v13M10 25V14h12v11M15 14v11' fill='none' stroke='%23d6b16f' stroke-width='2'/%3E%3C/svg%3E">
   <title>Garage · Renovation workspace | Ronu</title>
   <meta name="description" content="Garage renovation study: interactive model, dimensions, design direction, and execution sequence. Concept model, not construction drawings.">
-  <link rel="stylesheet" href="./workspace.css?v=4">
-  <script src="./workspace.js?v=4" defer></script>
+  <link rel="stylesheet" href="./workspace.css?v=5">
+  <script src="./workspace.js?v=5" defer></script>
 </head>
 <body>
   <header class="masthead">
@@ -31,6 +31,7 @@
           <div class="view-bar"><div><h2 id="model-title">Explore the space</h2><span class="small" id="view-name">3D exterior · proposed layout</span></div><div class="segmented" aria-label="Layout"><button data-mode="existing" aria-pressed="false">Existing</button><button data-mode="proposed" class="active" aria-pressed="true">Proposed</button></div></div>
           <div class="viewer" id="viewer">
             <canvas id="scene" tabindex="0" aria-label="Garage 3D model. Arrow keys rotate. Plus and minus zoom. Zero resets. Use view buttons for front, interior or floor plan."></canvas>
+            <svg id="software-scene" class="software-scene" aria-hidden="true" hidden></svg>
             <svg id="dimensions" class="dimension-overlay" aria-hidden="true"></svg>
             <div class="viewer-chip">MODEL / <span id="drawing-view">3D</span></div>
             <div id="photo-map-label" class="photo-map-label" hidden>PHOTO POSITION / <strong>P01</strong></div>
@@ -40,6 +41,7 @@
           </div>
           <div class="camera-bar" aria-label="Camera presets"><button data-view="orbit" class="active" aria-pressed="true"><span aria-hidden="true">◇</span> 3D</button><button data-view="front" aria-pressed="false"><span aria-hidden="true">▤</span> Front</button><button data-view="inside" aria-pressed="false"><span aria-hidden="true">⊓</span> Inside</button><button data-view="plan" aria-pressed="false"><span aria-hidden="true">▦</span> Floor plan</button></div>
           <div class="viewer-foot"><p>One finger rotates · two fingers pan / pinch to zoom<br><span>Mouse: drag to rotate · Shift-drag to pan · scroll to zoom</span></p><button id="download-view" class="text-button">Save view as PNG ↗</button></div>
+          <p id="renderer-status" class="small" role="status"></p>
           <section id="photo-survey" class="photo-survey" hidden aria-labelledby="photo-title">
             <header><div><p class="eyebrow">BASIC PHOTO SURVEY</p><h3 id="photo-title">P01 · Front / straight</h3></div><span id="photo-progress" class="tag">1 / 9</span></header>
             <div id="photo-strip" class="photo-strip" role="tablist" aria-label="Required photo"></div>

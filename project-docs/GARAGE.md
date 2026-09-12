@@ -44,7 +44,7 @@ The model is suitable for preliminary spatial discussion, not a verified structu
 - Inputs rebuild the model/plan for this session only. No storage or server uploads.
 - Print rejects unapplied measurement drafts; execution print expands work packages.
 - PNG includes displayed overlays plus planning-only caption. The fixed front diagram and budget are baseline references; they do not recalculate with model dimensions.
-- The plan and DIY content remain available without WebGL.
+- An SVG software renderer preserves interactive geometry/controls without WebGL; its approximate painter-order visibility is a fallback, not a CAD renderer. PNG export is disabled in software mode and the renderer diagnostic is shown. The plan and DIY content also remain available independently.
 - No new dependencies, trackers or external service requests. Source links open only on navigation.
 
 ## Photo survey
@@ -65,8 +65,9 @@ Primary references and detailed scope are in `GARAGE-FRONT-DIY.md` and visible o
 
 - `node --check docs/garage/workspace.js`.
 - `node scripts/check_garage.cjs`: initialization, both layouts, four camera views, finite projection/geometry, true inside camera, roof visibility, right-biased entry, window sizes, openings, navigation, dimension validation, printing state, gestures and photo markers.
+- `GARAGE_NO_WEBGL=1 node scripts/check_garage.cjs`: repeat interactions with a forced unavailable WebGL context and assert the software geometry/export status.
 - `python scripts/check_site.py`: currently reports only pre-existing CSP/privacy metadata omissions on six unrelated demo routes; no garage reference errors.
-- Stub tests do not certify GPU appearance, browser downloads, physical accuracy or structural capacity. Browser visual QA is recorded separately when available.
+- Live desktop browser verified navigation, front SVG plan/diagram, guide expansion and budget. The test browser could not initialize WebGL; GPU output and PNG download are not certified by this check. Software fallback is checked separately. Stub tests do not certify physical accuracy or structural capacity.
 
 ## Next release gate
 

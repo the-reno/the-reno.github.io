@@ -11,7 +11,8 @@ const byId=Object.fromEntries(elements.filter(el=>el.id).map(el=>[el.id,el]));by
 const select=selector=>{if(selector==='.page')return elements.filter(el=>(el.attrs.class||'').split(' ').includes('page'));if(selector==='.phases details')return elements.filter(el=>el.tagName==='details');const match=selector.match(/^\[([\w-]+)\]$/);if(match){const key=match[1];return elements.filter(el=>key in el.attrs||(key.startsWith('data-')&&key.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase()) in el.dataset))}return[]};
 let draws=0;
 const gl=new Proxy({getShaderParameter:()=>true,getProgramParameter:()=>true,getAttribLocation:()=>0,getUniformLocation:()=>({}),createProgram:()=>({}),createShader:()=>({}),createBuffer:()=>({}),drawArrays:()=>{draws++}},{get(o,k){return k in o?o[k]:k.toUpperCase()===k?1:()=>{}}});
-byId.scene.getContext=()=>gl;
+const softwareTest=process.env.GARAGE_NO_WEBGL==='1';
+byId.scene.getContext=()=>softwareTest?null:gl;
 const body=new Element('body');const docEvents={};
 const document={getElementById:id=>byId[id],querySelectorAll:select,querySelector:selector=>elements.find(el=>(el.attrs.class||'').split(' ').includes(selector.slice(1))),createElementNS:(ns,tag)=>new Element(tag),createElement:tag=>new Element(tag),body,hidden:false,addEventListener:(k,fn)=>docEvents[k]=fn};
 const winEvents={};let rafId=0;const raf=new Map();
@@ -54,5 +55,6 @@ a.state.cutaway=true;assert(roofs.every(o=>!a.isVisible(o,[8,6,10])));
 click('[data-view]','inside');assert(roofs.every(o=>!a.isVisible(o,[0,1.6,0])));
 assert(/id="front-budget"/.test(html));assert(html.includes('$1,808–3,559'));
 assert(!html.includes('Start with 9 images.'));
-assert(draws>0);assert(!byId.fallback.hidden===false);
+if(softwareTest){a.state.page='model';a.render();assert(byId['software-scene'].children.length>0,'software geometry rendered');assert(byId['download-view'].disabled);assert(byId['renderer-status'].textContent.includes('Software 3D'));}else assert(draws>0);
+assert(!byId.fallback.hidden===false);
 console.log('PASS: initialization, both layouts, 4 camera views, projection matrices, true interior camera, plan header visibility, finishes, opening doors, navigation, valid/invalid dimensions, print draft safety, large plan label spacing, two-finger gestures, nine photo positions, roof/window/front-layout geometry and budget presence. Draw calls:',draws);
