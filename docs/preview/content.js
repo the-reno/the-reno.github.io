@@ -1,13 +1,57 @@
 'use strict';
-// Only topics linked from the public homepage on 21 September 2026.
-// Pin article content to this source revision; interactive apps retain their live URLs.
+// Public article snapshot. Section introductions are editorial drafts for this preview.
 const SOURCE = {repo:'the-reno/the-reno.github.io', revision:'23df86d3f7c8ab99fc22c3c2072c16b6abc533e5', date:'21 September 2026', site:'https://ronu.one'};
 const SECTIONS = {
- all:{name:'Explore',number:'00',headline:'Stay <em>curious.</em>',description:'Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.',note:'Endurance / Science / Markets / Making',eyebrow:'A personal lab',featured:'endurance'},
- triathlon:{name:'Triathlon',number:'01',headline:'Built to <em>endure.</em>',description:'How the body keeps moving under pressure.',note:'Movement / Energy / Endurance',eyebrow:'01 / Triathlon',featured:'endurance'},
- science:{name:'Science',number:'02',headline:'Question <em>everything.</em>',description:'From dice probabilities to gravity,<br>traffic waves and fragile systems.',note:'Patterns / Systems / Experiments',eyebrow:'02 / Science',featured:'spark'},
- markets:{name:'Markets',number:'03',headline:'Explore the <em>trade-offs.</em>',description:'Sharp edges.',note:'Markets',eyebrow:'03 / Markets',featured:null,empty:'The current website has a Markets section, but no linked articles yet.'},
- maker:{name:'Maker',number:'04',headline:'Think it. <em>Make it.</em>',description:'A quiet space for experiments, sketches, tools and small systems. Built slowly. Tested by hand.',note:'Design / Build / Test',eyebrow:'04 / Maker',featured:null,empty:'The current website introduces Maker, but does not yet list projects in this section.'}
+ all:{name:'Explore',number:'00',headline:'Stay <em>curious.</em>',description:'Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.',note:'Endurance / Science / Markets / Making',eyebrow:'A personal lab'},
+ triathlon:{
+  name:'Triathlon',number:'01',headline:'Triathlon<em>.</em>',
+  description:'I see endurance as a way to explore movement, determination and adaptation.',
+  preview:'I look beyond pace and distance to explore how the body moves, responds to stress and adapts through practice.',
+  note:'Movement / Endurance / Adaptation',eyebrow:'A personal perspective',art:'motion',
+  question:'What keeps us moving?',
+  perspective:[
+   'I tend to see endurance as a systems problem. Beyond pace and distance, I am interested in how movement, energy, stress and recovery work together.',
+   'Training makes those questions personal. What changes with repetition? What can be adapted? How do I keep functioning when conditions become uncomfortable?',
+   'Here I explore those questions through mechanics, models and lessons from endurance.'
+  ]
+ },
+ science:{
+  name:'Science',number:'02',headline:'Science<em>.</em>',
+  description:'I start with an ordinary observation and follow the questions it raises.',
+  preview:'A roll of the dice. A traffic jam. A spark. I use simple models to explore the patterns behind ordinary events.',
+  note:'Questions / Patterns / Experiments',eyebrow:'A personal perspective',art:'network',
+  question:'What is behind the result?',
+  perspective:[
+   'It often starts with something ordinary: a roll of the dice, traffic slowing down, a spark becoming a fire. I want to understand what sits behind the result.',
+   'I use simple models to explore how small interactions become larger patterns, and where prediction stops being reliable.',
+   'The aim is not to make every answer certain. It is to ask a better question, test an explanation and see what changes.'
+  ]
+ },
+ markets:{
+  name:'Markets',number:'03',headline:'Markets<em>.</em>',
+  description:'I explore how to make decisions when the future is uncertain.',
+  preview:'I use data and models to compare possibilities, understand trade-offs and make decisions without confusing confidence with certainty.',
+  note:'Rates / Currencies / Decisions',eyebrow:'A personal perspective',art:'curves',
+  question:'How do we decide without certainty?',
+  perspective:[
+   'I am interested in how decisions change when the future is uncertain. Rates, currencies and liquidity are connected, but the choice depends on the objective and the risks we are prepared to take.',
+   'I use data and models to compare possibilities, not to turn a forecast into certainty.',
+   'The aim is to make the best decision the available information supports.'
+  ],
+  empty:'No articles or experiments are listed in this section yet.'
+ },
+ maker:{
+  name:'Maker',number:'04',headline:'Maker<em>.</em>',
+  description:'I turn ideas into things I can build, test and improve.',
+  preview:'A sketch becomes a prototype. I learn by building small tools and systems, testing them and refining what does not work.',
+  note:'Sketch / Build / Refine',eyebrow:'A personal perspective',art:'cube',
+  question:'What happens when an idea becomes real?',
+  perspective:[
+   'I use making to turn an idea into something I can test. A sketch becomes a prototype; the prototype shows me what works and what needs to change.',
+   'This is a place for small tools, experiments and practical systems, built slowly, tested by hand and refined through use.'
+  ],
+  empty:'No articles or projects are listed in this section yet.'
+ }
 };
 const TOPICS = [
  {id:'endurance',section:'triathlon',type:'Article',title:'Endurance',description:'A systems view of fuel, movement and the ability to keep going.',art:'motion',path:'/triathlon/',file:'docs/triathlon/index.html',tags:'ATP fuel oxygen muscle phosphocreatine glycolysis aerobic metabolism'},
@@ -19,11 +63,11 @@ const TOPICS = [
  {id:'traffic',section:'science',type:'Interactive',title:'Phantom Traffic Jam',description:'Explore how a small disturbance grows into a traffic wave moving backward through a network.',art:'lanes',path:'/Science/traffic-jam.html',tags:'traffic demand driver reaction following distance truck weather instability'},
  {id:'dice-storm',section:'science',type:'Article',title:'The Dice and the Storm',description:'Some days look normal. Then one small thing changes the direction of the day.',art:'cube',path:'/Science/dice.html',file:'docs/Science/dice.html',status:'Introduction only',tags:'dice storm small things',inline:'<p>Some days look normal. Same routine. Same train. Same desk. Then one small thing changes the direction of the day.</p>'}
 ];
-
-// One slide per main section. Empty sections retain introductions, not invented articles.
-const FEATURED_SECTIONS = [
- {section:'triathlon',topic:'endurance',cta:'Explore triathlon'},
- {section:'science',topic:'spark',cta:'Explore science'},
- {section:'markets',title:'Markets',description:'Sharp edges. Explore the trade-offs.',art:'curves',cta:'Explore markets'},
- {section:'maker',title:'Maker',description:'Experiments, sketches, tools and small systems. Built slowly. Tested by hand.',art:'cube',cta:'Explore maker'}
-];
+// Homepage slides represent sections only. No article IDs, titles or summaries.
+const FEATURED_SECTIONS = ['triathlon','science','markets','maker'].map(section => ({
+ section,
+ title: SECTIONS[section].name,
+ description: SECTIONS[section].preview,
+ art: SECTIONS[section].art,
+ cta: 'Explore ' + SECTIONS[section].name.toLowerCase()
+}));
