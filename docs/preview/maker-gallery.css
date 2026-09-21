@@ -1,0 +1,33 @@
+/* Maker's existing images stay visible at every screen size. */
+.maker-gallery{padding:32px 0 48px;scroll-margin-top:138px}
+.maker-gallery-heading{margin-bottom:22px}
+.maker-gallery-heading h2{margin:0 0 7px;font-size:20px;line-height:1.35;font-weight:450;letter-spacing:-.45px}
+.maker-gallery-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.maker-gallery-frame{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.maker-gallery-stage{order:0;display:grid;touch-action:pan-y pinch-zoom}
+.maker-gallery-panel{grid-area:1/1;min-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,visibility .4s}
+.maker-gallery-panel.is-active{opacity:1;visibility:visible;pointer-events:auto}
+.maker-gallery-panel figure{margin:0}
+.maker-gallery-open{display:block;text-decoration:none}
+.maker-gallery-open:focus-visible{outline-offset:-4px}
+.maker-gallery-image{position:relative;width:100%;aspect-ratio:2/1;background:#0d0d0d}
+.maker-gallery-image img{display:block;width:100%;height:100%;object-fit:contain;user-select:none}
+.maker-gallery-panel figcaption{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px;padding:18px 24px;font-size:14px;line-height:1.55}
+.maker-gallery-full{color:var(--accent);font-size:11px;white-space:nowrap}
+.maker-gallery-controls{order:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;min-height:66px;padding:10px 24px;border-top:1px solid var(--line-soft)}
+.maker-gallery-controls button{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;padding:0;border-radius:7px;color:var(--muted);background:transparent}
+.maker-gallery-controls button:hover{color:var(--text);background:var(--surface-2)}
+.maker-gallery-controls button:focus-visible{outline-offset:1px}
+.maker-gallery-toggle{justify-self:start;gap:8px;font-size:11px}
+.maker-gallery-toggle .icon{width:15px;height:15px}
+.maker-gallery-dots{display:flex;align-items:center;justify-content:center}
+.maker-gallery-dots button span{display:block;width:6px;height:6px;border-radius:99px;background:var(--faint);transition:width .25s,background .25s}
+.maker-gallery-dots button[aria-selected=true] span{width:22px;background:var(--accent)}
+.maker-gallery-arrows{display:flex;justify-self:end}
+.maker-gallery-arrows .icon{width:18px;height:18px}
+.maker-gallery-error{position:absolute;inset:0;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+.maker-gallery-error:not([hidden]){display:flex}
+.maker-gallery-panel.has-error img{opacity:0}
+@media(max-width:780px){.maker-gallery{padding:28px 0 36px}.maker-gallery-heading{margin-bottom:18px}.maker-gallery-panel figcaption{padding:16px 18px}.maker-gallery-controls{padding-inline:18px}}
+@media(max-width:500px){.maker-gallery{padding:28px 0 30px}.maker-gallery-heading h2{font-size:18px}.maker-gallery-heading p{font-size:12px}.maker-gallery-panel figcaption{min-height:60px;padding:15px 16px;font-size:13px;gap:12px}.maker-gallery-full{font-size:10px}.maker-gallery-controls{grid-template-columns:44px minmax(0,1fr) 88px;gap:0;padding:8px 12px;min-height:61px}.maker-gallery-toggle span{display:none}.maker-gallery-dots button{min-width:40px}}
+@media(prefers-reduced-motion:reduce){.maker-gallery-panel,.maker-gallery-dots button span{transition:none}}
