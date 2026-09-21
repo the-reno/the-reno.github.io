@@ -28,7 +28,9 @@ function renderPerspective(){
  const panel=$('#section-perspective'),section=SECTIONS[state.section];
  panel.hidden=state.section==='all';
  if(panel.hidden){panel.replaceChildren();return;}
- panel.innerHTML=`<div class="perspective-heading"><p class="eyebrow">Why I explore it</p><h2 id="perspective-title">${esc(section.question)}</h2></div><div class="perspective-copy">${section.perspective.map(text=>`<p>${esc(text)}</p>`).join('')}</div>`;
+ const paragraphs=(section.perspective||[]).filter(text=>text.trim());
+ panel.classList.toggle('is-heading-only',paragraphs.length===0);
+ panel.innerHTML=`<div class="perspective-heading"><p class="eyebrow">Why I explore it</p><h2 id="perspective-title">${esc(section.question)}</h2></div>${paragraphs.length?`<div class="perspective-copy">${paragraphs.map(text=>`<p>${esc(text)}</p>`).join('')}</div>`:''}`;
 }
 function card(topic){
  const s=SECTIONS[topic.section];
@@ -71,6 +73,8 @@ function renderBrowse(){
  $('#reading-progress').hidden=true;
  $('#page-title').innerHTML=s.headline;
  $('#intro-description').innerHTML=s.description;
+ $('#intro-description').hidden=!s.description.trim();
+ $('.intro').classList.toggle('has-no-description',!s.description.trim());
  $('#intro-note').textContent=s.note;
  $('#intro-eyebrow').innerHTML='<span class="tiny-dot"></span>'+s.eyebrow;
  $('#library-title').textContent='Articles & experiments';

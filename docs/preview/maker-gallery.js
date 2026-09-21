@@ -46,8 +46,8 @@
     root = document.createElement('section');
     root.id = 'maker-gallery';
     root.className = 'maker-gallery';
-    root.setAttribute('aria-labelledby', 'maker-gallery-title');
-    root.innerHTML = `<div class="maker-gallery-heading"><h2 id="maker-gallery-title">Visual experiments</h2><p>Scenes, memories and movement.</p></div>
+    root.setAttribute('aria-label', 'Maker image gallery');
+    root.innerHTML = `<div class="maker-gallery-heading"><p>Scenes, memories and movement.</p></div>
       <div class="maker-gallery-frame" role="region" aria-roledescription="carousel" aria-label="Maker images">
         <div class="maker-gallery-controls">
           <button type="button" class="maker-gallery-toggle" aria-label="Pause image rotation">${icon('pause')}<span>Pause</span></button>

@@ -1,0 +1,29 @@
+/* Preview-only accents. Existing article diagrams and gallery images keep their colors. */
+:root{--accent:#e3ab76;--accent-bg:#30251d;--accent-border:#766047;--art-bg:#201c19;--art-glow:#332820;--surface:#191a19;--surface-2:#222321;--line:#343632;--line-soft:#282a27;--muted:#aaa9a3;--faint:#8e8d86}
+:root[data-accent="blue"]{--accent:#91bde5;--accent-bg:#1e2b36;--accent-border:#516c83;--art-bg:#192128;--art-glow:#233343}
+:root[data-accent="lilac"]{--accent:#bca8e4;--accent-bg:#292333;--accent-border:#726181;--art-bg:#211d28;--art-glow:#31283e}
+::selection{background:var(--accent);color:var(--bg)}
+.feature:hover,.topic-card:hover,.related-link:hover,dialog{border-color:var(--accent-border)}
+.filter-button[aria-pressed=true],.small-cta{border-color:var(--accent-border)}
+.feature-art{background:radial-gradient(ellipse at 52% 50%,var(--art-glow),var(--art-bg) 35%,var(--surface) 75%)}
+.card-art,.reader-hero-art,.model-visual{background:var(--art-bg);border-color:var(--line)}
+.feature-art{border-color:var(--line)}
+.art-label,.feature-number,.card-art .card-section-number{color:var(--faint)}
+/* The card artwork is schematic, not source data: tint it consistently without touching photos. */
+:is(.feature-art,.card-art,.reader-hero-art) svg [stroke^="#"]{stroke:var(--accent)}
+:is(.feature-art,.card-art,.reader-hero-art) svg [fill^="#"]{fill:var(--accent)}
+:is(.feature-art,.card-art,.reader-hero-art) svg stop{stop-color:var(--accent)}
+.section-perspective.is-heading-only{grid-template-columns:1fr;gap:0;padding-block:26px}
+.section-perspective.is-heading-only h2{max-width:100%}
+.about-dialog{max-height:calc(100svh - 32px);overflow-y:auto}
+.accent-picker{border:0;border-top:1px solid var(--line);padding:19px 0 0;margin:25px 0 0;min-width:0}
+.accent-picker legend{padding:0 8px 0 0;color:var(--text);font-size:13px}
+.accent-options{display:flex;gap:8px;flex-wrap:wrap}
+.accent-options button{display:flex;align-items:center;gap:8px;min-height:44px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px;background:var(--bg)}
+.accent-options button[aria-pressed="true"]{border-color:var(--accent);color:var(--text);background:var(--accent-bg)}
+.accent-options button span{width:12px;height:12px;border-radius:50%;background:var(--swatch);flex-shrink:0}
+.accent-options button[data-accent-choice="amber"]{--swatch:#e3ab76}
+.accent-options button[data-accent-choice="blue"]{--swatch:#91bde5}
+.accent-options button[data-accent-choice="lilac"]{--swatch:#bca8e4}
+.about-dialog .accent-note{font-size:11px;line-height:1.7;margin:11px 0 0;color:var(--muted)}
+@media(max-width:780px){.intro.has-no-description{gap:0}.intro.has-no-description .intro-copy{display:none}}

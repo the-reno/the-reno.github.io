@@ -1,12 +1,13 @@
 'use strict';
-// Public article snapshot. Section introductions are editorial drafts for this preview.
+// Applied review: ceda933b197697db0710a5b9c40c2c1ddc6fd2d5 (21 September 2026).
+// Blank proposed fields remain blank; minor grammar/spelling corrections are logged.
 const SOURCE = {repo:'the-reno/the-reno.github.io', revision:'23df86d3f7c8ab99fc22c3c2072c16b6abc533e5', date:'21 September 2026', site:'https://ronu.one'};
 const SECTIONS = {
  all:{name:'Explore',number:'00',headline:'Stay <em>curious.</em>',description:'Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.',note:'Endurance / Science / Markets / Making',eyebrow:'A personal lab'},
  triathlon:{
   name:'Triathlon',number:'01',headline:'Triathlon<em>.</em>',
-  description:'I see endurance as a way to explore movement, determination and adaptation.',
-  preview:'I look beyond pace and distance to explore how the body moves, responds to stress and adapts through practice.',
+  description:'I see endurance as a way to measure adaptation.',
+  preview:'I look beyond pace and distance to explore how the body moves and where its limits lie.',
   note:'Movement / Endurance / Adaptation',eyebrow:'A personal perspective',art:'motion',
   question:'What keeps us moving?',
   perspective:[
@@ -18,7 +19,7 @@ const SECTIONS = {
  science:{
   name:'Science',number:'02',headline:'Science<em>.</em>',
   description:'I start with an ordinary observation and follow the questions it raises.',
-  preview:'A roll of the dice. A traffic jam. A spark. I use simple models to explore the patterns behind ordinary events.',
+  preview:'A roll of the dice. A traffic jam. A forest fire. Patterns behind ordinary events.',
   note:'Questions / Patterns / Experiments',eyebrow:'A personal perspective',art:'network',
   question:'What is behind the result?',
   perspective:[
@@ -42,14 +43,11 @@ const SECTIONS = {
  },
  maker:{
   name:'Maker',number:'04',headline:'Maker<em>.</em>',
-  description:'I turn ideas into things I can build, test and improve.',
-  preview:'A sketch becomes a prototype. I learn by building small tools and systems, testing them and refining what does not work.',
+  description:'',
+  preview:'Loading…',
   note:'Sketch / Build / Refine',eyebrow:'A personal perspective',art:'cube',
   question:'What happens when an idea becomes real?',
-  perspective:[
-   'I use making to turn an idea into something I can test. A sketch becomes a prototype; the prototype shows me what works and what needs to change.',
-   'This is a place for small tools, experiments and practical systems, built slowly, tested by hand and refined through use.'
-  ],
+  perspective:[],
   empty:'No articles or projects are listed in this section yet.'
  }
 };
