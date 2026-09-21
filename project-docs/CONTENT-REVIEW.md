@@ -69,7 +69,7 @@ Triathlon
 
 **Short introduction**
 
-I look beyond pace and distance to explore how the body moves, responds to stress and adapts through practice.
+I look beyond pace and distance to explore how the body moves, the limits.
 
 **Button**
 
@@ -87,7 +87,7 @@ Triathlon.
 
 **Opening line**
 
-I see endurance as a way to explore movement, determination and adaptation.
+I see endurance as a way to measure adaptation.
 
 **Themes**
 
@@ -123,7 +123,7 @@ Science
 
 **Short introduction**
 
-A roll of the dice. A traffic jam. A spark. I use simple models to explore the patterns behind ordinary events.
+A roll of the dice. A traffic jam. A fire in the florest. patterns of ordinary events.
 
 **Button**
 
@@ -235,7 +235,7 @@ Maker
 
 **Short introduction**
 
-A sketch becomes a prototype. I learn by building small tools and systems, testing them and refining what does not work.
+Loading….
 
 **Button**
 
@@ -253,7 +253,7 @@ Maker.
 
 **Opening line**
 
-I turn ideas into things I can build, test and improve.
+
 
 **Themes**
 
@@ -265,9 +265,7 @@ What happens when an idea becomes real?
 
 **My perspective**
 
-I use making to turn an idea into something I can test. A sketch becomes a prototype; the prototype shows me what works and what needs to change.
 
-This is a place for small tools, experiments and practical systems, built slowly, tested by hand and refined through use.
 
 ### Comments
 
@@ -285,7 +283,7 @@ The existing image files are references only. Editing the text below does not re
 
 **Heading**
 
-Visual experiments
+
 
 **Description**
 
