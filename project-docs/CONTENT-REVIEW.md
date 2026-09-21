@@ -513,6 +513,24 @@ _Use the template below for requests outside the text blocks above. Copy it for 
 
 ## Applied revision log
 
-No proposals from this file have been applied yet.
+### 21 September 2026 — wording and accent update
 
-After an approved update, append the review-file commit, implementation commit and a short summary here. Preserve the user's wording and unresolved comments.
+**Review-file commit:** `ceda933b197697db0710a5b9c40c2c1ddc6fd2d5`
+
+**Implementation commit:** `d624624cbe44f0e19f74e86ce75e84584c3f1f81`
+
+Applied to `docs/preview/` following the request to implement the saved edits. The existing homepage, navigation, article bodies, models and image assets were not changed.
+
+The Triathlon opening now reads exactly: “I see endurance as a way to measure adaptation.” Blank Maker opening and perspective fields were removed from display; its question remains. The deleted gallery heading stays absent, while its description, images, captions and controls remain.
+
+Minor copy corrections used on the webpage, with the original proposals above preserved:
+
+- Triathlon carousel: “I look beyond pace and distance to explore how the body moves and where its limits lie.”
+- Science carousel: “A roll of the dice. A traffic jam. A forest fire. Patterns behind ordinary events.”
+- Maker carousel: “Loading…” (ellipsis normalized).
+
+Warm amber `#E3AB76` replaces sage as the default accent. Soft blue `#91BDE5` and muted lilac `#BCA8E4` can be compared through **About → Try an accent**, or the preview query parameter `accent=amber`, `accent=blue` or `accent=lilac`. The dark background and off-white primary text remain. Color choices are local to the preview and do not publish a new default for everyone.
+
+Validation: JavaScript syntax checks and 46 local fixture checks passed, including text changes, empty fields, gallery image decoding, controls, filtering, article rendering, color controls and overflow at 320, 390, 768 and 1440 pixels. Accent-text contrast exceeds 7:1 on the tested dark interface surfaces. This is not a whole-site accessibility certification.
+
+Testing limitation: the browser environment blocked URL navigation, including localhost. Tests used an in-memory page assembled from the actual downloaded site files; images and scripts were embedded, source fetching used actual local article bodies, and the Content Security Policy was omitted only in the test fixture. Production security metadata was preserved. Live delivery, browser storage persistence and numerical model results were not validated by those local tests.
