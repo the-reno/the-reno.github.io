@@ -14,6 +14,7 @@ function browseHash(){
 function updateBrowseUrl(){lastBrowseHash=browseHash();try{history.replaceState(null,'',lastBrowseHash);}catch{/* Filtering remains functional without URL history access. */}}
 function matchTopics(topics,query){const q=query.trim().toLocaleLowerCase();if(!q)return topics;const words=q.split(/\s+/);return topics.filter(t=>words.every(w=>(t.title+' '+t.description+' '+SECTIONS[t.section].name+' '+t.type+' '+(t.tags||'')).toLocaleLowerCase().includes(w)));}
 function renderFeature(){
+ if(state.section==='all'){$('#featured-topic').hidden=true;return;}
  const topic=TOPICS.find(t=>t.id===SECTIONS[state.section].featured),f=$('#featured-topic'); if(!topic){f.hidden=true;f.innerHTML='';return;} const section=SECTIONS[topic.section];
  f.href='#topic/'+topic.id;
  f.innerHTML=`<div class="feature-copy"><div class="feature-top"><span class="feature-badge">Featured exploration</span><span class="divider"></span><span class="eyebrow">${section.name}</span></div><h2 id="feature-title">${esc(topic.title)}</h2><p class="feature-description">${esc(topic.description)}</p><span class="feature-cta">${topic.type==='Interactive'?'Explore the model':'Read the article'} ${arrow}</span></div><div class="feature-art">${artSvg(topic.art)}<span class="feature-number">${section.number} / EXPLORATION</span><span class="art-label">An idea in motion / schematic illustration</span></div>`;
@@ -27,7 +28,8 @@ function renderLibrary(){
  $('#grid-view').setAttribute('aria-pressed',String(state.view==='grid'));$('#list-view').setAttribute('aria-pressed',String(state.view==='list'));
  $('#topic-filter').value=state.query;
  // Keep search results close to the controls rather than above a repeated feature.
- $('#featured-topic').hidden=!SECTIONS[state.section].featured||state.type!=='all'||state.query.trim()!=='';
+ FeaturedCarousel.sync(state);
+ $('#featured-topic').hidden=state.section==='all'||!SECTIONS[state.section].featured||state.type!=='all'||state.query.trim()!=='';
  const sectionEmpty=!TOPICS.some(t=>state.section==='all'||t.section===state.section);
  $('#empty-state').innerHTML=sectionEmpty?`<div class="no-content"><h3>${esc(SECTIONS[state.section].name)}</h3><p>${esc(SECTIONS[state.section].empty||'No published topics are listed here.')}</p><a href="#explore">Explore the available topics →</a></div>`:`<h3>No topics found.</h3><p>Try another word or reset the filters.</p><button type="button" id="clear-filters">Clear filters</button>`;
  if(!sectionEmpty)$('#clear-filters').addEventListener('click',clearFilters);
@@ -52,7 +54,7 @@ function navigate(){
  const parts=hash.slice(1).split('?'),path=parts[0],params=new URLSearchParams(parts[1]||'');
  if(path.startsWith('topic/')){
    const [,id,anchor]=path.split('/'),topic=TOPICS.find(t=>t.id===id);
-   if(topic){if(!currentTopic||currentTopic.id!==id){renderReader(topic);window.scrollTo({top:0,behavior:'instant'});$('#reader-title').setAttribute('tabindex','-1');$('#reader-title').focus({preventScroll:true});}if(anchor&&/^(part-\d+|article-start|experiment)$/.test(anchor))goAnchor(anchor);return;}
+   if(topic){FeaturedCarousel.suspend();if(!currentTopic||currentTopic.id!==id){renderReader(topic);window.scrollTo({top:0,behavior:'instant'});$('#reader-title').setAttribute('tabindex','-1');$('#reader-title').focus({preventScroll:true});}if(anchor&&/^(part-\d+|article-start|experiment)$/.test(anchor))goAnchor(anchor);return;}
  }
  const proposed=path.startsWith('section/')?path.split('/')[1]:'all';state.section=Object.hasOwn(SECTIONS,proposed)?proposed:'all';
  state.type=['Article','Interactive','Project'].includes(params.get('format'))?params.get('format'):'all';state.query=params.get('q')||'';

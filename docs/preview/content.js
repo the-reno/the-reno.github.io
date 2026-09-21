@@ -3,7 +3,7 @@
 // Pin article content to this source revision; interactive apps retain their live URLs.
 const SOURCE = {repo:'the-reno/the-reno.github.io', revision:'23df86d3f7c8ab99fc22c3c2072c16b6abc533e5', date:'21 September 2026', site:'https://ronu.one'};
 const SECTIONS = {
- all:{name:'Explore',number:'00',headline:'Stay <em>curious.</em>',description:'Welcome to my lab.<br>Triathlon, science, markets and making.',note:'Endurance / Science / Markets / Making',eyebrow:'A personal lab',featured:'endurance'},
+ all:{name:'Explore',number:'00',headline:'Stay <em>curious.</em>',description:'Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.',note:'Endurance / Science / Markets / Making',eyebrow:'A personal lab',featured:'endurance'},
  triathlon:{name:'Triathlon',number:'01',headline:'Built to <em>endure.</em>',description:'How the body keeps moving under pressure.',note:'Movement / Energy / Endurance',eyebrow:'01 / Triathlon',featured:'endurance'},
  science:{name:'Science',number:'02',headline:'Question <em>everything.</em>',description:'From dice probabilities to gravity,<br>traffic waves and fragile systems.',note:'Patterns / Systems / Experiments',eyebrow:'02 / Science',featured:'spark'},
  markets:{name:'Markets',number:'03',headline:'Explore the <em>trade-offs.</em>',description:'Sharp edges.',note:'Markets',eyebrow:'03 / Markets',featured:null,empty:'The current website has a Markets section, but no linked articles yet.'},
@@ -18,4 +18,12 @@ const TOPICS = [
  {id:'spark',section:'science',type:'Interactive',title:'The Spark',description:'Most sparks die. A few change everything. The difference is the system surrounding them.',art:'network',path:'/Science/forest-fire-model.html',tags:'forest fire connectivity growth lightning networks critical systems'},
  {id:'traffic',section:'science',type:'Interactive',title:'Phantom Traffic Jam',description:'Explore how a small disturbance grows into a traffic wave moving backward through a network.',art:'lanes',path:'/Science/traffic-jam.html',tags:'traffic demand driver reaction following distance truck weather instability'},
  {id:'dice-storm',section:'science',type:'Article',title:'The Dice and the Storm',description:'Some days look normal. Then one small thing changes the direction of the day.',art:'cube',path:'/Science/dice.html',file:'docs/Science/dice.html',status:'Introduction only',tags:'dice storm small things',inline:'<p>Some days look normal. Same routine. Same train. Same desk. Then one small thing changes the direction of the day.</p>'}
+];
+
+// One slide per main section. Empty sections retain introductions, not invented articles.
+const FEATURED_SECTIONS = [
+ {section:'triathlon',topic:'endurance',cta:'Explore triathlon'},
+ {section:'science',topic:'spark',cta:'Explore science'},
+ {section:'markets',title:'Markets',description:'Sharp edges. Explore the trade-offs.',art:'curves',cta:'Explore markets'},
+ {section:'maker',title:'Maker',description:'Experiments, sketches, tools and small systems. Built slowly. Tested by hand.',art:'cube',cta:'Explore maker'}
 ];
