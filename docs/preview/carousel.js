@@ -43,16 +43,13 @@ const FeaturedCarousel = (() => {
   function initialize() {
     if (root) return;
     root = document.getElementById('section-carousel');
-    const slideData = FEATURED_SECTIONS.map(item => {
-      const topic = TOPICS.find(t => t.id === item.topic);
-      return { ...topic, ...item, name: SECTIONS[item.section].name };
-    });
+    const slideData = FEATURED_SECTIONS.map(item => ({...item, name:SECTIONS[item.section].name}));
     // Controls precede rotating content for keyboard access, but sit below it visually.
     root.innerHTML = `<div class="carousel-controls">
       <button type="button" class="carousel-toggle" id="carousel-toggle" aria-label="Pause automatic rotation"><svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg><span>Pause</span></button>
       <div class="carousel-dots" role="tablist" aria-label="Choose a section">${slideData.map(s => `<button type="button" role="tab" id="carousel-tab-${s.section}" aria-label="${esc(s.name)}" aria-controls="carousel-panel-${s.section}" aria-selected="false" tabindex="-1" title="${esc(s.name)}"><span aria-hidden="true"></span></button>`).join('')}</div>
       <div class="carousel-arrows"><button type="button" id="carousel-previous" aria-label="Previous section" title="Previous section"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></button><button type="button" id="carousel-next" aria-label="Next section" title="Next section"><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
-    </div><div class="carousel-slides" aria-live="off" aria-atomic="false">${slideData.map(s => `<div class="carousel-slide" role="tabpanel" id="carousel-panel-${s.section}" aria-labelledby="carousel-tab-${s.section}" aria-hidden="true" inert><a class="feature" href="#section/${s.section}" tabindex="-1" aria-labelledby="carousel-title-${s.section}"><div class="feature-copy"><div class="feature-top"><span class="feature-badge">Explore a section</span><span class="divider"></span><span class="eyebrow">${esc(s.name)}</span></div><h2 id="carousel-title-${s.section}">${esc(s.title)}</h2><p class="feature-description">${esc(s.description)}</p><span class="feature-cta">${esc(s.cta)} ${arrow}</span></div><div class="feature-art">${artSvg(s.art)}<span class="art-label">${esc(SECTIONS[s.section].note)} / schematic</span></div></a></div>`).join('')}</div>`;
+    </div><div class="carousel-slides" aria-live="off" aria-atomic="false">${slideData.map(s => `<div class="carousel-slide" role="tabpanel" id="carousel-panel-${s.section}" aria-labelledby="carousel-tab-${s.section}" aria-hidden="true" inert><a class="carousel-link" href="#section/${s.section}" tabindex="-1" aria-label="Explore ${esc(s.name)}">${mainHero(s.section,{slide:true})}</a></div>`).join('')}</div>`;
     viewport = root.querySelector('.carousel-slides');
     toggle = root.querySelector('#carousel-toggle');
     tabs = Array.from(root.querySelectorAll('[role="tab"]'));

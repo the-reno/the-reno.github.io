@@ -24,41 +24,12 @@ function matchTopics(topics,query){
  const words=query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
  return topics.filter(t=>words.every(w=>(t.title+' '+t.description+' '+SECTIONS[t.section].name+' '+t.type+' '+(t.tags||'')).toLocaleLowerCase().includes(w)));
 }
-function renderPerspective(){
- const panel=$('#section-perspective'),section=SECTIONS[state.section];
- panel.hidden=state.section==='all';
- if(panel.hidden){panel.replaceChildren();return;}
- const paragraphs=(section.perspective||[]).filter(text=>text.trim());
- panel.classList.toggle('is-heading-only',paragraphs.length===0);
- panel.innerHTML=`<div class="perspective-heading"><p class="eyebrow">Why I explore it</p><h2 id="perspective-title">${esc(section.question)}</h2></div>${paragraphs.length?`<div class="perspective-copy">${paragraphs.map(text=>`<p>${esc(text)}</p>`).join('')}</div>`:''}`;
-}
-function card(topic){
- const s=SECTIONS[topic.section];
- return `<a class="topic-card" href="#topic/${topic.id}" aria-labelledby="title-${topic.id}"><div class="card-art">${artSvg(topic.art)}<span class="card-section-number">${s.number} / EXPLORE</span></div><div class="card-content"><div class="card-meta"><span class="eyebrow">${s.name}</span><span class="card-type">${topic.type}</span></div><h3 class="card-title" id="title-${topic.id}">${esc(topic.title)}</h3><p class="card-description">${esc(topic.description)}</p><div class="card-bottom"><span>${esc(topic.status||(topic.type==='Interactive'?'Open experiment':'Read article'))}</span>${arrow}</div></div></a>`;
-}
 function renderLibrary(){
  FeaturedCarousel.sync(state);
- const library=$('#library'),grid=$('#topic-grid');
- library.hidden=state.section==='all';
- // The homepage contains only section introductions, never an all-article feed.
- if(library.hidden){grid.replaceChildren();$('#topic-count').textContent='';return;}
- const sectionTopics=TOPICS.filter(t=>t.section===state.section);
- const topics=matchTopics(sectionTopics.filter(t=>state.type==='all'||t.type===state.type),state.query);
- grid.innerHTML=topics.map(card).join('');
- grid.classList.toggle('is-list',state.view==='list');
- $('#empty-state').hidden=topics.length!==0;
- $('#topic-count').textContent=topics.length+' '+(topics.length===1?'topic':'topics');
- $$('.filter-button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.type===state.type)));
- $('#grid-view').setAttribute('aria-pressed',String(state.view==='grid'));
- $('#list-view').setAttribute('aria-pressed',String(state.view==='list'));
- $('#topic-filter').value=state.query;
- const sectionEmpty=sectionTopics.length===0;
- $('.browse-tools').hidden=sectionEmpty;
- $('#library-intro').hidden=sectionEmpty;
- $('#empty-state').innerHTML=sectionEmpty
-  ?`<div class="no-content"><h3>Nothing published here yet.</h3><p>${esc(SECTIONS[state.section].empty||'No articles or experiments are listed here yet.')}</p><a href="#explore">Back to the sections →</a></div>`
-  :'<h3>No topics found.</h3><p>Try another word or reset the filters.</p><button class="small-cta" type="button" id="clear-filters">Clear filters</button>';
- if(!sectionEmpty)$('#clear-filters').addEventListener('click',clearFilters);
+ const library=$('#library');
+ library.hidden=state.section==='all'||state.section==='maker';
+ $('#topic-grid').innerHTML=library.hidden?'':mainArticleCard(state.section);
+ $('#topic-count').textContent=state.section==='markets'?'Layout sample':'01 article';
 }
 function renderBrowse(){
  stopArticle();
@@ -66,23 +37,21 @@ function renderBrowse(){
  $('#reader-page').replaceChildren();
  if(observer){observer.disconnect();observer=null;}
  currentTopic=null;
- const s=SECTIONS[state.section];
+ const s=SECTIONS[state.section],home=state.section==='all';
+ document.body.dataset.pageMode='landing';
  $('#browse-page').hidden=false;
- $('#browse-page').dataset.view=state.section==='all'?'explore':'section';
+ $('#browse-page').dataset.view=home?'explore':'section';
  $('#reader-page').hidden=true;
  $('#reading-progress').hidden=true;
- $('#page-title').innerHTML=s.headline;
- $('#intro-description').innerHTML=s.description;
- $('#intro-description').hidden=!s.description.trim();
- $('.intro').classList.toggle('has-no-description',!s.description.trim());
- $('#intro-note').textContent=s.note;
- $('#intro-eyebrow').innerHTML='<span class="tiny-dot"></span>'+s.eyebrow;
+ const intro=$('#page-intro');
+ intro.className=home?'explore-intro':'index-hero';
+ intro.innerHTML=home?'<div><p class="eyebrow">A personal lab</p><h1 class="explore-title" id="page-title" tabindex="-1">Stay <em>curious.</em></h1></div><p class="explore-description">Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.</p>':mainHero(state.section);
  $('#library-title').textContent='Articles & experiments';
- $('#library-intro').textContent='Explore the questions further through the work below.';
  $$('.nav a').forEach(a=>a.dataset.section===state.section?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  document.title='Ronu.one — '+s.name;
- renderPerspective();renderLibrary();lastBrowseHash=browseHash();
+ renderLibrary();lastBrowseHash=browseHash();
 }
+
 function navigate(){
  if(searchDialog.open)searchDialog.close();
  if(aboutDialog.open)aboutDialog.close();
@@ -93,6 +62,7 @@ function navigate(){
   const [,id,anchor]=path.split('/'),topic=TOPICS.find(t=>t.id===id);
   if(topic){
    FeaturedCarousel.suspend();
+   document.body.dataset.pageMode='reader';
    if(!currentTopic||currentTopic.id!==id){
     // Deep links and global search still return readers to the relevant section.
     if(lastBrowseHash.split('?')[0]!=='#section/'+topic.section)lastBrowseHash='#section/'+topic.section;
@@ -108,9 +78,8 @@ function navigate(){
  }
  const proposed=path.startsWith('section/')?path.split('/')[1]:'all';
  state.section=Object.hasOwn(SECTIONS,proposed)?proposed:'all';
- state.type=state.section!=='all'&&['Article','Interactive','Project'].includes(params.get('format'))?params.get('format'):'all';
- state.query=state.section==='all'?'':params.get('q')||'';
- state.view=params.get('view')==='list'?'list':storedView;
+ // Main pages intentionally show one representative card; older filter URLs remain safe.
+ state.type='all';state.query='';state.view='grid';
  renderBrowse();
  window.scrollTo({top:0,behavior:'instant'});
  // Keep keyboard focus on the new page rather than an inactive carousel slide.
@@ -123,7 +92,7 @@ function updateProgress(){
 }
 function renderSearch(){
  const q=$('#global-search').value.trim(),words=q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
- const sections=FEATURED_SECTIONS.filter(s=>words.every(w=>(s.title+' '+s.description+' '+SECTIONS[s.section].note).toLocaleLowerCase().includes(w)));
+ const sections=FEATURED_SECTIONS.filter(s=>words.every(w=>(s.title+' '+MAIN_PAGES[s.section].start+MAIN_PAGES[s.section].end+' '+MAIN_PAGES[s.section].intro).toLocaleLowerCase().includes(w)));
  const topics=q?matchTopics(TOPICS,q):[];
  const sectionResults=sections.map(s=>`<a class="search-result" href="#section/${s.section}"><span class="result-symbol"><svg class="icon" aria-hidden="true"><use href="#i-${s.section}"/></svg></span><span class="result-copy"><strong>${esc(s.title)}</strong><span>Perspective · Articles · Experiments</span></span>${arrow}</a>`).join('');
  const articleResults=topics.map(t=>`<a class="search-result" href="#topic/${t.id}"><span class="result-symbol"><svg class="icon" aria-hidden="true"><use href="#i-${t.section}"/></svg></span><span class="result-copy"><strong>${esc(t.title)}</strong><span>${SECTIONS[t.section].name} · ${t.type}</span></span>${arrow}</a>`).join('');
@@ -154,12 +123,6 @@ document.addEventListener('keydown',e=>{
   }
  }
 });
-$('#topic-filter').addEventListener('input',e=>{state.query=e.target.value;renderLibrary();updateBrowseUrl();});
-$$('.filter-button').forEach(b=>b.addEventListener('click',()=>{state.type=b.dataset.type;renderLibrary();updateBrowseUrl();}));
-function clearFilters(){state.type='all';state.query='';renderLibrary();updateBrowseUrl();$('#topic-filter').focus();}
-function changeView(view){state.view=view;storedView=view;try{localStorage.setItem('ronu-layout-view',view);}catch{}renderLibrary();updateBrowseUrl();}
-$('#grid-view').addEventListener('click',()=>changeView('grid'));
-$('#list-view').addEventListener('click',()=>changeView('list'));
 window.addEventListener('hashchange',navigate);
 window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{updateProgress();scrollTick=false;});scrollTick=true;}},{passive:true});
 window.addEventListener('resize',updateProgress);
