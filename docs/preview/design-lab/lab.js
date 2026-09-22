@@ -5,12 +5,12 @@
   const $$ = (selector, node=document) => [...node.querySelectorAll(selector)];
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const defaultState = {layout:'01',color:'G1',page:'triathlon',view:'preview',screen:'fit',mode:'lab'};
+  const defaultState = {layout:'01',color:'G1',type:'01',page:'triathlon',view:'preview',screen:'fit',mode:'lab'};
   let state = {...defaultState}, homeSlide = 0, gallerySlide = 0, playback = false, timer = null, visible = true;
   const canonical = 'https://ronu.one/preview/design-lab/';
   const allowed = {
-    layout:data.layouts.map(x=>x.id), color:data.colors.map(x=>x.id),
-    page:['explore',...data.sections.map(x=>x.id)], view:['preview','compare'], screen:['fit','phone'],mode:['lab','present']
+    layout:data.layouts.map(x=>x.id), color:data.colors.map(x=>x.id), type:data.fonts.map(x=>x.id),
+    page:['explore',...data.sections.map(x=>x.id)], view:['preview','compare','colors'], screen:['fit','phone'],mode:['lab','present']
   };
   function readState() {
     const params = new URLSearchParams(location.search);
@@ -36,7 +36,8 @@
   function currentSection(){return data.sections.find(s=>s.id===state.page)||data.sections[homeSlide];}
   function currentLayout(){return data.layouts.find(x=>x.id===state.layout);}
   function currentColor(){return data.colors.find(x=>x.id===state.color);}
-  function reference(){return `L${state.layout} / ${state.color} / ${state.page==='explore'?'Explore':currentSection().name}`;}
+  function currentFont(){return data.fonts.find(x=>x.id===state.type);}
+  function reference(){return `L${state.layout} / ${state.color} / T${state.type} / ${state.page==='explore'?'Explore':currentSection().name}`;}
   function change(patch) {
     state = {...state,...patch};playback=false;
     if (state.mode==='present') {state.view='preview';state.screen='fit';}
@@ -46,6 +47,7 @@
     return `<div class="hero-art" data-art="${section.id}" aria-hidden="true"><span class="orbit"></span><span class="orbit"></span><span class="orbit"></span><span class="orbit-core"></span><span class="orbit-mark"></span><span class="art-caption">AN IDEA IN MOTION / ABSTRACT STUDY</span></div>`;
   }
   function hero(section,layout,{home=false,compact=false}={}) {
+    if(Number(layout)>=5)return window.RONU_VARIANTS.hero(section,layout,{home,compact});
     const statement = layout==='02'||layout==='04';
     const tag = home||compact?'h2':'h1';
     const title = statement ? `${escape(section.start)}<em>${escape(section.end)}</em>` : `${escape(section.name)}<span class="period">.</span>`;
@@ -81,31 +83,37 @@
     const section = state.page==='explore'?data.sections[0]:currentSection();
     $('#comparison-grid').innerHTML=data.layouts.map(l=>`<article class="compare-card" data-selected="${state.layout===l.id}"><div class="compare-card-head"><p><span>${l.id}</span>${l.name}</p><button type="button" data-try="${l.id}" aria-label="Try layout ${l.id}, ${l.name}">Try ${l.id} ↗</button></div><div class="compare-canvas" inert aria-hidden="true"><div class="site-mock layout-${l.id}"><div class="mock-inner">${hero(section,l.id,{compact:true})}</div></div></div><p class="compare-caption">${escape(l.note)} Same sentence. Same color.</p></article>`).join('');
   }
+  function renderColors() {
+    const section=state.page==='explore'?data.sections[0]:currentSection();
+    $('#comparison-grid').innerHTML=data.colors.map(c=>`<article class="compare-card color-compare-card" style="--accent:${c.hex}" data-selected="${state.color===c.id}"><div class="compare-card-head"><p><span class="color-id">${c.id}</span>${escape(c.name)}</p><button type="button" data-color-try="${c.id}" aria-label="Try ${escape(c.name)}">Try ${c.id} ↗</button></div><div class="compare-canvas" inert aria-hidden="true"><div class="site-mock layout-${state.layout}"><div class="mock-inner">${hero(section,state.layout,{compact:true})}</div></div></div><p class="compare-caption palette-caption"><span>${c.hex}</span><span>${ratio(c.hex,'#0C0E11').toFixed(1)}:1 on dark</span><span>L${state.layout} / T${state.type}</span><span class="sr-only">${escape(section.name)}: ${escape(section.tagline)}</span></p></article>`).join('');
+  }
   function render() {
     clearTimeout(timer);timer=null;
     const color=currentColor(),layout=currentLayout();
     document.documentElement.style.setProperty('--accent',color.hex);
     document.documentElement.dataset.color=color.id;
+    document.documentElement.dataset.type=state.type;
     document.body.classList.toggle('presentation',state.mode==='present');
     $('#exit-presentation').hidden=state.mode!=='present';
     $$('#layout-options button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.layout===state.layout)));
     $$('#color-options button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.color===state.color)));
+    $$('#font-options button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.type===state.type)));
     $$('#page-options button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.page===state.page)));
     $$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
     $$('[data-screen]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.screen===state.screen)));
     $('#color-spec').textContent=`${color.id} · ${color.name} · ${color.hex}`;
     $('#contrast-note').textContent=`${ratio(color.hex,'#0C0E11').toFixed(1)}:1 contrast on #0C0E11. White remains the reading color.`;
     $('#selection-code').textContent=reference();
-    $('#inspector-summary').textContent=`${state.layout} ${layout.name} · ${color.id}`;
-    $('#stage-title').textContent=`${state.layout} / ${layout.name}`;
-    $('#stage-subtitle').textContent=state.view==='compare'?`${state.page==='explore'?'Triathlon':currentSection().name} · Same color / ${color.id}`:`${state.page==='explore'?'Explore':currentSection().name} · ${color.id}`;
-    $('#design-caption').textContent=state.view==='compare'?'Compare the same sentence in four compositions. Choose “Try” to open one at full size.':layout.detail;
-    $('#preview-stage').hidden=state.view==='compare';
+    $('#inspector-summary').textContent=`${state.layout} ${layout.name} · ${color.id} · T${state.type}`;
+    $('#stage-title').textContent=`${state.layout} / ${layout.name} · T${state.type}`;
+    $('#stage-subtitle').textContent=state.view==='colors'?`${state.page==='explore'?'Triathlon':currentSection().name} · Same layout / L${state.layout}`:state.view!=='preview'?`${state.page==='explore'?'Triathlon':currentSection().name} · Same color / ${color.id}`:`${state.page==='explore'?'Explore':currentSection().name} · ${color.id}`;
+    $('#design-caption').textContent=state.view==='compare'?`Compare the same sentence in ${data.layouts.length} compositions. L05–L10 are new. Choose “Try” to open one at full size.`:state.view==='colors'?`Compare all ${data.colors.length} accents with the same layout and typography. Choose “Try” to see a color at full size.`:layout.detail;
+    $('#preview-stage').hidden=state.view!=='preview';
     $('#preview-stage').dataset.screen=state.screen;
-    $('#comparison-grid').hidden=state.view!=='compare';
-    $$('.screen-tools button').forEach(b=>b.disabled=state.view==='compare');
-    if(state.view==='compare') {$('#canvas').replaceChildren();renderComparison();} else {$('#comparison-grid').replaceChildren();renderCanvas();}
-    document.title=`Ronu lab — L${state.layout} / ${color.id} / ${state.page==='explore'?'Explore':currentSection().name}`;
+    $('#comparison-grid').hidden=state.view==='preview';
+    $$('.screen-tools button').forEach(b=>b.disabled=state.view!=='preview');
+    if(state.view!=='preview') {$('#canvas').replaceChildren();state.view==='colors'?renderColors():renderComparison();} else {$('#comparison-grid').replaceChildren();renderCanvas();}
+    document.title=`Ronu lab — ${reference()}`;
     schedule();
   }
   function showSlide(kind,index,manual=true) {
@@ -136,19 +144,24 @@
   }
   function choiceText() {
     const l=currentLayout(),c=currentColor();
-    return `Ronu design choice: ${reference()}\nLayout: ${l.id} — ${l.name}\nColor: ${c.id} — ${c.name} (${c.hex})\nPage: ${state.page==='explore'?'Explore':currentSection().name}\n${urlFor({...state,mode:'lab'})}`;
+    return `Ronu design choice: ${reference()}\nLayout: ${l.id} — ${l.name}\nColor: ${c.id} — ${c.name} (${c.hex})\nTypography: T${state.type} — ${currentFont().name}\nPage: ${state.page==='explore'?'Explore':currentSection().name}\n${urlFor({...state,mode:'lab'})}`;
   }
   async function copyChoice() {
     const text=choiceText();
     try {if(!navigator.clipboard?.writeText)throw new Error('Clipboard unavailable');await navigator.clipboard.writeText(text);$('#copy-status').textContent='Choice copied';setTimeout(()=>$('#copy-status').textContent='',2600);}
     catch (_) {$('#choice-text').value=text;$('#copy-dialog').showModal();$('#choice-text').focus();$('#choice-text').select();}
   }
-  $('#layout-options').innerHTML=data.layouts.map(l=>`<button class="layout-option" type="button" data-layout="${l.id}" aria-pressed="false"><span>${l.id}</span><div><strong>${l.name}</strong><small>${l.note}</small></div></button>`).join('');
+  $('#layout-options').innerHTML=data.layouts.map(l=>`<button class="layout-option" type="button" data-layout="${l.id}" data-fresh="${!!l.fresh}" title="${escape(l.detail)}" aria-pressed="false"><span>${l.id}</span><div><strong>${l.name}</strong><small>${l.note}</small></div></button>`).join('');
   $('#color-options').innerHTML=data.colors.map(c=>`<button class="color-option" type="button" data-color="${c.id}" style="--swatch:${c.hex}" aria-label="${c.id}, ${c.name}, ${c.hex}" aria-pressed="false" title="${c.name} · ${c.hex}"><span class="swatch" aria-hidden="true"></span><span>${c.id}</span></button>`).join('');
+  $('#font-options').innerHTML=data.fonts.map(f=>`<button class="font-option" type="button" data-type="${f.id}" title="${escape(f.note)}" aria-pressed="false"><span>T${f.id}</span>${escape(f.name)}</button>`).join('');
+  $('#presets').innerHTML='<span>STARTING POINTS</span>'+data.presets.map((p,i)=>`<button type="button" class="preset-button" data-preset="${i}" style="--preset:${data.colors.find(c=>c.id===p.color).hex}"><i aria-hidden="true"></i>${p.name}<small>L${p.layout} / ${p.color}</small></button>`).join('');
   $('#page-options').innerHTML=[{id:'explore',name:'Explore'},...data.sections].map(s=>`<button class="page-option" type="button" data-page="${s.id}" aria-pressed="false">${s.name}</button>`).join('');
   document.addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
-    if(b.dataset.layout)change({layout:b.dataset.layout});
+    if(b.dataset.preset!==undefined){const p=data.presets[Number(b.dataset.preset)];if(p)change({layout:p.layout,color:p.color,type:p.type,view:'preview'});}
+    else if(b.dataset.type)change({type:b.dataset.type});
+    else if(b.dataset.colorTry){change({color:b.dataset.colorTry,view:'preview'});$('#preview-area').scrollIntoView({block:'start'});}
+    else if(b.dataset.layout)change({layout:b.dataset.layout});
     else if(b.dataset.color)change({color:b.dataset.color});
     else if(b.dataset.page){change({page:b.dataset.page});}
     else if(b.dataset.view)change({view:b.dataset.view});
@@ -159,6 +172,7 @@
     else if(b.hasAttribute('data-play')){playback=!playback;updateHomeControls();schedule();}
     else if(b.dataset.jump){$('#'+b.dataset.jump)?.scrollIntoView({block:'start',behavior:reduced.matches?'instant':'smooth'});}
   });
+  $('#see-preview').addEventListener('click',()=>{$('.inspector-details').open=false;$('#preview-area').scrollIntoView({block:'start'});$('#preview-area').focus({preventScroll:true});});
   $('#full-preview').addEventListener('click',()=>{change({mode:'present',screen:'fit',view:'preview'});window.scrollTo(0,0);});
   $('#exit-presentation').addEventListener('click',()=>change({mode:'lab'}));
   $('#reset-options').addEventListener('click',()=>{homeSlide=0;gallerySlide=0;change({...defaultState});});
