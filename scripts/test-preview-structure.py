@@ -1,6 +1,6 @@
 """Check the Ronu release candidate without changing repository or website data.
 
-Usage: python scripts/test-preview-release.py --site-root docs --screenshots /tmp/ronu
+Usage: python scripts/test-preview-structure.py --site-root docs --screenshots /tmp/ronu
 Requires Playwright and Chromium. Uses localhost with published CSP when permitted;
 otherwise uses an explicitly reported in-memory fixture with embedded site assets.
 """
@@ -18,6 +18,7 @@ source_html = (preview / 'index.html').read_text(encoding='utf-8')
 assert 'Content-Security-Policy' in source_html
 assert 'noindex' in source_html
 assert 'about-dialog' not in source_html and 'preview-notice' not in source_html
+assert '<link href="/privacy/" rel="privacy-policy"/>' in source_html
 for name in re.findall(r'(?:src|href)="([^\"]+\.(?:css|js)(?:\?[^\"]*)?)"', source_html):
     assert (preview / name.split('?')[0]).is_file(), name
 
@@ -47,7 +48,7 @@ expected={
  'triathlon':[
   'I set a goal, make a plan and start training. A lot of it is repetition, with adjustments along the way.',
   'Sometimes I go further than I expected. Other times, I can’t finish something I’ve done before. And I start wondering why. What changed? Was it the training, the recovery, something else?',
-  'I enjoy the sport, but I also like figuring out what’s happening in my body and what I could do differently. There’s a lot I still don’t understand. That’s part of what keeps me interested.'
+  'I enjoy the sport because it allows me to figure out what’s happening in my body and what I could do differently. There’s a lot I still don’t understand.'
  ],
  'science':[
   'Some everyday things make me curious. Why does traffic stop when nothing is blocking the road? Why is a roll of the dice so hard to predict?',
@@ -102,6 +103,8 @@ with sync_playwright() as pw:
             check(prefix+' orange unchanged',page.evaluate('getComputedStyle(document.body).getPropertyValue("--accent").trim()')=='#ff7a1a')
             check(prefix+' no development labels',not re.search(r'design preview|layout sample|not published|working draft|unlinked|try an accent|L10 /',page.locator('body').inner_text(),re.I))
             check(prefix+' no test UI',page.locator('.preview-notice,.prototype-indicator,.accent-picker,#about-dialog,.index-number').count()==0)
+            check(prefix+' footer Since 2022',page.locator('.footer-inner > p').inner_text()=='Since 2022')
+            check(prefix+' no footer name or Privacy link',not re.search(r'Rafael|Privacy',page.locator('.site-footer').inner_text()) and page.locator('.site-footer a[href="/privacy/"]').count()==0)
             if section!='all':check(prefix+' approved paragraphs',page.locator('#page-intro .index-intro > p').all_text_contents()==expected[section])
             if section in ['triathlon','science']:
                 check(prefix+' one article',page.locator('.article-tile').count()==1)
@@ -137,6 +140,8 @@ with sync_playwright() as pw:
         route(page,section);page.locator('.article-tile').click()
         page.wait_for_function('document.querySelector("#source-content")?.shadowRoot?.textContent.length>1000')
         check(title+' loaded',page.locator('#reader-title').inner_text()==title)
+        check(title+' footer Since 2022',page.locator('.footer-inner > p').inner_text()=='Since 2022')
+        check(title+' no footer Privacy link',page.locator('.site-footer a[href="/privacy/"]').count()==0)
         check(title+' no reader development labels',not re.search(r'site preview|new reading layout|source snapshot|restyled|not been re-reviewed',page.locator('#reader-page').inner_text(),re.I))
         page.locator('.reader-top a').click();page.wait_for_timeout(80)
         check(title+' return',page.locator('#page-title').inner_text()==section.capitalize()+'.')

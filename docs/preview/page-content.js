@@ -6,7 +6,7 @@
 const SITE = {
   name: 'Ronu.one',
   sectionOrder: ['triathlon', 'science', 'markets', 'maker'],
-  footer: 'Rafael Renó',
+  footer: 'Since 2022',
   carousel: {intervalMs: 8000, autoplay: true, introParagraphs: 1},
   labels: {
     sections: 'Sections', articles: 'Articles', images: 'Maker images',
@@ -27,7 +27,7 @@ const MAIN_PAGES = {
   triathlon: {
     name: 'Triathlon', kind: 'articles', icon: 'endurance',
     start: 'Getting comfortable ', end: 'with discomfort.',
-    intro: "I set a goal, make a plan and start training. A lot of it is repetition, with adjustments along the way.\n\nSometimes I go further than I expected. Other times, I can’t finish something I’ve done before. And I start wondering why. What changed? Was it the training, the recovery, something else?\n\nI enjoy the sport, but I also like figuring out what’s happening in my body and what I could do differently. There’s a lot I still don’t understand. That’s part of what keeps me interested.",
+    intro: "I set a goal, make a plan and start training. A lot of it is repetition, with adjustments along the way.\n\nSometimes I go further than I expected. Other times, I can’t finish something I’ve done before. And I start wondering why. What changed? Was it the training, the recovery, something else?\n\nI enjoy the sport because it allows me to figure out what’s happening in my body and what I could do differently. There’s a lot I still don’t understand.",
     articleIds: ['endurance']
   },
   science: {
