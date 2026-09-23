@@ -9,7 +9,7 @@ const arrow = icon('arrow');
 let currentTopic = null, lastBrowseHash = '#explore', observer = null;
 let pageCarousel = null, scrollTick = false;
 const carouselStates = new Map();
-const searchDialog = $('#search-dialog'), aboutDialog = $('#about-dialog');
+const searchDialog = $('#search-dialog');
 function routeFor(id) {return id === 'all' ? '#explore' : '#section/' + id;}
 function destroyCarousel() {
   if (pageCarousel) {carouselStates.set(pageCarousel.root.id, pageCarousel.destroy()); pageCarousel = null;}
@@ -30,7 +30,9 @@ function renderBrowse(pageId) {
   $('#browse-page').dataset.page = pageId;
   // Every landing page uses this exact structure; only the data and collection vary.
   $('#page-intro').innerHTML = mainHero(pageId);
-  $('#page-collection').innerHTML = pageCollection(pageId);
+  const collection = pageCollection(pageId);
+  $('#page-collection').innerHTML = collection;
+  $('#page-collection').hidden = !collection;
   const root = $('#page-collection [data-carousel]');
   if (root) pageCarousel = new RonuCarousel(root, carouselStates.get(root.id));
   renderNavigation(pageId);
@@ -39,7 +41,6 @@ function renderBrowse(pageId) {
 }
 function navigate() {
   if (searchDialog.open) searchDialog.close();
-  if (aboutDialog.open) aboutDialog.close();
   const hash = location.hash || '#explore';
   if (hash === '#main') {$('#main').focus(); return;}
   const [path, query = ''] = hash.slice(1).split('?');
@@ -82,21 +83,16 @@ function renderSearch() {
   $('#search-results').innerHTML = (sectionRows ? `<p class="search-group-title">${esc(SITE.labels.sections)}</p>` + sectionRows : '') + (topicRows ? `<p class="search-group-title">${esc(SITE.labels.articles)}</p>` + topicRows : '') || '<div class="search-no-results">No results found. Try a different word.</div>';
   $('#search-result-count').textContent = query ? (sections.length + topics.length) + ' results' : 'Choose a section or search for a topic';
 }
-function openSearch() {if (aboutDialog.open) aboutDialog.close(); $('#global-search').value = ''; renderSearch(); searchDialog.showModal(); $('#global-search').focus();}
-function openAbout() {if (searchDialog.open) searchDialog.close(); aboutDialog.showModal();}
+function openSearch() {$('#global-search').value = ''; renderSearch(); searchDialog.showModal(); $('#global-search').focus();}
 // Navigation order is shared with the Explore carousel, not duplicated in HTML.
 $('.nav').innerHTML = ['all', ...SITE.sectionOrder].map(id => `<a href="${routeFor(id)}" data-section="${id}">${esc(MAIN_PAGES[id].name)}</a>`).join('');
-$('.preview-notice').textContent = SITE.previewNote;
 $('.footer-inner > p').textContent = SITE.footer;
 $('#global-search').placeholder = SITE.labels.searchPlaceholder;
 $('#search-open').addEventListener('click', openSearch);
 $('#search-close').addEventListener('click', () => searchDialog.close());
 $('#global-search').addEventListener('input', renderSearch);
 $('#search-results').addEventListener('click', event => {if (event.target.closest('a')) searchDialog.close();});
-$('#about-open').addEventListener('click', openAbout);
-$('#design-notes-open').addEventListener('click', openAbout);
-$('#about-close').addEventListener('click', () => aboutDialog.close());
-[searchDialog, aboutDialog].forEach(dialog => dialog.addEventListener('click', event => {
+[searchDialog].forEach(dialog => dialog.addEventListener('click', event => {
   const r = dialog.getBoundingClientRect();
   if (event.target === dialog && (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom)) dialog.close();
 }));
@@ -104,7 +100,6 @@ document.addEventListener('keydown', event => {
   if (event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && !document.activeElement.isContentEditable) {event.preventDefault(); if (!searchDialog.open) openSearch();}
   if (event.key === 'Escape') {
     if (searchDialog.open) {event.preventDefault(); searchDialog.close();}
-    if (aboutDialog.open) {event.preventDefault(); aboutDialog.close();}
   }
   if (event.key === 'Escape' && $('#original-app')?.classList.contains('is-expanded')) {
     $('#original-app').classList.remove('is-expanded');

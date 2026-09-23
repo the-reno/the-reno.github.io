@@ -1,10 +1,16 @@
 'use strict';
 /** Shared presentation only. All editable wording is in page-content.js. */
+function introMarkup(page, {slide = false} = {}) {
+  const paragraphs = String(page.intro || '').split(/\n\s*\n/).filter(text => text.trim());
+  const visible = slide ? paragraphs.slice(0, SITE.carousel.introParagraphs) : paragraphs;
+  if (!visible.length) return '';
+  return `<div class="index-intro">${visible.map(text => `<p>${esc(text)}</p>`).join('')}</div>`;
+}
 function mainHero(pageId, {slide = false} = {}) {
   const page = MAIN_PAGES[pageId];
   const heading = slide ? 'h3' : 'h1';
   const id = slide ? 'section-title-' + pageId : 'page-title';
-  return `<div class="index-copy"><${heading} class="index-title" id="${id}"${slide ? '' : ' tabindex="-1"'}>${esc(page.name)}<span>.</span></${heading}><p class="index-statement${page.breakSentence === false ? ' is-inline' : ''}">${esc(page.start)}<em>${esc(page.end)}</em></p>${page.intro ? `<p class="index-intro">${esc(page.intro)}</p>` : ''}</div>`;
+  return `<div class="index-copy"><${heading} class="index-title" id="${id}"${slide ? '' : ' tabindex="-1"'}>${esc(page.name)}<span>.</span></${heading}><p class="index-statement${page.breakSentence === false ? ' is-inline' : ''}">${esc(page.start)}<em>${esc(page.end)}</em></p>${introMarkup(page, {slide})}</div>`;
 }
 function articleIcon(kind) {
   const paths = {
@@ -16,10 +22,9 @@ function articleIcon(kind) {
   };
   return `<span class="article-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">${paths[kind] || paths.article}</svg></span>`;
 }
-function articleTile(topic, {sample = false} = {}) {
-  const preview = sample ? topic : ARTICLE_PREVIEWS[topic.id] || {icon: 'article', summary: topic.description};
-  const tag = sample ? 'article' : 'a';
-  return `<${tag} class="article-tile${sample ? ' is-sample' : ''}"${sample ? '' : ` href="#topic/${esc(topic.id)}"`} aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}${sample ? ' status-' + esc(topic.id) : ''}">${articleIcon(preview.icon)}<div class="article-tile-copy"><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p class="article-tile-summary" id="summary-${esc(topic.id)}">${esc(preview.summary)}</p>${sample ? `<p class="article-tile-status" id="status-${esc(topic.id)}">${esc(topic.status)}</p>` : ''}</div>${sample ? '' : `<span class="article-tile-arrow" aria-hidden="true">${arrow}</span>`}</${tag}>`;
+function articleTile(topic) {
+  const preview = ARTICLE_PREVIEWS[topic.id] || {icon: 'article', summary: topic.description};
+  return `<a class="article-tile" href="#topic/${esc(topic.id)}" aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}">${articleIcon(preview.icon)}<div class="article-tile-copy"><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p class="article-tile-summary" id="summary-${esc(topic.id)}">${esc(preview.summary)}</p></div><span class="article-tile-arrow" aria-hidden="true">${arrow}</span></a>`;
 }
 function carouselMarkup(id, items, kind) {
   const imageMode = kind === 'images';
@@ -42,9 +47,10 @@ function pageCollection(pageId) {
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2>${carouselMarkup('section-carousel', slides, 'sections')}`;
   }
   if (page.kind === 'gallery') {
-    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div><div class="gallery-caption"><span>${esc(image.title)}</span><span>${esc(SITE.labels.openImage)}</span></div></a></figure>`}));
-    return `<h2 class="sr-only" id="collection-title">${esc(SITE.labels.images)}</h2><p class="gallery-description">${esc(MAKER_GALLERY.description)}</p>${carouselMarkup('maker-gallery', slides, 'images')}`;
+    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div></a></figure>`}));
+    return `<h2 class="sr-only" id="collection-title">${esc(SITE.labels.images)}</h2>${carouselMarkup('maker-gallery', slides, 'images')}`;
   }
   const topics = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
-  return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}${page.sample ? articleTile(page.sample, {sample: true}) : ''}</div>`;
+  if (!topics.length) return '';
+  return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>`;
 }

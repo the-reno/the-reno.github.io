@@ -15,10 +15,6 @@ body[data-page-mode="landing"] .wrap {width:min(var(--page-width),calc(100% - 2 
 body[data-page-mode="landing"] .site-header {background:var(--bg); border-color:var(--line-soft)}
 body[data-page-mode="landing"] .nav a {border-radius:var(--radius)}
 body[data-page-mode="landing"] #browse-page {padding-bottom:50px}
-body[data-page-mode="landing"] .preview-notice {padding:14px 0; font-size:9px; border:0}
-body[data-page-mode="landing"] .accent-picker {display:none}
-body[data-page-mode="landing"] .page-layout-note {font:11px/1.8 var(--mono); color:var(--muted)}
-body[data-page-mode="reader"] .page-layout-note {display:none}
 body[data-page-mode="landing"] .site-footer {padding-bottom:24px}
 /* SHARED PAGE HEADER — Explore and every section use identical markup and sizing. */
 .index-hero {padding:34px 0 var(--section-gap); border-top:3px solid var(--accent); margin-top:20px}
@@ -29,11 +25,14 @@ body[data-page-mode="landing"] .site-footer {padding-bottom:24px}
 .index-statement {font:400 var(--statement-size)/1.36 var(--mono); letter-spacing:-1px; color:var(--text); margin:22px 0 0; max-width:760px; text-wrap:balance}
 .index-statement em {display:block; font-style:normal; color:var(--accent)}
 .index-statement.is-inline em {display:inline}
-.index-intro {font:400 var(--body-size)/1.85 var(--sans); color:var(--muted); max-width:650px; margin:22px 0 0; white-space:pre-line}
+.index-intro {font:400 var(--body-size)/1.85 var(--sans); color:var(--muted); max-width:650px; margin:22px 0 0}
+.index-intro p {margin:0; white-space:pre-line}
+.index-intro p + p {margin-top:16px}
+.footer-privacy {font-size:11px; color:var(--muted)}
+.footer-privacy:hover {color:var(--text)}
 /* SHARED COLLECTION — section carousel, article grid or Maker gallery. */
 .page-collection {border-top:1px solid var(--line); padding-top:24px; scroll-margin-top:138px}
 .collection-heading {font:400 19px/1.4 var(--mono); letter-spacing:-.5px; margin:0 0 16px}
-.gallery-description {font:14px/1.7 var(--sans); color:var(--muted); margin:0 0 18px}
 .search-group-title {margin:9px 13px 4px; color:var(--faint); font:9px var(--mono); letter-spacing:.12em; text-transform:uppercase}
 @media(min-width:1450px) {
   body[data-page-mode="landing"] {--title-size:52px; --statement-size:35px; --section-gap:42px}
@@ -46,7 +45,6 @@ body[data-page-mode="landing"] .site-footer {padding-bottom:24px}
 }
 @media(max-width:500px) {
   body[data-page-mode="landing"] {--page-gutter:18px; --title-size:34px; --statement-size:25px; --section-gap:30px}
-  body[data-page-mode="landing"] .preview-notice {font-size:8px; padding:10px 0}
   body[data-page-mode="landing"] #browse-page {padding-bottom:35px}
   .index-hero {padding-top:25px; margin-top:10px}
   .index-title {letter-spacing:-1.3px}
