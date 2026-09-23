@@ -29,7 +29,6 @@ function renderLibrary(){
  const library=$('#library');
  library.hidden=state.section==='all'||state.section==='maker';
  $('#topic-grid').innerHTML=library.hidden?'':mainArticleCard(state.section);
- $('#topic-count').textContent=state.section==='markets'?'Layout sample':'01 article';
 }
 function renderBrowse(){
  stopArticle();
@@ -46,7 +45,7 @@ function renderBrowse(){
  const intro=$('#page-intro');
  intro.className=home?'explore-intro':'index-hero';
  intro.innerHTML=home?'<div><p class="eyebrow">A personal lab</p><h1 class="explore-title" id="page-title" tabindex="-1">Stay <em>curious.</em></h1></div><p class="explore-description">Welcome to my lab.<br>Ideas to explore. Models to test. Things to build.</p>':mainHero(state.section);
- $('#library-title').textContent='Articles & experiments';
+ $('#library-title').textContent='Articles';
  $$('.nav a').forEach(a=>a.dataset.section===state.section?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  document.title='Ronu.one — '+s.name;
  renderLibrary();lastBrowseHash=browseHash();
