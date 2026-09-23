@@ -10,7 +10,7 @@ const MAIN_PAGES = {
 function mainHero(sectionId,{slide=false}={}){
  const section=SECTIONS[sectionId],copy=MAIN_PAGES[sectionId],tag=slide?'h2':'h1';
  const titleId=slide?'carousel-title-'+sectionId:'page-title';
- return `<span class="index-number" aria-hidden="true">${esc(section.number)}</span><div class="index-copy"><${tag} class="index-title" id="${titleId}"${slide?'':' tabindex="-1"'}>${esc(section.name)}<span>.</span></${tag}><p class="index-statement">${esc(copy.start)}<em>${esc(copy.end)}</em></p>${copy.intro?`<p class="index-intro">${esc(copy.intro)}</p>`:''}</div>`;
+ return `<div class="index-copy"><${tag} class="index-title" id="${titleId}"${slide?'':' tabindex="-1"'}>${esc(section.name)}<span>.</span></${tag}><p class="index-statement">${esc(copy.start)}<em>${esc(copy.end)}</em></p>${copy.intro?`<p class="index-intro">${esc(copy.intro)}</p>`:''}</div>`;
 }
 function mainArticleCard(sectionId){
  const id=MAIN_PAGES[sectionId].article,topic=TOPICS.find(item=>item.id===id);
