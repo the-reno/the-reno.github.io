@@ -1,0 +1,53 @@
+/* Feedback uses the site's existing palette and fonts. */
+.feedback-launcher{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));z-index:26;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:10px 15px;border:1px solid var(--accent,#ff7a1a);border-radius:9px;background:var(--bg,#0c0e11);color:var(--text,#efeee8);font:13px var(--sans,Arial,sans-serif);box-shadow:0 4px 18px #0005}
+.feedback-launcher svg{width:17px;height:17px;color:var(--accent,#ff7a1a)}
+.feedback-launcher:hover{background:var(--surface,#171a18)}
+body.has-feedback .site-footer{padding-bottom:88px}
+.feedback-dialog{padding:0;width:min(506px,calc(100% - 28px));max-height:calc(100dvh - 28px);margin:auto;border:1px solid var(--line,#30362f);border-radius:15px;background:var(--bg,#0c0e11);color:var(--text,#efeee8);overflow:auto;overscroll-behavior:contain;box-shadow:0 24px 100px #0009}
+.feedback-dialog::backdrop{background:#000b;backdrop-filter:blur(4px)}
+.feedback-content{padding:27px 29px 26px}
+.feedback-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.feedback-dialog h2{font:400 27px/1.2 var(--mono,monospace);letter-spacing:-1px;margin:3px 0 9px}
+.feedback-dialog h2 span{color:var(--accent,#ff7a1a)}
+.feedback-close{display:flex;align-items:center;justify-content:center;min-width:40px;height:40px;border:1px solid var(--line,#30362f);border-radius:8px;color:var(--muted,#a5aba1);margin-top:-4px;margin-right:-7px}
+.feedback-close:hover{color:var(--text);background:var(--surface)}
+.feedback-close svg{width:17px;height:17px}
+.feedback-subtitle{margin:0 0 24px;max-width:34ch;color:var(--muted,#a5aba1);font-size:13px;line-height:1.7}
+.feedback-dialog fieldset{min-width:0;padding:0;margin:0 0 20px;border:0}
+.feedback-dialog legend,.feedback-label{display:block;padding:0;margin:0 0 9px;font-size:12px;font-weight:500;line-height:1.5;color:var(--text,#efeee8)}
+.feedback-optional{font-weight:400;color:var(--faint,#8a8f89);font-size:11px}
+.feedback-stars{display:flex;gap:9px}
+.feedback-stars label{position:relative;cursor:pointer}
+.feedback-stars input{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.feedback-star{display:flex;align-items:center;justify-content:center;height:46px;width:52px;border:1px solid var(--line,#30362f);border-radius:8px;transition:border-color .15s,background .15s;background:var(--surface,#171a18);color:var(--faint,#7f887c)}
+.feedback-star svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.5}
+.feedback-stars input:focus-visible+.feedback-star{outline:2px solid var(--accent,#ff7a1a);outline-offset:3px}
+.feedback-stars input:checked+.feedback-star{border-color:var(--accent,#ff7a1a)}
+.feedback-stars label.is-lit .feedback-star{color:var(--accent,#ff7a1a);background:color-mix(in srgb,var(--accent,#ff7a1a) 9%,var(--bg,#0c0e11))}
+.feedback-stars label.is-lit svg{fill:currentColor}
+.feedback-rating-note{display:block;margin:8px 0 0;min-height:17px;font:10px/1.7 var(--mono,monospace);color:var(--muted,#a5aba1)}
+.feedback-field{margin-bottom:18px}
+.feedback-dialog input[type=text],.feedback-dialog input[type=email],.feedback-dialog textarea{display:block;width:100%;min-width:0;background:var(--surface,#171a18);border:1px solid var(--line,#30362f);border-radius:7px;padding:11px 12px;font:14px/1.6 var(--sans,Arial,sans-serif);color:var(--text,#efeee8)}
+.feedback-dialog input{min-height:44px}
+.feedback-dialog textarea{resize:vertical;min-height:92px;max-height:230px}
+.feedback-dialog input::placeholder,.feedback-dialog textarea::placeholder{color:var(--faint,#7f887c)}
+.feedback-dialog input:focus-visible,.feedback-dialog textarea:focus-visible{outline:2px solid var(--accent,#ff7a1a);outline-offset:2px}
+.feedback-contact{display:grid;grid-template-columns:1fr 1.2fr;gap:13px}
+.feedback-check{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;line-height:1.65;color:var(--muted,#a5aba1);padding:5px 0;margin:0 0 18px}
+.feedback-check input{width:17px;height:17px;min-height:0;flex:none;margin:2px 0 0;accent-color:var(--accent,#ff7a1a)}
+.feedback-privacy{margin:0 0 18px;font-size:11px;line-height:1.75;color:var(--muted,#a5aba1)}
+.feedback-privacy a{color:var(--accent,#ff7a1a);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.feedback-submit{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:46px;padding:12px;border-radius:7px;background:var(--accent,#ff7a1a);color:#0c0e11;font:500 13px var(--sans,Arial,sans-serif)}
+.feedback-submit:hover{filter:brightness(1.06)}
+.feedback-submit:disabled{opacity:.5;cursor:wait}
+.feedback-error{border-left:2px solid var(--accent,#ff7a1a);padding:9px 12px;margin:0 0 16px;font-size:12px;line-height:1.7;background:var(--surface,#171a18);color:var(--text,#efeee8)}
+.feedback-success{padding:15px 0 0}
+.feedback-success h3{font:400 22px/1.4 var(--mono,monospace);margin:0 0 16px}
+.feedback-success p{font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 23px}
+.feedback-demo{font:10px/1.7 var(--mono,monospace);padding:10px 13px;margin:0 0 20px;border:1px dashed var(--accent,#ff7a1a);border-radius:6px;color:var(--accent,#ff7a1a)}
+.feedback-dialog [hidden]{display:none!important}
+.feedback-trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+@media(max-width:500px){.feedback-content{padding:23px 21px}.feedback-dialog h2{font-size:25px}.feedback-subtitle{margin-bottom:20px}.feedback-star{width:48px;height:44px}.feedback-stars{gap:8px}.feedback-contact{grid-template-columns:1fr}.feedback-dialog input[type=text],.feedback-dialog input[type=email],.feedback-dialog textarea{font-size:16px}.feedback-field{margin-bottom:14px}.feedback-launcher{right:14px;bottom:max(14px,env(safe-area-inset-bottom))}.feedback-privacy{font-size:10.5px}}
+@media(max-width:350px){.feedback-star{width:41px}.feedback-stars{gap:7px}.feedback-content{padding:22px 18px}}
+@media(prefers-reduced-motion:reduce){.feedback-star{transition:none}}
+.feedback-dialog h2:focus,.feedback-success:focus{outline:none}

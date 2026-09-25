@@ -1,0 +1,81 @@
+/* COMPONENTS — shared article tiles, section slides and image carousel. */
+.article-grid {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:stretch}
+.article-tile {display:grid; grid-template-columns:40px minmax(0,1fr) 18px; align-items:start; column-gap:16px; padding:22px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); color:var(--text); min-width:0; text-decoration:none; transition:border-color .18s,background .18s}
+a.article-tile:hover {border-color:var(--accent-border); background:var(--surface-2)}
+a.article-tile:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
+.article-tile-icon {width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--accent-border); border-radius:var(--radius); color:var(--accent); background:var(--accent-bg)}
+.article-tile-icon svg {width:23px; height:23px; flex:none}
+.article-tile-copy {min-width:0; padding-top:1px}
+.article-tile h3 {font:400 18px/1.4 var(--mono); letter-spacing:-.45px; color:var(--text); margin:0}
+.article-tile-summary {font:400 14px/1.65 var(--sans); color:var(--muted); margin:8px 0 0; max-width:44ch}
+.article-tile-arrow {color:var(--accent); padding-top:5px; transition:transform .18s}
+.article-tile-arrow .icon {width:18px; height:18px}
+a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
+/* One carousel appearance/controller serves both types of content. */
+.media-carousel {display:flex; flex-direction:column; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); overflow:hidden}
+.carousel-slides {order:0; display:grid; touch-action:pan-y pinch-zoom}
+.carousel-slide {grid-area:1/1; min-width:0; visibility:hidden; opacity:0; pointer-events:none; transition:opacity .3s,visibility .3s}
+.carousel-slide.is-active {visibility:visible; opacity:1; pointer-events:auto}
+.carousel-controls {order:1; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:8px 24px; border-top:1px solid var(--line-soft); min-height:61px}
+.carousel-controls button {display:inline-flex; align-items:center; justify-content:center; height:44px; min-width:44px; padding:0; border-radius:var(--radius); color:var(--muted)}
+.carousel-controls button > * {pointer-events:none}
+.carousel-controls button:hover {color:var(--text); background:var(--surface-2)}
+.carousel-controls button:focus-visible {outline-offset:1px}
+.carousel-toggle {justify-self:start; gap:8px; font-size:11px}
+.carousel-toggle .icon {width:15px; height:15px}
+.carousel-dots {display:flex; align-items:center; justify-content:center}
+.carousel-dots button span {width:6px; height:6px; border-radius:99px; background:var(--faint); transition:width .2s,background .2s}
+.carousel-dots button[aria-selected="true"] span {width:22px; background:var(--accent)}
+.carousel-arrows {display:flex; justify-self:end}
+.carousel-arrows .icon {width:18px; height:18px}
+/* Explore's slides echo the article tile, using the same title/sentence template. */
+.section-slide-link {display:grid; grid-template-columns:40px minmax(0,1fr) 20px; gap:22px; height:100%; padding:28px; text-decoration:none}
+.section-slide-link .index-title {font-size:28px; letter-spacing:-.8px}
+.section-slide-link .index-statement {font-size:25px; margin-top:16px; letter-spacing:-.6px}
+.section-slide-link .index-intro {font-size:14px; line-height:1.8; margin-top:18px; max-width:64ch}
+.section-slide-link:focus-visible,.gallery-link:focus-visible {outline-offset:-4px}
+.section-slide-link:hover .index-title {color:var(--accent)}
+.section-slide-marker {padding-top:2px}
+.section-slide-arrow {padding-top:9px; color:var(--accent)}
+/* Actual image assets retain their original colors and proportions. */
+.gallery-figure {margin:0}
+.image-carousel .carousel-toggle span {display:none}
+.gallery-link {display:block}
+.gallery-image {position:relative; width:100%; aspect-ratio:2/1; background:#0d0d0d}
+.gallery-image img {display:block; width:100%; height:100%; object-fit:contain; user-select:none}
+.gallery-error {position:absolute; inset:0; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:13px}
+.gallery-error:not([hidden]) {display:flex}
+@media(max-width:780px) {
+  .article-grid {grid-template-columns:1fr}
+  .article-tile-summary {max-width:55ch}
+  .section-slide-link {padding:24px; gap:18px}
+  .section-slide-link .index-title {font-size:26px}
+  .section-slide-link .index-statement {font-size:23px}
+}
+@media(max-width:500px) {
+  .article-tile {grid-template-columns:36px minmax(0,1fr) 16px; gap:13px; padding:19px 17px}
+  .article-tile-icon {width:36px; height:36px}
+  .article-tile-icon svg {width:21px; height:21px}
+  .article-tile h3 {font-size:17px; line-height:1.45; letter-spacing:-.4px}
+  .article-tile-summary {font-size:13px; line-height:1.7; margin-top:7px}
+  .article-tile-arrow .icon {width:16px; height:16px}
+  .carousel-controls {grid-template-columns:44px minmax(0,1fr) 88px; gap:0; padding:7px 12px}
+  .carousel-toggle span {display:none}
+  .carousel-dots button {min-width:0; width:40px}
+  .section-slide-link {grid-template-columns:minmax(0,1fr) 24px; gap:16px; padding:22px}
+  .section-slide-marker {display:none}
+  .section-slide-link .index-title {font-size:25px}
+  .section-slide-link .index-statement {font-size:22px; line-height:1.4; margin-top:15px}
+  .section-slide-link .index-intro {font-size:13px; line-height:1.8; margin-top:18px}
+  .section-slide-arrow {padding-top:5px}
+}
+@media(max-width:360px) {
+  .article-tile {gap:11px; padding:17px 14px}
+  .article-tile h3 {font-size:16px}
+  .carousel-dots button {width:32px}
+  .section-slide-link {padding:19px 17px; gap:10px}
+  .section-slide-link .index-statement {font-size:20px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .article-tile,.article-tile-arrow,.carousel-slide,.carousel-dots button span {transition:none}
+}

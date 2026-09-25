@@ -1,0 +1,408 @@
+{
+  "id": "prediction",
+  "sections": [
+    {
+      "id": "opening",
+      "anchor": "article-opening",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "I have always liked the idea of predictability."
+        },
+        {
+          "type": "paragraph",
+          "text": "It probably started with dice."
+        },
+        {
+          "type": "paragraph",
+          "text": "I remember trying to throw a dice in what felt like exactly the same way."
+        },
+        {
+          "type": "paragraph",
+          "text": "Same direction.\nSame strength.\nSame movement."
+        },
+        {
+          "type": "paragraph",
+          "text": "Part of me thought I could somehow fool the system and force the same result again."
+        },
+        {
+          "type": "paragraph",
+          "text": "You roll once."
+        },
+        {
+          "type": "paragraph",
+          "text": "6",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "You try again."
+        },
+        {
+          "type": "paragraph",
+          "text": "3",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "Again."
+        },
+        {
+          "type": "paragraph",
+          "text": "1",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "The movement looked almost identical."
+        },
+        {
+          "type": "paragraph",
+          "text": "The result did not."
+        },
+        {
+          "type": "paragraph",
+          "text": "That stayed in my head for a long time."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first, I thought prediction meant controlling the outcome."
+        },
+        {
+          "type": "paragraph",
+          "text": "Later I realized prediction could also mean understanding the pattern behind the outcome."
+        }
+      ]
+    },
+    {
+      "id": "probability",
+      "anchor": "part-1",
+      "heading": "Probability",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A dice has six sides."
+        },
+        {
+          "type": "paragraph",
+          "text": "Six equal possibilities."
+        },
+        {
+          "type": "code",
+          "text": "P(event) = successful possibilities / all possibilities",
+          "label": "Probability formula"
+        },
+        {
+          "type": "paragraph",
+          "text": "If we want the probability of rolling a 3:"
+        },
+        {
+          "type": "code",
+          "text": "P(3) = 1 / 6",
+          "label": "Probability of rolling a three"
+        },
+        {
+          "type": "paragraph",
+          "text": "The exact outcome is uncertain."
+        },
+        {
+          "type": "paragraph",
+          "text": "I still do not know what the next roll will be."
+        },
+        {
+          "type": "paragraph",
+          "text": "But the structure behind the outcomes is predictable."
+        },
+        {
+          "type": "paragraph",
+          "text": "If we roll the dice only once, anything can happen."
+        },
+        {
+          "type": "paragraph",
+          "text": "But if we roll it many times, patterns start appearing."
+        },
+        {
+          "type": "paragraph",
+          "text": "Over time, each number tends to appear close to its expected probability."
+        },
+        {
+          "type": "paragraph",
+          "text": "Not exactly."
+        },
+        {
+          "type": "paragraph",
+          "text": "But approximately."
+        }
+      ]
+    },
+    {
+      "id": "two-dice",
+      "anchor": "part-2",
+      "heading": "Two Dice",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Then things can become more interesting."
+        },
+        {
+          "type": "paragraph",
+          "text": "Take two dice."
+        },
+        {
+          "type": "paragraph",
+          "text": "Now we stop looking at one number and start looking at the sum of both."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first it still feels random."
+        },
+        {
+          "type": "paragraph",
+          "text": "But patterns immediately appear."
+        },
+        {
+          "type": "paragraph",
+          "text": "Some numbers become more common because there are more combinations that create them."
+        },
+        {
+          "type": "table",
+          "label": "Two dice combinations",
+          "columns": [
+            "SUM",
+            "COMBINATIONS"
+          ],
+          "rows": [
+            [
+              "2",
+              "1 + 1"
+            ],
+            [
+              "3",
+              "1 + 2 · 2 + 1"
+            ],
+            [
+              "4",
+              "1 + 3 · 2 + 2 · 3 + 1"
+            ],
+            [
+              "7",
+              "1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1"
+            ],
+            [
+              "12",
+              "6 + 6"
+            ]
+          ]
+        },
+        {
+          "type": "code",
+          "text": "2   █\n3   ██\n4   ███\n5   ████\n6   █████\n7   ██████\n8   █████\n9   ████\n10  ███\n11  ██\n12  █",
+          "label": "Number of combinations for each sum"
+        },
+        {
+          "type": "paragraph",
+          "text": "That was probably the first time I noticed how patterns can emerge from randomness."
+        }
+      ]
+    },
+    {
+      "id": "newton-and-the-apple",
+      "anchor": "part-3",
+      "heading": "Newton and the Apple",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Later I heard about Isaac Newton, gravity, and the apple story."
+        },
+        {
+          "type": "paragraph",
+          "text": "An apple falling from a tree is predictable."
+        },
+        {
+          "type": "paragraph",
+          "text": "The movement is not random."
+        },
+        {
+          "type": "paragraph",
+          "text": "Objects move following patterns."
+        },
+        {
+          "type": "paragraph",
+          "text": "After enough observation, we can find the pattern and measure."
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematics can describe it."
+        },
+        {
+          "type": "code",
+          "text": "gravity ≈ 9.81 m/s²",
+          "label": "Gravity formula"
+        },
+        {
+          "type": "paragraph",
+          "text": "What became interesting to me was that the same idea appeared far beyond the apple itself."
+        },
+        {
+          "type": "paragraph",
+          "text": "Galaxies.\nPlanets.\nComets.\nApples.\nA grain of sand."
+        },
+        {
+          "type": "paragraph",
+          "text": "Different objects."
+        },
+        {
+          "type": "paragraph",
+          "text": "Different scales."
+        },
+        {
+          "type": "paragraph",
+          "text": "But similar structures repeating same movement."
+        },
+        {
+          "type": "paragraph",
+          "text": "I remember calculating.."
+        },
+        {
+          "type": "paragraph",
+          "text": "How fast something falls."
+        },
+        {
+          "type": "paragraph",
+          "text": "How far it moves."
+        },
+        {
+          "type": "paragraph",
+          "text": "How the numbers evolve."
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The "
+            },
+            {
+              "text": "time squared",
+              "strong": true
+            },
+            {
+              "text": " part also fascinated me."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The apple is not moving at a constant speed."
+        },
+        {
+          "type": "paragraph",
+          "text": "It keeps accelerating."
+        },
+        {
+          "type": "paragraph",
+          "text": "The movement changes continuously."
+        },
+        {
+          "type": "paragraph",
+          "text": "That idea became important later."
+        },
+        {
+          "type": "paragraph",
+          "text": "Because things in nature are continuous."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then college pulled me deeper into this world."
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematics.\nDifferential equations."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first they looked abstract."
+        },
+        {
+          "type": "paragraph",
+          "text": "Later I realized they were connected to the same idea that started with the dice:"
+        },
+        {
+          "type": "paragraph",
+          "text": "trying to understand how systems evolve through time."
+        },
+        {
+          "type": "paragraph",
+          "text": "Fluid dynamics.\nGas.\nElectricity.\nMarkets."
+        },
+        {
+          "type": "paragraph",
+          "text": "Everything changing continuously."
+        },
+        {
+          "type": "paragraph",
+          "text": "And once systems become continuous, tiny variations start mattering much more."
+        },
+        {
+          "type": "paragraph",
+          "text": "A small difference now can slowly become a large difference later."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then mathematics itself starts expanding."
+        },
+        {
+          "type": "paragraph",
+          "text": "Imaginary numbers appear."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first the idea sounds absurd."
+        },
+        {
+          "type": "paragraph",
+          "text": "But somehow mathematics keeps growing and starts describing real systems surprisingly well."
+        },
+        {
+          "type": "paragraph",
+          "text": "And the original idea from the dice gained a new meaning."
+        },
+        {
+          "type": "paragraph",
+          "text": "Now the goal was no longer trying know the outcome."
+        },
+        {
+          "type": "paragraph",
+          "text": "It became understanding the probabilities of the possibilities."
+        },
+        {
+          "type": "paragraph",
+          "text": "Quantum mechanics pushed that idea even further."
+        },
+        {
+          "type": "paragraph",
+          "text": "The equations no longer predict one exact outcome."
+        },
+        {
+          "type": "paragraph",
+          "text": "They predict a distribution of possible outcomes with different probabilities."
+        },
+        {
+          "type": "paragraph",
+          "text": "Very similar to the dice."
+        },
+        {
+          "type": "paragraph",
+          "text": "Some outcomes become much more likely than others."
+        },
+        {
+          "type": "paragraph",
+          "text": "Not certainty."
+        },
+        {
+          "type": "paragraph",
+          "text": "Probability distributed across possibilities."
+        }
+      ]
+    }
+  ]
+}

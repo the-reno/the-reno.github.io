@@ -1,0 +1,62 @@
+/* LANDING TOKENS — change shared color, sizes and spacing here, not per page. */
+body[data-page-mode="landing"] {
+  --bg:#0c0e11; --surface:#13161a; --surface-2:#1c2025;
+  --text:#eff2eb; --muted:#b1b5bb; --faint:#90979f;
+  --line:#30363d; --line-soft:#252a30;
+  --accent:#ff7a1a; --accent-bg:#2c1b10; --accent-border:#895024;
+  --page-width:1080px; --page-gutter:40px; --copy-width:780px;
+  --title-size:clamp(34px,4vw,50px); --statement-size:clamp(25px,2.6vw,34px);
+  --body-size:15px; --section-gap:38px; --radius:4px;
+  background:var(--bg); color:var(--text);
+}
+body {min-height:100vh; min-height:100svh; display:flex; flex-direction:column}
+#main {flex:1}
+body[data-page-mode="landing"] .wrap {width:min(var(--page-width),calc(100% - 2 * var(--page-gutter)))}
+body[data-page-mode="landing"] .site-header {background:var(--bg); border-color:var(--line-soft)}
+body[data-page-mode="landing"] .nav a {border-radius:var(--radius)}
+body[data-page-mode="landing"] #browse-page {padding-bottom:50px}
+body[data-page-mode="landing"] .site-footer {padding-bottom:24px}
+/* SHARED PAGE HEADER — Explore and every section use identical markup and sizing. */
+.index-hero {padding:34px 0 var(--section-gap); border-top:3px solid var(--accent); margin-top:20px}
+.index-copy {min-width:0; max-width:var(--copy-width)}
+.index-title {font:400 var(--title-size)/1.16 var(--mono); letter-spacing:-1.8px; margin:0; color:var(--text)}
+.index-title span {color:var(--accent)}
+.index-title:focus {outline:none}
+.index-statement {font:400 var(--statement-size)/1.36 var(--mono); letter-spacing:-1px; color:var(--text); margin:22px 0 0; max-width:760px; text-wrap:balance}
+.index-statement em {display:block; font-style:normal; color:var(--accent)}
+.index-statement.is-inline em {display:inline}
+.index-intro {font:400 var(--body-size)/1.85 var(--sans); color:var(--muted); max-width:650px; margin:22px 0 0}
+.index-intro p {margin:0; white-space:pre-line}
+.index-intro p + p {margin-top:16px}
+/* SHARED COLLECTION — section carousel, article grid or Maker gallery. */
+.page-collection {border-top:1px solid var(--line); padding-top:24px; scroll-margin-top:138px}
+.collection-heading {font:400 19px/1.4 var(--mono); letter-spacing:-.5px; margin:0 0 16px}
+.search-group-title {margin:9px 13px 4px; color:var(--faint); font:9px var(--mono); letter-spacing:.12em; text-transform:uppercase}
+@media(min-width:1450px) {
+  body[data-page-mode="landing"] {--title-size:52px; --statement-size:35px; --section-gap:42px}
+  .index-hero {padding-top:38px}
+}
+@media(max-width:780px) {
+  body[data-page-mode="landing"] {--page-gutter:20px; --title-size:40px; --statement-size:28px; --body-size:14px; --section-gap:34px}
+  .index-hero {padding-top:29px; margin-top:14px}
+  .index-statement {letter-spacing:-.9px}
+}
+@media(max-width:500px) {
+  body[data-page-mode="landing"] {--page-gutter:18px; --title-size:34px; --statement-size:25px; --section-gap:30px}
+  body[data-page-mode="landing"] #browse-page {padding-bottom:35px}
+  .index-hero {padding-top:25px; margin-top:10px}
+  .index-title {letter-spacing:-1.3px}
+  .index-statement {letter-spacing:-.85px; margin-top:20px; text-wrap:initial}
+  .index-intro {margin-top:20px}
+  .page-collection {padding-top:22px}
+  .collection-heading {font-size:18px; margin-bottom:14px}
+}
+@media(max-width:360px) {
+  body[data-page-mode="landing"] {--title-size:31px; --statement-size:23px; --body-size:13px}
+  .index-statement {letter-spacing:-.9px}
+}
+
+::selection{background:var(--accent);color:var(--bg)}
+dialog,.small-cta{border-color:var(--accent-border)}
+/* Keep all five navigation links within narrow phones. */
+@media(max-width:360px){.nav{gap:0}.nav a{font-size:10px;padding-inline:7px}}
