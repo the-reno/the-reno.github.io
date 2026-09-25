@@ -907,36 +907,17 @@
           "text": "It becomes a way of understanding the structure of possible futures."
         },
         {
-          "type": "paragraph",
-          "text": "And I believe the same idea applies to many of our daily interactions."
-        },
-        {
-          "type": "paragraph",
-          "text": "We make decisions without knowing exactly what will happen."
-        },
-        {
-          "type": "paragraph",
-          "text": "We observe patterns."
-        },
-        {
-          "type": "paragraph",
-          "text": "We understand some of the forces involved."
-        },
-        {
-          "type": "paragraph",
-          "text": "We consider different possible outcomes."
-        },
-        {
-          "type": "paragraph",
-          "text": "And we adjust our expectations as new information arrives."
-        },
-        {
-          "type": "paragraph",
-          "text": "We may not know the future."
-        },
-        {
-          "type": "paragraph",
-          "text": "But we can learn to understand its possibilities."
+          "type": "closing",
+          "paragraphs": [
+            "And I believe the same idea applies to many of our daily interactions.",
+            "We make decisions without knowing exactly what will happen.",
+            "We observe patterns.",
+            "We understand some of the forces involved.",
+            "We consider different possible outcomes.",
+            "And we adjust our expectations as new information arrives.",
+            "We may not know the future.",
+            "But we can learn to understand its possibilities."
+          ]
         }
       ]
     }
