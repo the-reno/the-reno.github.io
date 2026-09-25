@@ -67,13 +67,12 @@
           "text": "With the dice, each side has a probability."
         },
         {
-          "type": "paragraph",
-          "text": "For one specific number:"
-        },
-        {
-          "type": "code",
-          "text": "P(6) = 1 / 6",
-          "label": "Probability of rolling a six"
+          "type": "fraction",
+          "label": "Probability of rolling a six",
+          "numerator": "1",
+          "denominator": "6",
+          "percent": "16.7%",
+          "note": "One favorable outcome out of six equally likely possibilities."
         },
         {
           "type": "paragraph",
@@ -213,8 +212,23 @@
           "text": "The more I learned, the more powerful this idea became."
         },
         {
-          "type": "paragraph",
-          "text": "If I knew where something was, how fast it was moving and which forces were acting on it, mathematics could describe what happened next."
+          "type": "concepts",
+          "label": "If I knew:",
+          "items": [
+            {
+              "term": "Position",
+              "text": "Where something was"
+            },
+            {
+              "term": "Velocity",
+              "text": "How fast it was moving"
+            },
+            {
+              "term": "Forces",
+              "text": "What was acting on it"
+            }
+          ],
+          "conclusion": "Then mathematics could describe what happened next."
         },
         {
           "type": "paragraph",
@@ -476,16 +490,22 @@
           "text": "And properties that seem simple at our scale have a different meaning underneath."
         },
         {
-          "type": "paragraph",
-          "text": "Temperature is related to molecular motion."
-        },
-        {
-          "type": "paragraph",
-          "text": "Pressure emerges from molecules colliding."
-        },
-        {
-          "type": "paragraph",
-          "text": "Density describes how much matter occupies a certain volume."
+          "type": "concepts",
+          "label": "At our scale, I could describe the gas through properties:",
+          "items": [
+            {
+              "term": "Temperature",
+              "text": "Connected to molecular motion"
+            },
+            {
+              "term": "Pressure",
+              "text": "Emerges from countless molecular collisions"
+            },
+            {
+              "term": "Density",
+              "text": "How much matter occupies a given volume"
+            }
+          ]
         },
         {
           "type": "paragraph",
@@ -501,11 +521,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Instead of asking where every molecule was, I needed to begin thinking about properties."
-        },
-        {
-          "type": "paragraph",
-          "text": "Temperature.\nPressure.\nDensity.\nAverage velocity."
+          "text": "Instead of asking where every molecule was, I needed to begin thinking about the behavior of the system as a whole."
         },
         {
           "type": "paragraph",
@@ -559,8 +575,26 @@
           "text": "Together, they form fields."
         },
         {
-          "type": "paragraph",
-          "text": "A velocity field.\nA pressure field.\nA temperature field.\nA density field."
+          "type": "concepts",
+          "label": "At every point in space:",
+          "items": [
+            {
+              "term": "Velocity field",
+              "text": "How the fluid is moving"
+            },
+            {
+              "term": "Pressure field",
+              "text": "How pressure varies through space"
+            },
+            {
+              "term": "Temperature field",
+              "text": "How heat is distributed"
+            },
+            {
+              "term": "Density field",
+              "text": "How mass is distributed"
+            }
+          ]
         },
         {
           "type": "paragraph",
@@ -737,8 +771,26 @@
           "text": "We measure the current atmosphere as accurately as possible."
         },
         {
-          "type": "paragraph",
-          "text": "Temperature.\nPressure.\nHumidity.\nWind."
+          "type": "concepts",
+          "label": "We measure the atmosphere:",
+          "items": [
+            {
+              "term": "Temperature",
+              "text": "How warm the air is"
+            },
+            {
+              "term": "Pressure",
+              "text": "How strongly the air pushes"
+            },
+            {
+              "term": "Humidity",
+              "text": "How much water vapor is present"
+            },
+            {
+              "term": "Wind",
+              "text": "How the air is moving"
+            }
+          ]
         },
         {
           "type": "paragraph",
