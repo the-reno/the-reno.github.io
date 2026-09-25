@@ -4,6 +4,7 @@
     {
       "id": "opening",
       "anchor": "article-opening",
+      "heading": "Childhood — wanting to know what happens next",
       "blocks": [
         {
           "type": "paragraph",
@@ -11,396 +12,879 @@
         },
         {
           "type": "paragraph",
-          "text": "It probably started with dice."
+          "text": "As a child, I remember playing with dice and trying to understand why I could not get a six every time."
         },
         {
           "type": "paragraph",
-          "text": "I remember trying to throw a dice in what felt like exactly the same way."
+          "text": "I would try to repeat the movement."
         },
         {
           "type": "paragraph",
-          "text": "Same direction.\nSame strength.\nSame movement."
+          "text": "Same direction.\nSame strength.\nSame motion."
         },
         {
           "type": "paragraph",
-          "text": "Part of me thought I could somehow fool the system and force the same result again."
+          "text": "But the result changed."
         },
         {
           "type": "paragraph",
-          "text": "You roll once."
+          "text": "At the time, I knew nothing about probability."
         },
         {
           "type": "paragraph",
-          "text": "6",
+          "text": "I was simply trying to understand what decided the result."
+        },
+        {
+          "type": "paragraph",
+          "text": "Was the answer hidden somewhere in the movement of the dice?"
+        },
+        {
+          "type": "paragraph",
+          "text": "How could I predict the result?",
           "highlight": true
-        },
-        {
-          "type": "paragraph",
-          "text": "You try again."
-        },
-        {
-          "type": "paragraph",
-          "text": "3",
-          "highlight": true
-        },
-        {
-          "type": "paragraph",
-          "text": "Again."
-        },
-        {
-          "type": "paragraph",
-          "text": "1",
-          "highlight": true
-        },
-        {
-          "type": "paragraph",
-          "text": "The movement looked almost identical."
-        },
-        {
-          "type": "paragraph",
-          "text": "The result did not."
-        },
-        {
-          "type": "paragraph",
-          "text": "That stayed in my head for a long time."
-        },
-        {
-          "type": "paragraph",
-          "text": "At first, I thought prediction meant controlling the outcome."
-        },
-        {
-          "type": "paragraph",
-          "text": "Later I realized prediction could also mean understanding the pattern behind the outcome."
         }
       ]
     },
     {
       "id": "probability",
       "anchor": "part-1",
-      "heading": "Probability",
+      "heading": "Probability — uncertainty has structure",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "A dice has six sides."
+          "text": "Later, I learned about probability."
         },
         {
           "type": "paragraph",
-          "text": "Six equal possibilities."
+          "text": "I liked the idea."
+        },
+        {
+          "type": "paragraph",
+          "text": "But I also realized that not knowing the next result did not mean knowing nothing."
+        },
+        {
+          "type": "paragraph",
+          "text": "With the dice, each side has a probability."
+        },
+        {
+          "type": "paragraph",
+          "text": "For one specific number:"
         },
         {
           "type": "code",
-          "text": "P(event) = successful possibilities / all possibilities",
-          "label": "Probability formula"
+          "text": "P(6) = 1 / 6",
+          "label": "Probability of rolling a six"
         },
         {
           "type": "paragraph",
-          "text": "If we want the probability of rolling a 3:"
-        },
-        {
-          "type": "code",
-          "text": "P(3) = 1 / 6",
-          "label": "Probability of rolling a three"
+          "text": "That still did not tell me what the next result would be."
         },
         {
           "type": "paragraph",
-          "text": "The exact outcome is uncertain."
+          "text": "But now I knew something."
         },
         {
           "type": "paragraph",
-          "text": "I still do not know what the next roll will be."
+          "text": "Throw the dice once, and anything could happen."
         },
         {
           "type": "paragraph",
-          "text": "But the structure behind the outcomes is predictable."
+          "text": "Ten throws could still look irregular."
         },
         {
           "type": "paragraph",
-          "text": "If we roll the dice only once, anything can happen."
+          "text": "But after many throws, a pattern began to appear."
         },
         {
           "type": "paragraph",
-          "text": "But if we roll it many times, patterns start appearing."
+          "text": "Each number moved closer to its expected frequency."
         },
         {
           "type": "paragraph",
-          "text": "Over time, each number tends to appear close to its expected probability."
+          "text": "The individual result remained uncertain."
         },
         {
           "type": "paragraph",
-          "text": "Not exactly."
+          "text": "But the overall behavior became somehow stable."
         },
         {
           "type": "paragraph",
-          "text": "But approximately."
+          "text": "Then things became more interesting with two dice."
+        },
+        {
+          "type": "paragraph",
+          "text": "Now the possible sums were not equally likely."
+        },
+        {
+          "type": "paragraph",
+          "text": "Seven, for example, could be created in more ways than two or twelve."
+        },
+        {
+          "type": "paragraph",
+          "text": "Repeat the experiment many times and the results begin to form a pattern."
+        },
+        {
+          "type": "paragraph",
+          "text": "The values concentrate around the middle."
+        },
+        {
+          "type": "paragraph",
+          "text": "Seven appears most often."
+        },
+        {
+          "type": "paragraph",
+          "text": "Six and eight appear slightly less."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then five and nine."
+        },
+        {
+          "type": "paragraph",
+          "text": "And so on."
+        },
+        {
+          "type": "paragraph",
+          "text": "Randomness was not the absence of structure."
+        },
+        {
+          "type": "paragraph",
+          "text": "I could see that there were patterns inside uncertainty."
+        },
+        {
+          "type": "paragraph",
+          "text": "That changed my question."
+        },
+        {
+          "type": "paragraph",
+          "text": "What could I actually predict?",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "Or perhaps:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Which rules did I need to discover to predict the result?",
+          "highlight": true
         }
       ]
     },
     {
-      "id": "two-dice",
+      "id": "physics",
       "anchor": "part-2",
-      "heading": "Two Dice",
+      "heading": "Physics — nature follows rules",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Then things can become more interesting."
+          "text": "Later, I learned physics."
         },
         {
           "type": "paragraph",
-          "text": "Take two dice."
+          "text": "And it gave me a very different view of the world."
         },
         {
           "type": "paragraph",
-          "text": "Now we stop looking at one number and start looking at the sum of both."
+          "text": "Objects did not simply move."
         },
         {
           "type": "paragraph",
-          "text": "At first it still feels random."
+          "text": "They followed rules."
         },
         {
           "type": "paragraph",
-          "text": "But patterns immediately appear."
+          "text": "For me, it started with the story of Newton and the apple."
         },
         {
           "type": "paragraph",
-          "text": "Some numbers become more common because there are more combinations that create them."
-        },
-        {
-          "type": "table",
-          "label": "Two dice combinations",
-          "columns": [
-            "SUM",
-            "COMBINATIONS"
-          ],
-          "rows": [
-            [
-              "2",
-              "1 + 1"
-            ],
-            [
-              "3",
-              "1 + 2 · 2 + 1"
-            ],
-            [
-              "4",
-              "1 + 3 · 2 + 2 · 3 + 1"
-            ],
-            [
-              "7",
-              "1 + 6 · 2 + 5 · 3 + 4 · 4 + 3 + 5 · 2 + 6 + 1"
-            ],
-            [
-              "12",
-              "6 + 6"
-            ]
-          ]
-        },
-        {
-          "type": "code",
-          "text": "2   █\n3   ██\n4   ███\n5   ████\n6   █████\n7   ██████\n8   █████\n9   ████\n10  ███\n11  ██\n12  █",
-          "label": "Number of combinations for each sum"
+          "text": "A falling object accelerates because of gravity."
         },
         {
           "type": "paragraph",
-          "text": "That was probably the first time I noticed how patterns can emerge from randomness."
+          "text": "Its path depends on its position, its velocity and the forces acting on it."
+        },
+        {
+          "type": "paragraph",
+          "text": "And the same principles could describe the movement of planets."
+        },
+        {
+          "type": "paragraph",
+          "text": "The more I learned, the more powerful this idea became."
+        },
+        {
+          "type": "paragraph",
+          "text": "If I knew where something was, how fast it was moving and which forces were acting on it, mathematics could describe what happened next."
+        },
+        {
+          "type": "paragraph",
+          "text": "In some cases, this worked extraordinarily well."
+        },
+        {
+          "type": "paragraph",
+          "text": "It suggested a very different possibility."
+        },
+        {
+          "type": "paragraph",
+          "text": "Perhaps the future was not random at all."
+        },
+        {
+          "type": "paragraph",
+          "text": "Perhaps it was calculable."
         }
       ]
     },
     {
-      "id": "newton-and-the-apple",
+      "id": "mathematics",
       "anchor": "part-3",
-      "heading": "Newton and the Apple",
+      "heading": "Mathematics — describing change",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Later I heard about Isaac Newton, gravity, and the apple story."
+          "text": "But nature does not move from one fixed state to another."
         },
         {
           "type": "paragraph",
-          "text": "An apple falling from a tree is predictable."
+          "text": "It changes continuously."
         },
         {
           "type": "paragraph",
-          "text": "The movement is not random."
+          "text": "A falling object changes position."
         },
         {
           "type": "paragraph",
-          "text": "Objects move following patterns."
+          "text": "Its velocity changes."
         },
         {
           "type": "paragraph",
-          "text": "After enough observation, we can find the pattern and measure."
+          "text": "And the rate at which its velocity changes is acceleration."
         },
         {
           "type": "paragraph",
-          "text": "Mathematics can describe it."
-        },
-        {
-          "type": "code",
-          "text": "gravity ≈ 9.81 m/s²",
-          "label": "Gravity formula"
+          "text": "The system is constantly evolving."
         },
         {
           "type": "paragraph",
-          "text": "What became interesting to me was that the same idea appeared far beyond the apple itself."
+          "text": "This difference between something discrete and something continuous became important to me."
         },
         {
           "type": "paragraph",
-          "text": "Galaxies.\nPlanets.\nComets.\nApples.\nA grain of sand."
+          "text": "The dice gave me separate outcomes."
         },
         {
           "type": "paragraph",
-          "text": "Different objects."
+          "text": "One result."
         },
         {
           "type": "paragraph",
-          "text": "Different scales."
+          "text": "Then another."
         },
         {
           "type": "paragraph",
-          "text": "But similar structures repeating same movement."
+          "text": "But motion was different."
         },
         {
           "type": "paragraph",
-          "text": "I remember calculating.."
+          "text": "It was happening continuously."
         },
         {
           "type": "paragraph",
-          "text": "How fast something falls."
+          "text": "Every moment was connected to the one before it."
         },
         {
           "type": "paragraph",
-          "text": "How far it moves."
+          "text": "This is where calculus and differential equations became important."
         },
         {
           "type": "paragraph",
-          "text": "How the numbers evolve."
+          "text": "At first, the ideas seemed abstract."
         },
         {
           "type": "paragraph",
-          "runs": [
-            {
-              "text": "The "
-            },
-            {
-              "text": "time squared",
-              "strong": true
-            },
-            {
-              "text": " part also fascinated me."
-            }
-          ]
+          "text": "But eventually I understood what those equations were really doing."
         },
         {
           "type": "paragraph",
-          "text": "The apple is not moving at a constant speed."
+          "text": "They were describing change itself."
         },
         {
           "type": "paragraph",
-          "text": "It keeps accelerating."
+          "text": "Instead of simply saying where a system is, a differential equation describes how its current state is changing."
         },
         {
           "type": "paragraph",
-          "text": "The movement changes continuously."
+          "text": "A small step forward in time."
         },
         {
           "type": "paragraph",
-          "text": "That idea became important later."
+          "text": "Then another."
         },
         {
           "type": "paragraph",
-          "text": "Because things in nature are continuous."
+          "text": "Then another."
         },
         {
           "type": "paragraph",
-          "text": "Then college pulled me deeper into this world."
+          "text": "What looks like continuous motion can be described as an evolving system."
         },
         {
           "type": "paragraph",
-          "text": "Mathematics.\nDifferential equations."
+          "text": "For something simple, like a falling object, this can work beautifully."
         },
         {
           "type": "paragraph",
-          "text": "At first they looked abstract."
+          "text": "But then another question appears."
         },
         {
           "type": "paragraph",
-          "text": "Later I realized they were connected to the same idea that started with the dice:"
+          "text": "What happens when billions or trillions of things interact at the same time?",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "complexity",
+      "anchor": "part-4",
+      "heading": "Complexity — knowing the rules is not the same as knowing the answer",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The equations had not disappeared."
         },
         {
           "type": "paragraph",
-          "text": "trying to understand how systems evolve through time."
+          "text": "The physical laws were still there."
         },
         {
           "type": "paragraph",
-          "text": "Fluid dynamics.\nGas.\nElectricity.\nMarkets."
+          "text": "But the systems became more complicated."
         },
         {
           "type": "paragraph",
-          "text": "Everything changing continuously."
+          "text": "One object alone behaves in one way."
         },
         {
           "type": "paragraph",
-          "text": "And once systems become continuous, tiny variations start mattering much more."
+          "text": "Add another object, and now they interact."
         },
         {
           "type": "paragraph",
-          "text": "A small difference now can slowly become a large difference later."
+          "text": "Each one affects the other."
         },
         {
           "type": "paragraph",
-          "text": "Then mathematics itself starts expanding."
+          "text": "And the result is different from considering each one alone."
         },
         {
           "type": "paragraph",
-          "text": "Imaginary numbers appear."
+          "text": "Add another."
         },
         {
           "type": "paragraph",
-          "text": "At first the idea sounds absurd."
+          "text": "And another."
         },
         {
           "type": "paragraph",
-          "text": "But somehow mathematics keeps growing and starts describing real systems surprisingly well."
+          "text": "The number of interactions grows."
         },
         {
           "type": "paragraph",
-          "text": "And the original idea from the dice gained a new meaning."
+          "text": "One change affects another part of the system."
         },
         {
           "type": "paragraph",
-          "text": "Now the goal was no longer trying know the outcome."
+          "text": "That part changes something else."
         },
         {
           "type": "paragraph",
-          "text": "It became understanding the probabilities of the possibilities."
+          "text": "And those changes can eventually return and influence the original motion again."
         },
         {
           "type": "paragraph",
-          "text": "Quantum mechanics pushed that idea even further."
+          "text": "Everything begins influencing everything else."
         },
         {
           "type": "paragraph",
-          "text": "The equations no longer predict one exact outcome."
+          "text": "The problem is no longer simply finding the rule."
         },
         {
           "type": "paragraph",
-          "text": "They predict a distribution of possible outcomes with different probabilities."
+          "text": "The problem becomes following what those rules produce when the system has many possible interactions."
         },
         {
           "type": "paragraph",
-          "text": "Very similar to the dice."
+          "text": "This changed the way I understood prediction."
         },
         {
           "type": "paragraph",
-          "text": "Some outcomes become much more likely than others."
+          "text": "Knowing the laws governing a system does not automatically make its future easy to calculate.",
+          "highlight": true
         },
         {
           "type": "paragraph",
-          "text": "Not certainty."
+          "text": "And that opened an entirely new world for me."
         },
         {
           "type": "paragraph",
-          "text": "Probability distributed across possibilities."
+          "text": "Air."
+        }
+      ]
+    },
+    {
+      "id": "gas",
+      "anchor": "part-5",
+      "heading": "Gas — a hidden world of motion",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Air looks almost empty."
+        },
+        {
+          "type": "paragraph",
+          "text": "It is not."
+        },
+        {
+          "type": "paragraph",
+          "text": "A gas contains an enormous number of molecules moving continuously."
+        },
+        {
+          "type": "paragraph",
+          "text": "They travel."
+        },
+        {
+          "type": "paragraph",
+          "text": "They collide."
+        },
+        {
+          "type": "paragraph",
+          "text": "They change direction."
+        },
+        {
+          "type": "paragraph",
+          "text": "They exchange energy."
+        },
+        {
+          "type": "paragraph",
+          "text": "Something as ordinary as the air inside a room contains a microscopic world in constant motion."
+        },
+        {
+          "type": "paragraph",
+          "text": "Much more than I could imagine."
+        },
+        {
+          "type": "paragraph",
+          "text": "And properties that seem simple at our scale have a different meaning underneath."
+        },
+        {
+          "type": "paragraph",
+          "text": "Temperature is related to molecular motion."
+        },
+        {
+          "type": "paragraph",
+          "text": "Pressure emerges from molecules colliding."
+        },
+        {
+          "type": "paragraph",
+          "text": "Density describes how much matter occupies a certain volume."
+        },
+        {
+          "type": "paragraph",
+          "text": "At this scale, predicting the exact trajectory of every individual molecule becomes impractical."
+        },
+        {
+          "type": "paragraph",
+          "text": "There are simply too many of them."
+        },
+        {
+          "type": "paragraph",
+          "text": "So the way I thought about the problem had to change."
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of asking where every molecule was, I needed to begin thinking about properties."
+        },
+        {
+          "type": "paragraph",
+          "text": "Temperature.\nPressure.\nDensity.\nAverage velocity."
+        },
+        {
+          "type": "paragraph",
+          "text": "The individual particles were still there."
+        },
+        {
+          "type": "paragraph",
+          "text": "But from all those individual movements, new collective properties emerged."
+        }
+      ]
+    },
+    {
+      "id": "fluids",
+      "anchor": "part-6",
+      "heading": "From particles to fluids",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The same idea applies to water and other fluids."
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of tracking each molecule independently, fluid dynamics describes the material as something continuous."
+        },
+        {
+          "type": "paragraph",
+          "text": "Now we can imagine a value at every point in space."
+        },
+        {
+          "type": "paragraph",
+          "text": "At one location, the fluid has a certain velocity."
+        },
+        {
+          "type": "paragraph",
+          "text": "A certain pressure."
+        },
+        {
+          "type": "paragraph",
+          "text": "A certain temperature."
+        },
+        {
+          "type": "paragraph",
+          "text": "A certain density."
+        },
+        {
+          "type": "paragraph",
+          "text": "Move somewhere else, and those values are different."
+        },
+        {
+          "type": "paragraph",
+          "text": "Together, they form fields."
+        },
+        {
+          "type": "paragraph",
+          "text": "A velocity field.\nA pressure field.\nA temperature field.\nA density field."
+        },
+        {
+          "type": "paragraph",
+          "text": "And these fields evolve through time."
+        },
+        {
+          "type": "paragraph",
+          "text": "Fluid dynamics tries to describe how."
+        },
+        {
+          "type": "paragraph",
+          "text": "There are equations that describe parts of this process."
+        },
+        {
+          "type": "paragraph",
+          "text": "They connect motion, pressure, viscosity and forces."
+        },
+        {
+          "type": "paragraph",
+          "text": "The mathematics can sometimes be written compactly."
+        },
+        {
+          "type": "paragraph",
+          "text": "But the behavior it produces can be anything but simple."
+        }
+      ]
+    },
+    {
+      "id": "turbulence",
+      "anchor": "part-7",
+      "heading": "Turbulence — complexity becomes visible",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Watch smoke rise."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first, the motion can look smooth."
+        },
+        {
+          "type": "paragraph",
+          "text": "The stream moves upward in an almost organized way."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then something changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "The flow bends."
+        },
+        {
+          "type": "paragraph",
+          "text": "A vortex appears."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then another."
+        },
+        {
+          "type": "paragraph",
+          "text": "Large structures break into smaller ones."
+        },
+        {
+          "type": "paragraph",
+          "text": "Those smaller structures interact again."
+        },
+        {
+          "type": "paragraph",
+          "text": "Soon, the smooth motion has become turbulence."
+        },
+        {
+          "type": "paragraph",
+          "text": "What is striking is that the physical rules have not changed."
+        },
+        {
+          "type": "paragraph",
+          "text": "The fluid is still obeying the same underlying laws."
+        },
+        {
+          "type": "paragraph",
+          "text": "But the interactions inside the flow create extremely complex behavior."
+        },
+        {
+          "type": "paragraph",
+          "text": "Small differences can propagate through the system."
+        },
+        {
+          "type": "paragraph",
+          "text": "This is where chaos enters the story."
+        },
+        {
+          "type": "paragraph",
+          "text": "A small variation in velocity, temperature or pressure changes what happens nearby."
+        },
+        {
+          "type": "paragraph",
+          "text": "That change affects another region."
+        },
+        {
+          "type": "paragraph",
+          "text": "Which affects another."
+        },
+        {
+          "type": "paragraph",
+          "text": "Over time, two systems that began almost the same can evolve into very different states."
+        },
+        {
+          "type": "paragraph",
+          "text": "The system can still be deterministic."
+        },
+        {
+          "type": "paragraph",
+          "text": "But that does not mean it remains easy to predict far into the future."
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "anchor": "part-8",
+      "heading": "Weather — fluid dynamics on a planetary scale",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Then the problem becomes much larger."
+        },
+        {
+          "type": "paragraph",
+          "text": "The atmosphere is a fluid."
+        },
+        {
+          "type": "paragraph",
+          "text": "The same ideas now operate across an entire planet."
+        },
+        {
+          "type": "paragraph",
+          "text": "Air moves because of differences in pressure and temperature."
+        },
+        {
+          "type": "paragraph",
+          "text": "Water evaporates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Clouds form."
+        },
+        {
+          "type": "paragraph",
+          "text": "Energy arrives from the Sun."
+        },
+        {
+          "type": "paragraph",
+          "text": "Oceans exchange heat with the atmosphere."
+        },
+        {
+          "type": "paragraph",
+          "text": "The Earth rotates."
+        },
+        {
+          "type": "paragraph",
+          "text": "Mountains redirect flows."
+        },
+        {
+          "type": "paragraph",
+          "text": "Many different processes interact continuously."
+        },
+        {
+          "type": "paragraph",
+          "text": "Weather forecasting becomes an enormous problem in fluid dynamics."
+        },
+        {
+          "type": "paragraph",
+          "text": "We measure the current atmosphere as accurately as possible."
+        },
+        {
+          "type": "paragraph",
+          "text": "Temperature.\nPressure.\nHumidity.\nWind."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then numerical models calculate how those quantities should evolve."
+        },
+        {
+          "type": "paragraph",
+          "text": "But our measurements are never perfect."
+        },
+        {
+          "type": "paragraph",
+          "text": "And the equations are extremely complex."
+        },
+        {
+          "type": "paragraph",
+          "text": "Small uncertainties in the current state can grow as the forecast moves further into the future."
+        },
+        {
+          "type": "paragraph",
+          "text": "So many simulations can be run with slightly different starting conditions."
+        },
+        {
+          "type": "paragraph",
+          "text": "At first, they may remain close."
+        },
+        {
+          "type": "paragraph",
+          "text": "Later, they begin to spread."
+        },
+        {
+          "type": "paragraph",
+          "text": "And that spread itself contains information."
+        },
+        {
+          "type": "paragraph",
+          "text": "It tells us something about the range of possible futures."
+        },
+        {
+          "type": "paragraph",
+          "text": "And about how confident we can be in the prediction."
+        }
+      ]
+    },
+    {
+      "id": "prediction-conclusion",
+      "anchor": "part-9",
+      "heading": "Prediction — the question changes",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "To me, prediction seemed to mean one thing:"
+        },
+        {
+          "type": "paragraph",
+          "text": "Knowing what would happen next.",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "Over time, that definition became less relevant."
+        },
+        {
+          "type": "paragraph",
+          "text": "Probability showed me that uncertainty could still contain structure."
+        },
+        {
+          "type": "paragraph",
+          "text": "Physics showed me that nature follows rules."
+        },
+        {
+          "type": "paragraph",
+          "text": "Mathematics showed me how systems evolve continuously."
+        },
+        {
+          "type": "paragraph",
+          "text": "Complex systems showed me that knowing the rules does not guarantee a perfect forecast."
+        },
+        {
+          "type": "paragraph",
+          "text": "Fluid dynamics made that complexity visible."
+        },
+        {
+          "type": "paragraph",
+          "text": "And eventually I learned that prediction can become too complicated to describe as one certain future."
+        },
+        {
+          "type": "paragraph",
+          "text": "The question changes."
+        },
+        {
+          "type": "paragraph",
+          "text": "Instead of asking only:"
+        },
+        {
+          "type": "paragraph",
+          "text": "What will happen?",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "I begin asking:"
+        },
+        {
+          "type": "paragraph",
+          "text": "What can happen?\nWhich outcomes are more likely?\nHow confident are we?\nHow does that confidence change with time?",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "Prediction becomes less about discovering one certain future."
+        },
+        {
+          "type": "paragraph",
+          "text": "It becomes a way of understanding the structure of possible futures."
+        },
+        {
+          "type": "paragraph",
+          "text": "And I believe the same idea applies to many of our daily interactions."
+        },
+        {
+          "type": "paragraph",
+          "text": "We make decisions without knowing exactly what will happen."
+        },
+        {
+          "type": "paragraph",
+          "text": "We observe patterns."
+        },
+        {
+          "type": "paragraph",
+          "text": "We understand some of the forces involved."
+        },
+        {
+          "type": "paragraph",
+          "text": "We consider different possible outcomes."
+        },
+        {
+          "type": "paragraph",
+          "text": "And we adjust our expectations as new information arrives."
+        },
+        {
+          "type": "paragraph",
+          "text": "We may not know the future."
+        },
+        {
+          "type": "paragraph",
+          "text": "But we can learn to understand its possibilities."
         }
       ]
     }
