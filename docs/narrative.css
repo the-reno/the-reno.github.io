@@ -10,9 +10,12 @@
 .story-body {max-width:650px; font:400 16px/1.85 var(--sans); color:var(--muted)}
 .story-section p {margin:0 0 19px}
 .story-section:first-child > p:first-of-type {color:var(--text)}
-.story-section + .story-section {margin-top:36px}
-.story-section h2 {font:400 25px/1.4 var(--mono); margin:0 0 20px; color:var(--text); letter-spacing:-.65px}
+.story-section + .story-section {margin-top:58px}
 .story-section {scroll-margin-top:138px}
+.story-section-head {position:relative; margin:0 0 25px; padding-top:17px}
+.story-section-head::before {content:""; position:absolute; top:0; left:0; width:34px; height:1px; background:var(--accent)}
+.story-section-kicker {display:block; margin:0 0 7px; color:var(--accent); font:10px/1.6 var(--mono); letter-spacing:.09em; text-transform:uppercase}
+.story-section h2 {font:400 25px/1.36 var(--mono); margin:0; color:var(--text); letter-spacing:-.65px; text-wrap:balance}
 .story-section:last-child > p:last-child {margin-bottom:0}
 .story-bottom {display:flex; justify-content:space-between; align-items:center; gap:16px; border-top:1px solid var(--line); padding:15px 0 0; margin-top:31px; max-width:650px}
 .story-loading {color:var(--muted)}
@@ -31,6 +34,10 @@
   .story-kicker {font-size:9px; margin-bottom:14px}
   .story-body {font-size:15px; line-height:1.82}
   .story-section p {margin-bottom:18px}
+  .story-section + .story-section {margin-top:46px}
+  .story-section-head {margin-bottom:21px; padding-top:15px}
+  .story-section-kicker {font-size:9px; margin-bottom:5px}
+  .story-section h2 {font-size:22px; line-height:1.4}
   .story-bottom {gap:12px; flex-wrap:wrap; margin-top:27px}
   .story-bottom .quiet-link {font-size:11px}
 }
@@ -63,6 +70,13 @@
 .story-concept span {color:var(--muted); align-self:center}
 .story-concepts-conclusion {margin:21px 0 0!important; padding-top:18px; border-top:1px solid var(--line); color:var(--text)!important; font:400 18px/1.55 var(--sans)}
 
+
+.story-closing {max-width:620px; margin:54px 0 10px; padding-top:28px; border-top:1px solid var(--line)}
+.story-closing p {margin:0 0 17px!important; color:var(--text); font:400 18px/1.72 var(--sans)}
+.story-closing p:first-child {max-width:46ch; margin-bottom:26px!important; color:var(--muted)}
+.story-closing p:nth-last-child(2) {margin-top:34px!important; margin-bottom:7px!important; color:var(--text); font:400 21px/1.5 var(--mono)}
+.story-closing p:last-child {max-width:30ch; margin-bottom:0!important; color:var(--accent); font:400 27px/1.42 var(--mono); letter-spacing:-.45px}
+
 .story-table {max-width:100%; margin:24px 0; overflow-x:auto; border:1px solid var(--line); border-radius:4px; background:var(--surface)}
 .story-table table {width:100%; border-collapse:collapse; text-align:left; font:14px/1.8 var(--sans)}
 .story-table th {padding:13px 18px; color:var(--accent); background:var(--surface-2); font:10px/1.6 var(--mono); letter-spacing:.07em}
@@ -80,6 +94,11 @@
   .story-concept {grid-template-columns:1fr; gap:2px; padding:12px 0}
   .story-concept strong {font-size:16px}
   .story-concepts-conclusion {font-size:17px}
+  .story-closing {margin-top:42px; padding-top:23px}
+  .story-closing p {font-size:16px; line-height:1.75}
+  .story-closing p:first-child {margin-bottom:23px!important}
+  .story-closing p:nth-last-child(2) {margin-top:29px!important; font-size:18px}
+  .story-closing p:last-child {font-size:23px; line-height:1.45}
   .story-table table {font-size:13px}
   .story-table th,.story-table td {padding:12px 14px}
   .story-table td:first-child {width:52px}
