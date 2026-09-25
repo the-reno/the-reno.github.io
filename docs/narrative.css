@@ -35,32 +35,55 @@
   .story-bottom .quiet-link {font-size:11px}
 }
 @media(max-width:360px) {.story-title {font-size:28px}.story-body {font-size:14px}}
-/* The same text-first layout, with optional contents, formulas and tables. */
-.story-index {max-width:650px; margin:0 0 28px; padding:0 0 19px; border-bottom:1px solid var(--line)}
-.story-index-label {display:block; color:var(--faint); font:10px/1.6 var(--mono); letter-spacing:.08em; text-transform:uppercase; margin:0 0 7px}
-.story-index > div {display:flex; flex-wrap:wrap; gap:0 22px}
-.story-index a {display:inline-flex; align-items:center; min-height:44px; color:var(--muted); font:12px/1.6 var(--sans); text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:5px}
-.story-index a:hover {color:var(--accent); text-decoration-color:currentColor}
+/* Text-first article details, formulas and documentary callouts. */
 .story-section .story-highlight,.story-section strong {color:var(--text)}
 .story-section .story-highlight {font:400 26px/1.4 var(--mono); color:var(--accent)}
 .story-section strong {font-weight:600}
 .story-code {max-width:100%; margin:24px 0; padding:18px 20px; border:1px solid var(--line); border-left:2px solid var(--accent); border-radius:4px; background:var(--surface); color:var(--text); font:13px/1.85 var(--mono); white-space:pre-wrap; overflow-wrap:anywhere; overflow:auto}
 .story-code code {font:inherit}
+
+.story-fraction {display:grid; grid-template-columns:minmax(0,1.35fr) minmax(190px,.65fr); gap:30px; align-items:end; margin:30px 0 34px; padding:24px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.story-fraction figcaption,.story-concepts-label {margin:0 0 14px; color:var(--faint); font:10px/1.6 var(--mono); letter-spacing:.08em; text-transform:uppercase}
+.story-fraction-formula {display:flex; align-items:center; gap:13px; color:var(--text); font:400 28px/1 var(--mono); white-space:nowrap}
+.story-fraction-name {color:var(--muted)}
+.story-fraction-equals {color:var(--faint)}
+.story-fraction-stack {display:inline-grid; grid-template-rows:1fr 1fr; min-width:38px; text-align:center; line-height:1.05; color:var(--accent)}
+.story-fraction-stack span:first-child {padding:0 8px 5px; border-bottom:1.5px solid currentColor}
+.story-fraction-stack span:last-child {padding:5px 8px 0}
+.story-fraction-formula strong {font-size:31px; font-weight:500; color:var(--accent)}
+.story-fraction-note {margin:0!important; padding-left:18px; border-left:1px solid var(--line); color:var(--muted); font:13px/1.65 var(--sans)}
+
+.story-concepts {margin:28px 0 32px; padding:22px 0 20px; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+.story-concepts-label {margin-bottom:17px}
+.story-concepts-list {display:grid; gap:0}
+.story-concept {display:grid; grid-template-columns:minmax(110px,.36fr) minmax(0,.64fr); gap:22px; padding:13px 0; border-top:1px solid color-mix(in srgb,var(--line) 72%,transparent)}
+.story-concept:first-child {border-top:0; padding-top:0}
+.story-concept:last-child {padding-bottom:0}
+.story-concept strong {font:500 17px/1.45 var(--mono); color:var(--accent)}
+.story-concept span {color:var(--muted); align-self:center}
+.story-concepts-conclusion {margin:21px 0 0!important; padding-top:18px; border-top:1px solid var(--line); color:var(--text)!important; font:400 18px/1.55 var(--sans)}
+
 .story-table {max-width:100%; margin:24px 0; overflow-x:auto; border:1px solid var(--line); border-radius:4px; background:var(--surface)}
 .story-table table {width:100%; border-collapse:collapse; text-align:left; font:14px/1.8 var(--sans)}
 .story-table th {padding:13px 18px; color:var(--accent); background:var(--surface-2); font:10px/1.6 var(--mono); letter-spacing:.07em}
 .story-table td {padding:13px 18px; border-top:1px solid var(--line); vertical-align:top}
 .story-table td:first-child {color:var(--text); font-family:var(--mono); width:70px}
 .story-table td:last-child {overflow-wrap:anywhere}
-.story-index a:focus-visible,.story-code:focus-visible,.story-table:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
+.story-code:focus-visible,.story-table:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
 @media(max-width:500px) {
   .story-index {margin-bottom:24px; padding-bottom:14px}
   .story-index > div {gap:0 18px}
   .story-index a {font-size:11px}
   .story-code {font-size:12px; padding:16px; margin:21px 0}
+  .story-fraction {grid-template-columns:1fr; gap:18px; margin:25px 0 29px; padding:20px 0}
+  .story-fraction-formula {font-size:24px; gap:10px}
+  .story-fraction-formula strong {font-size:27px}
+  .story-fraction-note {padding-left:14px}
+  .story-concepts {margin:25px 0 29px; padding:19px 0}
+  .story-concept {grid-template-columns:1fr; gap:2px; padding:12px 0}
+  .story-concept strong {font-size:16px}
+  .story-concepts-conclusion {font-size:17px}
   .story-table table {font-size:13px}
   .story-table th,.story-table td {padding:12px 14px}
   .story-table td:first-child {width:52px}
 }
-/* The shared shell already reserves the sticky header through scroll-padding. */
-.story-index:not([hidden]) + .story-body .story-section {scroll-margin-top:24px}
