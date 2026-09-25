@@ -23,7 +23,7 @@ function narrativeBlocks(section) {
   const text = value => typeof value === 'string' && value.trim().length > 0;
   if (!blocks.length || blocks.length > 300) throw new Error('Invalid article blocks');
   for (const block of blocks) {
-    if (!block || !['paragraph', 'code', 'table'].includes(block.type)) throw new Error('Invalid block type');
+    if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts'].includes(block.type)) throw new Error('Invalid block type');
     if (block.label !== undefined && !text(block.label)) throw new Error('Invalid block label');
     if (block.type === 'table') {
       if (!text(block.label) || !Array.isArray(block.columns) || !block.columns.length || block.columns.length > 8 ||
@@ -33,6 +33,16 @@ function narrativeBlocks(section) {
       }
     } else if (block.type === 'code') {
       if (!text(block.text) || !text(block.label)) throw new Error('Invalid article formula');
+    } else if (block.type === 'fraction') {
+      if (!text(block.label) || !text(block.numerator) || !text(block.denominator) ||
+          !text(block.percent) || !text(block.note)) throw new Error('Invalid article fraction');
+    } else if (block.type === 'concepts') {
+      if (block.label !== undefined && !text(block.label)) throw new Error('Invalid concepts label');
+      if (!Array.isArray(block.items) || !block.items.length || block.items.length > 8 ||
+          !block.items.every(item => item && text(item.term) && text(item.text)) ||
+          (block.conclusion !== undefined && !text(block.conclusion))) {
+        throw new Error('Invalid article concepts');
+      }
     } else {
       const runs = Array.isArray(block.runs);
       if (runs === (block.text !== undefined) || (!runs && !text(block.text)) ||
@@ -70,6 +80,26 @@ function narrativeBlockMarkup(block) {
   }
   if (block.type === 'code') {
     return `<pre class="story-code" tabindex="0" role="region" aria-label="${esc(block.label)}"><code>${esc(block.text)}</code></pre>`;
+  }
+  if (block.type === 'fraction') {
+    return `<figure class="story-fraction" aria-label="${esc(block.label)}">
+      <div class="story-fraction-main">
+        <figcaption>${esc(block.label)}</figcaption>
+        <div class="story-fraction-formula" aria-label="${esc(block.label)}: ${esc(block.numerator)} over ${esc(block.denominator)}, approximately ${esc(block.percent)}">
+          <span class="story-fraction-name">P(6)</span><span class="story-fraction-equals">=</span>
+          <span class="story-fraction-stack"><span>${esc(block.numerator)}</span><span>${esc(block.denominator)}</span></span>
+          <span class="story-fraction-equals">≈</span><strong>${esc(block.percent)}</strong>
+        </div>
+      </div>
+      <p class="story-fraction-note">${esc(block.note)}</p>
+    </figure>`;
+  }
+  if (block.type === 'concepts') {
+    return `<aside class="story-concepts"${block.label ? ` aria-label="${esc(block.label)}"` : ''}>
+      ${block.label ? `<p class="story-concepts-label">${esc(block.label)}</p>` : ''}
+      <div class="story-concepts-list">${block.items.map(item => `<div class="story-concept"><strong>${esc(item.term)}</strong><span>${esc(item.text)}</span></div>`).join('')}</div>
+      ${block.conclusion ? `<p class="story-concepts-conclusion">${esc(block.conclusion)}</p>` : ''}
+    </aside>`;
   }
   return `<div class="story-table" tabindex="0" role="region" aria-label="${esc(block.label)}"><table aria-label="${esc(block.label)}"><thead><tr>${block.columns.map(text => `<th scope="col">${esc(text)}</th>`).join('')}</tr></thead><tbody>${block.rows.map(row => `<tr>${row.map(text => `<td>${esc(text)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
@@ -110,9 +140,6 @@ async function loadNarrative(topic) {
   articleController = controller;
   const host = $('#narrative-content');
   const isCurrent = () => !controller.signal.aborted && currentTopic?.id === topic.id && $('#narrative-content') === host;
-  const contents = $('#story-index');
-  contents.hidden = true;
-  contents.replaceChildren();
   host.setAttribute('aria-busy', 'true');
   host.innerHTML = '<p class="story-loading" role="status">Loading article…</p>';
   let timeout;
@@ -143,12 +170,6 @@ async function loadNarrative(topic) {
       ${section.heading ? `<h2 id="story-heading-${index}">${esc(section.heading)}</h2>` : ''}
       ${section.blocks.map(narrativeBlockMarkup).join('')}
     </section>`).join('');
-    const headings = sections.filter(section => section.heading);
-    if (headings.length > 1) {
-      contents.innerHTML = '<span class="story-index-label">On this page</span><div>' + headings.map(section =>
-        `<a href="#topic/${esc(topic.id)}/${esc(section.anchor)}">${esc(section.heading)}</a>`).join('') + '</div>';
-      contents.hidden = false;
-    }
     host.setAttribute('aria-busy', 'false');
     if (pendingAnchor) goAnchor(pendingAnchor);
     updateProgress();
