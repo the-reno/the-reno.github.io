@@ -123,7 +123,6 @@ function renderNarrative(topic) {
         <p class="story-kicker">${esc(sectionName)} / ${esc(topic.type)}</p>
         <h1 class="index-title story-title" id="reader-title" tabindex="-1">${esc(topic.title)}</h1>
       </header>
-      <nav class="story-index" id="story-index" aria-label="On this page" hidden></nav>
       <div class="story-body" id="narrative-content" aria-busy="true"></div>
       <nav class="story-bottom" aria-label="Article navigation">
         <a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a>
