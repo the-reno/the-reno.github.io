@@ -23,7 +23,7 @@ function narrativeBlocks(section) {
   const text = value => typeof value === 'string' && value.trim().length > 0;
   if (!blocks.length || blocks.length > 300) throw new Error('Invalid article blocks');
   for (const block of blocks) {
-    if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts'].includes(block.type)) throw new Error('Invalid block type');
+    if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts', 'closing'].includes(block.type)) throw new Error('Invalid block type');
     if (block.label !== undefined && !text(block.label)) throw new Error('Invalid block label');
     if (block.type === 'table') {
       if (!text(block.label) || !Array.isArray(block.columns) || !block.columns.length || block.columns.length > 8 ||
@@ -43,6 +43,9 @@ function narrativeBlocks(section) {
           (block.conclusion !== undefined && !text(block.conclusion))) {
         throw new Error('Invalid article concepts');
       }
+    } else if (block.type === 'closing') {
+      if (!Array.isArray(block.paragraphs) || block.paragraphs.length < 2 || block.paragraphs.length > 16 ||
+          !block.paragraphs.every(text)) throw new Error('Invalid article closing');
     } else {
       const runs = Array.isArray(block.runs);
       if (runs === (block.text !== undefined) || (!runs && !text(block.text)) ||
@@ -100,6 +103,9 @@ function narrativeBlockMarkup(block) {
       <div class="story-concepts-list">${block.items.map(item => `<div class="story-concept"><strong>${esc(item.term)}</strong><span>${esc(item.text)}</span></div>`).join('')}</div>
       ${block.conclusion ? `<p class="story-concepts-conclusion">${esc(block.conclusion)}</p>` : ''}
     </aside>`;
+  }
+  if (block.type === 'closing') {
+    return `<div class="story-closing">${block.paragraphs.map(text => `<p>${lines(text)}</p>`).join('')}</div>`;
   }
   return `<div class="story-table" tabindex="0" role="region" aria-label="${esc(block.label)}"><table aria-label="${esc(block.label)}"><thead><tr>${block.columns.map(text => `<th scope="col">${esc(text)}</th>`).join('')}</tr></thead><tbody>${block.rows.map(row => `<tr>${row.map(text => `<td>${esc(text)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
@@ -165,10 +171,16 @@ async function loadNarrative(topic) {
       narrativeCache.set(key, sections);
     }
     if (!isCurrent()) return;
-    host.innerHTML = sections.map((section, index) => `<section class="story-section" id="${esc(section.anchor)}"${section.heading ? ' aria-labelledby="story-heading-' + index + '"' : ' aria-label="Article opening"'}>
-      ${section.heading ? `<h2 id="story-heading-${index}">${esc(section.heading)}</h2>` : ''}
-      ${section.blocks.map(narrativeBlockMarkup).join('')}
-    </section>`).join('');
+    host.innerHTML = sections.map((section, index) => {
+      let heading = '';
+      if (section.heading) {
+        const parts = section.heading.split(' — ');
+        heading = parts.length === 2
+          ? `<header class="story-section-head"><span class="story-section-kicker" aria-hidden="true">${esc(parts[0])}</span><h2 id="story-heading-${index}" aria-label="${esc(section.heading)}">${esc(parts[1])}</h2></header>`
+          : `<header class="story-section-head"><h2 id="story-heading-${index}">${esc(section.heading)}</h2></header>`;
+      }
+      return `<section class="story-section" id="${esc(section.anchor)}"${section.heading ? ' aria-labelledby="story-heading-' + index + '"' : ' aria-label="Article opening"'}>${heading}${section.blocks.map(narrativeBlockMarkup).join('')}</section>`;
+    }).join('');
     host.setAttribute('aria-busy', 'false');
     if (pendingAnchor) goAnchor(pendingAnchor);
     updateProgress();
