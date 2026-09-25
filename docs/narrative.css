@@ -71,9 +71,6 @@
 .story-table td:last-child {overflow-wrap:anywhere}
 .story-code:focus-visible,.story-table:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
 @media(max-width:500px) {
-  .story-index {margin-bottom:24px; padding-bottom:14px}
-  .story-index > div {gap:0 18px}
-  .story-index a {font-size:11px}
   .story-code {font-size:12px; padding:16px; margin:21px 0}
   .story-fraction {grid-template-columns:1fr; gap:18px; margin:25px 0 29px; padding:20px 0}
   .story-fraction-formula {font-size:24px; gap:10px}
