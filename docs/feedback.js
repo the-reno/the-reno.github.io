@@ -14,16 +14,16 @@
   const launcher = document.createElement('button');
   launcher.type = 'button'; launcher.id = 'feedback-open'; launcher.className = 'feedback-launcher';
   launcher.setAttribute('aria-haspopup', 'dialog'); launcher.setAttribute('aria-controls', 'feedback-dialog');
-  launcher.innerHTML = svg('<path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-10a9 9 0 0 1 18 0Z"/><path d="M7 10h10M7 14h6"/>') + 'Feedback';
-  document.body.append(launcher);
-  document.body.classList.add('has-feedback');
+  launcher.setAttribute('aria-label', 'Open feedback form');
+  launcher.textContent = 'Feedback';
+  (document.querySelector('.header-tools') || document.body).append(launcher);
   const dialog = document.createElement('dialog');
   dialog.id = 'feedback-dialog'; dialog.className = 'feedback-dialog';
   dialog.setAttribute('aria-labelledby', 'feedback-title'); dialog.setAttribute('aria-describedby', 'feedback-subtitle');
   dialog.innerHTML = `<div class="feedback-content">
-    <div class="feedback-heading"><h2 id="feedback-title" tabindex="-1">Your thoughts<span>.</span></h2>
+    <div class="feedback-heading"><h2 id="feedback-title" tabindex="-1">Feedback<span>.</span></h2>
       <button type="button" class="feedback-close" aria-label="Close feedback">${svg('<path d="m6 6 12 12M18 6 6 18"/>')}</button></div>
-    <p id="feedback-subtitle" class="feedback-subtitle">Suggest a topic or share a comment about an article.</p>
+    <p id="feedback-subtitle" class="feedback-subtitle">Share a comment or suggest a topic.</p>
     ${preview ? '<p class="feedback-demo">Form preview · Nothing is sent or saved.</p>' : ''}
     <form id="feedback-form" method="dialog" novalidate>
       <fieldset><legend>Your rating <span class="feedback-optional">(optional)</span></legend>
@@ -45,8 +45,7 @@
       <button class="feedback-submit" id="feedback-submit" type="submit">${preview ? 'Preview submission' : 'Send feedback'} ${svg('<path d="M4 12h15m-5-5 5 5-5 5"/>', 'width="18" height="18"')}</button>
     </form>
     <div class="feedback-success" id="feedback-success" role="status" tabindex="-1" hidden>
-      <h3>${preview ? 'Preview complete.' : 'Thanks for the feedback.'}</h3>
-      <button type="button" class="feedback-submit" id="feedback-done">Done</button>
+      <h3>Thanks for the feedback.</h3>
     </div>
   </div>`;
   document.body.append(dialog);
@@ -82,7 +81,6 @@
   function close() {dialog.close();}
   launcher.addEventListener('click', open);
   $('.feedback-close').addEventListener('click', close);
-  $('#feedback-done').addEventListener('click', close);
   dialog.addEventListener('close', () => {
     const target = previousFocus?.isConnected ? previousFocus : launcher;
     target.focus({preventScroll: true});
