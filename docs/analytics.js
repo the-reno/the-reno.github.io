@@ -1,5 +1,5 @@
 'use strict';
-/* Basic consent: do not load Google or send any pings before an explicit opt-in. */
+/* Load statistics when the shared browser setting is on. */
 (() => {
   const id = window.RONU_ANALYTICS?.measurementId;
   if (location.hostname !== 'ronu.one' || !/^G-[A-Z0-9]+$/.test(id || '')) return;

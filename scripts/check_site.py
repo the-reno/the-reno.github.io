@@ -132,7 +132,7 @@ records_config = (site/'records-config.js').read_text(encoding='utf-8') if (site
 if origin not in records_config or 'enabled: true' not in records_config:
     errors.append('Visitor records are not configured for the verified service')
 privacy_text = (site/'privacy'/'index.html').read_text(encoding='utf-8')
-for phrase in ('Ronu.one is a personal website','Turn statistics on',"Google's privacy disclosure",'statistics-toggle'):
+for phrase in ('Ronu.one is a personal website','Statistics are on by default',"Google's privacy disclosure",'statistics-toggle'):
     if phrase not in privacy_text: errors.append(f'Privacy notice missing disclosure: {phrase}')
 visits_text = (site/'visits.js').read_text(encoding='utf-8')
 if 'Privacy choices' in visits_text or 'localStorage' in visits_text or 'consent:true' in visits_text:

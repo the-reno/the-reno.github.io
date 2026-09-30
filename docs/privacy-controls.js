@@ -8,10 +8,13 @@
   const excluded = () => signals() || read(excludeKey) === '1';
   function googleAllowed() {
     if (excluded()) return false;
+    const stored = read(consentKey);
+    if (stored === null) return true;
     try {
-      const choice = JSON.parse(read(consentKey));
-      return choice?.allowed === true && Number.isFinite(choice.at) && choice.at <= Date.now() && Date.now() - choice.at < lifetime;
-    } catch {return false;}
+      const choice = JSON.parse(stored);
+      if (Number.isFinite(choice?.at) && choice.at <= Date.now() && Date.now() - choice.at < lifetime) return choice.allowed === true;
+    } catch {}
+    return true;
   }
   function clearGoogleCookies() {
     for (const cookie of document.cookie.split(';')) {
@@ -49,7 +52,7 @@
       localStorage.setItem(consentKey, JSON.stringify({allowed: on, at: Date.now()}));
     } catch {
       render();
-      document.getElementById('analytics-status').textContent = 'Your browser blocked saving this setting. Statistics remain off.';
+      document.getElementById('analytics-status').textContent = 'Your browser blocked saving this setting. The current setting remains unchanged.';
       return;
     }
     changed();

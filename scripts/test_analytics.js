@@ -56,11 +56,11 @@ function fixture({allowed, excluded, age = 0, signals = {}, blockedStorage = fal
 }
 
 let f = fixture();
-check(f.scripts.length === 0 && f.commands().length === 0, 'No Google script or pings before consent');
-check(f.requests.length === 0, 'Neither statistics system starts before opt-in');
-check(!f.cookies.has('_ga') && f.cookies.has('necessary'), 'Remove stale Google cookies only');
+check(f.scripts.length === 1 && f.commands().length > 0, 'Google statistics start by default');
+check(f.requests.length === 1, 'Site statistics start by default');
+check(f.cookies.has('_ga') && f.cookies.has('necessary'), 'Default-on leaves existing statistics cookies available');
 f.tick(30000);
-check(f.requests.length === 0, 'Engagement remains off before opt-in');
+check(f.requests.at(-1).body.active_seconds === 30, 'Default-on engagement continues');
 
 f = fixture({allowed: true});
 check(f.scripts.length === 1 && f.scripts[0].src === 'https://www.googletagmanager.com/gtag/js?id=' + id, 'Opt-in loads the intended Google property once');
@@ -92,13 +92,15 @@ for (const options of [{allowed: true, excluded: true}, {allowed: true, signals:
   f = fixture(options); f.navigate('/topic/prediction/'); f.tick(30000);
   check(f.scripts.length === 0 && f.requests.length === 0, 'Exclusions/privacy signals suppress both systems');
 }
-for (const options of [{allowed: false}, {allowed: true, age: 181 * 86400000}, {allowed: true, age: -60000}, {blockedStorage: true}]) {
+f = fixture({allowed: false});
+check(f.scripts.length === 0 && f.requests.length === 0, 'An explicit off choice keeps both systems off');
+for (const options of [{allowed: true, age: 181 * 86400000}, {allowed: true, age: -60000}, {blockedStorage: true}]) {
   f = fixture(options);
-  check(f.scripts.length === 0 && f.requests.length === 0, 'Invalid, expired or absent consent keeps both systems off');
+  check(f.scripts.length === 1 && f.requests.length === 1, 'Missing, expired or unavailable storage uses the default-on setting');
 }
 f = fixture({blockedStorage: true});
-f.toggle(true);
-check(f.scripts.length === 0 && f.elements.get('analytics-status').textContent.includes('blocked saving'), 'Blocked preference storage does not silently grant consent');
+f.toggle(false);
+check(f.scripts.length === 1 && f.elements.get('analytics-status').textContent.includes('blocked saving'), 'A blocked browser reports that an off choice could not be saved');
 f = fixture();
 f.toggle(true);
 check(f.scripts.length === 1 && f.requests.length === 1 && f.win.RonuPrivacy.statisticsAllowed(), 'One switch activates both statistics systems');
