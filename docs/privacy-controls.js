@@ -1,7 +1,7 @@
 'use strict';
 (() => {
-  const consentKey = 'ronu.google-analytics-consent.v1';
-  const excludeKey = 'ronu.exclude-this-browser';
+  const consentKey = 'ronu.statistics-setting.v2';
+  const excludeKey = 'ronu.statistics-excluded.v2';
   const lifetime = 180 * 24 * 60 * 60 * 1000;
   const read = key => {try {return localStorage.getItem(key);} catch {return null;}};
   const signals = () => navigator.globalPrivacyControl === true || navigator.doNotTrack === '1' || window.doNotTrack === '1';

@@ -8,8 +8,8 @@ const {Event, EventTarget} = require('node:events');
 const NativeEvent = Event || globalThis.Event;
 const NativeTarget = EventTarget || globalThis.EventTarget;
 const site = path.resolve(__dirname, '../docs');
-const consentKey = 'ronu.google-analytics-consent.v1';
-const excludeKey = 'ronu.exclude-this-browser';
+const consentKey = 'ronu.statistics-setting.v2';
+const excludeKey = 'ronu.statistics-excluded.v2';
 const id = 'G-EWVTJ4SBS2';
 let checks = 0;
 function check(value, message) {assert.ok(value, message); checks++;}
