@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
 <link rel="privacy-policy" href="/privacy/" />
 <title>Privacy · Ronu</title>
-<meta name="description" content="Privacy and simple visitor statistics on the personal website Ronu.one." />
+<meta name="description" content="Privacy settings for the personal website Ronu.one." />
 <link rel="canonical" href="https://ronu.one/privacy/" />
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0c0e11;color:#a8a8a8;font:14px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}main{width:min(720px,calc(100% - 32px));margin:0 auto;padding:64px 0 96px}h1,h2{color:#efefef;font-weight:400}h1{font-size:2.4rem}h2{margin-top:2rem;font-size:1.1rem}a{color:#ff7a1a}p,li{max-width:68ch}.updated{color:#666}
@@ -18,26 +18,15 @@
 <main>
 <a href="/">← Ronu</a>
 <h1>Privacy</h1>
-<p class="updated">Effective September 30, 2026</p>
-<p>Ronu.one is a personal website. You do not need an account to read it.</p>
+<p>Ronu.one is a personal website.</p>
 <section class="choices" aria-labelledby="choices-title">
 <h2 id="choices-title">Statistics settings</h2>
-<p>Google Analytics is optional and off unless you enable it here. When enabled, it uses cookies to report pages viewed, reading time, device type and approximate location.</p>
-<p>This choice applies only to this browser. Google Analytics does not run on this page.</p>
+<p>Google Analytics is optional for this browser. Read <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">Google's privacy disclosure</a>.</p>
 <div class="actions"><button id="analytics-allow" type="button" disabled>Enable Google Analytics</button><button id="analytics-off" type="button" disabled>Turn Google Analytics off</button></div>
-<label class="exclude"><input id="exclude-browser" type="checkbox" disabled/><span>Do not count this browser in Google Analytics or Cloudflare statistics.</span></label>
+<label class="exclude"><input id="exclude-browser" type="checkbox" disabled/><span>Do not count this browser in site statistics.</span></label>
 <p class="status" id="analytics-status" role="status" aria-live="polite">Google Analytics stays off when JavaScript is unavailable.</p>
 <noscript><p>JavaScript is needed to save these settings. The browser statistics tools do not run without it.</p></noscript>
 </section>
-<h2>Simple visit statistics</h2>
-<p>Like many personal websites, Ronu uses basic statistics to understand which pages people read. Cloudflare records the page, visit time, active time, scroll depth, page order, connection IP address and approximate country or region. A random temporary ID connects pages during one open visit. Cloudflare does not use analytics cookies.</p>
-<p>If you enable Google Analytics, Google receives similar reading information plus approximate city and device details. Advertising features are disabled. Feedback, names, email addresses, searches and private URL details are not sent to Google. Google says it discards the IP address before storing Analytics data. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">how Google handles data from websites</a>.</p>
-<p>The Google choice and cookies expire after 180 days. You can turn Google off at any time. The browser exclusion above stops both statistics systems. Do Not Track and Global Privacy Control are also respected.</p>
-<h2>Feedback</h2>
-<p>If you use the Feedback form, Ronu privately stores the page, rating, comment and any name or email you provide. An email is used only to reply or send updates if you request them.</p>
-<h2>Storage</h2>
-<p>GitHub Pages hosts the site. Cloudflare stores visit records and feedback until they are manually deleted. Google keeps detailed Analytics data for 2 months, while general totals may remain longer.</p>
-<p>Statistics are not sold or used for advertising. To ask about information you submitted, use the Feedback form.</p>
 </main>
 <script defer src="/analytics-config.js?v=20260930-ga1"></script>
 <script defer src="/privacy-controls.js?v=20260930-ga1"></script>
