@@ -132,7 +132,7 @@ records_config = (site/'records-config.js').read_text(encoding='utf-8') if (site
 if origin not in records_config or 'enabled: true' not in records_config:
     errors.append('Visitor records are not configured for the verified service')
 privacy_text = (site/'privacy'/'index.html').read_text(encoding='utf-8')
-for phrase in ('connection IP address','first-level region','manually deleted','Cloudflare','Feedback'):
+for phrase in ('personal website','connection IP address','Google Analytics is optional','180 days','manually deleted','Cloudflare','Feedback'):
     if phrase not in privacy_text: errors.append(f'Privacy notice missing disclosure: {phrase}')
 visits_text = (site/'visits.js').read_text(encoding='utf-8')
 if 'Privacy choices' in visits_text or 'localStorage' in visits_text or 'consent:true' in visits_text:

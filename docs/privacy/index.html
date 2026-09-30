@@ -6,8 +6,8 @@
 <meta name="referrer" content="no-referrer" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
 <link rel="privacy-policy" href="/privacy/" />
-<title>Privacy Policy · Ronu</title>
-<meta name="description" content="Manage optional Google Analytics and visit counting, and learn how Ronu.one handles visit records and private feedback." />
+<title>Privacy · Ronu</title>
+<meta name="description" content="Privacy and simple visitor statistics on the personal website Ronu.one." />
 <link rel="canonical" href="https://ronu.one/privacy/" />
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0c0e11;color:#a8a8a8;font:14px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}main{width:min(720px,calc(100% - 32px));margin:0 auto;padding:64px 0 96px}h1,h2{color:#efefef;font-weight:400}h1{font-size:2.4rem}h2{margin-top:2rem;font-size:1.1rem}a{color:#ff7a1a}p,li{max-width:68ch}.updated{color:#666}
@@ -17,39 +17,27 @@
 <body>
 <main>
 <a href="/">← Ronu</a>
-<h1>Privacy &amp; statistics</h1>
+<h1>Privacy</h1>
 <p class="updated">Effective September 30, 2026</p>
-<p>Ronu.one is operated from the United States and hosted by GitHub Pages. It does not require an account to read.</p>
+<p>Ronu.one is a personal website. You do not need an account to read it.</p>
 <section class="choices" aria-labelledby="choices-title">
-<h2 id="choices-title">Your browser choices</h2>
-<p>Google Analytics is optional and off until you enable it here. Enabling it allows Google to receive page views, engagement time, approximate location and device information, and to use analytics cookies. This helps us understand which articles people read.</p>
-<p>Your choice applies to this browser. Google Analytics stays off on this Privacy page.</p>
+<h2 id="choices-title">Statistics settings</h2>
+<p>Google Analytics is optional and off unless you enable it here. When enabled, it uses cookies to report pages viewed, reading time, device type and approximate location.</p>
+<p>This choice applies only to this browser. Google Analytics does not run on this page.</p>
 <div class="actions"><button id="analytics-allow" type="button" disabled>Enable Google Analytics</button><button id="analytics-off" type="button" disabled>Turn Google Analytics off</button></div>
-<label class="exclude"><input id="exclude-browser" type="checkbox" disabled/><span>Do not count visits from this browser in either Google Analytics or Cloudflare.</span></label>
+<label class="exclude"><input id="exclude-browser" type="checkbox" disabled/><span>Do not count this browser in Google Analytics or Cloudflare statistics.</span></label>
 <p class="status" id="analytics-status" role="status" aria-live="polite">Google Analytics stays off when JavaScript is unavailable.</p>
-<noscript><p>Enable JavaScript to save browser preferences. Neither browser visit tracker runs without it; hosting providers may still keep infrastructure logs.</p></noscript>
+<noscript><p>JavaScript is needed to save these settings. The browser statistics tools do not run without it.</p></noscript>
 </section>
-<h2>Cloudflare visit records</h2>
-<p>For each accepted page or article visit, Ronu stores the time, page, connection IP address, country, and first-level region. Country and region are approximate and are supplied by Cloudflare from the incoming network connection.</p>
-<p>Ronu does not store city, postal code, latitude or longitude, cookies, account identifiers, or device fingerprints with the visit record. Browser Do Not Track and Global Privacy Control signals are respected.</p>
-<p>The browser also sends active time, maximum scroll depth, page order and randomly generated visit and temporary session identifiers. The session identifier lasts only in the open page's memory and is not stored in a cookie. These records help us understand readership and compare the two measurement systems. Turning Google Analytics off does not turn Cloudflare records off; use the browser exclusion above to stop both.</p>
-<h2>Optional Google Analytics</h2>
-<p>Only after you enable it, the homepage, articles and section pages load Google Analytics to measure page views and engagement time. Google also receives device/browser information and uses the connection IP address to estimate country, region and city. These are approximate locations, not GPS readings. Google states that Analytics discards the IP address before logging the data.</p>
-<p>We do not send feedback, names, email addresses, search input, URL query strings or fragments to Google. Advertising consent stays denied, and Google signals and advertising personalization are disabled in the site's tag. Enhanced measurement for forms, searches, outbound clicks, scrolling and videos is off.</p>
-<p>After opt-in, Google uses first-party analytics cookies such as <code>_ga</code> and <code>_ga_…</code> to distinguish browsers and sessions. We limit their lifetime to 180 days without extending it on each visit. The opt-in also expires after 180 days. You can withdraw it here at any time; we then stop Google collection and remove these cookies. Withdrawal does not delete data already received by Google.</p>
-<p>The settings above use local browser storage to remember your choices. The browser exclusion lasts until you switch it off or clear the site's storage. It must be set separately on each browser or device. Browser Do Not Track and Global Privacy Control signals override a Google opt-in and stop both visit trackers.</p>
-<p>Google processes the optional analytics data on our behalf, including outside your country. See <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">how Google uses information from sites that use its services</a>. We rely on your consent for this optional Google measurement.</p>
+<h2>Simple visit statistics</h2>
+<p>Like many personal websites, Ronu uses basic statistics to understand which pages people read. Cloudflare records the page, visit time, active time, scroll depth, page order, connection IP address and approximate country or region. A random temporary ID connects pages during one open visit. Cloudflare does not use analytics cookies.</p>
+<p>If you enable Google Analytics, Google receives similar reading information plus approximate city and device details. Advertising features are disabled. Feedback, names, email addresses, searches and private URL details are not sent to Google. Google says it discards the IP address before storing Analytics data. Learn more about <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">how Google handles data from websites</a>.</p>
+<p>The Google choice and cookies expire after 180 days. You can turn Google off at any time. The browser exclusion above stops both statistics systems. Do Not Track and Global Privacy Control are also respected.</p>
 <h2>Feedback</h2>
-<p>The optional Feedback form can send the page or article, a rating, your comment, and any name or email you choose to provide. Feedback is stored privately and is not posted on the website. Feedback is kept in a separate table and does not store or automatically join the visit IP address.</p>
-<p>Email is used for a reply when provided. The separate updates checkbox records a request for occasional updates.</p>
-<h2>Retention</h2>
-<p>Visit and feedback records remain until manually deleted. Aggregate page-view totals may remain after individual visit records are deleted. Private CSV exports may also be retained separately after a database row is deleted.</p>
-<p>Google's event and user data retention is set to 2 months. Aggregated standard reports can remain available longer. You may withdraw Google consent using the controls above.</p>
-<h2>Service providers</h2>
-<p>GitHub Pages hosts the public site. Cloudflare processes page-view and feedback requests, provides approximate country/region information, and stores the private records. Google processes analytics only for browsers that opt in. Provider infrastructure logs are separate from Ronu's database and the browser exclusion does not disable those logs.</p>
-<p>Visitor records are not sold and are not used for advertising.</p>
-<h2>Requests and changes</h2>
-<p>To ask about, correct, or delete information you submitted through Feedback, use the Feedback form and provide a reply email when needed. This policy will be updated when the site's data practices change.</p>
+<p>If you use the Feedback form, Ronu privately stores the page, rating, comment and any name or email you provide. An email is used only to reply or send updates if you request them.</p>
+<h2>Storage</h2>
+<p>GitHub Pages hosts the site. Cloudflare stores visit records and feedback until they are manually deleted. Google keeps detailed Analytics data for 2 months, while general totals may remain longer.</p>
+<p>Statistics are not sold or used for advertising. To ask about information you submitted, use the Feedback form.</p>
 </main>
 <script defer src="/analytics-config.js?v=20260930-ga1"></script>
 <script defer src="/privacy-controls.js?v=20260930-ga1"></script>
