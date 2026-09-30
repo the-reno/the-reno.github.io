@@ -109,6 +109,34 @@ function narrativeBlockMarkup(block) {
   }
   return `<div class="story-table" tabindex="0" role="region" aria-label="${esc(block.label)}"><table aria-label="${esc(block.label)}"><thead><tr>${block.columns.map(text => `<th scope="col">${esc(text)}</th>`).join('')}</tr></thead><tbody>${block.rows.map(row => `<tr>${row.map(text => `<td>${esc(text)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
+function narrativeSectionsMarkup(sections) {
+  return sections.map((section, index) => {
+    let heading = '';
+    if (section.heading) {
+      const parts = section.heading.split(' — ');
+      heading = parts.length === 2
+        ? `<header class="story-section-head"><span class="story-section-kicker" aria-hidden="true">${esc(parts[0])}</span><h2 id="story-heading-${index}" aria-label="${esc(section.heading)}">${esc(parts[1])}</h2></header>`
+        : `<header class="story-section-head"><h2 id="story-heading-${index}">${esc(section.heading)}</h2></header>`;
+    }
+    return `<section class="story-section" id="${esc(section.anchor)}"${section.heading ? ' aria-labelledby="story-heading-' + index + '"' : ' aria-label="Article opening"'}>${heading}${section.blocks.map(narrativeBlockMarkup).join('')}</section>`;
+  }).join('');
+}
+function narrativeMarkup(topic, content = '') {
+  const back = routeFor(topic.section);
+  const sectionName = SECTIONS[topic.section].name;
+  return `<div class="reader-top story-top"><a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a></div>
+    <article class="story-article" id="article-start" aria-labelledby="reader-title">
+      <header class="story-header">
+        <p class="story-kicker">${esc(sectionName)} / ${esc(topic.type)}</p>
+        <h1 class="index-title story-title" id="reader-title" tabindex="-1">${esc(topic.title)}</h1>
+      </header>
+      <div class="story-body" id="narrative-content" aria-busy="${!content}">${content}</div>
+      <nav class="story-bottom" aria-label="Article navigation">
+        <a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a>
+        <a class="quiet-link" href="/">Explore sections ${arrow}</a>
+      </nav>
+    </article>`;
+}
 function renderNarrative(topic) {
   stopArticle();
   pendingAnchor = '';
@@ -121,22 +149,14 @@ function renderNarrative(topic) {
   reader.classList.add('story-reader');
   $('#reading-progress').hidden = false;
   renderNavigation(topic.section);
-  const back = routeFor(topic.section);
-  const sectionName = SECTIONS[topic.section].name;
-  reader.innerHTML = `<div class="reader-top story-top"><a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a></div>
-    <article class="story-article" id="article-start" aria-labelledby="reader-title">
-      <header class="story-header">
-        <p class="story-kicker">${esc(sectionName)} / ${esc(topic.type)}</p>
-        <h1 class="index-title story-title" id="reader-title" tabindex="-1">${esc(topic.title)}</h1>
-      </header>
-      <div class="story-body" id="narrative-content" aria-busy="true"></div>
-      <nav class="story-bottom" aria-label="Article navigation">
-        <a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a>
-        <a class="quiet-link" href="#explore">Explore sections ${arrow}</a>
-      </nav>
-    </article>`;
+  const prerendered = reader.dataset.topicId === topic.id && reader.dataset.articleVersion === topic.articleVersion && $('#narrative-content', reader);
+  if (!prerendered) {
+    delete reader.dataset.topicId;
+    delete reader.dataset.articleVersion;
+    reader.innerHTML = narrativeMarkup(topic);
+    loadNarrative(topic);
+  }
   document.title = topic.title + ' — ' + SITE.name;
-  loadNarrative(topic);
   updateProgress();
 }
 async function loadNarrative(topic) {
@@ -160,7 +180,7 @@ async function loadNarrative(topic) {
           controller.abort();
         }
       }, 12000);
-      const response = await fetch(topic.articleFile + '?v=' + encodeURIComponent(topic.articleVersion || '1'), {
+      const response = await fetch('/' + topic.articleFile + '?v=' + encodeURIComponent(topic.articleVersion || '1'), {
         signal: controller.signal, credentials: 'same-origin', referrerPolicy: 'no-referrer'
       });
       if (!response.ok) throw new Error('Article HTTP ' + response.status);
@@ -171,16 +191,7 @@ async function loadNarrative(topic) {
       narrativeCache.set(key, sections);
     }
     if (!isCurrent()) return;
-    host.innerHTML = sections.map((section, index) => {
-      let heading = '';
-      if (section.heading) {
-        const parts = section.heading.split(' — ');
-        heading = parts.length === 2
-          ? `<header class="story-section-head"><span class="story-section-kicker" aria-hidden="true">${esc(parts[0])}</span><h2 id="story-heading-${index}" aria-label="${esc(section.heading)}">${esc(parts[1])}</h2></header>`
-          : `<header class="story-section-head"><h2 id="story-heading-${index}">${esc(section.heading)}</h2></header>`;
-      }
-      return `<section class="story-section" id="${esc(section.anchor)}"${section.heading ? ' aria-labelledby="story-heading-' + index + '"' : ' aria-label="Article opening"'}>${heading}${section.blocks.map(narrativeBlockMarkup).join('')}</section>`;
-    }).join('');
+    host.innerHTML = narrativeSectionsMarkup(sections);
     host.setAttribute('aria-busy', 'false');
     if (pendingAnchor) goAnchor(pendingAnchor);
     updateProgress();

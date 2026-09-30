@@ -2,14 +2,11 @@
 /** Routing and lifecycle. No landing-page wording or page-specific HTML here. */
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const esc = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
-const icon = id => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-const arrow = icon('arrow');
 let currentTopic = null;
+let currentPath = null;
 let pageCarousel = null, scrollTick = false;
 const carouselStates = new Map();
 const searchDialog = $('#search-dialog');
-function routeFor(id) {return id === 'all' ? '#explore' : '#section/' + id;}
 function destroyCarousel() {
   if (pageCarousel) {carouselStates.set(pageCarousel.root.id, pageCarousel.destroy()); pageCarousel = null;}
 }
@@ -20,6 +17,8 @@ function renderBrowse(pageId) {
   destroyCarousel();
   stopArticle();
   $('#reader-page').replaceChildren();
+  delete $('#reader-page').dataset.topicId;
+  delete $('#reader-page').dataset.articleVersion;
   currentTopic = null;
   document.body.dataset.pageMode = 'landing';
   $('#browse-page').hidden = false;
@@ -38,21 +37,17 @@ function renderBrowse(pageId) {
 }
 function navigate() {
   if (searchDialog.open) searchDialog.close();
-  const hash = location.hash || '#explore';
-  const olderRoutes = {
-    endurance: '#topic/sunlight-to-step', 'chaos-motion': '#topic/sunlight-to-step',
-    'body-mechanics': '#section/triathlon', arms: '#section/triathlon',
-    spark: '#section/science', traffic: '#section/science', 'dice-storm': '#section/science'
-  };
-  const oldId = hash.match(/^#topic\/([^/?]+)/)?.[1];
-  if (oldId && Object.hasOwn(olderRoutes, oldId)) {
-    history.replaceState(null, '', olderRoutes[oldId]);
-    return navigate();
-  }
-  if (hash === '#main') {$('#main').focus(); return;}
-  const [path, query = ''] = hash.slice(1).split('?');
-  const [kind, id, anchor] = path.split('/');
-  const topic = kind === 'topic' && TOPICS.find(item => item.id === id);
+  const route = readRoute(new URL(location.href));
+  if (!route) {location.reload(); return;}
+  const {topic, anchor, pageId, search} = route;
+  const destination = route.path + search + (anchor ? '#' + anchor : '');
+  if (location.pathname + location.search + location.hash !== destination) history.replaceState(null, '', destination);
+  const metadata = routeMetadata(route);
+  document.title = metadata.title;
+  $('meta[name="description"]').content = metadata.description;
+  $('link[rel="canonical"]').href = metadata.canonical;
+  const changed = currentPath !== route.path;
+  currentPath = route.path;
   if (topic) {
     destroyCarousel();
     document.body.dataset.pageMode = 'landing';
@@ -63,15 +58,16 @@ function navigate() {
       $('#reader-title').focus({preventScroll: true});
     }
     if (anchor && /^(part-\d+|article-start|article-opening)$/.test(anchor)) goAnchor(anchor);
-    return;
+  } else if (changed) {
+    renderBrowse(pageId);
+    window.scrollTo({top: 0, behavior: 'instant'});
+    $('#page-title').focus({preventScroll: true});
+    if (MAIN_PAGES[pageId].kind === 'gallery' && new URLSearchParams(search).get('gallery') === 'images') {
+      requestAnimationFrame(() => $('#page-collection').scrollIntoView({block: 'start', behavior: 'instant'}));
+    }
   }
-  const pageId = kind === 'section' && Object.hasOwn(MAIN_PAGES, id) ? id : 'all';
-  renderBrowse(pageId);
-  window.scrollTo({top: 0, behavior: 'instant'});
-  $('#page-title').focus({preventScroll: true});
-  if (MAIN_PAGES[pageId].kind === 'gallery' && new URLSearchParams(query).get('gallery') === 'images') {
-    requestAnimationFrame(() => $('#page-collection').scrollIntoView({block: 'start', behavior: 'instant'}));
-  }
+  if (anchor === 'main') $('#main').focus();
+  if (changed) window.dispatchEvent(new Event('ronu:navigate'));
 }
 function updateProgress() {
   if (!currentTopic) return;
@@ -85,7 +81,7 @@ function renderSearch() {
   const sections = SITE.sectionOrder.filter(id => {const p = MAIN_PAGES[id]; return match(p.name + ' ' + p.start + p.end + ' ' + p.intro);});
   const topics = query ? TOPICS.filter(t => match(t.title + ' ' + t.description + ' ' + SECTIONS[t.section].name + ' ' + t.type + ' ' + (t.tags || ''))) : [];
   const sectionRows = sections.map(id => `<a class="search-result" href="${routeFor(id)}"><span class="result-symbol">${icon(id)}</span><span class="result-copy"><strong>${esc(MAIN_PAGES[id].name)}</strong><span>${esc(MAIN_PAGES[id].start + MAIN_PAGES[id].end)}</span></span>${arrow}</a>`).join('');
-  const topicRows = topics.map(t => `<a class="search-result" href="#topic/${t.id}"><span class="result-symbol">${icon(t.section)}</span><span class="result-copy"><strong>${esc(t.title)}</strong><span>${esc(SECTIONS[t.section].name)} · ${esc(t.type)}</span></span>${arrow}</a>`).join('');
+  const topicRows = topics.map(t => `<a class="search-result" href="${topicPath(t.id)}"><span class="result-symbol">${icon(t.section)}</span><span class="result-copy"><strong>${esc(t.title)}</strong><span>${esc(SECTIONS[t.section].name)} · ${esc(t.type)}</span></span>${arrow}</a>`).join('');
   $('#search-results').innerHTML = (sectionRows ? `<p class="search-group-title">${esc(SITE.labels.sections)}</p>` + sectionRows : '') + (topicRows ? `<p class="search-group-title">${esc(SITE.labels.articles)}</p>` + topicRows : '') || '<div class="search-no-results">No results found. Try a different word.</div>';
   $('#search-result-count').textContent = query ? (sections.length + topics.length) + ' results' : 'Choose a section or search for a topic';
 }
@@ -108,6 +104,17 @@ document.addEventListener('keydown', event => {
     if (searchDialog.open) {event.preventDefault(); searchDialog.close();}
   }
 });
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href]');
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+      !link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+  const url = new URL(link.href);
+  if (url.origin !== location.origin || !readRoute(url)) return;
+  event.preventDefault();
+  if (url.href !== location.href) history.pushState(null, '', url.pathname + url.search + url.hash);
+  navigate();
+});
+window.addEventListener('popstate', navigate);
 window.addEventListener('hashchange', navigate);
 window.addEventListener('scroll', () => {if (!scrollTick) {requestAnimationFrame(() => {updateProgress(); scrollTick = false;}); scrollTick = true;}}, {passive: true});
 window.addEventListener('resize', updateProgress);

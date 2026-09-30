@@ -24,7 +24,7 @@ function articleIcon(kind) {
 }
 function articleTile(topic) {
   const preview = ARTICLE_PREVIEWS[topic.id] || {icon: 'article', summary: topic.description};
-  return `<a class="article-tile" href="#topic/${esc(topic.id)}" aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}">${articleIcon(preview.icon)}<div class="article-tile-copy"><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p class="article-tile-summary" id="summary-${esc(topic.id)}">${esc(preview.summary)}</p></div><span class="article-tile-arrow" aria-hidden="true">${arrow}</span></a>`;
+  return `<a class="article-tile" href="${topicPath(topic.id)}" aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}">${articleIcon(preview.icon)}<div class="article-tile-copy"><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p class="article-tile-summary" id="summary-${esc(topic.id)}">${esc(preview.summary)}</p></div><span class="article-tile-arrow" aria-hidden="true">${arrow}</span></a>`;
 }
 function carouselMarkup(id, items, kind) {
   const imageMode = kind === 'images';
@@ -43,7 +43,7 @@ function carouselMarkup(id, items, kind) {
 function pageCollection(pageId) {
   const page = MAIN_PAGES[pageId];
   if (page.kind === 'sections') {
-    const slides = SITE.sectionOrder.map(id => ({name: MAIN_PAGES[id].name, html: `<a class="section-slide-link" href="#section/${id}" aria-labelledby="section-title-${id}"><div class="section-slide-marker">${articleIcon(MAIN_PAGES[id].icon)}</div>${mainHero(id, {slide: true})}<span class="section-slide-arrow" aria-hidden="true">${arrow}</span></a>`}));
+    const slides = SITE.sectionOrder.map(id => ({name: MAIN_PAGES[id].name, html: `<a class="section-slide-link" href="${routeFor(id)}" aria-labelledby="section-title-${id}"><div class="section-slide-marker">${articleIcon(MAIN_PAGES[id].icon)}</div>${mainHero(id, {slide: true})}<span class="section-slide-arrow" aria-hidden="true">${arrow}</span></a>`}));
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2>${carouselMarkup('section-carousel', slides, 'sections')}`;
   }
   if (page.kind === 'gallery') {

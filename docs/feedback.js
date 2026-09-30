@@ -51,14 +51,7 @@
   document.body.append(dialog);
   const form = $('#feedback-form'), button = $('#feedback-submit'), error = $('#feedback-error');
   let previousFocus = null, inFlight = false, context = '/', submissionId = null, submittedSignature = null;
-  const route = () => {
-    const hash = location.hash.split('?')[0];
-    const section = hash.match(/^#section\/([a-z0-9-]+)/)?.[1];
-    const topic = hash.match(/^#topic\/([a-z0-9-]+)/)?.[1];
-    if (section && typeof MAIN_PAGES !== 'undefined' && Object.hasOwn(MAIN_PAGES, section)) return '/section/' + section;
-    if (topic && typeof TOPICS !== 'undefined' && TOPICS.some(t => t.id === topic)) return '/article/' + topic;
-    return '/';
-  };
+  const route = () => recordRoute() || '/';
   function showError(message, control) {
     error.textContent = message; error.hidden = false;
     if (control) {control.setAttribute('aria-invalid', 'true'); control.focus();}

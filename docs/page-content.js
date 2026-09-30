@@ -4,6 +4,7 @@
  */
 const SITE = {
   name: 'Ronu.one',
+  description: 'Triathlon, science, markets and making. Ideas to explore. Models to test. Things to build.',
   sectionOrder: ['triathlon', 'science', 'markets', 'maker'],
   footer: 'Since 2022',
   carousel: {intervalMs: 8000, autoplay: true, introParagraphs: 1},
