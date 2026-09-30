@@ -34,3 +34,13 @@ Updating this branch does not publish the site. Merging into the GitHub Pages so
 ## Visitor records
 
 The live site uses page-view records and a private feedback form. Public integration files are `docs/records-config.js`, `docs/visits.js`, `docs/feedback.js`, and `docs/feedback.css`. They send only to `https://ronu-records.rafatreno.workers.dev`; no administrator credential is stored in this repository. Visit records retain page/time, connection IP address, and approximate country/first-level region supplied by Cloudflare. City, postal code and coordinates are not stored. The privacy notice is at `/privacy/`.
+
+## Google Analytics comparison
+
+Google Analytics runs alongside the Cloudflare logger. There is no consent pop-up: visitors explicitly enable Google from `/privacy/`. Before opt-in, neither the Google script nor any Google measurement pings load. Opt-in and cookies expire after 180 days. Do Not Track, Global Privacy Control and the "Do not count visits from this browser" setting override Google consent. The exclusion also stops Cloudflare visit records, without disabling feedback or provider infrastructure logs. Set it separately on every owner browser/device, including phones. Private browsing and clearing site storage remove these preferences.
+
+`docs/analytics-config.js` contains the public measurement ID; `docs/analytics.js` handles opt-in loading and one page view per real route change. Google receives canonical paths and public titles, not query strings, fragments, search input or feedback. Enhanced measurement must remain off in the Google web stream to prevent duplicate History API views and unwanted form/search/click events. The tag denies all advertising consent and disables Google signals and advertising personalization. Google user/event retention is 2 months; standard aggregate reports have different retention.
+
+Comparison: Google reports only opted-in browsers; Cloudflare continues recording other eligible browsers. Counts should therefore differ. Match dates/time zones and map Cloudflare `/article/<id>` to Google's `/topic/<id>/`. Google views include repeat views; users are not views. Google engagement time and Cloudflare active seconds use different measurement methods. Avoid interpreting the difference as missing Cloudflare data. The Privacy page itself loads neither tracker.
+
+Run `node scripts/test_analytics.js` for isolated consent, exclusion, engagement and route lifecycle checks. They simulate production behavior without making network requests and run in CI alongside static-site validation.
