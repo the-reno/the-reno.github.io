@@ -1,2 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://ronu.one/</loc></url></urlset>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://ronu.one/</loc></url>
+  <url><loc>https://ronu.one/section/triathlon/</loc></url>
+  <url><loc>https://ronu.one/section/science/</loc></url>
+  <url><loc>https://ronu.one/section/markets/</loc></url>
+  <url><loc>https://ronu.one/section/maker/</loc></url>
+  <url><loc>https://ronu.one/topic/sunlight-to-step/</loc></url>
+  <url><loc>https://ronu.one/topic/prediction/</loc></url>
+  <url><loc>https://ronu.one/privacy/</loc></url>
+</urlset>

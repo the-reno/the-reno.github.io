@@ -5,10 +5,14 @@ from urllib.parse import urlsplit, unquote
 import json
 import re
 import subprocess
+import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
 site = root / 'docs'
 errors = []
+
+generated = subprocess.run(['node', str(root/'scripts/build_site.js'), '--check'], capture_output=True, text=True)
+if generated.returncode: errors.append(generated.stderr)
 
 class Document(HTMLParser):
     def __init__(self):
@@ -16,6 +20,7 @@ class Document(HTMLParser):
         self.references = []
         self.metadata = {}
         self.links = []
+        self.text = []
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag == 'meta':
@@ -23,6 +28,8 @@ class Document(HTMLParser):
         if tag == 'link': self.links.append(attrs)
         for attr in ('src', 'href'):
             if attr in attrs: self.references.append(attrs[attr])
+    def handle_data(self, data):
+        self.text.append(data)
 
 for file in site.rglob('*.html'):
     parsed = Document()
@@ -55,6 +62,8 @@ else:
     data = json.loads(catalogue.stdout)
     ids = {t['id'] for t in data['topics']}
     if len(ids) != len(data['topics']): errors.append('Duplicate article IDs')
+    for page in (site/'topic').glob('*/index.html'):
+        if page.parent.name not in ids: errors.append(f'Remove obsolete generated article: {page.relative_to(root)}')
     for topic in data['topics']:
         path = topic.get('articleFile','')
         if not re.fullmatch(r'articles/[a-z0-9-]+\.json',path):
@@ -64,12 +73,50 @@ else:
         article = json.loads(file.read_text(encoding='utf-8'))
         if article.get('id') != topic['id']: errors.append(f'Article ID mismatch: {path}')
         if not article.get('sections'): errors.append(f'Empty article: {path}')
+        page = site/'topic'/topic['id']/'index.html'
+        if not page.is_file(): errors.append(f'Missing static article: {topic["id"]}')
+        else:
+            article_html = page.read_text(encoding='utf-8')
+            parsed = Document()
+            parsed.feed(article_html)
+            if parsed.metadata.get('description') != topic['description']: errors.append(f'Article description mismatch: {page}')
+            if len(re.findall(r'<h1\b', article_html)) != 1: errors.append(f'Expected one article heading: {page}')
+            # Every authored string must occur in the response HTML, before JavaScript runs.
+            def prose(value):
+                if isinstance(value, str): return [value]
+                if isinstance(value, list): return [text for item in value for text in prose(item)]
+                if isinstance(value, dict): return [text for key, item in value.items() if key not in ('id','anchor','type') for text in prose(item)]
+                return []
+            visible_text = re.sub(r'\s+', ' ', ' '.join(parsed.text))
+            for text in prose(article['sections']):
+                # Split headings have their full wording in an accessible label.
+                if re.sub(r'\s+', ' ', text) not in visible_text and text not in article_html:
+                    errors.append(f'Article text missing from static HTML: {topic["id"]}: {text[:70]}')
     for page in data['pages'].values():
         for article_id in page.get('articleIds',[]):
             if article_id not in ids: errors.append(f'Unresolved article selection: {article_id}')
     for image in data['gallery']['images']:
         if not (site/image['src'].lstrip('/')).is_file(): errors.append('Missing gallery asset')
         if not image.get('alt','').strip(): errors.append('Missing image description')
+
+    expected_urls = {'https://ronu.one/', 'https://ronu.one/privacy/'}
+    expected_urls.update('https://ronu.one/topic/' + topic['id'] + '/' for topic in data['topics'])
+    expected_urls.update('https://ronu.one/section/' + section + '/' for section in data['site']['sectionOrder'])
+    sitemap = ET.parse(site/'sitemap.xml')
+    urls = [loc.text for loc in sitemap.findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+    if set(urls) != expected_urls or len(urls) != len(expected_urls): errors.append('Sitemap must list each canonical page exactly once')
+    for url in urls:
+        page = site/urlsplit(url).path.lstrip('/')/'index.html'
+        if not page.is_file(): errors.append(f'Sitemap URL does not resolve: {url}'); continue
+        parsed = Document()
+        parsed.feed(page.read_text(encoding='utf-8'))
+        canonical = [link.get('href') for link in parsed.links if link.get('rel') == 'canonical']
+        if canonical != [url]: errors.append(f'Canonical mismatch: {url}')
+        if 'noindex' in parsed.metadata.get('robots', ''): errors.append(f'Sitemap URL is noindex: {url}')
+        if not parsed.metadata.get('description'): errors.append(f'Missing description: {url}')
+        if any(ref.startswith(('#topic/', '#section/', '#explore')) for ref in parsed.references): errors.append(f'Legacy navigation link: {url}')
+    robots = (site/'robots.txt').read_text(encoding='utf-8')
+    if 'Sitemap: https://ronu.one/sitemap.xml' not in robots or 'Disallow: /\n' in robots: errors.append('Invalid robots.txt')
 
 
 # Visitor-record integration checks.
@@ -104,4 +151,4 @@ if (site/'CNAME').read_text().strip() != 'ronu.one': errors.append('Custom domai
 if 'noindex' in (site/'index.html').read_text(): errors.append('Main page must not be noindex')
 if errors:
     raise SystemExit('Site validation failed:\n- ' + '\n- '.join(errors))
-print('Site validation passed: local references, syntax, catalogue, content and gallery assets.')
+print('Site validation passed: generated pages, crawlable content, metadata, sitemap, local references, syntax, catalogue and integrations.')

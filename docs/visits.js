@@ -10,14 +10,7 @@
   const sessionId=crypto.randomUUID();
   let current=null,sequence=0,lastTick=performance.now(),activeMs=0,maxScroll=0,wasVisible=document.visibilityState==='visible';
 
-  function route(){
-    const hash=location.hash.split('?')[0];
-    const [kind,id]=hash.slice(1).split('/');
-    if(kind==='section'&&typeof MAIN_PAGES!=='undefined'&&Object.hasOwn(MAIN_PAGES,id)&&id!=='all')return '/section/'+id;
-    if(kind==='topic'&&typeof TOPICS!=='undefined'&&TOPICS.some(t=>t.id===id))return '/article/'+id;
-    if(!hash||hash==='#explore')return '/';
-    return null;
-  }
+  const route=()=>recordRoute();
   function addActive(){
     const now=performance.now();
     if(wasVisible&&current)activeMs+=Math.max(0,now-lastTick);
@@ -49,7 +42,7 @@
     setTimeout(updateScroll,120);
   }
   window.addEventListener('scroll',updateScroll,{passive:true});
-  window.addEventListener('hashchange',()=>{flush();start();});
+  window.addEventListener('ronu:navigate',()=>{flush();start();});
   document.addEventListener('visibilitychange',()=>{flush();wasVisible=document.visibilityState==='visible';lastTick=performance.now();});
   window.addEventListener('pagehide',flush);
   setInterval(flush,30000);
