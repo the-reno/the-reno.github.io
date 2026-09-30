@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://ronu.one/privacy/" />
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0c0e11;color:#a8a8a8;font:14px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}main{width:min(720px,calc(100% - 32px));margin:0 auto;padding:64px 0 96px}h1,h2{color:#efefef;font-weight:400}h1{font-size:2.4rem}h2{margin-top:2rem;font-size:1.1rem}a{color:#ff7a1a}p,li{max-width:68ch}.updated{color:#666}
-.choices{border:1px solid #30343a;border-radius:12px;padding:22px;margin:28px 0}.choices h2{margin-top:0}.toggle{display:flex;align-items:center;gap:14px;margin:24px 0;color:#efefef;cursor:pointer}.toggle input{appearance:none;width:54px;height:30px;margin:0;border:1px solid #5c626b;border-radius:999px;background:#1c2026;cursor:pointer;position:relative;transition:.2s}.toggle input::after{content:"";position:absolute;width:20px;height:20px;left:4px;top:4px;border-radius:50%;background:#a8a8a8;transition:.2s}.toggle input:checked{background:#ff7a1a;border-color:#ff7a1a}.toggle input:checked::after{left:28px;background:#111}.toggle input:disabled{opacity:.5;cursor:default}.toggle input:focus-visible,a:focus-visible{outline:2px solid #ff7a1a;outline-offset:4px}.toggle-value{min-width:3ch}.status{color:#efefef;font-size:13px}
+a:focus-visible{outline:2px solid #ff7a1a;outline-offset:4px}
 </style>
 </head>
 <body>
@@ -19,15 +19,9 @@
 <a href="/">← Ronu</a>
 <h1>Privacy</h1>
 <p>Ronu.one is a personal website.</p>
-<section class="choices" aria-labelledby="choices-title">
-<h2 id="choices-title">Statistics settings</h2>
-<p>Statistics are on by default. Use the switch to change this browser. Read <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">Google's privacy disclosure</a>.</p>
-<label class="toggle" for="statistics-toggle"><input id="statistics-toggle" type="checkbox" role="switch" disabled/><span>Statistics</span><strong class="toggle-value" id="statistics-value">Off</strong></label>
-<p class="status" id="analytics-status" role="status" aria-live="polite">Statistics are off for this browser.</p>
-<noscript><p>JavaScript is needed to save these settings. The browser statistics tools do not run without it.</p></noscript>
-</section>
+<p>Ronu uses Google Analytics for visit statistics. Read <a href="https://policies.google.com/technologies/partner-sites" rel="noopener noreferrer">Google's privacy disclosure</a>.</p>
 </main>
 <script defer src="/analytics-config.js?v=20260930-ga1"></script>
-<script defer src="/privacy-controls.js?v=20260930-toggle3"></script>
+<script defer src="/privacy-controls.js?v=20260930-always1"></script>
 </body>
 </html>
