@@ -23,16 +23,19 @@
     maxScroll=Math.max(maxScroll,Math.min(100,Math.round(((scrollY+innerHeight)/h)*100)));
   }
   function send(payload){
+    if(signals()||window.RonuPrivacy?.excluded())return;
     fetch(base.origin+'/api/visit',{method:'POST',credentials:'omit',referrerPolicy:'no-referrer',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true}).catch(()=>{});
   }
   function flush(){
+    if(window.RonuPrivacy?.excluded()){current=null;return;}
     if(!current)return;
     addActive();updateScroll();
     send({event_id:current.event_id,session_id:sessionId,page:current.page,page_sequence:current.page_sequence,
       mode:'update',active_seconds:Math.round(activeMs/1000),max_scroll:maxScroll,privacy_version:'2026-09-25-records3'});
   }
   function start(){
+    if(window.RonuPrivacy?.excluded()){current=null;return;}
     const page=route();if(!page)return;
     sequence+=1;
     current={event_id:crypto.randomUUID(),page,page_sequence:sequence};
@@ -43,6 +46,10 @@
   }
   window.addEventListener('scroll',updateScroll,{passive:true});
   window.addEventListener('ronu:navigate',()=>{flush();start();});
+  window.addEventListener('ronu:privacy-change',()=>{
+    if(window.RonuPrivacy?.excluded()){current=null;activeMs=0;}
+    else if(!current)start();
+  });
   document.addEventListener('visibilitychange',()=>{flush();wasVisible=document.visibilityState==='visible';lastTick=performance.now();});
   window.addEventListener('pagehide',flush);
   setInterval(flush,30000);
