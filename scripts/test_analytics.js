@@ -17,7 +17,7 @@ function fixture({allowed, excluded, age = 0, signals = {}, blockedStorage = fal
   const store = new Map();
   if (allowed !== undefined) store.set(consentKey, JSON.stringify({allowed, at: Date.now() - age}));
   if (excluded) store.set(excludeKey, '1');
-  const elements = new Map(['analytics-status', 'analytics-allow', 'analytics-off', 'exclude-browser'].map(key => [key, new NativeTarget()]));
+  const elements = new Map(['analytics-status', 'statistics-toggle', 'statistics-value'].map(key => [key, new NativeTarget()]));
   const cookies = new Map([['_ga', 'test-id'], ['necessary', 'keep']]);
   const scripts = [], requests = [], intervals = [];
   const win = new NativeTarget();
@@ -49,7 +49,7 @@ function fixture({allowed, excluded, age = 0, signals = {}, blockedStorage = fal
     get reloads() {return reloads;},
     commands: () => (win.dataLayer || []).map(args => Array.from(args)),
     event: name => win.dispatchEvent(new NativeEvent(name)),
-    click: name => elements.get(name).dispatchEvent(new NativeEvent('click')),
+    toggle: checked => {const element = elements.get('statistics-toggle'); element.checked = checked; element.dispatchEvent(new NativeEvent('change'));},
     tick: ms => {ticks += ms; intervals.forEach(callback => callback());},
     navigate: pathname => {location.pathname = pathname; location.href = 'https://' + host + pathname + '?email=private@example.com#private'; document.canonical = 'https://ronu.one' + pathname; document.title = 'Article — Ronu.one'; win.dispatchEvent(new NativeEvent('ronu:navigate'));}
   };
@@ -57,14 +57,14 @@ function fixture({allowed, excluded, age = 0, signals = {}, blockedStorage = fal
 
 let f = fixture();
 check(f.scripts.length === 0 && f.commands().length === 0, 'No Google script or pings before consent');
-check(f.requests.length === 1 && f.requests[0].url.endsWith('/api/visit'), 'Cloudflare starts independently');
+check(f.requests.length === 0, 'Neither statistics system starts before opt-in');
 check(!f.cookies.has('_ga') && f.cookies.has('necessary'), 'Remove stale Google cookies only');
 f.tick(30000);
-check(f.requests.at(-1).body.active_seconds === 30, 'Cloudflare engagement continues');
+check(f.requests.length === 0, 'Engagement remains off before opt-in');
 
 f = fixture({allowed: true});
 check(f.scripts.length === 1 && f.scripts[0].src === 'https://www.googletagmanager.com/gtag/js?id=' + id, 'Opt-in loads the intended Google property once');
-check(f.requests.length === 1, 'Cloudflare still starts after Google opt-in');
+check(f.requests.length === 1 && f.requests[0].url.endsWith('/api/visit'), 'Site statistics start with Google after opt-in');
 let commands = f.commands();
 check(commands[0][0] === 'consent' && commands[0][2].analytics_storage === 'denied' && commands[1][2].analytics_storage === 'granted', 'Consent is established before tag setup');
 check(commands[0][2].ad_storage === 'denied' && commands[0][2].ad_user_data === 'denied' && commands[0][2].ad_personalization === 'denied', 'Advertising remains denied');
@@ -81,11 +81,12 @@ check(views[1][2].page_referrer === 'https://ronu.one/' && !JSON.stringify(comma
 check(f.requests.at(-1).body.page === '/article/prediction', 'Cloudflare retains its article identifiers');
 f.navigate('/');
 check(f.commands().filter(c => c[1] === 'page_view').length === 3, 'Returning to a prior route counts a new view');
-f.click('analytics-off');
+const requestCount = f.requests.length;
+f.toggle(false);
 check(f.win['ga-disable-' + id] === true && f.reloads === 1 && !f.cookies.has('_ga'), 'Withdrawal disables Google, removes cookies and unloads its timers');
 const count = f.commands().length;
 f.navigate('/topic/sunlight-to-step/');
-check(f.commands().length === count && f.requests.at(-1).body.page === '/article/sunlight-to-step', 'Google withdrawal leaves Cloudflare operating');
+check(f.commands().length === count && f.requests.length === requestCount, 'Turning statistics off stops both collectors');
 
 for (const options of [{allowed: true, excluded: true}, {allowed: true, signals: {doNotTrack: '1'}}, {allowed: true, signals: {globalPrivacyControl: true}}]) {
   f = fixture(options); f.navigate('/topic/prediction/'); f.tick(30000);
@@ -93,14 +94,14 @@ for (const options of [{allowed: true, excluded: true}, {allowed: true, signals:
 }
 for (const options of [{allowed: false}, {allowed: true, age: 181 * 86400000}, {allowed: true, age: -60000}, {blockedStorage: true}]) {
   f = fixture(options);
-  check(f.scripts.length === 0 && f.requests.length === 1, 'Invalid/expired/absent consent fails closed for Google only');
+  check(f.scripts.length === 0 && f.requests.length === 0, 'Invalid, expired or absent consent keeps both systems off');
 }
 f = fixture({blockedStorage: true});
-f.click('analytics-allow');
+f.toggle(true);
 check(f.scripts.length === 0 && f.elements.get('analytics-status').textContent.includes('blocked saving'), 'Blocked preference storage does not silently grant consent');
 f = fixture();
-f.click('analytics-allow');
-check(f.scripts.length === 1 && f.win.RonuPrivacy.googleAllowed(), 'Explicit opt-in activates Google');
+f.toggle(true);
+check(f.scripts.length === 1 && f.requests.length === 1 && f.win.RonuPrivacy.statisticsAllowed(), 'One switch activates both statistics systems');
 f.store.set(excludeKey, '1');
 const storage = new NativeEvent('storage'); storage.key = excludeKey; f.win.dispatchEvent(storage);
 const before = f.requests.length; f.navigate('/topic/prediction/'); f.tick(30000);

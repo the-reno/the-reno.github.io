@@ -22,19 +22,17 @@
       }
     }
   }
-  window.RonuPrivacy = Object.freeze({excluded, googleAllowed});
+  const statisticsAllowed = () => googleAllowed();
+  window.RonuPrivacy = Object.freeze({excluded, googleAllowed, statisticsAllowed});
   function render() {
-    const checkbox = document.getElementById('exclude-browser');
-    if (checkbox) {checkbox.checked = read(excludeKey) === '1'; checkbox.disabled = false;}
+    const on = statisticsAllowed();
+    const toggle = document.getElementById('statistics-toggle');
+    if (toggle) {toggle.checked = on; toggle.disabled = signals();}
+    const value = document.getElementById('statistics-value');
+    if (value) value.textContent = on ? 'On' : 'Off';
     const status = document.getElementById('analytics-status');
-    if (status) status.textContent = excluded()
-      ? 'Visit counting is off in both systems for this browser' + (signals() ? ' because of your browser privacy signal.' : '.')
-      : googleAllowed() ? 'Google Analytics is on for this browser. Cloudflare visit records are also on.'
-        : 'Google Analytics is off for this browser. Cloudflare visit records are still on.';
-    const allow = document.getElementById('analytics-allow');
-    if (allow) allow.disabled = excluded() || googleAllowed();
-    const off = document.getElementById('analytics-off');
-    if (off) off.disabled = false;
+    if (status) status.textContent = on ? 'Statistics are on for this browser.'
+      : 'Statistics are off for this browser' + (signals() ? ' because of your browser privacy signal.' : '.');
   }
   function changed() {
     if (!googleAllowed()) {
@@ -45,17 +43,18 @@
     render();
     window.dispatchEvent(new Event('ronu:privacy-change'));
   }
-  function save(key, value) {
-    try {localStorage.setItem(key, value);} catch {
+  function save(on) {
+    try {
+      localStorage.setItem(excludeKey, on ? '0' : '1');
+      localStorage.setItem(consentKey, JSON.stringify({allowed: on, at: Date.now()}));
+    } catch {
       render();
-      document.getElementById('analytics-status').textContent = 'Your browser blocked saving this preference. Google Analytics stays off unless a valid earlier choice is available. Enable browser storage to save a change.';
+      document.getElementById('analytics-status').textContent = 'Your browser blocked saving this setting. Statistics remain off.';
       return;
     }
     changed();
   }
-  document.getElementById('analytics-allow')?.addEventListener('click', () => save(consentKey, JSON.stringify({allowed: true, at: Date.now()})));
-  document.getElementById('analytics-off')?.addEventListener('click', () => save(consentKey, JSON.stringify({allowed: false, at: Date.now()})));
-  document.getElementById('exclude-browser')?.addEventListener('change', event => save(excludeKey, event.target.checked ? '1' : '0'));
+  document.getElementById('statistics-toggle')?.addEventListener('change', event => save(event.target.checked));
   window.addEventListener('storage', event => {if (!event.key || event.key === consentKey || event.key === excludeKey) changed();});
   if (!googleAllowed()) clearGoogleCookies();
   render();
