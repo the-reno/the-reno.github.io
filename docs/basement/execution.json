@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "model": {"id": "kiri-room3-shell-v1", "url": "./room.gltf", "units": "meters", "upAxis": "Y"},
+  "measurements": [],
+  "areas": [],
+  "comments": [],
+  "steps": [
+    {"id": 1, "name": "Survey", "status": "Not started"},
+    {"id": 2, "name": "Clean", "status": "Not started"},
+    {"id": 3, "name": "Utilities", "status": "Not started"},
+    {"id": 4, "name": "Ceiling Plane", "status": "Not started"},
+    {"id": 5, "name": "Soffits", "status": "Not started"},
+    {"id": 6, "name": "Electrical", "status": "Not started"},
+    {"id": 7, "name": "Drywall", "status": "Not started"},
+    {"id": 8, "name": "Finish", "status": "Not started"}
+  ],
+  "counters": {"comment": 0, "measurement": 0, "area": 0}
+}
