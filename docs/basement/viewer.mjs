@@ -50,17 +50,30 @@ export async function createViewer(host, onTap) {
   model.updateMatrixWorld(true);
   const geometry = (mesh) => {
     const attribute = mesh.geometry.getAttribute("position");
-    const positions = Array.from({length:attribute.count}, (_,i) =>
-      new THREE.Vector3().fromBufferAttribute(attribute,i).applyMatrix4(mesh.matrixWorld).toArray());
-    return {positions, indices:mesh.geometry.index ? Array.from(mesh.geometry.index.array) : null};
+    const positions = Array.from({ length: attribute.count }, (_, i) =>
+      new THREE.Vector3()
+        .fromBufferAttribute(attribute, i)
+        .applyMatrix4(mesh.matrixWorld)
+        .toArray(),
+    );
+    return {
+      positions,
+      indices: mesh.geometry.index
+        ? Array.from(mesh.geometry.index.array)
+        : null,
+    };
   };
   let metrics = null;
   try {
     metrics = {
       floor: measureFloor(floors.map(geometry)),
-      walls: meshes.filter(m=>m.name.startsWith("wall_")).map((m,i)=>({
-        ...measureWall(geometry(m).positions), source:m.name, id:`W${String(i+1).padStart(2,"0")}`,
-      })),
+      walls: meshes
+        .filter((m) => m.name.startsWith("wall_"))
+        .map((m, i) => ({
+          ...measureWall(geometry(m).positions),
+          source: m.name,
+          id: `W${String(i + 1).padStart(2, "0")}`,
+        })),
     };
   } catch (error) {
     console.warn("Model measurements unavailable:", error);
@@ -190,30 +203,103 @@ export async function createViewer(host, onTap) {
     leaders.replaceChildren();
     labelItems = [];
     for (const i of items) {
+      const firstObject = annotations.children.length;
       if (i.type === "measurement") {
-        line(annotations, [i.a, i.b], 0x255d77);
-        dot(annotations, i.a, 0x255d77);
-        dot(annotations, i.b, 0x255d77);
+        const color = i.selected ? 0xad5420 : 0x255d77;
+        line(annotations, [i.a, i.b], color);
+        dot(annotations, i.a, color);
+        dot(annotations, i.b, color);
       }
       if (i.type === "project-dimension" || i.type === "wall-dimension") {
-        const color = i.type === "wall-dimension" ? (i.selected ? 0xad5420 : 0x255d77) : 0x88613b;
+        const color = i.selected
+          ? 0xad5420
+          : i.type === "wall-dimension"
+            ? 0x255d77
+            : 0x88613b;
         line(annotations, [i.a, i.b], color);
         // Architectural ticks; the printed value comes from the plan, not length.
         for (const p of [i.a, i.b])
-          line(annotations, [[p[0] - .065, p[1], p[2] - .065],
-            [p[0] + .065, p[1], p[2] + .065]], color);
+          line(
+            annotations,
+            [
+              [p[0] - 0.065, p[1], p[2] - 0.065],
+              [p[0] + 0.065, p[1], p[2] + 0.065],
+            ],
+            color,
+          );
       }
       if (i.type === "model-floor") {
-        const fill = new THREE.Mesh(new THREE.BufferGeometry().setAttribute("position",
-          new THREE.Float32BufferAttribute(i.triangles.flat(2),3)),
-          new THREE.MeshBasicMaterial({color:0x255d77,transparent:true,opacity:.08,
-            depthWrite:false,side:THREE.DoubleSide}));
-        fill.position.y=.015;
+        const fill = new THREE.Mesh(
+          new THREE.BufferGeometry().setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(i.triangles.flat(2), 3),
+          ),
+          new THREE.MeshBasicMaterial({
+            color: 0x255d77,
+            transparent: true,
+            opacity: 0.08,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          }),
+        );
+        fill.position.y = 0.015;
         annotations.add(fill);
       }
       if (i.type === "area") polygon(annotations, i.points, 0xad5420);
       if (i.type === "comment") dot(annotations, i.position, 0xad5420);
       addLabel(i.position, i.node);
+      if (i.selected && i.a && i.b) {
+        const a = new THREE.Vector3(...i.a),
+          b = new THREE.Vector3(...i.b);
+        const direction = b.clone().sub(a);
+        const stroke = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            radius * 0.003,
+            radius * 0.003,
+            direction.length(),
+            8,
+          ),
+          new THREE.MeshBasicMaterial({ color: 0xad5420, depthTest: false }),
+        );
+        stroke.position.copy(a).add(b).multiplyScalar(0.5);
+        stroke.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          direction.normalize(),
+        );
+        stroke.renderOrder = 12;
+        annotations.add(stroke);
+        for (const [index, position] of [i.a, i.b].entries()) {
+          dot(annotations, position, 0xad5420);
+          const endpoint = document.createElement("span");
+          endpoint.className = "model-label endpoint";
+          endpoint.textContent = index === 0 ? "A" : "B";
+          addLabel(position, endpoint);
+        }
+        if (i.type === "wall-dimension") {
+          const wall = meshes.find((mesh) => mesh.name === i.source);
+          if (wall) {
+            const highlight = new THREE.Mesh(
+              wall.geometry.clone(),
+              new THREE.MeshBasicMaterial({
+                color: 0xad5420,
+                transparent: true,
+                opacity: 0.35,
+                depthTest: false,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+              }),
+            );
+            highlight.applyMatrix4(wall.matrixWorld);
+            highlight.renderOrder = 8;
+            annotations.add(highlight);
+          }
+        }
+      }
+      if (i.muted)
+        for (const object of annotations.children.slice(firstObject)) {
+          object.material.transparent = true;
+          object.material.opacity *= 0.25;
+        }
     }
   }
   function showDraft(points, area = false) {
@@ -307,10 +393,18 @@ export async function createViewer(host, onTap) {
   renderer.setAnimationLoop(() => {
     controls.update();
     renderer.render(scene, camera);
-    const placed = [".topbar", ".model-summary", ".source-switch", ".tools", ".prompt"]
-      .map(selector=>document.querySelector(selector))
-      .filter(node=>node && !node.hidden && node.getClientRects().length)
-      .map(node=>node.getBoundingClientRect());
+    const placed = [
+      ".topbar",
+      ".model-summary",
+      ".source-switch",
+      ".tools",
+      ".prompt",
+      "#panel",
+      "#project-panel",
+    ]
+      .map((selector) => document.querySelector(selector))
+      .filter((node) => node && !node.hidden && node.getClientRects().length)
+      .map((node) => node.getBoundingClientRect());
     for (const { position, node, leader } of labelItems) {
       const p = project(position.toArray());
       node.hidden =
@@ -324,15 +418,31 @@ export async function createViewer(host, onTap) {
       if (node.hidden) continue;
       const w = node.offsetWidth,
         h = node.offsetHeight;
-      if (node.classList.contains("project-dimension")) {
+      if (
+        node.classList.contains("project-dimension") &&
+        !node.classList.contains("selected")
+      ) {
         // Keep source labels close to their endpoints. Crowded labels reappear
         // as the user zooms; the complete catalogue stays in Project.
-        const r = { left: p.x - w / 2, right: p.x + w / 2,
-          top: p.y - h / 2, bottom: p.y + h / 2 };
-        if (r.left < 6 || r.right > host.clientWidth - 6 || r.top < 140 ||
-            r.bottom > host.clientHeight - 150 || placed.some((o) =>
-              r.left < o.right + 6 && r.right + 6 > o.left &&
-              r.top < o.bottom + 6 && r.bottom + 6 > o.top)) {
+        const r = {
+          left: p.x - w / 2,
+          right: p.x + w / 2,
+          top: p.y - h / 2,
+          bottom: p.y + h / 2,
+        };
+        if (
+          r.left < 6 ||
+          r.right > host.clientWidth - 6 ||
+          r.top < 140 ||
+          r.bottom > host.clientHeight - 110 ||
+          placed.some(
+            (o) =>
+              r.left < o.right + 6 &&
+              r.right + 6 > o.left &&
+              r.top < o.bottom + 6 &&
+              r.bottom + 6 > o.top,
+          )
+        ) {
           node.hidden = true;
           leader.style.display = "none";
           continue;
@@ -357,13 +467,21 @@ export async function createViewer(host, onTap) {
         ];
         const wallLabel = node.classList.contains("wall-dimension");
         if (wallLabel && host.clientWidth < 600) {
-          offsets.splice(0, offsets.length, [0,0], [0,-h-6], [0,h+6],
-            [-w/2,-h-6], [w/2,h+6]);
+          offsets.splice(
+            0,
+            offsets.length,
+            [0, 0],
+            [0, -h - 6],
+            [0, h + 6],
+            [-w / 2, -h - 6],
+            [w / 2, h + 6],
+          );
         } else if (wallLabel) {
-          for(let ring=1;ring<=4;ring++) {
-            for(let dx=-ring;dx<=ring;dx++)for(let dy=-ring;dy<=ring;dy++)
-              if(Math.max(Math.abs(dx),Math.abs(dy))===ring)
-                offsets.push([dx*(w+8),dy*(h+8)]);
+          for (let ring = 1; ring <= 4; ring++) {
+            for (let dx = -ring; dx <= ring; dx++)
+              for (let dy = -ring; dy <= ring; dy++)
+                if (Math.max(Math.abs(dx), Math.abs(dy)) === ring)
+                  offsets.push([dx * (w + 8), dy * (h + 8)]);
           }
         }
         let found = false;
@@ -426,6 +544,27 @@ export async function createViewer(host, onTap) {
     renderer.domElement.style.cursor =
       mode === "navigate" ? "grab" : "crosshair";
   }
+  function focusMeasurement(a, b) {
+    const damping = controls.enableDamping;
+    controls.enableDamping = false;
+    controls.update();
+    const direction = camera.position.clone().sub(controls.target).normalize();
+    const midpoint = new THREE.Vector3(...a)
+      .add(new THREE.Vector3(...b))
+      .multiplyScalar(0.5);
+    const halfFov = Math.atan(
+      Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
+        Math.min(camera.aspect, 1),
+    );
+    const span = new THREE.Vector3(...a).distanceTo(new THREE.Vector3(...b));
+    const dist = Math.max(2.5, span * 0.75) / Math.sin(halfFov);
+    controls.target.copy(midpoint);
+    camera.position
+      .copy(midpoint)
+      .addScaledVector(direction, Math.min(dist, controls.maxDistance));
+    controls.update();
+    controls.enableDamping = damping;
+  }
   return {
     metrics,
     camera,
@@ -436,6 +575,7 @@ export async function createViewer(host, onTap) {
     pick,
     onFloor,
     fit,
+    focusMeasurement,
     renderItems,
     showDraft,
     setMode,

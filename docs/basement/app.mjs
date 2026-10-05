@@ -3,14 +3,17 @@ import {
   INCH_TO_M,
   distance,
   polygonCenter,
-  formatLength,
-  formatArea,
+  formatLength as displayLength,
+  formatArea as displayArea,
+  VIEW_STORAGE_KEY,
+  loadView,
+  parseProjectLength,
   commentNumber,
   nextId,
   validatePolygon,
   validateData,
   loadData,
-} from "./data.mjs?v=2";
+} from "./data.mjs?v=5";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -26,45 +29,194 @@ let selected = null,
   editingNote = null;
 let toastTimer,
   lastAreaTap = null;
-const visible = { comments: true, measurements: true, areas: true };
+let preferences = loadView();
+let visible = preferences.visibility;
+let focusedMeasure = null;
+const formatLength = (meters) => displayLength(meters, preferences.units);
+const formatArea = (meters) => displayArea(meters, preferences.units);
+function projectLength(item) {
+  const meters = parseProjectLength(item.value);
+  return preferences.units === "metric" && meters !== null
+    ? formatLength(meters)
+    : item.value;
+}
 let projectData = null;
 let projectLoading = false;
 let dimensionSource = "model";
-let selectedWall = null;
 let selectedImage = "lighting";
 
-function openWalls() {
+function saveView() {
+  preferences.source = dimensionSource;
+  try {
+    storage?.setItem(VIEW_STORAGE_KEY, JSON.stringify(preferences));
+  } catch {
+    toast(
+      "View preferences apply only in this tab. Browser saving is unavailable.",
+    );
+  }
+}
+function measureShown(key) {
+  return !preferences.hidden.includes(key);
+}
+function setMeasureShown(key, show) {
+  preferences.hidden = preferences.hidden.filter((id) => id !== key);
+  if (!show) preferences.hidden.push(key);
+  else visible.measurements = true;
+  if (!show && focusedMeasure === key) focusedMeasure = null;
+  saveView();
+  refresh();
+}
+function measurementEntries() {
+  const own = data.measurements.map((item) => ({
+    key: `saved:${item.id}`,
+    title: item.name || item.id,
+    detail: `${item.id} · ${formatLength(lengthOf(item))} · ${item.status}`,
+    a: item.a,
+    b: item.b,
+    item,
+    type: "saved",
+  }));
+  const reference =
+    dimensionSource === "model"
+      ? (viewer.metrics?.walls || []).map((wall) => ({
+          key: `wall:${wall.id}`,
+          title: `Wall ${wall.id}`,
+          detail: `${formatLength(wall.length)} long · ${formatLength(wall.height)} high · SCAN`,
+          a: [wall.a[0], viewer.ceilingY, wall.a[1]],
+          b: [wall.b[0], viewer.ceilingY, wall.b[1]],
+          type: "wall",
+          item: wall,
+        }))
+      : projectDimensions().map((item) => ({
+          key: `project:${item.id}`,
+          title: `${item.room} · ${item.name}`,
+          detail: `${item.id} · ${projectLength(item)} · PROJECT`,
+          a: [item.a[0], viewer.ceilingY, item.a[1]],
+          b: [item.b[0], viewer.ceilingY, item.b[1]],
+          type: "project",
+          item,
+        }));
+  return [...own, ...reference];
+}
+function locateMeasure(entry) {
   setMode("navigate");
-  openPanel("Wall sizes · 3D model");
-  note("Model estimates in feet/inches. Each number identifies a wall segment in the KIRI file; some segments overlap. Length follows the modelled segment, not a clear room span.");
-  const table = el("table", undefined, "wall-table");
-  const head = el("tr");
-  for (const title of ["Wall", "Length", "Height"]) head.append(el("th", title));
-  table.append(head);
-  for (const wall of viewer.metrics?.walls || []) {
-    const row = el("tr");
-    const cell = el("td");
-    const choose = button(wall.id, () => {
-      selectedWall = wall.id;
-      dimensionSource = "model";
-      visible.measurements = true;
-      $$(".wall-table button").forEach(b=>b.setAttribute("aria-pressed",String(b.textContent===wall.id)));
+  focusedMeasure = entry.key;
+  setMeasureShown(entry.key, true);
+  viewer.focusMeasurement(entry.a, entry.b);
+  toast(`${entry.title} · highlighted between A and B`);
+}
+function openShowOptions() {
+  const previousFocus = focusedMeasure;
+  setMode("navigate");
+  focusedMeasure = previousFocus;
+  openPanel("Show on model", { type: "view" });
+  $("#show-options").setAttribute("aria-expanded", "true");
+  const units = el("div", undefined, "unit-options");
+  units.setAttribute("role", "group");
+  units.setAttribute("aria-label", "Measurement units");
+  for (const [value, label] of [
+    ["imperial", "Imperial · ft/in"],
+    ["metric", "Metric · m"],
+  ]) {
+    const control = button(label, () => {
+      preferences.units = value;
+      saveView();
+      refresh();
+      if (projectData) renderProjectReferences();
+      openShowOptions();
+    });
+    control.dataset.units = value;
+    control.setAttribute("aria-pressed", String(preferences.units === value));
+    units.append(control);
+  }
+  body.append(units);
+  const groups = el("div", undefined, "visibility-options");
+  for (const [key, label] of [
+    ["measurements", "Measurements"],
+    ["areas", "Areas"],
+    ["comments", "Comments"],
+  ]) {
+    const control = button(label, () => {
+      visible[key] = !visible[key];
+      saveView();
       refresh();
     });
-    choose.setAttribute("aria-label", `Highlight wall ${wall.id}`);
-    choose.setAttribute("aria-pressed", String(selectedWall === wall.id));
-    cell.append(choose);
-    row.append(cell, el("td", formatLength(wall.length)), el("td", formatLength(wall.height)));
-    table.append(row);
+    control.dataset.visibility = key;
+    control.setAttribute("aria-pressed", String(visible[key]));
+    groups.append(control);
   }
-  body.append(table);
+  body.append(groups);
+  note(
+    "Check what stays visible. Locate highlights the related wall or the A–B line.",
+  );
+  const entries = measurementEntries();
+  actions(
+    ...[
+      ["Show all", true],
+      ["Hide all", false],
+    ].map(([label, show]) =>
+      button(label, () => {
+        const keys = new Set(entries.map((entry) => entry.key));
+        preferences.hidden = preferences.hidden.filter((key) => !keys.has(key));
+        if (!show) preferences.hidden.push(...keys);
+        visible.measurements = true;
+        focusedMeasure = null;
+        saveView();
+        openShowOptions();
+      }),
+    ),
+  );
+  let group;
+  for (const entry of entries) {
+    const heading =
+      entry.type === "saved"
+        ? "Your measurements"
+        : dimensionSource === "model"
+          ? "Model wall lengths"
+          : "Lighting spacings · approximate placement";
+    if (heading !== group) {
+      body.append(el("h2", heading, "filter-heading"));
+      group = heading;
+    }
+    const row = el("div", undefined, "measurement-option");
+    row.dataset.measureKey = entry.key;
+    const label = el("label");
+    const checkbox = el("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = measureShown(entry.key);
+    checkbox.setAttribute("aria-label", `Show ${entry.title}`);
+    checkbox.onchange = () => {
+      focusedMeasure = checkbox.checked ? entry.key : focusedMeasure;
+      setMeasureShown(entry.key, checkbox.checked);
+    };
+    const text = el("span");
+    text.append(el("strong", entry.title), el("small", entry.detail));
+    label.append(checkbox, text);
+    const locate = button("Locate", () => locateMeasure(entry));
+    locate.setAttribute("aria-label", `Locate ${entry.title}`);
+    row.append(label, locate);
+    body.append(row);
+  }
+  if (!entries.length)
+    note(
+      projectLoading
+        ? "Loading reference dimensions…"
+        : "No measurements to show yet.",
+    );
+  refresh();
 }
 
 function projectDimensions() {
-  return (projectData?.dimensions || []).filter((d) =>
-    typeof d.id === "string" && typeof d.value === "string" &&
-    [d.a, d.b].every((p) => Array.isArray(p) && p.length === 2 &&
-      p.every((v) => Number.isFinite(v) && Math.abs(v) < 10)),
+  return (projectData?.dimensions || []).filter(
+    (d) =>
+      typeof d.id === "string" &&
+      typeof d.value === "string" &&
+      [d.a, d.b].every(
+        (p) =>
+          Array.isArray(p) &&
+          p.length === 2 &&
+          p.every((v) => Number.isFinite(v) && Math.abs(v) < 10),
+      ),
   );
 }
 
@@ -72,13 +224,15 @@ function openProjectDimension(item) {
   setMode("navigate");
   openPanel(`${item.room} · plan dimension`);
   body.append(el("span", "PROJECT", "badge project-badge"));
-  body.append(el("p", item.value, "value"), el("p", item.name));
+  focusedMeasure = `project:${item.id}`;
+  body.append(el("p", projectLength(item), "value"), el("p", item.name));
   note(projectData.dimensionNote);
   const source = el("a", "Open lighting drawing image");
   source.href = "./lighting-plan.png";
   source.target = "_blank";
   source.rel = "noopener";
   body.append(source);
+  refresh();
 }
 
 async function loadProjectReferences() {
@@ -90,12 +244,15 @@ async function loadProjectReferences() {
     const response = await fetch("./project-data.json?v=4", {
       signal: AbortSignal.timeout(8000),
     });
-    if (!response.ok) throw new Error(`Project reference HTTP ${response.status}`);
+    if (!response.ok)
+      throw new Error(`Project reference HTTP ${response.status}`);
     const reference = await response.json();
-    if (!Array.isArray(reference?.pages)) throw new Error("Invalid project references");
+    if (!Array.isArray(reference?.pages))
+      throw new Error("Invalid project references");
     projectData = reference;
     renderProjectReferences();
     refresh();
+    if (selected?.type === "view") openShowOptions();
   } catch (error) {
     projectData = null;
     console.warn("Project references unavailable:", error);
@@ -118,14 +275,23 @@ function renderProjectReferences() {
     const list = el("details", undefined, "plan-dimension-list");
     list.append(el("summary", `All ${dimensions.length} printed dimensions`));
     for (const item of dimensions) {
-      const row = button(`${item.room} · ${item.name}: ${item.value}`,
-        () => openProjectDimension(item));
+      const row = button(
+        `${item.room} · ${item.name}: ${projectLength(item)}`,
+        () => openProjectDimension(item),
+      );
       list.append(row);
     }
     catalogue.append(list);
   }
   for (const page of projectData.pages || []) {
-    const card = button("", () => { selectedImage = page.id; renderProjectReferences(); }, "project-ref");
+    const card = button(
+      "",
+      () => {
+        selectedImage = page.id;
+        renderProjectReferences();
+      },
+      "project-ref",
+    );
     card.setAttribute("aria-pressed", String(page.id === selectedImage));
     const image = el("img");
     image.src = page.image;
@@ -134,7 +300,9 @@ function renderProjectReferences() {
     card.append(image, el("span", page.title));
     host.append(card);
   }
-  const page = projectData.pages.find(p=>p.id===selectedImage) || projectData.pages[0];
+  const page =
+    projectData.pages.find((p) => p.id === selectedImage) ||
+    projectData.pages[0];
   if (page) {
     $("#project-image").src = page.image;
     $("#project-image").alt = page.title;
@@ -143,7 +311,6 @@ function renderProjectReferences() {
     $("#lighting-dimensions").hidden = page.id !== "lighting";
   }
 }
-
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -182,10 +349,15 @@ function save() {
 }
 function changed() {
   save();
+  saveView();
   refresh();
 }
 function openPanel(title, selection = null) {
   selected = selection;
+  $("#show-options").setAttribute(
+    "aria-expanded",
+    String(selection?.type === "view"),
+  );
   $("#project-panel").hidden = true;
   $("#panel-title").textContent = title;
   body.replaceChildren();
@@ -194,6 +366,7 @@ function openPanel(title, selection = null) {
 }
 function closePanel() {
   $("#panel").hidden = true;
+  $("#show-options").setAttribute("aria-expanded", "false");
   selected = null;
   editingNote = null;
   refresh();
@@ -296,6 +469,7 @@ function openHiddenNotes() {
 }
 function openMeasurement(measurement) {
   setMode("navigate");
+  focusedMeasure = `saved:${measurement.id}`;
   openPanel(measurement.name || "Measurement", {
     type: "measurement",
     id: measurement.id,
@@ -309,7 +483,7 @@ function openMeasurement(measurement) {
     ),
   );
   note(
-    `${lengthOf(measurement).toFixed(3)} m · scan ${distance(measurement.a, measurement.b).toFixed(3)} m`,
+    `Original scan: ${formatLength(distance(measurement.a, measurement.b))}`,
   );
   field(
     "Name (optional)",
@@ -333,36 +507,48 @@ function openMeasurement(measurement) {
     input.id = lab.htmlFor;
     input.type = "number";
     input.min = "0";
-    input.step = label === "Feet" ? "1" : ".125";
+    input.step = label === "Feet" ? "1" : label === "Meters" ? ".001" : ".125";
     input.inputMode = "decimal";
     input.value = String(value);
     wrap.append(lab, input);
     row.append(wrap);
     return input;
   }
-  const feetInput = numeric("Feet", feet);
-  const inchInput = numeric(
-    "Inches",
-    Number((totalInches - feet * 12).toFixed(3)),
-  );
+  const metric = preferences.units === "metric";
+  const meterInput = metric
+    ? numeric("Meters", Number(lengthOf(measurement).toFixed(3)))
+    : null;
+  const feetInput = metric ? null : numeric("Feet", feet);
+  const inchInput = metric
+    ? null
+    : numeric("Inches", Number((totalInches - feet * 12).toFixed(3)));
   body.append(row);
   actions(
     button("Mark VERIFIED", () => {
-      const f = Number(feetInput.value),
-        i = Number(inchInput.value),
-        meters = (f * 12 + i) * INCH_TO_M;
+      const f = Number(feetInput?.value),
+        i = Number(inchInput?.value);
+      const meters = metric
+        ? Number(meterInput.value)
+        : (f * 12 + i) * INCH_TO_M;
       if (
-        feetInput.value === "" ||
-        inchInput.value === "" ||
-        !Number.isInteger(f) ||
-        f < 0 ||
-        !Number.isFinite(i) ||
-        i < 0 ||
-        i >= 12 ||
+        !Number.isFinite(meters) ||
         meters <= 0 ||
-        meters > 1000
+        meters > 1000 ||
+        (metric
+          ? meterInput.value === ""
+          : feetInput.value === "" ||
+            inchInput.value === "" ||
+            !Number.isInteger(f) ||
+            f < 0 ||
+            !Number.isFinite(i) ||
+            i < 0 ||
+            i >= 12)
       ) {
-        return toast("Enter feet and inches. Inches must be less than 12.");
+        return toast(
+          metric
+            ? "Enter a physical length in meters greater than zero."
+            : "Enter feet and inches. Inches must be less than 12.",
+        );
       }
       measurement.status = "VERIFIED";
       measurement.verifiedMeters = meters;
@@ -385,7 +571,7 @@ function openArea(area) {
   setMode("navigate");
   openPanel(area.name || "Area", { type: "area", id: area.id });
   body.append(el("div", formatArea(area.squareMeters), "value"));
-  note(`${area.squareMeters.toFixed(2)} m² · approximate horizontal scan area`);
+  note("Approximate horizontal scan area");
   field(
     "Name (optional)",
     area.name,
@@ -423,7 +609,7 @@ function refresh() {
       () => {
         if (mode === "navigate") openItem(type, item);
       },
-      `model-label ${type}${selected?.id === item.id ? " selected" : ""}`,
+      `model-label ${type}${selected?.id === item.id || focusedMeasure === `saved:${item.id}` ? " selected" : ""}`,
     );
     node.dataset.id = item.id;
     node.title = text;
@@ -451,7 +637,12 @@ function refresh() {
         el("span", formatArea(item.squareMeters), "label-line"),
       );
     }
-    items.push({ ...item, type, node });
+    items.push({
+      ...item,
+      type,
+      node,
+      selected: type === "measurement" && focusedMeasure === `saved:${item.id}`,
+    });
   }
   if (visible.comments) {
     data.comments
@@ -460,51 +651,116 @@ function refresh() {
     if (editingNote) add("comment", editingNote.item);
   }
   if (visible.measurements)
-    data.measurements.forEach((measurement) => add("measurement", measurement));
+    data.measurements
+      .filter((measurement) => measureShown(`saved:${measurement.id}`))
+      .forEach((measurement) => add("measurement", measurement));
   if (visible.areas) data.areas.forEach((area) => add("area", area));
   const dimensions = projectDimensions();
-  $("#plan-note").hidden = dimensionSource !== "lighting" || !visible.measurements || !dimensions.length || mode !== "navigate";
+  $("#plan-note").hidden =
+    dimensionSource !== "lighting" ||
+    !visible.measurements ||
+    !dimensions.length ||
+    mode !== "navigate";
   if (dimensions.length) {
     $("#plan-note").replaceChildren(
       el("span", `LIGHTING · ${dimensions.length} fixture spacings`),
       el("small", "Approximate placement · zoom for detail"),
     );
   }
-  $$("[data-source]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.source===dimensionSource)));
+  $$("[data-source]").forEach((b) =>
+    b.setAttribute(
+      "aria-pressed",
+      String(b.dataset.source === dimensionSource),
+    ),
+  );
   if (viewer.metrics) {
-    const {floor,walls} = viewer.metrics;
+    const { floor, walls } = viewer.metrics;
     $("#model-area").textContent = formatArea(floor.squareMeters);
-    $("#model-area-metric").textContent = `${floor.squareMeters.toFixed(2)} m² · model footprint`;
-    $("#wall-sizes").textContent = `Wall sizes · ${walls.length}`;
-    $("#wall-sizes").disabled = false;
     if (visible.areas && dimensionSource === "model" && mode === "navigate") {
-      const node=el("span",undefined,"model-label model-floor");
-      node.append(el("span","FLOOR · SCAN","label-name"),el("strong",formatArea(floor.squareMeters)));
-      items.push({type:"model-floor",triangles:floor.triangles,
-        position:[floor.position[0],viewer.ceilingY,floor.position[2]],node});
+      const node = el("span", undefined, "model-label model-floor");
+      node.append(
+        el("span", "FLOOR · SCAN", "label-name"),
+        el("strong", formatArea(floor.squareMeters)),
+      );
+      items.push({
+        type: "model-floor",
+        triangles: floor.triangles,
+        position: [floor.position[0], viewer.ceilingY, floor.position[2]],
+        node,
+      });
     }
-    if (visible.measurements && dimensionSource === "model" && mode === "navigate") {
-      const ordered=[...walls].sort((a,b)=>Number(b.id===selectedWall)-Number(a.id===selectedWall));
+    if (
+      visible.measurements &&
+      dimensionSource === "model" &&
+      mode === "navigate"
+    ) {
+      const ordered = walls.filter((wall) => measureShown(`wall:${wall.id}`));
       for (const wall of ordered) {
-        const a=[wall.a[0],viewer.ceilingY,wall.a[1]],b=[wall.b[0],viewer.ceilingY,wall.b[1]];
-        const node=el("span",undefined,`model-label wall-dimension${selectedWall===wall.id?" selected":""}`);
-        node.append(el("span",wall.id,"wall-id"),el("span",`≈ ${formatLength(wall.length)}`));
-        node.dataset.id=wall.id;
-        node.setAttribute("aria-label",`${wall.id}, model length ${formatLength(wall.length)}, height ${formatLength(wall.height)}`);
-        items.push({type:"wall-dimension",a,b,position:polygonCenter([a,b]),node,selected:selectedWall===wall.id});
+        const a = [wall.a[0], viewer.ceilingY, wall.a[1]],
+          b = [wall.b[0], viewer.ceilingY, wall.b[1]];
+        const active = focusedMeasure === `wall:${wall.id}`;
+        const node = el(
+          "span",
+          undefined,
+          `model-label wall-dimension${active ? " selected" : ""}`,
+        );
+        node.append(
+          el("span", wall.id, "wall-id"),
+          el("span", `≈ ${formatLength(wall.length)}`),
+        );
+        node.dataset.id = wall.id;
+        node.setAttribute(
+          "aria-label",
+          `${wall.id}, model length ${formatLength(wall.length)}, height ${formatLength(wall.height)}`,
+        );
+        items.push({
+          type: "wall-dimension",
+          a,
+          b,
+          source: wall.source,
+          position: polygonCenter([a, b]),
+          node,
+          selected: active,
+        });
       }
     }
   }
-  if (visible.measurements && dimensionSource === "lighting" && mode === "navigate") {
-    for (const item of dimensions.sort((a, b) => a.priority - b.priority)) {
+  if (
+    visible.measurements &&
+    dimensionSource === "lighting" &&
+    mode === "navigate"
+  ) {
+    for (const item of dimensions
+      .filter((item) => measureShown(`project:${item.id}`))
+      .sort((a, b) => a.priority - b.priority)) {
       const a = [item.a[0], viewer.ceilingY, item.a[1]];
       const b = [item.b[0], viewer.ceilingY, item.b[1]];
-      const node = el("span", item.value, "model-label project-dimension");
+      const active = focusedMeasure === `project:${item.id}`;
+      const node = el(
+        "span",
+        `${item.room} · ${projectLength(item)}`,
+        `model-label project-dimension${active ? " selected" : ""}`,
+      );
       node.dataset.id = item.id;
-      node.title = `PROJECT · ${item.room} · ${item.name}: ${item.value}`;
+      node.title = `PROJECT · ${item.room} · ${item.name}: ${projectLength(item)}`;
       node.setAttribute("aria-label", node.title);
-      items.push({ type: "project-dimension", a, b, position: polygonCenter([a, b]), node });
+      items.push({
+        type: "project-dimension",
+        a,
+        b,
+        position: polygonCenter([a, b]),
+        node,
+        selected: active,
+      });
     }
+  }
+  const focused = items.some((item) => item.selected);
+  items.sort(
+    (a, b) => Number(Boolean(b.selected)) - Number(Boolean(a.selected)),
+  );
+  for (const item of items) {
+    item.muted = focused && !item.selected;
+    item.node.classList.toggle("muted", item.muted);
   }
   viewer.renderItems(items);
   viewer.showDraft(points, mode === "area");
@@ -531,6 +787,8 @@ function setMode(next, keepEdit = false) {
   $("#panel").hidden = true;
   $("#project-panel").hidden = true;
   selected = null;
+  focusedMeasure = null;
+  $("#show-options").setAttribute("aria-expanded", "false");
   $$("[data-mode]").forEach((node) =>
     node.setAttribute("aria-pressed", String(node.dataset.mode === mode)),
   );
@@ -617,6 +875,9 @@ function handleTap(hit, screen) {
         status: "SCAN",
       };
       data.measurements.push(item);
+      preferences.hidden = preferences.hidden.filter(
+        (key) => key !== `saved:${item.id}`,
+      );
       visible.measurements = true;
       changed();
       openMeasurement(item);
@@ -690,14 +951,19 @@ $("#close-project").onclick = () => {
   $("#project-panel").hidden = true;
 };
 $("#plan-note").onclick = () => $("#project").click();
-$("#wall-sizes").onclick = openWalls;
-$$("[data-source]").forEach(node=>node.onclick=()=>{
-  setMode("navigate");
-  dimensionSource=node.dataset.source;
-  visible.measurements=true;
-  refresh();
-  if (dimensionSource === "lighting") void loadProjectReferences();
-});
+$("#show-options").onclick = () =>
+  selected?.type === "view" ? closePanel() : openShowOptions();
+$$("[data-source]").forEach(
+  (node) =>
+    (node.onclick = () => {
+      setMode("navigate");
+      dimensionSource = node.dataset.source;
+      visible.measurements = true;
+      saveView();
+      refresh();
+      if (dimensionSource === "lighting") void loadProjectReferences();
+    }),
+);
 
 try {
   try {
@@ -706,9 +972,12 @@ try {
     storage = undefined;
   }
   const loaded = loadData(storage);
+  preferences = loadView(storage);
+  visible = preferences.visibility;
+  dimensionSource = preferences.source;
   data = loaded.data;
   writable = loaded.writable;
-  const { createViewer } = await import("./viewer.mjs?v=4");
+  const { createViewer } = await import("./viewer.mjs?v=5");
   viewer = await createViewer($("#view"), handleTap);
   $("#top").onclick = () => viewer.fit("top");
   $("#three").onclick = () => {
@@ -738,13 +1007,7 @@ try {
           : node.dataset.mode,
       );
   });
-  $$("[data-visibility]").forEach((node) => {
-    node.disabled = false;
-    node.onclick = () => {
-      visible[node.dataset.visibility] = !visible[node.dataset.visibility];
-      refresh();
-    };
-  });
+  $("#show-options").disabled = false;
   for (const id of ["top", "three", "reset"]) $("#" + id).disabled = false;
   document.addEventListener("keydown", (event) => {
     if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
