@@ -21,6 +21,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         ".js": "text/javascript",
         ".mjs": "text/javascript",
         ".css": "text/css",
+        ".json": "application/json",
         ".gltf": "model/gltf+json",
         ".pdf": "application/pdf",
       };
@@ -56,7 +57,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     assert.ok(value, message);
     checks++;
   }
-  async function newPage(options = {}) {
+  async function newPage(options = {}, referenceFailure = false) {
     const context = await browser.newContext(options);
     if (process.env.BASEMENT_THREE_PATH) {
       const pkg = JSON.parse(
@@ -84,15 +85,20 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const page = await context.newPage();
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("console", (msg) => {
+      // Chrome may request a site-wide icon; the site has never supplied one.
+      if (msg.location().url === `${base}/favicon.ico`) return;
+      if (referenceFailure && msg.location().url.includes("/project-data.json")) return;
       if (msg.type() === "error") errors.push(msg.text());
     });
     page.on("response", (response) => {
+      if (referenceFailure && response.url().includes("/project-data.json")) return;
       if (response.status() >= 400)
         broken.push(`${response.status()} ${response.url()}`);
     });
-    page.on("requestfailed", (request) =>
-      broken.push(`${request.url()} ${request.failure().errorText}`),
-    );
+    page.on("requestfailed", (request) => {
+      if (referenceFailure && request.url().includes("/project-data.json")) return;
+      broken.push(`${request.url()} ${request.failure().errorText}`);
+    });
     return page;
   }
   const ready = (page) =>
@@ -101,7 +107,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey);
   const camera = (page) =>
     page.evaluate(async () => {
-      const v = (await import("/basement/app.mjs?v=2")).viewer;
+      const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
       return {
         position: v.camera.position.toArray(),
         target: v.controls.target.toArray(),
@@ -110,7 +116,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const project = (page, p, area = false) =>
     page.evaluate(
       async ({ p, area }) => {
-        const v = (await import("/basement/app.mjs?v=2")).viewer;
+        const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
         return v.project([p[0], area ? v.ceilingY : -1.13053, p[1]]);
       },
       { p, area },
@@ -139,7 +145,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     check(
       (await page.evaluate(async () =>
-        (await import("/basement/app.mjs?v=2")).viewer.box.isEmpty(),
+        (await import(document.querySelector('script[type="module"][src]').src)).viewer.box.isEmpty(),
       )) === false,
       "Model has geometry",
     );
@@ -379,7 +385,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await tool(page, "3D").click();
     await sleep(200);
     const attachment = await page.evaluate(async () => {
-      const v = (await import("/basement/app.mjs?v=2")).viewer;
+      const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
       const data = JSON.parse(localStorage.getItem("ronu.basement.simple.v2"));
       const records = [...data.comments, ...data.measurements, ...data.areas];
       return records.map((item) => {
@@ -409,6 +415,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Annotations return after refresh",
     );
     await tool(page, "Project").click();
+    await page.locator(".project-ref").nth(2).waitFor();
+    check((await page.locator(".project-ref").count()) === 3, "All project references load");
     check(
       await page.locator("#project-panel").isVisible(),
       "Project overlay opens",
@@ -425,6 +433,38 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     }
     await screenshot(page, "basement-project");
     await tool(page, "Close project reference").click();
+
+    // Missing, malformed, offline and stalled optional references must not stop 3D.
+    for (const failure of ["404", "json", "schema", "offline", "stalled"]) {
+      const isolated = await newPage({}, true);
+      let referenceRequests = 0, pdfRequests = 0, pendingRoute;
+      await isolated.route("**/project.pdf", (route) => {
+        pdfRequests++;
+        return route.fulfill({ status: 404, body: "Missing PDF" });
+      });
+      await isolated.route("**/project-data.json", (route) => {
+        referenceRequests++;
+        if (failure === "stalled") { pendingRoute = route; return; }
+        if (failure === "offline") return route.abort("failed");
+        return route.fulfill({
+          status: failure === "404" ? 404 : 200,
+          contentType: "application/json",
+          body: failure === "json" ? "{" : "{}",
+        });
+      });
+      await isolated.goto(`${base}/basement/`);
+      await ready(isolated);
+      check(referenceRequests === 0 && pdfRequests === 0, `${failure}: optional files do not gate startup`);
+      await tool(isolated, "Project").click();
+      await tool(isolated, "Measure").click();
+      check((await isolated.locator("#instruction").innerText()) === "Tap Point A", `${failure}: tools work during reference loading`);
+      await isolated.locator("#project-reference-list").getByText("Project details unavailable. Open the original PDF below.").waitFor({ state: "attached", timeout: 12000 });
+      check(await isolated.locator("#status").isHidden(), `${failure}: reference failure does not replace viewer status`);
+      check(await tool(isolated, "Area").isEnabled() && await tool(isolated, "Comment").isEnabled(), `${failure}: all tools remain enabled`);
+      check(pdfRequests === 0, `${failure}: PDF is only a link, never a viewer dependency`);
+      if (pendingRoute) await pendingRoute.abort().catch(() => {});
+      await isolated.context().close();
+    }
 
     // Actual touch events with mobile context, including two-finger pan and pinch.
     const mobile = await newPage({
@@ -665,7 +705,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     assert.deepEqual(errors, []);
     assert.deepEqual(broken, []);
     console.log(
-      `Basement V2 browser validation passed: ${checks} checks covering real model, desktop navigation, simple tools, provenance, visibility, attachment, PDF, persistence, migration and mobile touch. No console errors or broken requests.`,
+      `Basement browser validation passed: ${checks} checks covering real model, desktop navigation, simple tools, provenance, visibility, attachment, PDF, persistence, migration, mobile touch and optional-reference failures. No application console errors or broken requests.`,
     );
   } finally {
     await browser.close();

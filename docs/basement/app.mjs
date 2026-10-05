@@ -26,7 +26,28 @@ let selected = null,
   editingNote = null;
 let toastTimer,
   lastAreaTap = null;
-const visible = { comments: true, measurements: true, areas: true };\nlet projectData = null;
+const visible = { comments: true, measurements: true, areas: true };
+let projectData = null;
+
+async function loadProjectReferences() {
+  if (projectData) return;
+  const host = $("#project-reference-list");
+  try {
+    host.textContent = "Loading project references…";
+    const response = await fetch("./project-data.json", {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) throw new Error(`Project reference HTTP ${response.status}`);
+    const reference = await response.json();
+    if (!Array.isArray(reference?.pages)) throw new Error("Invalid project references");
+    projectData = reference;
+    renderProjectReferences();
+  } catch (error) {
+    projectData = null;
+    console.warn("Project references unavailable:", error);
+    host.textContent = "Project details unavailable. Open the original PDF below.";
+  }
+}
 
 function renderProjectReferences() {
   const host = $("#project-reference-list");
@@ -545,6 +566,8 @@ function finishArea() {
 $("#project").onclick = () => {
   setMode("navigate");
   $("#project-panel").hidden = false;
+  // Optional references never participate in viewer startup or block its tools.
+  void loadProjectReferences();
 };
 $("#close-project").onclick = () => {
   $("#project-panel").hidden = true;
