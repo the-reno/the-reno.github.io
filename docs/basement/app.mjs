@@ -26,7 +26,30 @@ let selected = null,
   editingNote = null;
 let toastTimer,
   lastAreaTap = null;
-const visible = { comments: true, measurements: true, areas: true };
+const visible = { comments: true, measurements: true, areas: true };\nlet projectData = null;
+
+function renderProjectReferences() {
+  const host = $("#project-reference-list");
+  if (!host || !projectData) return;
+  host.replaceChildren();
+  for (const page of projectData.pages || []) {
+    const card = el("div", undefined, "project-ref");
+    const head = el("div", undefined, "project-ref-head");
+    head.append(
+      el("strong", page.title),
+      el("span", "PROJECT", "badge project-badge"),
+    );
+    card.append(head);
+    card.append(el("p", page.description || "", "small"));
+    const link = el("a", `Open · original page ${page.sourcePage}`);
+    link.href = `./project.pdf#page=${page.pdfPage}`;
+    link.target = "_blank";
+    link.rel = "noopener";
+    card.append(link);
+    host.append(card);
+  }
+}
+
 
 function el(tag, text, className) {
   const node = document.createElement(tag);

@@ -1,0 +1,37 @@
+{
+  "source": {
+    "title": "ADRIANA_BASEMENT_DUO FINAL",
+    "designer": "Studio Duo",
+    "date": "2025-08-05",
+    "referenceFile": "./project.pdf",
+    "note": "Project dimensions and fixture positions are reference information only. Verify on site before construction."
+  },
+  "pages": [
+    {
+      "id": "floor-plan",
+      "title": "Original floor plan",
+      "pdfPage": 1,
+      "sourcePage": 4,
+      "description": "Existing basement shell, stairs, support columns, laundry equipment, furnace and electrical panel."
+    },
+    {
+      "id": "layout",
+      "title": "Proposed basement layout",
+      "pdfPage": 2,
+      "sourcePage": 5,
+      "description": "Studio Duo proposed basement arrangement."
+    },
+    {
+      "id": "lighting",
+      "title": "Lighting plan",
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "description": "Studio Duo recessed-light, wall-light and fixture spacing plan."
+    }
+  ],
+  "legend": {
+    "project": "Studio Duo project reference",
+    "scan": "KIRI 3D scan/model",
+    "verified": "Physically confirmed on site"
+  }
+}
