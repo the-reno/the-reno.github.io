@@ -33,5 +33,1058 @@
     "project": "Studio Duo project reference",
     "scan": "KIRI 3D scan/model",
     "verified": "Physically confirmed on site"
-  }
+  },
+  "dimensionNote": "Printed lighting-plan dimensions, original sheet 6. Placement on the KIRI model is approximate; refer to the drawing for exact endpoints. These are fixture spacings and offsets, not overall room sizes.",
+  "dimensions": [
+    {
+      "id": "P6-01",
+      "room": "Entry",
+      "name": "Light to right wall",
+      "value": "2′11″",
+      "a": [
+        3.9732,
+        -3.002
+      ],
+      "b": [
+        3.9732,
+        -2.2615
+      ],
+      "planA": [
+        301,
+        379
+      ],
+      "planB": [
+        383,
+        379
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-02",
+      "room": "Entry",
+      "name": "Top wall to light",
+      "value": "2′4″",
+      "a": [
+        4.9171,
+        -2.6227
+      ],
+      "b": [
+        4.3123,
+        -2.6227
+      ],
+      "planA": [
+        343,
+        276
+      ],
+      "planB": [
+        343,
+        342
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-03",
+      "room": "Main room",
+      "name": "Left wall to first light",
+      "value": "1′10″",
+      "a": [
+        2.7952,
+        -5.004
+      ],
+      "b": [
+        2.7952,
+        -4.4805
+      ],
+      "planA": [
+        100,
+        494
+      ],
+      "planB": [
+        150,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-04",
+      "room": "Main room",
+      "name": "First to second light",
+      "value": "5′6″",
+      "a": [
+        2.7952,
+        -4.4805
+      ],
+      "b": [
+        2.7952,
+        -2.8471
+      ],
+      "planA": [
+        150,
+        494
+      ],
+      "planB": [
+        306,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-05",
+      "room": "Main room",
+      "name": "Second to third light",
+      "value": "5′6″",
+      "a": [
+        2.7952,
+        -2.8471
+      ],
+      "b": [
+        2.7952,
+        -1.2137
+      ],
+      "planA": [
+        306,
+        494
+      ],
+      "planB": [
+        462,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-06",
+      "room": "Main room",
+      "name": "Third light to partition",
+      "value": "2′1″",
+      "a": [
+        2.7952,
+        -1.2137
+      ],
+      "b": [
+        2.7952,
+        -0.575
+      ],
+      "planA": [
+        462,
+        494
+      ],
+      "planB": [
+        523,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-07",
+      "room": "Main room",
+      "name": "Top wall to left light row",
+      "value": "1′7″",
+      "a": [
+        3.6142,
+        -3.779
+      ],
+      "b": [
+        3.1401,
+        -3.779
+      ],
+      "planA": [
+        217,
+        418
+      ],
+      "planB": [
+        217,
+        462
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-08",
+      "room": "Main room",
+      "name": "Left light row to bathroom wall",
+      "value": "1′7″",
+      "a": [
+        3.1401,
+        -3.779
+      ],
+      "b": [
+        2.6444,
+        -3.779
+      ],
+      "planA": [
+        217,
+        462
+      ],
+      "planB": [
+        217,
+        508
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-09",
+      "room": "Main room",
+      "name": "Top wall to right light row",
+      "value": "1′7″",
+      "a": [
+        3.6142,
+        -1.4231
+      ],
+      "b": [
+        3.1401,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        418
+      ],
+      "planB": [
+        442,
+        462
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-10",
+      "room": "Bathroom",
+      "name": "Wall light to right wall",
+      "value": "2′4″",
+      "a": [
+        2.1164,
+        -4.3025
+      ],
+      "b": [
+        2.1164,
+        -3.6219
+      ],
+      "planA": [
+        167,
+        557
+      ],
+      "planB": [
+        232,
+        557
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-11",
+      "room": "Bathroom",
+      "name": "Left wall to ceiling light",
+      "value": "2′4″",
+      "a": [
+        1.6745,
+        -5.004
+      ],
+      "b": [
+        1.6745,
+        -4.3025
+      ],
+      "planA": [
+        100,
+        598
+      ],
+      "planB": [
+        167,
+        598
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-12",
+      "room": "Bathroom",
+      "name": "Ceiling light to bottom wall",
+      "value": "3′10″",
+      "a": [
+        1.362,
+        -3.8313
+      ],
+      "b": [
+        0.1767,
+        -3.8313
+      ],
+      "planA": [
+        212,
+        627
+      ],
+      "planB": [
+        212,
+        737
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-13",
+      "room": "Laundry",
+      "name": "Partition to first light column",
+      "value": "1′11″",
+      "a": [
+        2.7952,
+        -0.5122
+      ],
+      "b": [
+        2.7952,
+        0.0532
+      ],
+      "planA": [
+        529,
+        494
+      ],
+      "planB": [
+        583,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-14",
+      "room": "Laundry",
+      "name": "Between light columns",
+      "value": "3′9″",
+      "a": [
+        2.7952,
+        0.0532
+      ],
+      "b": [
+        2.7952,
+        1.1631
+      ],
+      "planA": [
+        583,
+        494
+      ],
+      "planB": [
+        689,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-15",
+      "room": "Laundry",
+      "name": "Last light column to right wall",
+      "value": "1′11″",
+      "a": [
+        2.7952,
+        1.1631
+      ],
+      "b": [
+        2.7952,
+        1.718
+      ],
+      "planA": [
+        689,
+        494
+      ],
+      "planB": [
+        742,
+        494
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-16",
+      "room": "Laundry",
+      "name": "Door recess to light column",
+      "value": "1′11″",
+      "a": [
+        1.0603,
+        -0.5122
+      ],
+      "b": [
+        1.0603,
+        0.0532
+      ],
+      "planA": [
+        529,
+        655
+      ],
+      "planB": [
+        583,
+        655
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-17",
+      "room": "Laundry",
+      "name": "Top wall to first light row",
+      "value": "1′11″",
+      "a": [
+        3.6142,
+        0.7757
+      ],
+      "b": [
+        3.0431,
+        0.7757
+      ],
+      "planA": [
+        652,
+        418
+      ],
+      "planB": [
+        652,
+        471
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-18",
+      "room": "Laundry",
+      "name": "First to second light row",
+      "value": "3′10″",
+      "a": [
+        3.0431,
+        0.7757
+      ],
+      "b": [
+        1.8685,
+        0.7757
+      ],
+      "planA": [
+        652,
+        471
+      ],
+      "planB": [
+        652,
+        580
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-19",
+      "room": "Laundry",
+      "name": "Second to third light row",
+      "value": "3′10″",
+      "a": [
+        1.8685,
+        0.7757
+      ],
+      "b": [
+        0.7047,
+        0.7757
+      ],
+      "planA": [
+        652,
+        580
+      ],
+      "planB": [
+        652,
+        688
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-20",
+      "room": "Laundry",
+      "name": "Last light row to bottom wall",
+      "value": "1′11″",
+      "a": [
+        0.7047,
+        0.7757
+      ],
+      "b": [
+        0.1228,
+        0.7757
+      ],
+      "planA": [
+        652,
+        688
+      ],
+      "planB": [
+        652,
+        742
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-21",
+      "room": "Main room",
+      "name": "First to second light row",
+      "value": "6′11″",
+      "a": [
+        3.1401,
+        -1.4231
+      ],
+      "b": [
+        1.0495,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        462
+      ],
+      "planB": [
+        442,
+        656
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-22",
+      "room": "Main room",
+      "name": "Second to third light row",
+      "value": "6′11″",
+      "a": [
+        1.0495,
+        -1.4231
+      ],
+      "b": [
+        -1.0518,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        656
+      ],
+      "planB": [
+        442,
+        851
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-23",
+      "room": "Main room",
+      "name": "Third to fourth light row",
+      "value": "6′6″",
+      "a": [
+        -1.0518,
+        -1.4231
+      ],
+      "b": [
+        -3.0346,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        851
+      ],
+      "planB": [
+        442,
+        1035
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-24",
+      "room": "Living area",
+      "name": "Stair wall to light row",
+      "value": "3′3″",
+      "a": [
+        -0.0604,
+        -2.355
+      ],
+      "b": [
+        -1.0518,
+        -2.355
+      ],
+      "planA": [
+        353,
+        759
+      ],
+      "planB": [
+        353,
+        851
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-25",
+      "room": "Living area",
+      "name": "Left wall to first light",
+      "value": "2′8″",
+      "a": [
+        -3.2932,
+        -5.004
+      ],
+      "b": [
+        -3.2932,
+        -4.2082
+      ],
+      "planA": [
+        100,
+        1059
+      ],
+      "planB": [
+        176,
+        1059
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-26",
+      "room": "Living area",
+      "name": "First to second light",
+      "value": "5′5″",
+      "a": [
+        -3.2932,
+        -4.2082
+      ],
+      "b": [
+        -3.2932,
+        -2.6167
+      ],
+      "planA": [
+        176,
+        1059
+      ],
+      "planB": [
+        328,
+        1059
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-27",
+      "room": "Living area",
+      "name": "Second to third light",
+      "value": "4′9″",
+      "a": [
+        -3.2932,
+        -2.6167
+      ],
+      "b": [
+        -3.2932,
+        -1.2137
+      ],
+      "planA": [
+        328,
+        1059
+      ],
+      "planB": [
+        462,
+        1059
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-28",
+      "room": "Living area",
+      "name": "Third to fourth light",
+      "value": "7′3″",
+      "a": [
+        -3.2932,
+        -1.2137
+      ],
+      "b": [
+        -3.2932,
+        0.9222
+      ],
+      "planA": [
+        462,
+        1059
+      ],
+      "planB": [
+        666,
+        1059
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-29",
+      "room": "Living area",
+      "name": "Last light to utility wall",
+      "value": "2′2″",
+      "a": [
+        -3.2932,
+        0.9222
+      ],
+      "b": [
+        -3.2932,
+        1.5714
+      ],
+      "planA": [
+        666,
+        1059
+      ],
+      "planB": [
+        728,
+        1059
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-30",
+      "room": "Dining area",
+      "name": "Electrical enclosure to first light column",
+      "value": "4′9″",
+      "a": [
+        -4.2307,
+        -4.0198
+      ],
+      "b": [
+        -4.2307,
+        -2.6167
+      ],
+      "planA": [
+        194,
+        1146
+      ],
+      "planB": [
+        328,
+        1146
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-31",
+      "room": "Dining area",
+      "name": "First to second light column",
+      "value": "4′9″",
+      "a": [
+        -4.2307,
+        -2.6167
+      ],
+      "b": [
+        -4.2307,
+        -1.2137
+      ],
+      "planA": [
+        328,
+        1146
+      ],
+      "planB": [
+        462,
+        1146
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-32",
+      "room": "Dining area",
+      "name": "Second to third light column",
+      "value": "7′3″",
+      "a": [
+        -4.2307,
+        -1.2137
+      ],
+      "b": [
+        -4.2307,
+        0.9222
+      ],
+      "planA": [
+        462,
+        1146
+      ],
+      "planB": [
+        666,
+        1146
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-33",
+      "room": "Dining area",
+      "name": "Last light column to right wall",
+      "value": "2′8″",
+      "a": [
+        -4.2307,
+        0.9222
+      ],
+      "b": [
+        -4.2307,
+        1.718
+      ],
+      "planA": [
+        666,
+        1146
+      ],
+      "planB": [
+        742,
+        1146
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-34",
+      "room": "Dining area",
+      "name": "Fourth to fifth main light row",
+      "value": "5′2″",
+      "a": [
+        -3.0346,
+        -1.4231
+      ],
+      "b": [
+        -4.6079,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        1035
+      ],
+      "planB": [
+        442,
+        1181
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 1
+    },
+    {
+      "id": "P6-35",
+      "room": "Dining area",
+      "name": "Last light row to bottom wall",
+      "value": "1′11″",
+      "a": [
+        -4.6079,
+        -1.4231
+      ],
+      "b": [
+        -5.179,
+        -1.4231
+      ],
+      "planA": [
+        442,
+        1181
+      ],
+      "planB": [
+        442,
+        1234
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-36",
+      "room": "Office",
+      "name": "Left wall to first light column",
+      "value": "2′4″",
+      "a": [
+        -0.6423,
+        1.9277
+      ],
+      "b": [
+        -0.6423,
+        2.6968
+      ],
+      "planA": [
+        760,
+        813
+      ],
+      "planB": [
+        826,
+        813
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-37",
+      "room": "Office",
+      "name": "Between light columns",
+      "value": "4′8″",
+      "a": [
+        -0.6423,
+        2.6968
+      ],
+      "b": [
+        -0.6423,
+        4.2349
+      ],
+      "planA": [
+        826,
+        813
+      ],
+      "planB": [
+        958,
+        813
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-38",
+      "room": "Office",
+      "name": "Last light column to right wall",
+      "value": "2′4″",
+      "a": [
+        -0.6423,
+        4.2349
+      ],
+      "b": [
+        -0.6423,
+        5.004
+      ],
+      "planA": [
+        958,
+        813
+      ],
+      "planB": [
+        1024,
+        813
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-39",
+      "room": "Office",
+      "name": "Top wall to first light row",
+      "value": "2′10″",
+      "a": [
+        -0.0712,
+        4.0135
+      ],
+      "b": [
+        -0.9225,
+        4.0135
+      ],
+      "planA": [
+        939,
+        760
+      ],
+      "planB": [
+        939,
+        839
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    },
+    {
+      "id": "P6-40",
+      "room": "Office",
+      "name": "First to second light row",
+      "value": "5′7″",
+      "a": [
+        -0.9225,
+        4.0135
+      ],
+      "b": [
+        -2.6251,
+        4.0135
+      ],
+      "planA": [
+        939,
+        839
+      ],
+      "planB": [
+        939,
+        997
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-41",
+      "room": "Office",
+      "name": "Second to third light row",
+      "value": "5′7″",
+      "a": [
+        -2.6251,
+        4.0135
+      ],
+      "b": [
+        -4.3385,
+        4.0135
+      ],
+      "planA": [
+        939,
+        997
+      ],
+      "planB": [
+        939,
+        1156
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 0
+    },
+    {
+      "id": "P6-42",
+      "room": "Office",
+      "name": "Last light row to bottom wall",
+      "value": "2′10″",
+      "a": [
+        -4.3385,
+        4.0135
+      ],
+      "b": [
+        -5.179,
+        4.0135
+      ],
+      "planA": [
+        939,
+        1156
+      ],
+      "planB": [
+        939,
+        1234
+      ],
+      "pdfPage": 3,
+      "sourcePage": 6,
+      "priority": 2
+    }
+  ]
 }

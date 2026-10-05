@@ -24,6 +24,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         ".json": "application/json",
         ".gltf": "model/gltf+json",
         ".pdf": "application/pdf",
+        ".png": "image/png",
       };
       res.setHeader(
         "Content-Type",
@@ -153,6 +154,30 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator('[data-mode][aria-pressed="true"]').count()) === 0,
       "Navigation is the default, with no extra mode",
     );
+    await page.locator("#plan-note").getByText("PROJECT · 42 plan dimensions").waitFor();
+    check(await page.locator(".project-dimension").count() === 42,
+      "All printed plan dimensions load independently of saved annotations");
+    check(await page.locator(".project-dimension:not([hidden])").count() >= 10,
+      "Printed dimensions are visibly readable on first load");
+    const beforePlan = await data(page);
+    await tool(page, "Project").click();
+    await page.locator(".plan-dimension-list summary").click();
+    await page.locator(".plan-dimension-list button").first().click();
+    check((await page.locator("#panel-body").innerText()).includes("Placement on the KIRI model is approximate"),
+      "Plan dimensions explain their source and approximate placement");
+    check(await page.locator("#panel-body button").count() === 0,
+      "Reference values cannot be edited or marked as field-verified");
+    await close(page);
+    await tool(page, "Measurements").click();
+    check(await page.locator(".project-dimension").count() === 0,
+      "Measurements toggle also hides plan references");
+    await tool(page, "Measurements").click();
+    check(await page.locator(".project-dimension").count() === 42,
+      "Measurements toggle restores the source dimensions");
+    assert.deepEqual(await data(page), beforePlan);
+    checks++;
+    await screenshot(page, "basement-plan-dimensions");
+    await tool(page, "3D").click();
     const initial = await camera(page);
     await page.mouse.move(850, 400);
     await page.mouse.down();
@@ -421,7 +446,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await page.locator("#project-panel").isVisible(),
       "Project overlay opens",
     );
-    for (const link of await page.locator("#project-panel a").all()) {
+    await page.locator(".lighting-plan").waitFor();
+    await page.waitForFunction(() => document.querySelector(".lighting-plan").naturalWidth === 1056);
+    check(true, "Original dimensioned drawing renders in Project");
+    for (const link of await page.locator('#project-panel a[href*="project.pdf"]').all()) {
       const response = await page.request.get(
         new URL(await link.getAttribute("href"), page.url()).href,
       );
@@ -435,26 +463,26 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await tool(page, "Close project reference").click();
 
     // Missing, malformed, offline and stalled optional references must not stop 3D.
-    for (const failure of ["404", "json", "schema", "offline", "stalled"]) {
+    for (const failure of ["404", "json", "schema", "dimension-schema", "offline", "stalled"]) {
       const isolated = await newPage({}, true);
       let referenceRequests = 0, pdfRequests = 0, pendingRoute;
       await isolated.route("**/project.pdf", (route) => {
         pdfRequests++;
         return route.fulfill({ status: 404, body: "Missing PDF" });
       });
-      await isolated.route("**/project-data.json", (route) => {
+      await isolated.route("**/project-data.json*", (route) => {
         referenceRequests++;
         if (failure === "stalled") { pendingRoute = route; return; }
         if (failure === "offline") return route.abort("failed");
         return route.fulfill({
           status: failure === "404" ? 404 : 200,
           contentType: "application/json",
-          body: failure === "json" ? "{" : "{}",
+          body: failure === "json" ? "{" : failure === "dimension-schema" ? '{"pages":[],"dimensions":{}}' : "{}",
         });
       });
       await isolated.goto(`${base}/basement/`);
       await ready(isolated);
-      check(referenceRequests === 0 && pdfRequests === 0, `${failure}: optional files do not gate startup`);
+      check(referenceRequests <= 1 && pdfRequests === 0, `${failure}: canvas becomes ready without waiting for optional data`);
       await tool(isolated, "Project").click();
       await tool(isolated, "Measure").click();
       check((await isolated.locator("#instruction").innerText()) === "Tap Point A", `${failure}: tools work during reference loading`);

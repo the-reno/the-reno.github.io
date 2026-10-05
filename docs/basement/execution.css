@@ -542,3 +542,36 @@ input[type="number"] {
 .project-ref-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .project-ref p{margin:6px 0}
 .project-ref a,.project-pdf-link{display:inline-block;margin-top:4px}
+.model-label.project-dimension {
+  pointer-events: none;
+  color: #694a2c;
+  border-color: #bda486;
+  background: #fffaf0f5;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 30px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  box-shadow: none;
+}
+#plan-note {
+  position: fixed;
+  z-index: 3;
+  left: 16px;
+  top: 76px;
+  text-align: left;
+  color: #694a2c;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+#plan-note small { display: block; color: var(--muted); font-size: 12px; }
+.lighting-plan { display: block; width: 100%; height: auto; background: white; }
+.plan-dimension-list summary { cursor: pointer; padding: 10px 0; }
+.plan-dimension-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}

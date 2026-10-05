@@ -176,6 +176,13 @@ export async function createViewer(host, onTap) {
         dot(annotations, i.a, 0x255d77);
         dot(annotations, i.b, 0x255d77);
       }
+      if (i.type === "project-dimension") {
+        line(annotations, [i.a, i.b], 0x88613b);
+        // Architectural ticks; the printed value comes from the plan, not length.
+        for (const p of [i.a, i.b])
+          line(annotations, [[p[0] - .065, p[1], p[2] - .065],
+            [p[0] + .065, p[1], p[2] + .065]], 0x88613b);
+      }
       if (i.type === "area") polygon(annotations, i.points, 0xad5420);
       if (i.type === "comment") dot(annotations, i.position, 0xad5420);
       addLabel(i.position, i.node);
@@ -286,6 +293,25 @@ export async function createViewer(host, onTap) {
       if (node.hidden) continue;
       const w = node.offsetWidth,
         h = node.offsetHeight;
+      if (node.classList.contains("project-dimension")) {
+        // Keep source labels close to their endpoints. Crowded labels reappear
+        // as the user zooms; the complete catalogue stays in Project.
+        const r = { left: p.x - w / 2, right: p.x + w / 2,
+          top: p.y - h / 2, bottom: p.y + h / 2 };
+        if (r.left < 6 || r.right > host.clientWidth - 6 || r.top < 118 ||
+            r.bottom > host.clientHeight - 192 || placed.some((o) =>
+              r.left < o.right + 6 && r.right + 6 > o.left &&
+              r.top < o.bottom + 6 && r.bottom + 6 > o.top)) {
+          node.hidden = true;
+          leader.style.display = "none";
+          continue;
+        }
+        placed.push(r);
+        node.style.left = `${p.x}px`;
+        node.style.top = `${p.y}px`;
+        leader.style.display = "none";
+        continue;
+      }
       let x = p.x,
         y = p.y;
       if (!node.classList.contains("draft")) {
