@@ -1,64 +1,140 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Basement · Ronu</title>
-<meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'">
-<link rel="stylesheet" href="./execution.css?v=1">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-</head>
-<body>
-<main id="view" aria-label="Interactive basement 3D model"></main>
-<div id="labels" aria-label="Model annotations"></div>
-<header class="topbar">
-  <div class="brand"><b>RONU</b> / BASEMENT</div>
-  <nav class="surface camera" aria-label="Camera views">
-    <button id="top" disabled aria-pressed="false">Top</button>
-    <button id="three" disabled aria-pressed="true">3D</button>
-    <button id="reset" disabled>Reset</button>
-  </nav>
-</header>
-<div class="tools">
-  <nav class="surface primary" aria-label="Tools">
-    <button data-mode="navigate" aria-pressed="true" disabled>Navigate</button>
-    <button data-mode="measure" aria-pressed="false" disabled>Measure</button>
-    <button data-mode="area" aria-pressed="false" disabled>Areas</button>
-    <button data-mode="comment" aria-pressed="false" disabled>+ Comment</button>
-  </nav>
-  <div class="secondary">
-    <nav class="surface visibility" aria-label="Show annotations">
-      <button data-visibility="measurements" aria-pressed="true" disabled>Measurements</button>
-      <button data-visibility="areas" aria-pressed="true" disabled>Areas</button>
-      <button data-visibility="comments" aria-pressed="true" disabled>Comments</button>
-    </nav>
-    <nav class="surface filters" aria-label="Comment status">
-      <button data-filter="all" aria-pressed="true" disabled>All</button>
-      <button data-filter="open" aria-pressed="false" disabled>Open</button>
-      <button data-filter="done" aria-pressed="false" disabled>Done</button>
-    </nav>
-    <button class="surface" id="list" disabled>List</button>
-  </div>
-</div>
-<div id="status" class="surface" role="status" aria-live="polite">Loading your basement…</div>
-<div class="prompt surface" id="prompt">
-  <span id="instruction">Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to pan</span>
-  <div id="drawing-actions" hidden>
-    <button id="undo-point">Undo</button><button id="finish-area" class="accent" disabled>Finish zone</button><button id="cancel-drawing">Cancel</button>
-  </div>
-</div>
-<aside id="panel" class="surface" hidden aria-label="Edit selected item">
-  <div class="panel-head"><h1 id="panel-title"></h1><button id="close-panel" aria-label="Close editor">×</button></div>
-  <div id="panel-body"></div>
-</aside>
-<footer>
-  <div class="summary"><span id="area-total">Ceiling zones: 0 sq ft</span><span id="save-state" role="status">Saved on this device</span><button id="data" disabled>Data</button></div>
-  <nav class="surface steps" aria-label="Execution steps"><button id="all-steps" aria-pressed="true" disabled>All steps</button><div id="step-buttons"></div></nav>
-</footer>
-<div id="toast" class="surface" role="status" aria-live="polite" hidden></div>
-<input id="import-file" type="file" accept="application/json,.json" hidden>
-<script type="module" src="./app.mjs?v=1"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Basement · Ronu</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
+    />
+    <link rel="stylesheet" href="./execution.css?v=2" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="view" aria-label="Interactive basement 3D model"></main>
+    <div id="labels" aria-label="Model annotations"></div>
+
+    <header class="topbar">
+      <div class="brand"><b>RONU</b><span> / BASEMENT</span></div>
+      <div class="top-actions">
+        <button id="project" class="surface">Project</button>
+        <nav class="surface camera" aria-label="Camera views">
+          <button id="top" disabled aria-pressed="false">Top</button>
+          <button id="three" disabled aria-pressed="true">3D</button>
+          <button id="reset" disabled>Reset</button>
+        </nav>
+      </div>
+    </header>
+
+    <div class="tools">
+      <nav class="surface primary" aria-label="Tools">
+        <button data-mode="measure" aria-pressed="false" disabled>
+          Measure
+        </button>
+        <button data-mode="area" aria-pressed="false" disabled>Area</button>
+        <button data-mode="comment" aria-pressed="false" disabled>
+          Comment
+        </button>
+      </nav>
+      <nav class="surface visibility" aria-label="Show annotations">
+        <button data-visibility="measurements" aria-pressed="true" disabled>
+          Measurements
+        </button>
+        <button data-visibility="areas" aria-pressed="true" disabled>
+          Areas
+        </button>
+        <button data-visibility="comments" aria-pressed="true" disabled>
+          Comments
+        </button>
+      </nav>
+    </div>
+
+    <div id="status" class="surface" role="status" aria-live="polite">
+      Loading your basement…
+    </div>
+
+    <div class="prompt surface" id="prompt">
+      <span id="instruction"
+        >Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to
+        pan</span
+      >
+      <div id="drawing-actions" hidden>
+        <button id="undo-point">Undo</button>
+        <button id="finish-area" class="accent" disabled>Done</button>
+        <button id="cancel-drawing">Cancel</button>
+      </div>
+    </div>
+
+    <aside id="panel" class="surface" hidden aria-label="Edit selected item">
+      <div class="panel-head">
+        <h1 id="panel-title"></h1>
+        <button id="close-panel" aria-label="Close editor">×</button>
+      </div>
+      <div id="panel-body"></div>
+    </aside>
+
+    <aside
+      id="project-panel"
+      class="surface project-panel"
+      hidden
+      aria-label="Original project reference"
+    >
+      <div class="panel-head">
+        <h1>Project reference</h1>
+        <button id="close-project" aria-label="Close project reference">
+          ×
+        </button>
+      </div>
+      <div class="project-copy">
+        <p>
+          Original Studio Duo pages. Check dimensions on site before using them.
+        </p>
+        <a href="./project.pdf#page=1" target="_blank" rel="noopener"
+          >Floor plan <small>Original page 4</small></a
+        >
+        <a href="./project.pdf#page=2" target="_blank" rel="noopener"
+          >Proposed layout <small>Original page 5</small></a
+        >
+        <a href="./project.pdf#page=3" target="_blank" rel="noopener"
+          >Lighting plan <small>Original page 6</small></a
+        >
+      </div>
+    </aside>
+
+    <footer>
+      <div class="summary">
+        <span id="area-total" title="Sum of the saved areas currently shown"
+          >Area: ≈ 0 ft²</span
+        >
+        <button
+          id="hidden-notes"
+          aria-label="Show hidden notes"
+          hidden
+        ></button>
+        <span id="save-state" role="status">Saved on this device</span>
+      </div>
+    </footer>
+
+    <div
+      id="toast"
+      class="surface"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+    <script type="module" src="./app.mjs?v=2"></script>
+  </body>
 </html>

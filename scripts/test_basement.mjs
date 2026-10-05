@@ -1,36 +1,228 @@
-import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-import {validateData, validatePolygon, polygonArea, polygonsOverlap, distance, formatLength, nextId} from '../docs/basement/data.mjs';
-const raw = JSON.parse(await readFile(new URL('../docs/basement/execution.json', import.meta.url)));
-const rect = (x, z, w, h) => [[x, 1, z], [x + w, 1, z], [x + w, 1, z + h], [x, 1, z + h]];
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  STORAGE_KEY,
+  LEGACY_STORAGE_KEY,
+  createData,
+  validateData,
+  validatePolygon,
+  polygonArea,
+  polygonsOverlap,
+  distance,
+  formatLength,
+  formatArea,
+  nextId,
+  loadData,
+  migrateLegacy,
+} from "../docs/basement/data.mjs";
+
+const rect = (x, z, w, h) => [
+  [x, 1, z],
+  [x + w, 1, z],
+  [x + w, 1, z + h],
+  [x, 1, z + h],
+];
 assert.equal(distance([0, 0, 0], [0, 2, 0]), 2);
-assert.equal(formatLength(.3048), '1′ 0″');
-assert.equal(formatLength(.3039), '1′ 0″'); // rounding carries across the foot boundary
+assert.equal(formatLength(0.3048), "1′ 0″");
+assert.equal(formatLength(0.3039), "1′ 0″");
+assert.equal(formatLength(86.5 * 0.0254), "7′ 2½″");
+assert.equal(formatLength(0.125 * 0.0254), "0′ ⅛″");
+assert.equal(formatArea(3), "≈ 32.3 ft²");
 assert.equal(polygonArea(rect(0, 0, 3, 2)), 6);
 assert.equal(validatePolygon(rect(0, 0, 3, 2)), 6);
 assert.equal(polygonsOverlap(rect(0, 0, 2, 2), rect(2, 0, 2, 2)), false);
 assert.equal(polygonsOverlap(rect(0, 0, 2, 2), rect(0, 0, 2, 2)), true);
 assert.equal(polygonsOverlap(rect(0, 0, 2, 2), rect(1, 0, 2, 2)), true);
 assert.equal(polygonsOverlap(rect(0, 0, 4, 4), rect(1, 1, 1, 1)), true);
-assert.throws(() => validatePolygon([[0,1,0], [2,1,2], [0,1,2], [2,1,0]]), /crosses/);
-assert.throws(() => validatePolygon(rect(1, 0, 2, 2), [{points: rect(0, 0, 2, 2)}]), /overlaps/);
-assert.throws(() => validatePolygon([[0,1,0], [1,1,0], [2,1,0]]), /small/);
-const d = validateData(raw);
-assert.equal(nextId(d, 'comment'), 'C01');
-assert.equal(nextId(d, 'measurement'), 'M01');
-assert.equal(nextId(d, 'area'), 'A1');
-d.comments.push({id:'C01', position:[0,0,0], category:'MOVE', step:3, status:'OPEN', text:'Check PEX'});
-d.measurements.push({id:'M01', a:[0,0,0], b:[0,2,0], status:'VERIFIED', name:'Height', step:1, verifiedMeters:2.1, verifiedAt:'2026-10-05'});
-d.areas.push({id:'A1', name:'A1', points:rect(0,0,2,2), squareMeters:999, step:4});
-const restored = validateData(JSON.parse(JSON.stringify(d)));
-assert.equal(restored.areas[0].squareMeters, 4); // never trust imported area totals
-assert.deepEqual(restored.measurements[0].position, [0,1,0]);
-assert.equal(restored.measurements[0].verifiedMeters, 2.1);
-assert.equal(nextId(restored, 'comment'), 'C02'); // deleted IDs cannot be reused
-const invalid = structuredClone(d); invalid.model.id = 'another-room';
+assert.throws(
+  () =>
+    validatePolygon([
+      [0, 1, 0],
+      [2, 1, 2],
+      [0, 1, 2],
+      [2, 1, 0],
+    ]),
+  /crosses/,
+);
+assert.throws(
+  () => validatePolygon(rect(1, 0, 2, 2), [{ points: rect(0, 0, 2, 2) }]),
+  /overlaps/,
+);
+assert.throws(
+  () =>
+    validatePolygon([
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+    ]),
+  /small/,
+);
+const data = createData();
+assert.equal(nextId(data, "comment"), "C01");
+assert.equal(nextId(data, "measurement"), "M01");
+assert.equal(nextId(data, "area"), "A1");
+data.comments.push({
+  id: "C01",
+  position: [0, 0, 0],
+  text: "<script>literal text</script>",
+  resolved: true,
+});
+data.measurements.push({
+  id: "M01",
+  a: [0, 0, 0],
+  b: [0, 2, 0],
+  status: "SCAN",
+  name: "Height",
+});
+data.areas.push({
+  id: "A1",
+  name: "",
+  points: rect(0, 0, 2, 2),
+  squareMeters: 999,
+});
+let restored = validateData(JSON.parse(JSON.stringify(data)));
+assert.equal(restored.areas[0].squareMeters, 4);
+assert.deepEqual(restored.measurements[0].position, [0, 1, 0]);
+assert.equal(restored.measurements[0].status, "SCAN");
+assert.equal(restored.comments[0].resolved, true);
+assert.deepEqual(Object.keys(restored.comments[0]).sort(), [
+  "id",
+  "position",
+  "resolved",
+  "text",
+]);
+const endpoints = [restored.measurements[0].a, restored.measurements[0].b];
+Object.assign(restored.measurements[0], {
+  status: "VERIFIED",
+  verifiedMeters: 86.5 * 0.0254,
+  verifiedAt: "2026-10-05T00:00:00Z",
+});
+restored = validateData(restored);
+assert.equal(formatLength(restored.measurements[0].verifiedMeters), "7′ 2½″");
+assert.deepEqual(
+  [restored.measurements[0].a, restored.measurements[0].b],
+  endpoints,
+);
+restored.comments = [];
+assert.equal(nextId(validateData(restored), "comment"), "C02");
+const invalid = structuredClone(data);
+invalid.model.id = "another-room";
 assert.throws(() => validateData(invalid), /model/);
-const duplicate = structuredClone(d); duplicate.comments.push({...duplicate.comments[0]});
+const duplicate = structuredClone(data);
+duplicate.comments.push({ ...duplicate.comments[0] });
 assert.throws(() => validateData(duplicate), /duplicate/);
-const fakeVerified = structuredClone(d); delete fakeVerified.measurements[0].verifiedMeters;
+const fakeVerified = structuredClone(data);
+fakeVerified.measurements[0].status = "VERIFIED";
 assert.throws(() => validateData(fakeVerified), /confirmed/);
-console.log('Basement data checks passed: units, polygons, overlap, provenance and import validation.');
+
+// Legacy fields exist only in migration fixtures; they must never survive a V2 write.
+const legacy = {
+  ...structuredClone(restored),
+  schemaVersion: 1,
+  steps: [{ status: "Complete" }],
+};
+legacy.comments = [
+  {
+    id: "C03",
+    position: [1, 2, 3],
+    text: "Check pipe",
+    category: "MOVE",
+    step: 3,
+    status: "DONE",
+  },
+];
+legacy.measurements[0].step = 1;
+legacy.areas[0].step = 4;
+const migrated = migrateLegacy(legacy);
+assert.deepEqual(migrated.comments[0], {
+  id: "C03",
+  position: [1, 2, 3],
+  text: "Check pipe",
+  resolved: false,
+});
+assert.deepEqual(migrated.measurements[0].a, legacy.measurements[0].a);
+assert.equal(
+  migrated.measurements[0].verifiedMeters,
+  legacy.measurements[0].verifiedMeters,
+);
+for (const value of [
+  migrated,
+  ...migrated.comments,
+  ...migrated.measurements,
+  ...migrated.areas,
+]) {
+  for (const key of ["step", "steps", "category", "priority"])
+    assert.equal(key in value, false);
+}
+function memory(initial = {}) {
+  const values = new Map(Object.entries(initial)),
+    writes = [];
+  return {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => {
+      writes.push(key);
+      values.set(key, value);
+    },
+    values,
+    writes,
+  };
+}
+const original = JSON.stringify(legacy),
+  storage = memory({ [LEGACY_STORAGE_KEY]: original });
+assert.deepEqual(loadData(storage).data, migrated);
+assert.equal(storage.getItem(LEGACY_STORAGE_KEY), original);
+assert.deepEqual(storage.writes, [STORAGE_KEY]);
+loadData(storage);
+assert.deepEqual(storage.writes, [STORAGE_KEY]); // migration runs exactly once
+const both = memory({
+  [STORAGE_KEY]: JSON.stringify(data),
+  [LEGACY_STORAGE_KEY]: original,
+});
+assert.deepEqual(loadData(both).data, validateData(data));
+assert.deepEqual(both.writes, []);
+const corrupt = memory({
+  [STORAGE_KEY]: "broken-json",
+  [LEGACY_STORAGE_KEY]: original,
+});
+assert.equal(loadData(corrupt).writable, false);
+assert.equal(corrupt.getItem(STORAGE_KEY), "broken-json");
+assert.deepEqual(corrupt.writes, []);
+assert.equal(loadData(undefined).writable, false);
+const blocked = {
+  getItem: (key) => (key === LEGACY_STORAGE_KEY ? original : null),
+  setItem: () => {
+    throw new Error("blocked");
+  },
+};
+assert.deepEqual(loadData(blocked).data, migrated);
+assert.equal(loadData(blocked).writable, false);
+const poisoned = { ...structuredClone(data), workflow: true };
+poisoned.comments[0].category = "GENERAL";
+assert.deepEqual(validateData(poisoned), validateData(data));
+
+// The model is byte-for-byte the existing self-contained KIRI asset.
+const modelBytes = await readFile(
+  new URL("../docs/basement/room.gltf", import.meta.url),
+);
+const blob = createHash("sha1")
+  .update(`blob ${modelBytes.length}\0`)
+  .update(modelBytes)
+  .digest("hex");
+assert.equal(blob, "5e6b473d4e7a2bdf0ed78af18d80fe12a76feb0b");
+const model = JSON.parse(modelBytes);
+assert.ok(model.meshes.length > 0);
+for (const dependency of [...(model.buffers || []), ...(model.images || [])]) {
+  assert.ok(
+    !dependency.uri || dependency.uri.startsWith("data:"),
+    "Model dependencies must remain embedded.",
+  );
+}
+const pdf = await readFile(
+  new URL("../docs/basement/project.pdf", import.meta.url),
+);
+assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
+assert.ok(pdf.length < 2_000_000);
+console.log(
+  "Basement V2 data checks passed: geometry, fractional units, provenance, clean migration, persistence protection and preserved model/reference assets.",
+);
