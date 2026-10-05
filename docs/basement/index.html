@@ -13,7 +13,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
     />
-    <link rel="stylesheet" href="./execution.css?v=3.2" />
+    <link rel="stylesheet" href="./execution.css?v=4" />
     <script type="importmap">
       {
         "imports": {
@@ -30,7 +30,7 @@
     <header class="topbar">
       <div class="brand"><b>RONU</b><span> / BASEMENT</span></div>
       <div class="top-actions">
-        <button id="project" class="surface">Project</button>
+        <button id="project" class="surface">Project images</button>
         <nav class="surface camera" aria-label="Camera views">
           <button id="top" disabled aria-pressed="false">Top</button>
           <button id="three" disabled aria-pressed="true">3D</button>
@@ -38,6 +38,17 @@
         </nav>
       </div>
     </header>
+    <nav class="source-switch surface" aria-label="Dimension source">
+      <button data-source="model" aria-pressed="true">3D dimensions</button>
+      <button data-source="lighting" aria-pressed="false">Lighting plan</button>
+    </nav>
+    <section class="model-summary surface" aria-label="Measurements from the 3D model">
+      <span class="eyebrow">FLOOR AREA · KIRI SCAN</span>
+      <strong id="model-area">Calculating…</strong>
+      <span id="model-area-metric"></span>
+      <small>Includes walls + stairs.</small>
+      <button id="wall-sizes" disabled>Wall sizes</button>
+    </section>
     <button id="plan-note" class="surface" hidden aria-label="Open plan dimensions"></button>
 
     <div class="tools">
@@ -91,32 +102,30 @@
       id="project-panel"
       class="surface project-panel"
       hidden
-      aria-label="Original project reference"
+      aria-label="Project image gallery"
     >
       <div class="panel-head">
-        <h1>Project reference</h1>
+        <h1>Project images</h1>
         <button id="close-project" aria-label="Close project reference">
           ×
         </button>
       </div>
-      <div class="project-copy">
-        <p>
-          Original Studio Duo project reference. Project values are not treated as verified site measurements.
-        </p>
-        <div class="project-source-legend" aria-label="Measurement sources">
-          <span class="badge project-badge">PROJECT</span>
-          <span class="badge">SCAN</span>
-          <span class="badge verified">VERIFIED</span>
-        </div>
-        <div id="project-reference-list" class="project-reference-list"></div>
-        <a class="project-pdf-link" href="./project.pdf" target="_blank" rel="noopener">Open original project PDF</a>
-      </div>
+      <p class="small">Studio Duo drawings. The lighting sheet locates spotlights and other fixtures; its red dimensions are spacing and offsets.</p>
+      <div id="project-reference-list" class="project-reference-list" aria-label="Choose a project image"></div>
+      <figure class="project-preview">
+        <a id="open-project-image" href="./lighting-sheet.png" target="_blank" rel="noopener" aria-label="Open selected image at full size">
+          <img id="project-image" class="lighting-plan" loading="lazy" alt="Lighting plan" />
+          <span>Open full-size image</span>
+        </a>
+        <figcaption id="project-image-note"></figcaption>
+      </figure>
+      <div id="lighting-dimensions"></div>
     </aside>
 
     <footer>
       <div class="summary">
         <span id="area-total" title="Sum of the saved areas currently shown"
-          >Area: ≈ 0 ft²</span
+          >Drawn areas: ≈ 0 ft²</span
         >
         <button
           id="hidden-notes"
@@ -134,6 +143,6 @@
       aria-live="polite"
       hidden
     ></div>
-    <script type="module" src="./app.mjs?v=3.2"></script>
+    <script type="module" src="./app.mjs?v=4"></script>
   </body>
 </html>

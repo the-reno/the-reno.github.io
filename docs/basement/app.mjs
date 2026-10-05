@@ -29,6 +29,36 @@ let toastTimer,
 const visible = { comments: true, measurements: true, areas: true };
 let projectData = null;
 let projectLoading = false;
+let dimensionSource = "model";
+let selectedWall = null;
+let selectedImage = "lighting";
+
+function openWalls() {
+  setMode("navigate");
+  openPanel("Wall sizes · 3D model");
+  note("Model estimates in feet/inches. Each number identifies a wall segment in the KIRI file; some segments overlap. Length follows the modelled segment, not a clear room span.");
+  const table = el("table", undefined, "wall-table");
+  const head = el("tr");
+  for (const title of ["Wall", "Length", "Height"]) head.append(el("th", title));
+  table.append(head);
+  for (const wall of viewer.metrics?.walls || []) {
+    const row = el("tr");
+    const cell = el("td");
+    const choose = button(wall.id, () => {
+      selectedWall = wall.id;
+      dimensionSource = "model";
+      visible.measurements = true;
+      $$(".wall-table button").forEach(b=>b.setAttribute("aria-pressed",String(b.textContent===wall.id)));
+      refresh();
+    });
+    choose.setAttribute("aria-label", `Highlight wall ${wall.id}`);
+    choose.setAttribute("aria-pressed", String(selectedWall === wall.id));
+    cell.append(choose);
+    row.append(cell, el("td", formatLength(wall.length)), el("td", formatLength(wall.height)));
+    table.append(row);
+  }
+  body.append(table);
+}
 
 function projectDimensions() {
   return (projectData?.dimensions || []).filter((d) =>
@@ -44,8 +74,8 @@ function openProjectDimension(item) {
   body.append(el("span", "PROJECT", "badge project-badge"));
   body.append(el("p", item.value, "value"), el("p", item.name));
   note(projectData.dimensionNote);
-  const source = el("a", "Open lighting drawing · original page 6");
-  source.href = "./project.pdf#page=3";
+  const source = el("a", "Open lighting drawing image");
+  source.href = "./lighting-plan.png";
   source.target = "_blank";
   source.rel = "noopener";
   body.append(source);
@@ -57,7 +87,7 @@ async function loadProjectReferences() {
   const host = $("#project-reference-list");
   try {
     host.textContent = "Loading project references…";
-    const response = await fetch("./project-data.json?v=3.2", {
+    const response = await fetch("./project-data.json?v=4", {
       signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) throw new Error(`Project reference HTTP ${response.status}`);
@@ -69,9 +99,9 @@ async function loadProjectReferences() {
   } catch (error) {
     projectData = null;
     console.warn("Project references unavailable:", error);
-    host.textContent = "Project details unavailable. Open the original PDF below.";
-    $("#plan-note").textContent = "Plan dimensions unavailable · open Project";
-    $("#plan-note").hidden = false;
+    host.textContent = "Project images unavailable. Reload to try again.";
+    $("#plan-note").textContent = "Lighting references unavailable";
+    $("#plan-note").hidden = dimensionSource !== "lighting";
   } finally {
     projectLoading = false;
   }
@@ -82,19 +112,9 @@ function renderProjectReferences() {
   if (!host || !projectData) return;
   host.replaceChildren();
   const dimensions = projectDimensions();
+  const catalogue = $("#lighting-dimensions");
+  catalogue.replaceChildren();
   if (dimensions.length) {
-    host.append(el("p", projectData.dimensionNote, "small"));
-    const drawing = el("a");
-    drawing.href = "./lighting-plan.png";
-    drawing.target = "_blank";
-    drawing.rel = "noopener";
-    const image = el("img");
-    image.src = "./lighting-plan.png";
-    image.alt = "Original dimensioned lighting plan, Studio Duo sheet 6";
-    image.loading = "lazy";
-    image.className = "lighting-plan";
-    drawing.append(image, el("span", "Open full-size dimensioned drawing"));
-    host.append(drawing);
     const list = el("details", undefined, "plan-dimension-list");
     list.append(el("summary", `All ${dimensions.length} printed dimensions`));
     for (const item of dimensions) {
@@ -102,23 +122,25 @@ function renderProjectReferences() {
         () => openProjectDimension(item));
       list.append(row);
     }
-    host.append(list);
+    catalogue.append(list);
   }
   for (const page of projectData.pages || []) {
-    const card = el("div", undefined, "project-ref");
-    const head = el("div", undefined, "project-ref-head");
-    head.append(
-      el("strong", page.title),
-      el("span", "PROJECT", "badge project-badge"),
-    );
-    card.append(head);
-    card.append(el("p", page.description || "", "small"));
-    const link = el("a", `Open · original page ${page.sourcePage}`);
-    link.href = `./project.pdf#page=${page.pdfPage}`;
-    link.target = "_blank";
-    link.rel = "noopener";
-    card.append(link);
+    const card = button("", () => { selectedImage = page.id; renderProjectReferences(); }, "project-ref");
+    card.setAttribute("aria-pressed", String(page.id === selectedImage));
+    const image = el("img");
+    image.src = page.image;
+    image.loading = "lazy";
+    image.alt = "";
+    card.append(image, el("span", page.title));
     host.append(card);
+  }
+  const page = projectData.pages.find(p=>p.id===selectedImage) || projectData.pages[0];
+  if (page) {
+    $("#project-image").src = page.image;
+    $("#project-image").alt = page.title;
+    $("#project-image-note").textContent = page.description;
+    $("#open-project-image").href = page.image;
+    $("#lighting-dimensions").hidden = page.id !== "lighting";
   }
 }
 
@@ -441,14 +463,39 @@ function refresh() {
     data.measurements.forEach((measurement) => add("measurement", measurement));
   if (visible.areas) data.areas.forEach((area) => add("area", area));
   const dimensions = projectDimensions();
-  $("#plan-note").hidden = !visible.measurements || !dimensions.length || mode !== "navigate";
+  $("#plan-note").hidden = dimensionSource !== "lighting" || !visible.measurements || !dimensions.length || mode !== "navigate";
   if (dimensions.length) {
     $("#plan-note").replaceChildren(
-      el("span", `PROJECT · ${dimensions.length} plan dimensions`),
+      el("span", `LIGHTING · ${dimensions.length} fixture spacings`),
       el("small", "Approximate placement · zoom for detail"),
     );
   }
-  if (visible.measurements && mode === "navigate") {
+  $$("[data-source]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.source===dimensionSource)));
+  if (viewer.metrics) {
+    const {floor,walls} = viewer.metrics;
+    $("#model-area").textContent = formatArea(floor.squareMeters);
+    $("#model-area-metric").textContent = `${floor.squareMeters.toFixed(2)} m² · model footprint`;
+    $("#wall-sizes").textContent = `Wall sizes · ${walls.length}`;
+    $("#wall-sizes").disabled = false;
+    if (visible.areas && dimensionSource === "model" && mode === "navigate") {
+      const node=el("span",undefined,"model-label model-floor");
+      node.append(el("span","FLOOR · SCAN","label-name"),el("strong",formatArea(floor.squareMeters)));
+      items.push({type:"model-floor",triangles:floor.triangles,
+        position:[floor.position[0],viewer.ceilingY,floor.position[2]],node});
+    }
+    if (visible.measurements && dimensionSource === "model" && mode === "navigate") {
+      const ordered=[...walls].sort((a,b)=>Number(b.id===selectedWall)-Number(a.id===selectedWall));
+      for (const wall of ordered) {
+        const a=[wall.a[0],viewer.ceilingY,wall.a[1]],b=[wall.b[0],viewer.ceilingY,wall.b[1]];
+        const node=el("span",undefined,`model-label wall-dimension${selectedWall===wall.id?" selected":""}`);
+        node.append(el("span",wall.id,"wall-id"),el("span",`≈ ${formatLength(wall.length)}`));
+        node.dataset.id=wall.id;
+        node.setAttribute("aria-label",`${wall.id}, model length ${formatLength(wall.length)}, height ${formatLength(wall.height)}`);
+        items.push({type:"wall-dimension",a,b,position:polygonCenter([a,b]),node,selected:selectedWall===wall.id});
+      }
+    }
+  }
+  if (visible.measurements && dimensionSource === "lighting" && mode === "navigate") {
     for (const item of dimensions.sort((a, b) => a.priority - b.priority)) {
       const a = [item.a[0], viewer.ceilingY, item.a[1]];
       const b = [item.b[0], viewer.ceilingY, item.b[1]];
@@ -464,7 +511,7 @@ function refresh() {
   const total = visible.areas
     ? data.areas.reduce((sum, area) => sum + area.squareMeters, 0)
     : 0;
-  $("#area-total").textContent = `Area: ${formatArea(total)}`;
+  $("#area-total").textContent = `Drawn areas: ${formatArea(total)}`;
   const hiddenCount = data.comments.filter(
     (comment) => comment.resolved,
   ).length;
@@ -643,6 +690,14 @@ $("#close-project").onclick = () => {
   $("#project-panel").hidden = true;
 };
 $("#plan-note").onclick = () => $("#project").click();
+$("#wall-sizes").onclick = openWalls;
+$$("[data-source]").forEach(node=>node.onclick=()=>{
+  setMode("navigate");
+  dimensionSource=node.dataset.source;
+  visible.measurements=true;
+  refresh();
+  if (dimensionSource === "lighting") void loadProjectReferences();
+});
 
 try {
   try {
@@ -653,7 +708,7 @@ try {
   const loaded = loadData(storage);
   data = loaded.data;
   writable = loaded.writable;
-  const { createViewer } = await import("./viewer.mjs?v=3.2");
+  const { createViewer } = await import("./viewer.mjs?v=4");
   viewer = await createViewer($("#view"), handleTap);
   $("#top").onclick = () => viewer.fit("top");
   $("#three").onclick = () => {

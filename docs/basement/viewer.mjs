@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { measureWall, measureFloor } from "./model-metrics.mjs?v=4";
 
 export async function createViewer(host, onTap) {
   const scene = new THREE.Scene();
@@ -46,6 +47,24 @@ export async function createViewer(host, onTap) {
     throw new Error("Empty model");
   const radius = size.length() / 2,
     ceilingY = (wallBox.isEmpty() ? box.max.y : wallBox.max.y) + 0.025;
+  model.updateMatrixWorld(true);
+  const geometry = (mesh) => {
+    const attribute = mesh.geometry.getAttribute("position");
+    const positions = Array.from({length:attribute.count}, (_,i) =>
+      new THREE.Vector3().fromBufferAttribute(attribute,i).applyMatrix4(mesh.matrixWorld).toArray());
+    return {positions, indices:mesh.geometry.index ? Array.from(mesh.geometry.index.array) : null};
+  };
+  let metrics = null;
+  try {
+    metrics = {
+      floor: measureFloor(floors.map(geometry)),
+      walls: meshes.filter(m=>m.name.startsWith("wall_")).map((m,i)=>({
+        ...measureWall(geometry(m).positions), source:m.name, id:`W${String(i+1).padStart(2,"0")}`,
+      })),
+    };
+  } catch (error) {
+    console.warn("Model measurements unavailable:", error);
+  }
   camera.near = radius / 1000;
   camera.far = radius * 100;
   controls.minDistance = radius * 0.025;
@@ -176,12 +195,21 @@ export async function createViewer(host, onTap) {
         dot(annotations, i.a, 0x255d77);
         dot(annotations, i.b, 0x255d77);
       }
-      if (i.type === "project-dimension") {
-        line(annotations, [i.a, i.b], 0x88613b);
+      if (i.type === "project-dimension" || i.type === "wall-dimension") {
+        const color = i.type === "wall-dimension" ? (i.selected ? 0xad5420 : 0x255d77) : 0x88613b;
+        line(annotations, [i.a, i.b], color);
         // Architectural ticks; the printed value comes from the plan, not length.
         for (const p of [i.a, i.b])
           line(annotations, [[p[0] - .065, p[1], p[2] - .065],
-            [p[0] + .065, p[1], p[2] + .065]], 0x88613b);
+            [p[0] + .065, p[1], p[2] + .065]], color);
+      }
+      if (i.type === "model-floor") {
+        const fill = new THREE.Mesh(new THREE.BufferGeometry().setAttribute("position",
+          new THREE.Float32BufferAttribute(i.triangles.flat(2),3)),
+          new THREE.MeshBasicMaterial({color:0x255d77,transparent:true,opacity:.08,
+            depthWrite:false,side:THREE.DoubleSide}));
+        fill.position.y=.015;
+        annotations.add(fill);
       }
       if (i.type === "area") polygon(annotations, i.points, 0xad5420);
       if (i.type === "comment") dot(annotations, i.position, 0xad5420);
@@ -279,7 +307,10 @@ export async function createViewer(host, onTap) {
   renderer.setAnimationLoop(() => {
     controls.update();
     renderer.render(scene, camera);
-    const placed = [];
+    const placed = [".topbar", ".model-summary", ".source-switch", ".tools", ".prompt"]
+      .map(selector=>document.querySelector(selector))
+      .filter(node=>node && !node.hidden && node.getClientRects().length)
+      .map(node=>node.getBoundingClientRect());
     for (const { position, node, leader } of labelItems) {
       const p = project(position.toArray());
       node.hidden =
@@ -298,8 +329,8 @@ export async function createViewer(host, onTap) {
         // as the user zooms; the complete catalogue stays in Project.
         const r = { left: p.x - w / 2, right: p.x + w / 2,
           top: p.y - h / 2, bottom: p.y + h / 2 };
-        if (r.left < 6 || r.right > host.clientWidth - 6 || r.top < 118 ||
-            r.bottom > host.clientHeight - 192 || placed.some((o) =>
+        if (r.left < 6 || r.right > host.clientWidth - 6 || r.top < 140 ||
+            r.bottom > host.clientHeight - 150 || placed.some((o) =>
               r.left < o.right + 6 && r.right + 6 > o.left &&
               r.top < o.bottom + 6 && r.bottom + 6 > o.top)) {
           node.hidden = true;
@@ -324,6 +355,18 @@ export async function createViewer(host, onTap) {
           [-w - 6, 0],
           [w + 6, 0],
         ];
+        const wallLabel = node.classList.contains("wall-dimension");
+        if (wallLabel && host.clientWidth < 600) {
+          offsets.splice(0, offsets.length, [0,0], [0,-h-6], [0,h+6],
+            [-w/2,-h-6], [w/2,h+6]);
+        } else if (wallLabel) {
+          for(let ring=1;ring<=4;ring++) {
+            for(let dx=-ring;dx<=ring;dx++)for(let dy=-ring;dy<=ring;dy++)
+              if(Math.max(Math.abs(dx),Math.abs(dy))===ring)
+                offsets.push([dx*(w+8),dy*(h+8)]);
+          }
+        }
+        let found = false;
         for (const [dx, dy] of offsets) {
           const cx = Math.max(
             w / 2 + 4,
@@ -349,8 +392,15 @@ export async function createViewer(host, onTap) {
                 r.top < o.bottom + 4 &&
                 r.bottom + 4 > o.top,
             )
-          )
+          ) {
+            found = true;
             break;
+          }
+        }
+        if (wallLabel && !found) {
+          node.hidden = true;
+          leader.style.display = "none";
+          continue;
         }
         placed.push({
           left: x - w / 2,
@@ -377,6 +427,7 @@ export async function createViewer(host, onTap) {
       mode === "navigate" ? "grab" : "crosshair";
   }
   return {
+    metrics,
     camera,
     controls,
     box,
