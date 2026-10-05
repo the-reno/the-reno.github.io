@@ -13,7 +13,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
     />
-    <link rel="stylesheet" href="./execution.css?v=4" />
+    <link rel="stylesheet" href="./execution.css?v=5" />
     <script type="importmap">
       {
         "imports": {
@@ -42,14 +42,20 @@
       <button data-source="model" aria-pressed="true">3D dimensions</button>
       <button data-source="lighting" aria-pressed="false">Lighting plan</button>
     </nav>
-    <section class="model-summary surface" aria-label="Measurements from the 3D model">
+    <section
+      class="model-summary surface"
+      aria-label="Measurements from the 3D model"
+    >
       <span class="eyebrow">FLOOR AREA · KIRI SCAN</span>
       <strong id="model-area">Calculating…</strong>
-      <span id="model-area-metric"></span>
       <small>Includes walls + stairs.</small>
-      <button id="wall-sizes" disabled>Wall sizes</button>
     </section>
-    <button id="plan-note" class="surface" hidden aria-label="Open plan dimensions"></button>
+    <button
+      id="plan-note"
+      class="surface"
+      hidden
+      aria-label="Open plan dimensions"
+    ></button>
 
     <div class="tools">
       <nav class="surface primary" aria-label="Tools">
@@ -60,16 +66,13 @@
         <button data-mode="comment" aria-pressed="false" disabled>
           Comment
         </button>
-      </nav>
-      <nav class="surface visibility" aria-label="Show annotations">
-        <button data-visibility="measurements" aria-pressed="true" disabled>
-          Measurements
-        </button>
-        <button data-visibility="areas" aria-pressed="true" disabled>
-          Areas
-        </button>
-        <button data-visibility="comments" aria-pressed="true" disabled>
-          Comments
+        <button
+          id="show-options"
+          aria-expanded="false"
+          aria-controls="panel"
+          disabled
+        >
+          Show
         </button>
       </nav>
     </div>
@@ -110,11 +113,29 @@
           ×
         </button>
       </div>
-      <p class="small">Studio Duo drawings. The lighting sheet locates spotlights and other fixtures; its red dimensions are spacing and offsets.</p>
-      <div id="project-reference-list" class="project-reference-list" aria-label="Choose a project image"></div>
+      <p class="small">
+        Studio Duo drawings. The lighting sheet locates spotlights and other
+        fixtures; its red dimensions are spacing and offsets.
+      </p>
+      <div
+        id="project-reference-list"
+        class="project-reference-list"
+        aria-label="Choose a project image"
+      ></div>
       <figure class="project-preview">
-        <a id="open-project-image" href="./lighting-sheet.png" target="_blank" rel="noopener" aria-label="Open selected image at full size">
-          <img id="project-image" class="lighting-plan" loading="lazy" alt="Lighting plan" />
+        <a
+          id="open-project-image"
+          href="./lighting-sheet.png"
+          target="_blank"
+          rel="noopener"
+          aria-label="Open selected image at full size"
+        >
+          <img
+            id="project-image"
+            class="lighting-plan"
+            loading="lazy"
+            alt="Lighting plan"
+          />
           <span>Open full-size image</span>
         </a>
         <figcaption id="project-image-note"></figcaption>
@@ -143,6 +164,6 @@
       aria-live="polite"
       hidden
     ></div>
-    <script type="module" src="./app.mjs?v=4"></script>
+    <script type="module" src="./app.mjs?v=5"></script>
   </body>
 </html>

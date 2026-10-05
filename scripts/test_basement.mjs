@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import {
+  VIEW_STORAGE_KEY,
+  loadView,
+  parseProjectLength,
   STORAGE_KEY,
   LEGACY_STORAGE_KEY,
   createData,
@@ -27,6 +30,29 @@ assert.equal(distance([0, 0, 0], [0, 2, 0]), 2);
 assert.equal(formatLength(0.3048), "1′ 0″");
 assert.equal(formatLength(0.3039), "1′ 0″");
 assert.equal(formatLength(86.5 * 0.0254), "7′ 2½″");
+assert.equal(formatLength(2.1971, "metric"), "2.197 m");
+assert.equal(formatArea(3, "metric"), "≈ 3 m²");
+assert.equal(parseProjectLength("2′11″"), 35 * 0.0254);
+assert.equal(parseProjectLength("unknown"), null);
+const view = loadView({
+  getItem: (key) => {
+    assert.equal(key, VIEW_STORAGE_KEY);
+    return JSON.stringify({
+      units: "metric",
+      source: "lighting",
+      hidden: ["wall:W06", "wall:W06", "project:P6-01", "saved:M01", "bad"],
+      visibility: { areas: false, comments: "invalid" },
+    });
+  },
+});
+assert.deepEqual(view, {
+  units: "metric",
+  source: "lighting",
+  hidden: ["wall:W06", "project:P6-01", "saved:M01"],
+  visibility: { measurements: true, areas: false, comments: true },
+});
+assert.equal(loadView({ getItem: () => "not-json" }).units, "imperial");
+assert.equal(loadView().units, "imperial");
 assert.equal(formatLength(0.125 * 0.0254), "0′ ⅛″");
 assert.equal(formatArea(3), "≈ 32.3 ft²");
 assert.equal(polygonArea(rect(0, 0, 3, 2)), 6);
@@ -218,11 +244,21 @@ for (const dependency of [...(model.buffers || []), ...(model.images || [])]) {
     "Model dependencies must remain embedded.",
   );
 }
-for (const name of ["existing-plan.png", "proposed-layout.png", "lighting-sheet.png", "lighting-plan.png"]) {
-  const image = await readFile(new URL(`../docs/basement/${name}`, import.meta.url));
-  assert.equal(image.subarray(1,4).toString(), "PNG");
+for (const name of [
+  "existing-plan.png",
+  "proposed-layout.png",
+  "lighting-sheet.png",
+  "lighting-plan.png",
+]) {
+  const image = await readFile(
+    new URL(`../docs/basement/${name}`, import.meta.url),
+  );
+  assert.equal(image.subarray(1, 4).toString(), "PNG");
 }
-await assert.rejects(readFile(new URL("../docs/basement/project.pdf", import.meta.url)), {code:"ENOENT"});
+await assert.rejects(
+  readFile(new URL("../docs/basement/project.pdf", import.meta.url)),
+  { code: "ENOENT" },
+);
 console.log(
   "Basement data checks passed: geometry, fractional units, provenance, clean migration, persistence protection, unchanged model and image-only references.",
 );

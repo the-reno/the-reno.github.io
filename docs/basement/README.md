@@ -11,13 +11,13 @@ right-drag/two fingers to pan. Top, 3D and Reset fit the camera. Navigation is t
 default; pressing an active tool again, Cancel or Escape returns to it.
 
 - **Measure:** pick A then B. A dimension appears immediately on the model, with
-  a SCAN badge and feet/inches rounded to the nearest eighth. Name is optional.
-  Enter the physical tape/laser value in feet and inches and press Mark VERIFIED.
+  a SCAN badge and your selected units. Name is optional.
+  Enter the physical tape/laser value in feet/inches or meters and press Mark VERIFIED.
   This saves the confirmed length and date, preserving both original scan
   endpoints. Use SCAN returns to the scan value. Select the label to edit/delete.
 - **Area:** switches to Top view. Pick corners, then Done (or tap the first corner
   again). Name is optional. The outline follows one horizontal ceiling plane;
-  the approximate area is shown in ft². Overlap, crossing outlines and edges
+  the approximate area is shown in ft² or m². Overlap, crossing outlines and edges
   outside the floor footprint are rejected. Redraw keeps the saved name and ID.
   The unobtrusive total sums the saved areas currently shown.
 - **Comment:** tap a model surface, type a note and Save. Select its numbered
@@ -25,7 +25,10 @@ default; pressing an active tool again, Cancel or Escape returns to it.
   and saves after the new position is selected. Closing an unsaved note cancels
   it. The temporary Hidden notes panel allows restoring resolved notes.
 - **3D dimensions:** the default view labels all 22 wall segments in the KIRI
-  file. Wall sizes lists length and height and highlights a selected segment.
+  file. Show lists each wall's length and height. Check/uncheck individual
+  dimensions; Locate centers the view, highlights the actual source wall surface
+  and emphasizes its dimension line with A/B endpoints. Other annotations fade
+  while a measurement is selected. Reset returns to the whole model.
   The model floor footprint is approximately 854.6 ft² / 79.40 m². It includes
   wall and stair footprints and is separate from user-drawn area totals.
 - **Lighting plan:** shows the 42 printed fixture spacings and offsets from
@@ -35,24 +38,36 @@ default; pressing an active tool again, Cancel or Escape returns to it.
   proposed layout and lighting sheet, with a full-size image link. No PDF is
   deployed. Close the gallery with × or Escape.
 
-The three visibility buttons show/hide annotations. Editors appear only when
-creating/selecting an item. There is no permanent sidebar or additional workflow.
+The single bottom toolbar is **Measure | Area | Comment | Show**. Show opens a
+small temporary panel with Imperial/Metric selection, group visibility, and
+individual checkboxes for your measurements and the active reference source
+(model walls or lighting spacings). Show all/Hide all affect only that list.
+Locate also reveals a previously hidden measurement. Lighting locations remain
+approximate; converted metric values use the original printed dimensions, never
+the lengths of their approximate model lines. The original drawing images are
+unchanged and retain their printed units.
+
+Imperial lengths use feet/inches rounded to an eighth; metric lengths use meters
+rounded to a millimeter. Areas, totals, labels, reference lists and verification
+inputs all follow the selected unit system. Switching units never changes model
+geometry, scan endpoints, saved tape values or measurement provenance.
+Editors appear only when creating/selecting an item. There is no permanent sidebar.
 
 ## Files and model dependencies
 
-| File            | Purpose                                                                    |
-| --------------- | -------------------------------------------------------------------------- |
-| `index.html`    | Static controls, import map and reference overlay                          |
-| `app.mjs`       | Simple interactions, editors and device persistence                        |
-| `viewer.mjs`    | Existing Three.js renderer, camera controls, model picking and annotations |
-| `data.mjs`      | V2 schema, geometry, units, validation and one-time migration              |
-| `execution.css` | Current interface styles; filename retained to fit the requested structure |
-| `room.gltf`     | Unchanged KIRI model, Git blob `5e6b473d4e7a2bdf0ed78af18d80fe12a76feb0b`  |
-| `model-metrics.mjs` | World-space wall segment dimensions and horizontal floor footprint |
-| `project-data.json` | Image descriptions and 42 printed lighting dimensions |
-| `existing-plan.png`, `proposed-layout.png`, `lighting-sheet.png` | Original Studio Duo sheets 4–6 rendered as images |
-| `lighting-plan.png` | Detail image of the dimensioned lighting drawing |
-| `README.md`     | Canonical source, behavior, storage and validation                         |
+| File                                                             | Purpose                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `index.html`                                                     | Static controls, import map and reference overlay                          |
+| `app.mjs`                                                        | Simple interactions, editors and device persistence                        |
+| `viewer.mjs`                                                     | Existing Three.js renderer, camera controls, model picking and annotations |
+| `data.mjs`                                                       | V2 schema, geometry, units, validation and one-time migration              |
+| `execution.css`                                                  | Current interface styles; filename retained to fit the requested structure |
+| `room.gltf`                                                      | Unchanged KIRI model, Git blob `5e6b473d4e7a2bdf0ed78af18d80fe12a76feb0b`  |
+| `model-metrics.mjs`                                              | World-space wall segment dimensions and horizontal floor footprint         |
+| `project-data.json`                                              | Image descriptions and 42 printed lighting dimensions                      |
+| `existing-plan.png`, `proposed-layout.png`, `lighting-sheet.png` | Original Studio Duo sheets 4–6 rendered as images                          |
+| `lighting-plan.png`                                              | Detail image of the dimensioned lighting drawing                           |
+| `README.md`                                                      | Canonical source, behavior, storage and validation                         |
 
 All model buffers are embedded in `room.gltf`; it requires no additional model
 asset files. Three.js and its official addons are pinned to 0.180.0 in the import
@@ -109,6 +124,12 @@ A corrupt V2 record is preserved and saving is blocked in that tab; a clear
 message explains that edits are temporary. Browsers denying localStorage also
 show an unsaved state. Saving is per browser/device and origin; there is no
 cloud sync or import/export interface.
+
+View preferences are saved separately in `ronu.basement.view.v1`: units, active
+source, group visibility and hidden measurement keys (`wall:W06`,
+`project:P6-01`, `saved:M01`). Individual choices survive refresh without changing
+the V2 annotation schema. Invalid/unavailable preferences fall back to defaults;
+the original annotation storage and safe migration behavior are unchanged.
 
 ## Duplicate implementation audit
 

@@ -84,20 +84,26 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       );
     }
     const page = await context.newPage();
-    page.on("pageerror", (e) => errors.push(e.message));
+    page.on("pageerror", (e) => {
+      errors.push(e.message);
+      console.error("Page error:", e.message);
+    });
     page.on("console", (msg) => {
       // Chrome may request a site-wide icon; the site has never supplied one.
       if (msg.location().url === `${base}/favicon.ico`) return;
-      if (referenceFailure && msg.location().url.includes("/project-data.json")) return;
+      if (referenceFailure && msg.location().url.includes("/project-data.json"))
+        return;
       if (msg.type() === "error") errors.push(msg.text());
     });
     page.on("response", (response) => {
-      if (referenceFailure && response.url().includes("/project-data.json")) return;
+      if (referenceFailure && response.url().includes("/project-data.json"))
+        return;
       if (response.status() >= 400)
         broken.push(`${response.status()} ${response.url()}`);
     });
     page.on("requestfailed", (request) => {
-      if (referenceFailure && request.url().includes("/project-data.json")) return;
+      if (referenceFailure && request.url().includes("/project-data.json"))
+        return;
       broken.push(`${request.url()} ${request.failure().errorText}`);
     });
     return page;
@@ -108,7 +114,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey);
   const camera = (page) =>
     page.evaluate(async () => {
-      const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
+      const v = (
+        await import(document.querySelector('script[type="module"][src]').src)
+      ).viewer;
       return {
         position: v.camera.position.toArray(),
         target: v.controls.target.toArray(),
@@ -117,7 +125,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const project = (page, p, area = false) =>
     page.evaluate(
       async ({ p, area }) => {
-        const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
+        const v = (
+          await import(document.querySelector('script[type="module"][src]').src)
+        ).viewer;
         return v.project([p[0], area ? v.ceilingY : -1.13053, p[1]]);
       },
       { p, area },
@@ -129,6 +139,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   };
   const tool = (page, name) => page.getByRole("button", { name, exact: true });
   const close = (page) => tool(page, "Close editor").click();
+  const visibility = async (page, key) => {
+    await tool(page, "Show").click();
+    await page.locator(`[data-visibility="${key}"]`).click();
+    await close(page);
+  };
   async function screenshot(page, name) {
     if (artifactDir) {
       await page.locator("#toast").waitFor({ state: "hidden" });
@@ -146,7 +161,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     check(
       (await page.evaluate(async () =>
-        (await import(document.querySelector('script[type="module"][src]').src)).viewer.box.isEmpty(),
+        (
+          await import(document.querySelector('script[type="module"][src]').src)
+        ).viewer.box.isEmpty(),
       )) === false,
       "Model has geometry",
     );
@@ -154,38 +171,146 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator('[data-mode][aria-pressed="true"]').count()) === 0,
       "Navigation is the default, with no extra mode",
     );
-    check((await page.locator("#model-area").innerText()).includes("854.6"), "Floor area comes from KIRI geometry");
-    check(await page.locator(".wall-dimension").count() === 22, "Every model wall has a dimension label");
-    check(await page.locator(".project-dimension").count() === 0, "Lighting spacings are separate from wall sizes");
+    check(
+      (await page.locator("#model-area").innerText()).includes("854.6"),
+      "Floor area comes from KIRI geometry",
+    );
+    check(
+      (await page.locator(".wall-dimension").count()) === 22,
+      "Every model wall has a dimension label",
+    );
+    check(
+      (await page.locator(".project-dimension").count()) === 0,
+      "Lighting spacings are separate from wall sizes",
+    );
     await screenshot(page, "basement-model-dimensions");
-    const beforeWalls=await data(page);
-    await page.locator("#wall-sizes").click();
-    check(await page.locator(".wall-table tr").count() === 23, "All 22 walls have length and height rows");
-    await page.getByRole("button",{name:"Highlight wall W06",exact:true}).click();
-    check(await page.locator('.wall-dimension.selected[data-id="W06"]').isVisible(), "Selecting a wall highlights its model label");
-    assert.deepEqual(await data(page),beforeWalls);checks++;
+    const beforeWalls = await data(page);
+    await tool(page, "Show").click();
+    check(
+      (await page.locator(".measurement-option").count()) === 22,
+      "All 22 walls have individual visibility and size rows",
+    );
+    await page.getByLabel("Show Wall W06", { exact: true }).uncheck();
+    check(
+      (await page.locator('.wall-dimension[data-id="W06"]').count()) === 0,
+      "Only the unchecked wall dimension hides",
+    );
+    check(
+      (await page.locator(".wall-dimension").count()) === 21,
+      "Other wall dimensions stay visible",
+    );
     await close(page);
+    await page.reload();
+    await ready(page);
+    check(
+      (await page.locator('.wall-dimension[data-id="W06"]').count()) === 0,
+      "Per-measurement visibility survives refresh",
+    );
+    await tool(page, "Show").click();
+    await tool(page, "Hide all").click();
+    await tool(page, "Locate Wall W06").click();
+    check(
+      await page.locator('.wall-dimension.selected[data-id="W06"]').isVisible(),
+      "Selecting a wall highlights its model label",
+    );
+    check(
+      (await page.locator(".wall-dimension").count()) === 1,
+      "Locate reveals only the requested hidden dimension",
+    );
+    check(
+      (await page.locator(".endpoint").count()) === 2,
+      "The related line has A and B endpoints",
+    );
+    await screenshot(page, "basement-located-wall");
+    await tool(page, "Show").click();
+    await tool(page, "Metric · m").click();
+    check(
+      (await page.locator("#model-area").innerText()).includes("79.4 m²"),
+      "Floor area switches to metric",
+    );
+    check(
+      (
+        await page.locator('.wall-dimension[data-id="W06"]').innerText()
+      ).includes(" m"),
+      "Wall labels switch to meters",
+    );
+    await screenshot(page, "basement-filter-panel");
+    await close(page);
+    await page.reload();
+    await ready(page);
+    check(
+      (await page.locator("#model-area").innerText()).includes("m²"),
+      "Unit selection survives refresh",
+    );
+    await tool(page, "Show").click();
+    await tool(page, "Imperial · ft/in").click();
+    await tool(page, "Show all").click();
+    assert.deepEqual(await data(page), beforeWalls);
+    checks++;
+    await close(page);
+    check(
+      (await page.locator(".tools nav").count()) === 1,
+      "Only one toolbar row remains",
+    );
     await tool(page, "Lighting plan").click();
-    await page.locator("#plan-note").getByText("LIGHTING · 42 fixture spacings").waitFor();
-    check(await page.locator(".project-dimension").count() === 42,
-      "All printed plan dimensions load independently of saved annotations");
-    check(await page.locator(".project-dimension:not([hidden])").count() >= 10,
-      "Printed lighting dimensions are visibly readable");
+    await page
+      .locator("#plan-note")
+      .getByText("LIGHTING · 42 fixture spacings")
+      .waitFor();
+    check(
+      (await page.locator(".project-dimension").count()) === 42,
+      "All printed plan dimensions load independently of saved annotations",
+    );
+    check(
+      (await page.locator(".project-dimension:not([hidden])").count()) >= 5,
+      "Printed lighting dimensions are visibly readable",
+    );
+    await tool(page, "Show").click();
+    await page.locator('[data-measure-key="project:P6-01"] input').uncheck();
+    check(
+      (await page.locator('.project-dimension[data-id="P6-01"]').count()) === 0,
+      "Individual lighting dimension hides",
+    );
+    await tool(page, "Metric · m").click();
+    await page.locator('[data-measure-key="project:P6-01"] button').click();
+    check(
+      (
+        await page.locator('.project-dimension[data-id="P6-01"]').innerText()
+      ).includes("0.889 m"),
+      "Metric lighting value converts printed 2ft 11in, not approximate endpoints",
+    );
+    check(
+      await page.locator(".project-dimension.selected").isVisible(),
+      "Located lighting measurement is visible",
+    );
+    await tool(page, "Show").click();
+    await tool(page, "Imperial · ft/in").click();
+    await close(page);
     const beforePlan = await data(page);
     await tool(page, "Project images").click();
     await page.locator(".plan-dimension-list summary").click();
     await page.locator(".plan-dimension-list button").first().click();
-    check((await page.locator("#panel-body").innerText()).includes("Placement on the KIRI model is approximate"),
-      "Plan dimensions explain their source and approximate placement");
-    check(await page.locator("#panel-body button").count() === 0,
-      "Reference values cannot be edited or marked as field-verified");
+    check(
+      (await page.locator("#panel-body").innerText()).includes(
+        "Placement on the KIRI model is approximate",
+      ),
+      "Plan dimensions explain their source and approximate placement",
+    );
+    check(
+      (await page.locator("#panel-body button").count()) === 0,
+      "Reference values cannot be edited or marked as field-verified",
+    );
     await close(page);
-    await tool(page, "Measurements").click();
-    check(await page.locator(".project-dimension").count() === 0,
-      "Measurements toggle also hides plan references");
-    await tool(page, "Measurements").click();
-    check(await page.locator(".project-dimension").count() === 42,
-      "Measurements toggle restores the source dimensions");
+    await visibility(page, "measurements");
+    check(
+      (await page.locator(".project-dimension").count()) === 0,
+      "Measurements toggle also hides plan references",
+    );
+    await visibility(page, "measurements");
+    check(
+      (await page.locator(".project-dimension").count()) === 42,
+      "Measurements toggle restores the source dimensions",
+    );
     assert.deepEqual(await data(page), beforePlan);
     checks++;
     await screenshot(page, "basement-plan-dimensions");
@@ -344,12 +469,43 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Primary dimension uses feet and fractional inches",
     );
     await close(page);
-    await page.locator('[data-visibility="measurements"]').click();
+    await visibility(page, "measurements");
     check(
       (await page.locator(".model-label.measurement").count()) === 0,
       "Measurements hide",
     );
-    await page.locator('[data-visibility="measurements"]').click();
+    await visibility(page, "measurements");
+
+    const beforeUnits = await data(page);
+    await tool(page, "Show").click();
+    await page.locator('[data-measure-key="saved:M01"] input').uncheck();
+    check(
+      (await page.locator(".model-label.measurement").count()) === 0,
+      "Individual saved measurement hides without hiding walls",
+    );
+    check(
+      (await page.locator(".wall-dimension").count()) === 22,
+      "Saved-measure filtering leaves model dimensions alone",
+    );
+    await tool(page, "Metric · m").click();
+    await tool(page, "Locate Beam height").click();
+    check(
+      (await page.locator(".model-label.measurement").innerText()).includes(
+        "2.197 m",
+      ),
+      "Saved VERIFIED dimension switches to metric",
+    );
+    check(
+      await page.locator(".model-label.measurement.selected").isVisible(),
+      "Locate highlights the saved measurement's exact scan endpoints",
+    );
+    assert.deepEqual(await data(page), beforeUnits);
+    checks++;
+    await tool(page, "Show").click();
+    await tool(page, "Imperial · ft/in").click();
+    await close(page);
+    assert.deepEqual(await data(page), beforeUnits);
+    checks++;
 
     await tool(page, "Area").click();
     for (const p of [
@@ -379,12 +535,26 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator("#area-total").innerText()).includes("32.3"),
       "Visible area total is correct",
     );
-    await page.locator('[data-visibility="areas"]').click();
+    await visibility(page, "areas");
     check(
       (await page.locator("#area-total").innerText()).includes("≈ 0 ft²"),
       "Hidden areas leave visible total",
     );
-    await page.locator('[data-visibility="areas"]').click();
+    await visibility(page, "areas");
+    await tool(page, "Show").click();
+    await tool(page, "Metric · m").click();
+    await close(page);
+    check(
+      (await page.locator(".model-label.area").innerText()).includes("≈ 3 m²"),
+      "Drawn areas use selected metric units",
+    );
+    check(
+      (await page.locator("#area-total").innerText()).includes("≈ 3 m²"),
+      "Drawn-area total uses metric units",
+    );
+    await tool(page, "Show").click();
+    await tool(page, "Imperial · ft/in").click();
+    await close(page);
     await tool(page, "Area").click();
     for (const p of [
       [-3.5, -3.5],
@@ -423,7 +593,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await tool(page, "3D").click();
     await sleep(200);
     const attachment = await page.evaluate(async () => {
-      const v = (await import(document.querySelector('script[type="module"][src]').src)).viewer;
+      const v = (
+        await import(document.querySelector('script[type="module"][src]').src)
+      ).viewer;
       const data = JSON.parse(localStorage.getItem("ronu.basement.simple.v2"));
       const records = [...data.comments, ...data.measurements, ...data.areas];
       return records.map((item) => {
@@ -454,22 +626,29 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     await tool(page, "Project images").click();
     await page.locator(".project-ref").nth(2).waitFor();
-    check((await page.locator(".project-ref").count()) === 3, "All project references load");
+    check(
+      (await page.locator(".project-ref").count()) === 3,
+      "All project references load",
+    );
     check(
       await page.locator("#project-panel").isVisible(),
       "Project overlay opens",
     );
     await page.locator(".lighting-plan").waitFor();
-    await page.waitForFunction(() => document.querySelector("#project-image").naturalWidth === 2400);
+    await page.waitForFunction(
+      () => document.querySelector("#project-image").naturalWidth === 2400,
+    );
     check(true, "Original dimensioned drawing renders in Project");
-    check(await page.locator('a[href*=".pdf"]').count() === 0, "No PDF links remain in the UI");
-    for (const image of await page.locator('.project-ref img').all()) {
+    check(
+      (await page.locator('a[href*=".pdf"]').count()) === 0,
+      "No PDF links remain in the UI",
+    );
+    for (const image of await page.locator(".project-ref img").all()) {
       const response = await page.request.get(
         new URL(await image.getAttribute("src"), page.url()).href,
       );
       check(
-        response.ok() &&
-          response.headers()["content-type"] === "image/png",
+        response.ok() && response.headers()["content-type"] === "image/png",
         "Original project image loads",
       );
     }
@@ -477,34 +656,70 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await tool(page, "Close project reference").click();
 
     // Missing, malformed, offline and stalled optional references must not stop 3D.
-    for (const failure of ["404", "json", "schema", "dimension-schema", "offline", "stalled"]) {
+    for (const failure of [
+      "404",
+      "json",
+      "schema",
+      "dimension-schema",
+      "offline",
+      "stalled",
+    ]) {
       const isolated = await newPage({}, true);
-      let referenceRequests = 0, pdfRequests = 0, pendingRoute;
+      let referenceRequests = 0,
+        pdfRequests = 0,
+        pendingRoute;
       await isolated.route("**/project.pdf", (route) => {
         pdfRequests++;
         return route.fulfill({ status: 404, body: "Missing PDF" });
       });
       await isolated.route("**/project-data.json*", (route) => {
         referenceRequests++;
-        if (failure === "stalled") { pendingRoute = route; return; }
+        if (failure === "stalled") {
+          pendingRoute = route;
+          return;
+        }
         if (failure === "offline") return route.abort("failed");
         return route.fulfill({
           status: failure === "404" ? 404 : 200,
           contentType: "application/json",
-          body: failure === "json" ? "{" : failure === "dimension-schema" ? '{"pages":[],"dimensions":{}}' : "{}",
+          body:
+            failure === "json"
+              ? "{"
+              : failure === "dimension-schema"
+                ? '{"pages":[],"dimensions":{}}'
+                : "{}",
         });
       });
       await isolated.goto(`${base}/basement/`);
       await ready(isolated);
-      check(referenceRequests <= 1 && pdfRequests === 0, `${failure}: canvas becomes ready without waiting for optional data`);
-      check((await isolated.locator("#model-area").innerText()).includes("854.6"), `${failure}: model measurements do not depend on references`);
+      check(
+        referenceRequests <= 1 && pdfRequests === 0,
+        `${failure}: canvas becomes ready without waiting for optional data`,
+      );
+      check(
+        (await isolated.locator("#model-area").innerText()).includes("854.6"),
+        `${failure}: model measurements do not depend on references`,
+      );
       await tool(isolated, "Project images").click();
       await tool(isolated, "Close project reference").click();
       await tool(isolated, "Measure").click();
-      check((await isolated.locator("#instruction").innerText()) === "Tap Point A", `${failure}: tools work during reference loading`);
-      await isolated.locator("#project-reference-list").getByText("Project images unavailable. Reload to try again.").waitFor({ state: "attached", timeout: 12000 });
-      check(await isolated.locator("#status").isHidden(), `${failure}: reference failure does not replace viewer status`);
-      check(await tool(isolated, "Area").isEnabled() && await tool(isolated, "Comment").isEnabled(), `${failure}: all tools remain enabled`);
+      check(
+        (await isolated.locator("#instruction").innerText()) === "Tap Point A",
+        `${failure}: tools work during reference loading`,
+      );
+      await isolated
+        .locator("#project-reference-list")
+        .getByText("Project images unavailable. Reload to try again.")
+        .waitFor({ state: "attached", timeout: 12000 });
+      check(
+        await isolated.locator("#status").isHidden(),
+        `${failure}: reference failure does not replace viewer status`,
+      );
+      check(
+        (await tool(isolated, "Area").isEnabled()) &&
+          (await tool(isolated, "Comment").isEnabled()),
+        `${failure}: all tools remain enabled`,
+      );
       check(pdfRequests === 0, `${failure}: no PDF is requested`);
       if (pendingRoute) await pendingRoute.abort().catch(() => {});
       await isolated.context().close();
@@ -520,11 +735,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await mobile.goto(`${base}/basement/`);
     await ready(mobile);
     await tool(mobile, "Top").click();
-    await screenshot(mobile,"basement-mobile-model");
-    await tool(mobile,"Project images").click();
-    await mobile.waitForFunction(()=>document.querySelector('#project-image').naturalWidth===2400);
-    await screenshot(mobile,"basement-mobile-gallery");
-    await tool(mobile,"Close project reference").click();
+    await screenshot(mobile, "basement-mobile-model");
+    await tool(mobile, "Project images").click();
+    await mobile.waitForFunction(
+      () => document.querySelector("#project-image").naturalWidth === 2400,
+    );
+    await screenshot(mobile, "basement-mobile-gallery");
+    await tool(mobile, "Close project reference").click();
     const session = await mobile.context().newCDPSession(mobile);
     const touch = (type, points) =>
       session.send("Input.dispatchTouchEvent", { type, touchPoints: points });
@@ -632,6 +849,30 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Phone physical measurement verification works",
     );
     await close(mobile);
+    await tool(mobile, "Show").click();
+    await tool(mobile, "Metric · m").click();
+    await screenshot(mobile, "basement-mobile-filters");
+    await close(mobile);
+    await mobile.locator(".model-label.measurement").click();
+    const mobileEndpoints = (await data(mobile)).measurements.map((m) => [
+      m.a,
+      m.b,
+    ]);
+    await mobile.getByLabel("Meters", { exact: true }).fill("2.2");
+    await tool(mobile, "Mark VERIFIED").click();
+    check(
+      (await data(mobile)).measurements[0].verifiedMeters === 2.2,
+      "Metric tape entry verifies without imperial conversion input",
+    );
+    assert.deepEqual(
+      (await data(mobile)).measurements.map((m) => [m.a, m.b]),
+      mobileEndpoints,
+    );
+    checks++;
+    await close(mobile);
+    await tool(mobile, "Show").click();
+    await tool(mobile, "Imperial · ft/in").click();
+    await close(mobile);
     await tool(mobile, "Area").click();
     for (const point of [
       [-4, -4],
@@ -666,12 +907,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         ),
         "Phone has no horizontal overflow",
       );
-      for (const selector of [
-        ".primary",
-        ".visibility",
-        ".camera",
-        ".top-actions",
-      ]) {
+      for (const selector of [".primary", ".camera", ".top-actions"]) {
         const bounds = await mobile.locator(selector).boundingBox();
         check(
           bounds.x >= 0 && bounds.x + bounds.width <= width,

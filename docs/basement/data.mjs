@@ -3,7 +3,47 @@ export const LEGACY_STORAGE_KEY = "ronu.basement.execution.v1";
 export const MODEL_ID = "kiri-room3-shell-v1";
 export const M2_TO_FT2 = 10.7639104167;
 export const INCH_TO_M = 0.0254;
+export const VIEW_STORAGE_KEY = "ronu.basement.view.v1";
 const EPS = 1e-6;
+
+export function loadView(storage) {
+  const result = {
+    units: "imperial",
+    source: "model",
+    hidden: [],
+    visibility: { measurements: true, areas: true, comments: true },
+  };
+  try {
+    const raw = JSON.parse(storage.getItem(VIEW_STORAGE_KEY));
+    if (raw?.units === "metric") result.units = "metric";
+    if (raw?.source === "lighting") result.source = "lighting";
+    if (Array.isArray(raw?.hidden))
+      result.hidden = [
+        ...new Set(
+          raw.hidden
+            .filter(
+              (id) =>
+                typeof id === "string" &&
+                /^(wall:W\d+|project:P6-\d+|saved:M\d+)$/.test(id),
+            )
+            .slice(0, 2000),
+        ),
+      ];
+    for (const key of Object.keys(result.visibility)) {
+      if (typeof raw?.visibility?.[key] === "boolean")
+        result.visibility[key] = raw.visibility[key];
+    }
+  } catch {
+    /* View preferences are optional; annotations remain separate. */
+  }
+  return result;
+}
+
+// Convert the printed source value, never its approximately placed endpoints.
+export function parseProjectLength(value) {
+  const match = /^(\d+)\s*′\s*(\d+(?:\.\d+)?)\s*″$/.exec(value);
+  return match ? (Number(match[1]) * 12 + Number(match[2])) * INCH_TO_M : null;
+}
 
 export function createData() {
   return {
@@ -32,7 +72,9 @@ export function polygonArea(points) {
     ) / 2
   );
 }
-export function formatLength(meters) {
+export function formatLength(meters, units = "imperial") {
+  if (units === "metric")
+    return `${meters.toLocaleString("en-US", { maximumFractionDigits: 3 })} m`;
   const eighths = Math.round((meters / INCH_TO_M) * 8);
   const feet = Math.floor(eighths / 96);
   const remainder = eighths % 96;
@@ -40,10 +82,13 @@ export function formatLength(meters) {
   const fraction = ["", "⅛", "¼", "⅜", "½", "⅝", "¾", "⅞"][remainder % 8];
   return `${feet}′ ${inches || !fraction ? inches : ""}${fraction}″`;
 }
-export const formatArea = (squareMeters) =>
-  `≈ ${(squareMeters * M2_TO_FT2).toLocaleString(undefined, {
-    maximumFractionDigits: 1,
-  })} ft²`;
+export const formatArea = (squareMeters, units = "imperial") =>
+  `≈ ${(units === "metric"
+    ? squareMeters
+    : squareMeters * M2_TO_FT2
+  ).toLocaleString("en-US", {
+    maximumFractionDigits: units === "metric" ? 2 : 1,
+  })} ${units === "metric" ? "m²" : "ft²"}`;
 export function commentNumber(id) {
   const number = Number(id.slice(1));
   return number >= 1 && number <= 20
