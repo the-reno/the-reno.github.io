@@ -38,7 +38,7 @@ try {
  document.querySelector('#top').onclick=()=>fit('top');document.querySelector('#three').onclick=()=>fit('three');document.querySelector('#reset').onclick=()=>fit('three');document.querySelectorAll('button').forEach(b=>b.disabled=false);status.hidden=true;
  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();status.hidden=false;status.textContent='3D view interrupted. Reload this page to continue.';});
  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
-} catch(error){console.error(error);status.hidden=false;status.textContent='Could not open the 3D model. Please reload the page to try again.';}
+} catch(error){console.error(error);status.hidden=false;status.textContent=/WebGL|context/i.test(error.message)?'3D requires WebGL. Enable browser graphics acceleration or open this page in another browser.':'Could not open the 3D model. Please reload the page to try again.';}
 </script>
 </body>
 </html>
