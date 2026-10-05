@@ -44,7 +44,8 @@ for file in site.rglob('*.html'):
         if path.is_dir(): path = path / 'index.html'
         if not path.exists(): errors.append(f'{file.relative_to(root)}: unresolved local file {part.path}')
 
-for file in site.glob('*.js'):
+for file in site.rglob('*'):
+    if file.suffix not in {'.js', '.mjs'}: continue
     result = subprocess.run(['node','--check',str(file)],capture_output=True,text=True)
     if result.returncode: errors.append(result.stderr)
 
