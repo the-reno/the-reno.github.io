@@ -2,8 +2,7 @@
 
 Canonical public source: **`the-reno/the-reno.github.io`, `docs/basement/`**.
 GitHub Pages serves `docs/`; `docs/CNAME` sets `ronu.one`. The production path is
-`https://ronu.one/basement/`. V2 is reviewed on `basement-simple-tools-v2`, draft
-PR #18. Updating that branch does not publish it; merge/deployment require review.
+`https://ronu.one/basement/`. Main is the production branch.
 
 ## Use
 
@@ -25,8 +24,16 @@ default; pressing an active tool again, Cancel or Escape returns to it.
   marker to edit, move, resolve/hide or delete. Moving preserves its ID and text
   and saves after the new position is selected. Closing an unsaved note cancels
   it. The temporary Hidden notes panel allows restoring resolved notes.
-- **Project:** opens three links to the original Studio Duo floor plan, proposed
-  layout and lighting plan. The overlay closes with ×.
+- **3D dimensions:** the default view labels all 22 wall segments in the KIRI
+  file. Wall sizes lists length and height and highlights a selected segment.
+  The model floor footprint is approximately 854.6 ft² / 79.40 m². It includes
+  wall and stair footprints and is separate from user-drawn area totals.
+- **Lighting plan:** shows the 42 printed fixture spacings and offsets from
+  Studio Duo sheet 6. Their placement on the model is approximate. These are
+  lighting references, not wall lengths or physically verified measurements.
+- **Project images:** opens a thumbnail gallery of the existing floor plan,
+  proposed layout and lighting sheet, with a full-size image link. No PDF is
+  deployed. Close the gallery with × or Escape.
 
 The three visibility buttons show/hide annotations. Editors appear only when
 creating/selecting an item. There is no permanent sidebar or additional workflow.
@@ -41,7 +48,10 @@ creating/selecting an item. There is no permanent sidebar or additional workflow
 | `data.mjs`      | V2 schema, geometry, units, validation and one-time migration              |
 | `execution.css` | Current interface styles; filename retained to fit the requested structure |
 | `room.gltf`     | Unchanged KIRI model, Git blob `5e6b473d4e7a2bdf0ed78af18d80fe12a76feb0b`  |
-| `project.pdf`   | Original Studio Duo pages 4–6, extracted without altering page content     |
+| `model-metrics.mjs` | World-space wall segment dimensions and horizontal floor footprint |
+| `project-data.json` | Image descriptions and 42 printed lighting dimensions |
+| `existing-plan.png`, `proposed-layout.png`, `lighting-sheet.png` | Original Studio Duo sheets 4–6 rendered as images |
+| `lighting-plan.png` | Detail image of the dimensioned lighting drawing |
 | `README.md`     | Canonical source, behavior, storage and validation                         |
 
 All model buffers are embedded in `room.gltf`; it requires no additional model
@@ -50,13 +60,19 @@ map. The shell contains floors/walls, not detailed joists/pipes/beams, so it can
 supply dimensions for those missing elements. Scan lengths and horizontal areas
 are approximate; physically confirm dimensions before proceeding.
 
-`project.pdf` is a lightweight 3-page extract from the supplied 45-page
-`ADRIANA_BASEMENT_DUO FINAL.pdf` (Studio Duo, August 2025). PDF pages 1, 2 and 3
-correspond to original pages 4, 5 and 6. Only stale in-document menu annotations
-were removed; page images/text/content are unchanged and rendered pixel-identical
-to those original pages. The full source is retained separately as supplied.
-The source's page 36 warns to check all dimensions on site. The reference does
-not populate or verify measurements automatically.
+Project images preserve the three supplied Studio Duo sheets (August 2025).
+Only the lighting sheet supplies the 42 fixture spacing labels. References and
+computed model metrics never enter or overwrite browser-local annotations.
+
+Model measurements use the loaded geometry after world transforms. Wall length
+is the long side of its minimum-area oriented footprint rectangle; height is
+its vertical extent. Each numbered wall is a source mesh segment, including
+short or overlapping segments. The floor calculation sums unique horizontal
+top triangles, excluding bottom and side faces. It does not subtract walls,
+stairs or equipment and is not a net usable-area calculation.
+
+Image metadata loads independently after the model is ready. Missing, malformed,
+offline or stalled references cannot stop the viewer or its model measurements.
 
 The old standalone `navigation.html` and unused `execution.json` were removed
 after history/reference inspection and successful V2 navigation tests. Empty V2
@@ -121,6 +137,7 @@ Run the repository checks:
 python3 scripts/check_site.py
 node scripts/test_analytics.js
 node scripts/test_basement.mjs
+node scripts/test_basement_metrics.mjs
 ```
 
 For real-browser checks, install Playwright with Chromium outside the repository,

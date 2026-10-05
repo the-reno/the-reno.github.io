@@ -218,11 +218,11 @@ for (const dependency of [...(model.buffers || []), ...(model.images || [])]) {
     "Model dependencies must remain embedded.",
   );
 }
-const pdf = await readFile(
-  new URL("../docs/basement/project.pdf", import.meta.url),
-);
-assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
-assert.ok(pdf.length < 2_000_000);
+for (const name of ["existing-plan.png", "proposed-layout.png", "lighting-sheet.png", "lighting-plan.png"]) {
+  const image = await readFile(new URL(`../docs/basement/${name}`, import.meta.url));
+  assert.equal(image.subarray(1,4).toString(), "PNG");
+}
+await assert.rejects(readFile(new URL("../docs/basement/project.pdf", import.meta.url)), {code:"ENOENT"});
 console.log(
-  "Basement V2 data checks passed: geometry, fractional units, provenance, clean migration, persistence protection and preserved model/reference assets.",
+  "Basement data checks passed: geometry, fractional units, provenance, clean migration, persistence protection, unchanged model and image-only references.",
 );

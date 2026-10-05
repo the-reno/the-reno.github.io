@@ -154,13 +154,25 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator('[data-mode][aria-pressed="true"]').count()) === 0,
       "Navigation is the default, with no extra mode",
     );
-    await page.locator("#plan-note").getByText("PROJECT · 42 plan dimensions").waitFor();
+    check((await page.locator("#model-area").innerText()).includes("854.6"), "Floor area comes from KIRI geometry");
+    check(await page.locator(".wall-dimension").count() === 22, "Every model wall has a dimension label");
+    check(await page.locator(".project-dimension").count() === 0, "Lighting spacings are separate from wall sizes");
+    await screenshot(page, "basement-model-dimensions");
+    const beforeWalls=await data(page);
+    await page.locator("#wall-sizes").click();
+    check(await page.locator(".wall-table tr").count() === 23, "All 22 walls have length and height rows");
+    await page.getByRole("button",{name:"Highlight wall W06",exact:true}).click();
+    check(await page.locator('.wall-dimension.selected[data-id="W06"]').isVisible(), "Selecting a wall highlights its model label");
+    assert.deepEqual(await data(page),beforeWalls);checks++;
+    await close(page);
+    await tool(page, "Lighting plan").click();
+    await page.locator("#plan-note").getByText("LIGHTING · 42 fixture spacings").waitFor();
     check(await page.locator(".project-dimension").count() === 42,
       "All printed plan dimensions load independently of saved annotations");
     check(await page.locator(".project-dimension:not([hidden])").count() >= 10,
-      "Printed dimensions are visibly readable on first load");
+      "Printed lighting dimensions are visibly readable");
     const beforePlan = await data(page);
-    await tool(page, "Project").click();
+    await tool(page, "Project images").click();
     await page.locator(".plan-dimension-list summary").click();
     await page.locator(".plan-dimension-list button").first().click();
     check((await page.locator("#panel-body").innerText()).includes("Placement on the KIRI model is approximate"),
@@ -177,6 +189,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     assert.deepEqual(await data(page), beforePlan);
     checks++;
     await screenshot(page, "basement-plan-dimensions");
+    await tool(page, "3D dimensions").click();
     await tool(page, "3D").click();
     const initial = await camera(page);
     await page.mouse.move(850, 400);
@@ -439,7 +452,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator(".model-label.measurement").count()) === 1,
       "Annotations return after refresh",
     );
-    await tool(page, "Project").click();
+    await tool(page, "Project images").click();
     await page.locator(".project-ref").nth(2).waitFor();
     check((await page.locator(".project-ref").count()) === 3, "All project references load");
     check(
@@ -447,16 +460,17 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Project overlay opens",
     );
     await page.locator(".lighting-plan").waitFor();
-    await page.waitForFunction(() => document.querySelector(".lighting-plan").naturalWidth === 1056);
+    await page.waitForFunction(() => document.querySelector("#project-image").naturalWidth === 2400);
     check(true, "Original dimensioned drawing renders in Project");
-    for (const link of await page.locator('#project-panel a[href*="project.pdf"]').all()) {
+    check(await page.locator('a[href*=".pdf"]').count() === 0, "No PDF links remain in the UI");
+    for (const image of await page.locator('.project-ref img').all()) {
       const response = await page.request.get(
-        new URL(await link.getAttribute("href"), page.url()).href,
+        new URL(await image.getAttribute("src"), page.url()).href,
       );
       check(
         response.ok() &&
-          response.headers()["content-type"] === "application/pdf",
-        "Original plan reference loads",
+          response.headers()["content-type"] === "image/png",
+        "Original project image loads",
       );
     }
     await screenshot(page, "basement-project");
@@ -483,13 +497,15 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await isolated.goto(`${base}/basement/`);
       await ready(isolated);
       check(referenceRequests <= 1 && pdfRequests === 0, `${failure}: canvas becomes ready without waiting for optional data`);
-      await tool(isolated, "Project").click();
+      check((await isolated.locator("#model-area").innerText()).includes("854.6"), `${failure}: model measurements do not depend on references`);
+      await tool(isolated, "Project images").click();
+      await tool(isolated, "Close project reference").click();
       await tool(isolated, "Measure").click();
       check((await isolated.locator("#instruction").innerText()) === "Tap Point A", `${failure}: tools work during reference loading`);
-      await isolated.locator("#project-reference-list").getByText("Project details unavailable. Open the original PDF below.").waitFor({ state: "attached", timeout: 12000 });
+      await isolated.locator("#project-reference-list").getByText("Project images unavailable. Reload to try again.").waitFor({ state: "attached", timeout: 12000 });
       check(await isolated.locator("#status").isHidden(), `${failure}: reference failure does not replace viewer status`);
       check(await tool(isolated, "Area").isEnabled() && await tool(isolated, "Comment").isEnabled(), `${failure}: all tools remain enabled`);
-      check(pdfRequests === 0, `${failure}: PDF is only a link, never a viewer dependency`);
+      check(pdfRequests === 0, `${failure}: no PDF is requested`);
       if (pendingRoute) await pendingRoute.abort().catch(() => {});
       await isolated.context().close();
     }
@@ -504,6 +520,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await mobile.goto(`${base}/basement/`);
     await ready(mobile);
     await tool(mobile, "Top").click();
+    await screenshot(mobile,"basement-mobile-model");
+    await tool(mobile,"Project images").click();
+    await mobile.waitForFunction(()=>document.querySelector('#project-image').naturalWidth===2400);
+    await screenshot(mobile,"basement-mobile-gallery");
+    await tool(mobile,"Close project reference").click();
     const session = await mobile.context().newCDPSession(mobile);
     const touch = (type, points) =>
       session.send("Input.dispatchTouchEvent", { type, touchPoints: points });
@@ -733,7 +754,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     assert.deepEqual(errors, []);
     assert.deepEqual(broken, []);
     console.log(
-      `Basement browser validation passed: ${checks} checks covering real model, desktop navigation, simple tools, provenance, visibility, attachment, PDF, persistence, migration, mobile touch and optional-reference failures. No application console errors or broken requests.`,
+      `Basement browser validation passed: ${checks} checks covering real model, model measurements, desktop navigation, simple tools, provenance, visibility, images, persistence, migration, mobile touch and optional-reference failures. No application console errors or broken requests.`,
     );
   } finally {
     await browser.close();

@@ -3,30 +3,29 @@
     "title": "ADRIANA_BASEMENT_DUO FINAL",
     "designer": "Studio Duo",
     "date": "2025-08-05",
-    "referenceFile": "./project.pdf",
     "note": "Project dimensions and fixture positions are reference information only. Verify on site before construction."
   },
   "pages": [
     {
       "id": "floor-plan",
-      "title": "Original floor plan",
-      "pdfPage": 1,
+      "title": "Existing floor plan",
       "sourcePage": 4,
-      "description": "Existing basement shell, stairs, support columns, laundry equipment, furnace and electrical panel."
+      "description": "Existing basement shell, stairs, support columns, laundry equipment, furnace and electrical panel.",
+      "image": "./existing-plan.png"
     },
     {
       "id": "layout",
-      "title": "Proposed basement layout",
-      "pdfPage": 2,
+      "title": "Proposed layout",
       "sourcePage": 5,
-      "description": "Studio Duo proposed basement arrangement."
+      "description": "Studio Duo proposed basement arrangement.",
+      "image": "./proposed-layout.png"
     },
     {
       "id": "lighting",
       "title": "Lighting plan",
-      "pdfPage": 3,
       "sourcePage": 6,
-      "description": "Studio Duo recessed-light, wall-light and fixture spacing plan."
+      "description": "Spotlight and fixture locations. Red dimensions give fixture spacing and wall offsets, not wall lengths.",
+      "image": "./lighting-sheet.png"
     }
   ],
   "legend": {
@@ -57,7 +56,6 @@
         383,
         379
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -82,7 +80,6 @@
         343,
         342
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -107,7 +104,6 @@
         150,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -132,7 +128,6 @@
         306,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -157,7 +152,6 @@
         462,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -182,7 +176,6 @@
         523,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -207,7 +200,6 @@
         217,
         462
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -232,7 +224,6 @@
         217,
         508
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -257,7 +248,6 @@
         442,
         462
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -282,7 +272,6 @@
         232,
         557
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -307,7 +296,6 @@
         167,
         598
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -332,7 +320,6 @@
         212,
         737
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -357,7 +344,6 @@
         583,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -382,7 +368,6 @@
         689,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -407,7 +392,6 @@
         742,
         494
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -432,7 +416,6 @@
         583,
         655
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -457,7 +440,6 @@
         652,
         471
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -482,7 +464,6 @@
         652,
         580
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -507,7 +488,6 @@
         652,
         688
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -532,7 +512,6 @@
         652,
         742
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -557,7 +536,6 @@
         442,
         656
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -582,7 +560,6 @@
         442,
         851
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -607,7 +584,6 @@
         442,
         1035
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -632,7 +608,6 @@
         353,
         851
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -657,7 +632,6 @@
         176,
         1059
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -682,7 +656,6 @@
         328,
         1059
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -707,7 +680,6 @@
         462,
         1059
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -732,7 +704,6 @@
         666,
         1059
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -757,7 +728,6 @@
         728,
         1059
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -782,7 +752,6 @@
         328,
         1146
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -807,7 +776,6 @@
         462,
         1146
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -832,7 +800,6 @@
         666,
         1146
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -857,7 +824,6 @@
         742,
         1146
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -882,7 +848,6 @@
         442,
         1181
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 1
     },
@@ -907,7 +872,6 @@
         442,
         1234
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -932,7 +896,6 @@
         826,
         813
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -957,7 +920,6 @@
         958,
         813
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -982,7 +944,6 @@
         1024,
         813
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -1007,7 +968,6 @@
         939,
         839
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     },
@@ -1032,7 +992,6 @@
         939,
         997
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -1057,7 +1016,6 @@
         939,
         1156
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 0
     },
@@ -1082,7 +1040,6 @@
         939,
         1234
       ],
-      "pdfPage": 3,
       "sourcePage": 6,
       "priority": 2
     }

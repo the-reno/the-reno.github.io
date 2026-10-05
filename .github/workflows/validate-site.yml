@@ -13,3 +13,4 @@ jobs:
       - run: python3 scripts/check_site.py
       - run: node scripts/test_analytics.js
       - run: node scripts/test_basement.mjs
+      - run: node scripts/test_basement_metrics.mjs
