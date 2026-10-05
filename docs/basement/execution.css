@@ -534,3 +534,11 @@ input[type="number"] {
     display: none;
   }
 }
+
+.project-source-legend{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}
+.project-badge{background:#ece8df;border-color:#c9c1b2;color:#6b604f}
+.project-reference-list{display:grid;gap:10px;margin:10px 0 14px}
+.project-ref{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}
+.project-ref-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.project-ref p{margin:6px 0}
+.project-ref a,.project-pdf-link{display:inline-block;margin-top:4px}
