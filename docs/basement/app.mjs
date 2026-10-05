@@ -28,13 +28,36 @@ let toastTimer,
   lastAreaTap = null;
 const visible = { comments: true, measurements: true, areas: true };
 let projectData = null;
+let projectLoading = false;
+
+function projectDimensions() {
+  return (projectData?.dimensions || []).filter((d) =>
+    typeof d.id === "string" && typeof d.value === "string" &&
+    [d.a, d.b].every((p) => Array.isArray(p) && p.length === 2 &&
+      p.every((v) => Number.isFinite(v) && Math.abs(v) < 10)),
+  );
+}
+
+function openProjectDimension(item) {
+  setMode("navigate");
+  openPanel(`${item.room} · plan dimension`);
+  body.append(el("span", "PROJECT", "badge project-badge"));
+  body.append(el("p", item.value, "value"), el("p", item.name));
+  note(projectData.dimensionNote);
+  const source = el("a", "Open lighting drawing · original page 6");
+  source.href = "./project.pdf#page=3";
+  source.target = "_blank";
+  source.rel = "noopener";
+  body.append(source);
+}
 
 async function loadProjectReferences() {
-  if (projectData) return;
+  if (projectData || projectLoading) return;
+  projectLoading = true;
   const host = $("#project-reference-list");
   try {
     host.textContent = "Loading project references…";
-    const response = await fetch("./project-data.json", {
+    const response = await fetch("./project-data.json?v=3.2", {
       signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) throw new Error(`Project reference HTTP ${response.status}`);
@@ -42,10 +65,15 @@ async function loadProjectReferences() {
     if (!Array.isArray(reference?.pages)) throw new Error("Invalid project references");
     projectData = reference;
     renderProjectReferences();
+    refresh();
   } catch (error) {
     projectData = null;
     console.warn("Project references unavailable:", error);
     host.textContent = "Project details unavailable. Open the original PDF below.";
+    $("#plan-note").textContent = "Plan dimensions unavailable · open Project";
+    $("#plan-note").hidden = false;
+  } finally {
+    projectLoading = false;
   }
 }
 
@@ -53,6 +81,29 @@ function renderProjectReferences() {
   const host = $("#project-reference-list");
   if (!host || !projectData) return;
   host.replaceChildren();
+  const dimensions = projectDimensions();
+  if (dimensions.length) {
+    host.append(el("p", projectData.dimensionNote, "small"));
+    const drawing = el("a");
+    drawing.href = "./lighting-plan.png";
+    drawing.target = "_blank";
+    drawing.rel = "noopener";
+    const image = el("img");
+    image.src = "./lighting-plan.png";
+    image.alt = "Original dimensioned lighting plan, Studio Duo sheet 6";
+    image.loading = "lazy";
+    image.className = "lighting-plan";
+    drawing.append(image, el("span", "Open full-size dimensioned drawing"));
+    host.append(drawing);
+    const list = el("details", undefined, "plan-dimension-list");
+    list.append(el("summary", `All ${dimensions.length} printed dimensions`));
+    for (const item of dimensions) {
+      const row = button(`${item.room} · ${item.name}: ${item.value}`,
+        () => openProjectDimension(item));
+      list.append(row);
+    }
+    host.append(list);
+  }
   for (const page of projectData.pages || []) {
     const card = el("div", undefined, "project-ref");
     const head = el("div", undefined, "project-ref-head");
@@ -389,6 +440,25 @@ function refresh() {
   if (visible.measurements)
     data.measurements.forEach((measurement) => add("measurement", measurement));
   if (visible.areas) data.areas.forEach((area) => add("area", area));
+  const dimensions = projectDimensions();
+  $("#plan-note").hidden = !visible.measurements || !dimensions.length || mode !== "navigate";
+  if (dimensions.length) {
+    $("#plan-note").replaceChildren(
+      el("span", `PROJECT · ${dimensions.length} plan dimensions`),
+      el("small", "Approximate placement · zoom for detail"),
+    );
+  }
+  if (visible.measurements && mode === "navigate") {
+    for (const item of dimensions.sort((a, b) => a.priority - b.priority)) {
+      const a = [item.a[0], viewer.ceilingY, item.a[1]];
+      const b = [item.b[0], viewer.ceilingY, item.b[1]];
+      const node = el("span", item.value, "model-label project-dimension");
+      node.dataset.id = item.id;
+      node.title = `PROJECT · ${item.room} · ${item.name}: ${item.value}`;
+      node.setAttribute("aria-label", node.title);
+      items.push({ type: "project-dimension", a, b, position: polygonCenter([a, b]), node });
+    }
+  }
   viewer.renderItems(items);
   viewer.showDraft(points, mode === "area");
   const total = visible.areas
@@ -572,6 +642,7 @@ $("#project").onclick = () => {
 $("#close-project").onclick = () => {
   $("#project-panel").hidden = true;
 };
+$("#plan-note").onclick = () => $("#project").click();
 
 try {
   try {
@@ -582,7 +653,7 @@ try {
   const loaded = loadData(storage);
   data = loaded.data;
   writable = loaded.writable;
-  const { createViewer } = await import("./viewer.mjs?v=2");
+  const { createViewer } = await import("./viewer.mjs?v=3.2");
   viewer = await createViewer($("#view"), handleTap);
   $("#top").onclick = () => viewer.fit("top");
   $("#three").onclick = () => {
@@ -654,7 +725,10 @@ try {
     ? "Saved on this device"
     : "Browser saving unavailable";
   $("#status").hidden = true;
+  viewer.fit("top");
   setMode("navigate");
+  // Reference failures/timeouts never delay the canvas or enablement of tools.
+  void loadProjectReferences();
   if (loaded.message) toast(loaded.message);
 } catch (error) {
   console.error(error);

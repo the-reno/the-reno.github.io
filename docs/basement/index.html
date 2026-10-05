@@ -13,7 +13,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
     />
-    <link rel="stylesheet" href="./execution.css?v=3.1" />
+    <link rel="stylesheet" href="./execution.css?v=3.2" />
     <script type="importmap">
       {
         "imports": {
@@ -38,6 +38,7 @@
         </nav>
       </div>
     </header>
+    <button id="plan-note" class="surface" hidden aria-label="Open plan dimensions"></button>
 
     <div class="tools">
       <nav class="surface primary" aria-label="Tools">
@@ -133,6 +134,6 @@
       aria-live="polite"
       hidden
     ></div>
-    <script type="module" src="./app.mjs?v=3.1"></script>
+    <script type="module" src="./app.mjs?v=3.2"></script>
   </body>
 </html>
