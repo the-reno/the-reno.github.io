@@ -1,266 +1,619 @@
-import {STORAGE_KEY, M2_TO_FT2, INCH_TO_M, distance, polygonCenter, formatLength, nextId, validatePolygon, validateData} from './data.mjs';
+import {
+  STORAGE_KEY,
+  INCH_TO_M,
+  distance,
+  polygonCenter,
+  formatLength,
+  formatArea,
+  commentNumber,
+  nextId,
+  validatePolygon,
+  validateData,
+  loadData,
+} from "./data.mjs?v=2";
 
-const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const status = $('#status'), body = $('#panel-body');
-let viewer, data, mode = 'navigate', selected = null, points = [], anchors = [], editGeometry = null;
-let toastTimer, lastAreaTap = null;
-const visible = {comments: true, measurements: true, areas: true};
-const clone = value => structuredClone(value);
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const body = $("#panel-body");
+export let viewer;
+let data,
+  storage,
+  writable = true,
+  mode = "navigate";
+let selected = null,
+  points = [],
+  editGeometry = null,
+  editingNote = null;
+let toastTimer,
+  lastAreaTap = null;
+const visible = { comments: true, measurements: true, areas: true };
 
 function el(tag, text, className) {
-  const n = document.createElement(tag);
-  if (text !== undefined) n.textContent = text;
-  if (className) n.className = className;
-  return n;
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
 }
-function button(text, fn, className) {
-  const n = el('button', text, className);
-  n.type = 'button';
-  n.onclick = fn;
-  return n;
+function button(text, action, className) {
+  const node = el("button", text, className);
+  node.type = "button";
+  node.onclick = action;
+  return node;
 }
 function toast(text) {
   clearTimeout(toastTimer);
-  $('#toast').textContent = text;
-  $('#toast').hidden = false;
-  toastTimer = setTimeout(() => {$('#toast').hidden = true;}, 3500);
+  $("#toast").textContent = text;
+  $("#toast").hidden = false;
+  toastTimer = setTimeout(() => {
+    $("#toast").hidden = true;
+  }, 3500);
 }
 function save() {
-  data.updatedAt = new Date().toISOString();
+  if (!writable) {
+    $("#save-state").textContent = "Not saved · original data kept";
+    return false;
+  }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    $('#save-state').textContent = 'Saved on this device';
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    $("#save-state").textContent = "Saved on this device";
+    return true;
   } catch {
-    $('#save-state').textContent = 'Not saved on this device';
+    $("#save-state").textContent = "Browser saving unavailable";
+    toast("This change is only in this tab. Browser saving is unavailable.");
+    return false;
   }
 }
-function changed() {save(); refresh();}
-function panel(title, selection = null) {
-  selected = selection;
-  $('#panel-title').textContent = title;
-  body.replaceChildren();
-  $('#panel').hidden = false;
+function changed() {
+  save();
   refresh();
+}
+function openPanel(title, selection = null) {
+  selected = selection;
+  $("#project-panel").hidden = true;
+  $("#panel-title").textContent = title;
+  body.replaceChildren();
+  $("#panel").hidden = false;
+  $("#panel").scrollTop = 0;
 }
 function closePanel() {
-  $('#panel').hidden = true;
+  $("#panel").hidden = true;
   selected = null;
+  editingNote = null;
   refresh();
 }
-function field(label, value, onChange, config = {}) {
-  const id = 'field-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const lab = el('label', label); lab.htmlFor = id;
-  const input = el(config.multiline ? 'textarea' : 'input');
+function field(label, value, onInput, config = {}) {
+  const id = "field-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const lab = el("label", label);
+  lab.htmlFor = id;
+  const input = el(config.multiline ? "textarea" : "input");
   input.id = id;
   if (config.maxLength) input.maxLength = config.maxLength;
   input.value = value;
-  input.addEventListener('input', () => onChange(input.value));
+  input.addEventListener("input", () => onInput(input.value));
   body.append(lab, input);
   return input;
 }
-function note(text) {body.append(el('p', text, 'small'));}
-function actions(...buttons) {
-  const row = el('div', undefined, 'panel-actions');
-  row.append(...buttons);
+function note(text) {
+  body.append(el("p", text, "small"));
+}
+function actions(...items) {
+  const row = el("div", undefined, "panel-actions");
+  row.append(...items);
   body.append(row);
 }
 function removeItem(type, item) {
-  data[type] = data[type].filter(x => x.id !== item.id);
+  data[type] = data[type].filter((value) => value.id !== item.id);
   closePanel();
   changed();
 }
-function lengthOf(m) {return m.status === 'VERIFIED' ? m.verifiedMeters : distance(m.a, m.b);}
+function lengthOf(measurement) {
+  return measurement.status === "VERIFIED"
+    ? measurement.verifiedMeters
+    : distance(measurement.a, measurement.b);
+}
 
-function openComment(c) {
-  setMode('navigate');
-  panel(c.id, {type:'comment', id:c.id});
-  field('Comment', c.text, v => {c.text = v; changed();}, {multiline:true, maxLength:5000});
-  actions(
-    button(c.resolved ? 'Show note' : 'Resolve / hide', () => {c.resolved = !c.resolved; changed(); closePanel();}),
-    button('Move', () => {editGeometry = {type:'comment', item:c}; setMode('comment', true);}),
-    button('Delete', () => removeItem('comments', c), 'danger')
-  );
+function commitComment() {
+  const { item, isNew } = editingNote;
+  const text = item.text.trim();
+  if (isNew && !text) return toast("Type a note before saving.");
+  const record = {
+    id: item.id,
+    position: [...item.position],
+    text,
+    resolved: item.resolved,
+  };
+  const index = data.comments.findIndex((comment) => comment.id === item.id);
+  if (index < 0) data.comments.push(record);
+  else data.comments[index] = record;
+  closePanel();
+  changed();
 }
-function openMeasurement(m) {
-  setMode('navigate');
-  panel(m.name || m.id, {type:'measurement', id:m.id});
-  body.append(el('div', formatLength(lengthOf(m)), 'value'));
-  body.append(el('span', m.status, `badge ${m.status === 'VERIFIED' ? 'verified' : ''}`));
-  note(`${lengthOf(m).toFixed(3)} m`);
-  field('Name (optional)', m.name === m.id ? '' : m.name, v => {m.name = v || m.id; changed();}, {maxLength:80});
-  const totalInches = lengthOf(m) / INCH_TO_M, feet = Math.floor(totalInches / 12);
-  const row = el('div', undefined, 'row');
-  const ft = el('input'), inches = el('input');
-  ft.type = inches.type = 'number'; ft.min = inches.min = '0'; ft.step = '1'; inches.step = '.125';
-  ft.value = String(feet); inches.value = String(Number((totalInches - feet * 12).toFixed(3)));
-  row.append(ft, inches); body.append(row);
-  note('Enter a tape/laser value only if you want to mark this measurement VERIFIED.');
+function openComment(comment, isNew = false) {
+  setMode("navigate");
+  editingNote = { item: structuredClone(comment), isNew };
+  const item = editingNote.item;
+  openPanel(`${commentNumber(item.id)} Comment`, {
+    type: "comment",
+    id: item.id,
+  });
+  field(
+    "Note",
+    item.text,
+    (text) => {
+      item.text = text;
+      refresh();
+    },
+    { multiline: true, maxLength: 5000 },
+  );
+  const saveButton = button("Save", commitComment, "accent");
+  const moveButton = button("Move", () => {
+    editGeometry = { type: "comment", item: structuredClone(item), isNew };
+    setMode("comment", true);
+  });
+  if (isNew) actions(saveButton, moveButton, button("Cancel", closePanel));
+  else
+    actions(
+      saveButton,
+      moveButton,
+      button(item.resolved ? "Show note" : "Resolve / hide", () => {
+        item.resolved = !item.resolved;
+        commitComment();
+      }),
+      button("Delete", () => removeItem("comments", item), "danger"),
+    );
+  refresh();
+}
+function openHiddenNotes() {
+  setMode("navigate");
+  openPanel("Hidden notes");
+  for (const comment of data.comments.filter((item) => item.resolved)) {
+    body.append(
+      button(
+        `${commentNumber(comment.id)} ${comment.text || "Note"}`,
+        () => openComment(comment),
+        "hidden-note",
+      ),
+    );
+  }
+  refresh();
+}
+function openMeasurement(measurement) {
+  setMode("navigate");
+  openPanel(measurement.name || "Measurement", {
+    type: "measurement",
+    id: measurement.id,
+  });
+  body.append(el("div", formatLength(lengthOf(measurement)), "value"));
+  body.append(
+    el(
+      "span",
+      measurement.status,
+      `badge ${measurement.status === "VERIFIED" ? "verified" : ""}`,
+    ),
+  );
+  note(
+    `${lengthOf(measurement).toFixed(3)} m · scan ${distance(measurement.a, measurement.b).toFixed(3)} m`,
+  );
+  field(
+    "Name (optional)",
+    measurement.name,
+    (value) => {
+      measurement.name = value;
+      changed();
+    },
+    { maxLength: 80 },
+  );
+  note("Enter a physical tape or laser measurement to mark VERIFIED.");
+  const totalInches =
+    Math.round((lengthOf(measurement) / INCH_TO_M) * 1000) / 1000;
+  const feet = Math.floor(totalInches / 12);
+  const row = el("div", undefined, "row");
+  function numeric(label, value) {
+    const wrap = el("div"),
+      lab = el("label", label),
+      input = el("input");
+    lab.htmlFor = "confirmed-" + label.toLowerCase();
+    input.id = lab.htmlFor;
+    input.type = "number";
+    input.min = "0";
+    input.step = label === "Feet" ? "1" : ".125";
+    input.inputMode = "decimal";
+    input.value = String(value);
+    wrap.append(lab, input);
+    row.append(wrap);
+    return input;
+  }
+  const feetInput = numeric("Feet", feet);
+  const inchInput = numeric(
+    "Inches",
+    Number((totalInches - feet * 12).toFixed(3)),
+  );
+  body.append(row);
   actions(
-    button('Mark VERIFIED', () => {
-      const f = Number(ft.value), i = Number(inches.value), value = (f * 12 + i) * INCH_TO_M;
-      if (!Number.isInteger(f) || f < 0 || !Number.isFinite(i) || i < 0 || i >= 12 || value <= 0) return toast('Enter valid feet and inches.');
-      m.status = 'VERIFIED'; m.verifiedMeters = value; m.verifiedAt = new Date().toISOString(); changed(); openMeasurement(m);
+    button("Mark VERIFIED", () => {
+      const f = Number(feetInput.value),
+        i = Number(inchInput.value),
+        meters = (f * 12 + i) * INCH_TO_M;
+      if (
+        feetInput.value === "" ||
+        inchInput.value === "" ||
+        !Number.isInteger(f) ||
+        f < 0 ||
+        !Number.isFinite(i) ||
+        i < 0 ||
+        i >= 12 ||
+        meters <= 0 ||
+        meters > 1000
+      ) {
+        return toast("Enter feet and inches. Inches must be less than 12.");
+      }
+      measurement.status = "VERIFIED";
+      measurement.verifiedMeters = meters;
+      measurement.verifiedAt = new Date().toISOString();
+      changed();
+      openMeasurement(measurement);
     }),
-    button('Use SCAN', () => {m.status='SCAN'; delete m.verifiedMeters; delete m.verifiedAt; changed(); openMeasurement(m);}),
-    button('Delete', () => removeItem('measurements', m), 'danger')
+    button("Use SCAN", () => {
+      measurement.status = "SCAN";
+      delete measurement.verifiedMeters;
+      delete measurement.verifiedAt;
+      changed();
+      openMeasurement(measurement);
+    }),
+    button("Delete", () => removeItem("measurements", measurement), "danger"),
   );
+  refresh();
 }
-function openArea(a) {
-  setMode('navigate');
-  panel(a.name || a.id, {type:'area', id:a.id});
-  body.append(el('div', `≈ ${(a.squareMeters * M2_TO_FT2).toFixed(1)} sq ft`, 'value'));
-  note(`${a.squareMeters.toFixed(2)} m² · approximate scan area`);
-  field('Name (optional)', a.name === a.id ? '' : a.name, v => {a.name = v || a.id; changed();}, {maxLength:80});
-  actions(
-    button('Redraw', () => {editGeometry = {type:'area', item:a}; setMode('area', true);}),
-    button('Delete', () => removeItem('areas', a), 'danger')
+function openArea(area) {
+  setMode("navigate");
+  openPanel(area.name || "Area", { type: "area", id: area.id });
+  body.append(el("div", formatArea(area.squareMeters), "value"));
+  note(`${area.squareMeters.toFixed(2)} m² · approximate horizontal scan area`);
+  field(
+    "Name (optional)",
+    area.name,
+    (value) => {
+      area.name = value;
+      changed();
+    },
+    { maxLength: 80 },
   );
+  actions(
+    button("Redraw", () => {
+      editGeometry = { type: "area", item: area };
+      setMode("area", true);
+    }),
+    button("Delete", () => removeItem("areas", area), "danger"),
+  );
+  refresh();
 }
 function openItem(type, item) {
-  ({comment:openComment, measurement:openMeasurement, area:openArea})[type](item);
+  ({ comment: openComment, measurement: openMeasurement, area: openArea })[
+    type
+  ](item);
 }
-
 function refresh() {
   if (!viewer || !data) return;
   const items = [];
-  function add(type, item, text) {
-    if (type === 'comment' && item.resolved) return;
-    const node = button(text, () => {if (mode === 'navigate') openItem(type, item);}, `model-label ${type}${selected?.id === item.id ? ' selected' : ''}`);
-    if (type === 'measurement') {
-      node.replaceChildren(el('span', item.name || item.id, 'label-name'));
-      const line = el('span', undefined, 'label-line');
-      line.append(el('span', formatLength(lengthOf(item))), el('span', item.status, `badge ${item.status === 'VERIFIED' ? 'verified' : ''}`));
+  function add(type, item) {
+    if (type === "comment" && item.resolved) return;
+    const text =
+      type === "comment"
+        ? `${commentNumber(item.id)} ${item.text || "New note"}`
+        : item.name || item.id;
+    const node = button(
+      text,
+      () => {
+        if (mode === "navigate") openItem(type, item);
+      },
+      `model-label ${type}${selected?.id === item.id ? " selected" : ""}`,
+    );
+    node.dataset.id = item.id;
+    node.title = text;
+    node.setAttribute(
+      "aria-label",
+      type === "comment"
+        ? `Comment ${Number(item.id.slice(1))}: ${item.text || "New note"}`
+        : `${text}: ${type === "measurement" ? formatLength(lengthOf(item)) : formatArea(item.squareMeters)}`,
+    );
+    if (type === "measurement") {
+      node.replaceChildren(el("span", item.name || item.id, "label-name"));
+      const line = el("span", undefined, "label-line");
+      line.append(
+        el("span", formatLength(lengthOf(item))),
+        el(
+          "span",
+          item.status,
+          `badge ${item.status === "VERIFIED" ? "verified" : ""}`,
+        ),
+      );
       node.append(line);
+    } else if (type === "area") {
+      node.replaceChildren(
+        el("span", item.name || item.id, "label-name"),
+        el("span", formatArea(item.squareMeters), "label-line"),
+      );
     }
-    if (type === 'area') {
-      node.replaceChildren(el('span', item.name || item.id, 'label-name'), el('span', `≈ ${(item.squareMeters*M2_TO_FT2).toFixed(1)} sq ft`, 'label-line'));
-    }
-    items.push({...item, type, node});
+    items.push({ ...item, type, node });
   }
-  if (visible.comments) data.comments.forEach(c => add('comment', c, c.id));
-  if (visible.measurements) data.measurements.forEach(m => add('measurement', m, m.id));
-  if (visible.areas) data.areas.forEach(a => add('area', a, a.id));
+  if (visible.comments) {
+    data.comments
+      .filter((comment) => comment.id !== editingNote?.item.id)
+      .forEach((comment) => add("comment", comment));
+    if (editingNote) add("comment", editingNote.item);
+  }
+  if (visible.measurements)
+    data.measurements.forEach((measurement) => add("measurement", measurement));
+  if (visible.areas) data.areas.forEach((area) => add("area", area));
   viewer.renderItems(items);
-  viewer.showDraft(points, mode === 'area');
-  $('#area-total').textContent = `Areas: ≈ ${(data.areas.reduce((sum,a)=>sum+a.squareMeters,0)*M2_TO_FT2).toLocaleString(undefined,{maximumFractionDigits:1})} sq ft`;
-  $$('[data-visibility]').forEach(b => b.setAttribute('aria-pressed', String(visible[b.dataset.visibility])));
+  viewer.showDraft(points, mode === "area");
+  const total = visible.areas
+    ? data.areas.reduce((sum, area) => sum + area.squareMeters, 0)
+    : 0;
+  $("#area-total").textContent = `Area: ${formatArea(total)}`;
+  const hiddenCount = data.comments.filter(
+    (comment) => comment.resolved,
+  ).length;
+  $("#hidden-notes").hidden = hiddenCount === 0;
+  $("#hidden-notes").textContent = `Hidden · ${hiddenCount}`;
+  $$("[data-visibility]").forEach((node) =>
+    node.setAttribute("aria-pressed", String(visible[node.dataset.visibility])),
+  );
 }
-function setMode(next, keepEdit=false) {
-  const oldEdit = keepEdit ? editGeometry : null;
-  mode = next; points = []; anchors = []; editGeometry = oldEdit; lastAreaTap = null;
-  $('#panel').hidden = true; selected = null;
-  $$('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
-  $('#drawing-actions').hidden = mode === 'navigate';
-  $('#finish-area').hidden = mode !== 'area';
-  $('#undo-point').hidden = mode === 'comment' || (!!editGeometry && mode !== 'area');
-  $('#prompt').classList.toggle('drawing', mode !== 'navigate');
+function setMode(next, keepEdit = false) {
+  const previousEdit = keepEdit ? editGeometry : null;
+  mode = next;
+  points = [];
+  editGeometry = previousEdit;
+  editingNote = null;
+  lastAreaTap = null;
+  $("#panel").hidden = true;
+  $("#project-panel").hidden = true;
+  selected = null;
+  $$("[data-mode]").forEach((node) =>
+    node.setAttribute("aria-pressed", String(node.dataset.mode === mode)),
+  );
+  $("#drawing-actions").hidden = mode === "navigate";
+  $("#finish-area").hidden = mode !== "area";
+  $("#undo-point").hidden = mode === "comment";
+  $("#prompt").classList.toggle("drawing", mode !== "navigate");
   viewer?.setMode(mode);
-  if (mode === 'area') viewer?.fit('top');
-  updateInstruction(); refresh();
+  if (mode === "area") viewer?.fit("top");
+  updateInstruction();
+  refresh();
 }
 function updateInstruction() {
-  $('#instruction').textContent = mode === 'navigate'
-    ? 'Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to pan'
-    : mode === 'comment'
-      ? (editGeometry ? 'Tap the new note position' : 'Tap anywhere on the model to place a note')
-      : mode === 'measure'
-        ? (editGeometry ? `Tap the new Point ${editGeometry.endpoint?.toUpperCase() || ''}` : (points.length ? 'Tap Point B' : 'Tap Point A'))
-        : `Tap area corners · ${points.length} placed · Done to save`;
-  $('#finish-area').disabled = points.length < 3;
-  $('#undo-point').disabled = points.length === 0;
+  $("#instruction").textContent =
+    mode === "navigate"
+      ? "Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to pan"
+      : mode === "comment"
+        ? editGeometry
+          ? "Tap the new note position"
+          : "Tap a model surface to place a note"
+        : mode === "measure"
+          ? points.length
+            ? "Tap Point B"
+            : "Tap Point A"
+          : `Tap area corners · ${points.length} placed · Done to save`;
+  $("#finish-area").disabled = points.length < 3;
+  $("#undo-point").disabled = points.length === 0;
 }
 function checkFootprint(outline) {
-  if (outline.some(p => Math.abs(p[1] - viewer.ceilingY) > .01)) throw new Error('Use one horizontal ceiling plane.');
-  for (let i=0;i<outline.length;i++) {
-    const a=outline[i], b=outline[(i+1)%outline.length], samples=Math.ceil(distance(a,b)/.1);
-    for (let j=0;j<=samples;j++) if (!viewer.onFloor(a.map((v,k)=>v+(b[k]-v)*j/samples))) throw new Error('An edge leaves the basement footprint.');
+  for (let i = 0; i < outline.length; i++) {
+    const a = outline[i],
+      b = outline[(i + 1) % outline.length],
+      samples = Math.ceil(distance(a, b) / 0.1);
+    for (let j = 0; j <= samples; j++) {
+      if (
+        !viewer.onFloor(
+          a.map((value, k) => value + ((b[k] - value) * j) / samples),
+        )
+      ) {
+        throw new Error("An edge leaves the basement footprint.");
+      }
+    }
   }
 }
 function handleTap(hit, screen) {
-  if (mode === 'navigate') {closePanel(); return;}
-  if (!hit) return toast(mode === 'area' ? 'Tap inside the basement footprint.' : 'Tap a model surface.');
-  const p = hit.position;
-  if (mode === 'comment') {
-    let c;
-    if (editGeometry) {c = editGeometry.item; c.position = p; c.anchor = hit.object;}
-    else {c = {id:nextId(data,'comment'), position:p, anchor:hit.object, text:'', resolved:false}; data.comments.push(c);}
-    visible.comments = true; changed(); openComment(c); return;
+  if (mode === "navigate") {
+    closePanel();
+    return;
   }
-  if (mode === 'measure') {
+  if (!hit)
+    return toast(
+      mode === "area"
+        ? "Tap inside the basement footprint."
+        : "Tap a model surface.",
+    );
+  const position = hit.position;
+  if (mode === "comment") {
     if (editGeometry) {
-      const m=editGeometry.item, other=editGeometry.endpoint==='a'?m.b:m.a;
-      if (distance(p,other)<.001) return toast('Pick two different points.');
-      m[editGeometry.endpoint]=p; m.status='SCAN'; delete m.verifiedMeters; delete m.verifiedAt; m.position=m.a.map((v,i)=>(v+m.b[i])/2);
-      changed(); openMeasurement(m); return;
+      const item = editGeometry.item,
+        isNew = editGeometry.isNew;
+      item.position = position;
+      openComment(item, isNew);
+    } else {
+      openComment(
+        { id: nextId(data, "comment"), position, text: "", resolved: false },
+        true,
+      );
     }
-    if (points.length && distance(points[0],p)<.001) return toast('Pick a different Point B.');
-    points.push(p); anchors.push(hit.object);
-    if (points.length===2) {
-      const id=nextId(data,'measurement');
-      const m={id,name:id,a:points[0],b:points[1],position:polygonCenter(points),anchors:{a:anchors[0],b:anchors[1]},status:'SCAN'};
-      data.measurements.push(m); visible.measurements=true; changed(); openMeasurement(m); return;
+    visible.comments = true;
+    refresh();
+    return;
+  }
+  if (mode === "measure") {
+    if (points.length && distance(points[0], position) < 0.001)
+      return toast("Pick a different Point B.");
+    points.push(position);
+    if (points.length === 2) {
+      const item = {
+        id: nextId(data, "measurement"),
+        name: "",
+        a: points[0],
+        b: points[1],
+        position: polygonCenter(points),
+        status: "SCAN",
+      };
+      data.measurements.push(item);
+      visible.measurements = true;
+      changed();
+      openMeasurement(item);
+      return;
     }
+  } else if (mode === "area") {
+    const start = points.length ? viewer.project(points[0]) : null;
+    if (
+      points.length >= 3 &&
+      Math.hypot(screen.x - start.x, screen.y - start.y) < 16
+    ) {
+      finishArea();
+      return;
+    }
+    if (
+      lastAreaTap &&
+      Date.now() - lastAreaTap.time < 350 &&
+      Math.hypot(screen.x - lastAreaTap.x, screen.y - lastAreaTap.y) < 16
+    )
+      return;
+    if (points.length && distance(points.at(-1), position) < 0.01)
+      return toast("Tap a different corner.");
+    if (points.length >= 100)
+      return toast("Save this area before adding more corners.");
+    points.push(position);
+    lastAreaTap = { ...screen, time: Date.now() };
   }
-  if (mode === 'area') {
-    if (points.length>=3 && Math.hypot(screen.x-viewer.project(points[0]).x,screen.y-viewer.project(points[0]).y)<16) {finishArea();return;}
-    if (lastAreaTap && Date.now()-lastAreaTap.time<350 && Math.hypot(screen.x-lastAreaTap.x,screen.y-lastAreaTap.y)<16) return;
-    if (points.length && distance(points.at(-1),p)<.01) return toast('Tap a different corner.');
-    points.push(p); lastAreaTap={...screen,time:Date.now()};
-  }
-  updateInstruction(); viewer.showDraft(points, mode==='area');
+  updateInstruction();
+  viewer.showDraft(points, mode === "area");
 }
 function finishArea() {
   try {
-    const others=data.areas.filter(a=>a.id!==editGeometry?.item.id), area=validatePolygon(points,others);
+    const others = data.areas.filter(
+      (area) => area.id !== editGeometry?.item.id,
+    );
+    const squareMeters = validatePolygon(points, others);
     checkFootprint(points);
     let item;
     if (editGeometry) {
-      item=editGeometry.item;
-      Object.assign(item,{points:clone(points),squareMeters:area,position:polygonCenter(points)});
+      item = editGeometry.item;
+      Object.assign(item, {
+        points: structuredClone(points),
+        squareMeters,
+        position: polygonCenter(points),
+      });
     } else {
-      const id=nextId(data,'area');
-      item={id,name:id,points:clone(points),squareMeters:area,position:polygonCenter(points),source:'SCAN',projection:'horizontal'};
+      item = {
+        id: nextId(data, "area"),
+        name: "",
+        points: structuredClone(points),
+        squareMeters,
+        position: polygonCenter(points),
+      };
       data.areas.push(item);
     }
-    visible.areas=true; changed(); openArea(item);
-  } catch(e) {toast(e.message);}
+    visible.areas = true;
+    changed();
+    openArea(item);
+  } catch (error) {
+    toast(error.message);
+  }
 }
 
+$("#project").onclick = () => {
+  setMode("navigate");
+  $("#project-panel").hidden = false;
+};
+$("#close-project").onclick = () => {
+  $("#project-panel").hidden = true;
+};
+
 try {
-  const response = await fetch('./execution.json?v=2');
-  if (!response.ok) throw new Error('Basement data unavailable');
-  data = validateData(await response.json());
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) data = validateData(JSON.parse(raw));
-  } catch {}
-  const {createViewer} = await import('./viewer.mjs');
-  viewer = await createViewer($('#view'), handleTap);
-
-  $('#top').onclick = () => viewer.fit('top');
-  $('#three').onclick = () => viewer.fit('three');
-  $('#reset').onclick = () => {setMode('navigate'); viewer.fit('three');};
-  $('#project').onclick = () => {$('#project-panel').hidden = false;};
-  $('#close-project').onclick = () => {$('#project-panel').hidden = true;};
-  $('#close-panel').onclick = closePanel;
-  $('#undo-point').onclick = () => {points.pop(); anchors.pop(); updateInstruction(); viewer.showDraft(points, mode==='area');};
-  $('#finish-area').onclick = finishArea;
-  $('#cancel-drawing').onclick = () => setMode('navigate');
-
-  $$('[data-mode]').forEach(b => {b.disabled=false; b.onclick=()=>setMode(b.dataset.mode);});
-  $$('[data-visibility]').forEach(b => {b.disabled=false; b.onclick=()=>{visible[b.dataset.visibility]=!visible[b.dataset.visibility]; refresh();};});
-  for (const id of ['top','three','reset']) $('#'+id).disabled=false;
-
-  document.addEventListener('keydown', e => {
-    if (['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {if (e.key==='Escape') document.activeElement.blur(); return;}
-    if (e.key==='Escape') {setMode('navigate'); closePanel(); $('#project-panel').hidden=true;}
-    if (e.key==='Enter' && mode==='area') {e.preventDefault(); finishArea();}
+    storage = window.localStorage;
+  } catch {
+    storage = undefined;
+  }
+  const loaded = loadData(storage);
+  data = loaded.data;
+  writable = loaded.writable;
+  const { createViewer } = await import("./viewer.mjs?v=2");
+  viewer = await createViewer($("#view"), handleTap);
+  $("#top").onclick = () => viewer.fit("top");
+  $("#three").onclick = () => {
+    setMode("navigate");
+    viewer.fit("three");
+  };
+  $("#reset").onclick = () => {
+    setMode("navigate");
+    viewer.fit("three");
+  };
+  $("#close-panel").onclick = closePanel;
+  $("#hidden-notes").onclick = openHiddenNotes;
+  $("#undo-point").onclick = () => {
+    points.pop();
+    lastAreaTap = null;
+    updateInstruction();
+    viewer.showDraft(points, mode === "area");
+  };
+  $("#finish-area").onclick = finishArea;
+  $("#cancel-drawing").onclick = () => setMode("navigate");
+  $$("[data-mode]").forEach((node) => {
+    node.disabled = false;
+    node.onclick = () =>
+      setMode(
+        node.getAttribute("aria-pressed") === "true"
+          ? "navigate"
+          : node.dataset.mode,
+      );
   });
-
-  status.hidden = true;
-  setMode('navigate');
-} catch(error) {
+  $$("[data-visibility]").forEach((node) => {
+    node.disabled = false;
+    node.onclick = () => {
+      visible[node.dataset.visibility] = !visible[node.dataset.visibility];
+      refresh();
+    };
+  });
+  for (const id of ["top", "three", "reset"]) $("#" + id).disabled = false;
+  document.addEventListener("keydown", (event) => {
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+      if (event.key === "Escape") document.activeElement.blur();
+      return;
+    }
+    if (event.key === "Escape") {
+      setMode("navigate");
+      closePanel();
+    }
+    if (event.key === "Enter" && mode === "area") {
+      event.preventDefault();
+      finishArea();
+    }
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STORAGE_KEY || !event.newValue) return;
+    try {
+      const next = validateData(JSON.parse(event.newValue));
+      // Keep an unsaved note in this tab; it will merge into the new record on Save.
+      data = next;
+      if (mode === "navigate") refresh();
+    } catch {
+      toast("Another tab saved unreadable notes. This view was kept.");
+    }
+  });
+  $("#view canvas").addEventListener("webglcontextlost", (event) => {
+    event.preventDefault();
+    $("#status").hidden = false;
+    $("#status").textContent = "3D view interrupted. Reload to continue.";
+  });
+  $("#save-state").textContent = writable
+    ? "Saved on this device"
+    : "Browser saving unavailable";
+  $("#status").hidden = true;
+  setMode("navigate");
+  if (loaded.message) toast(loaded.message);
+} catch (error) {
   console.error(error);
-  status.hidden = false;
-  status.textContent = 'Could not open the basement. Reload to try again.';
+  $("#status").hidden = false;
+  $("#status").textContent = /WebGL|context/i.test(error.message)
+    ? "3D requires WebGL. Enable browser graphics acceleration or try another browser."
+    : "Could not open the basement. Reload to try again.";
 }

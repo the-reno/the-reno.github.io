@@ -1,8 +1,0 @@
-{
-  "schemaVersion": 2,
-  "model": {"id": "kiri-room3-shell-v1", "url": "./room.gltf", "units": "meters", "upAxis": "Y"},
-  "measurements": [],
-  "areas": [],
-  "comments": [],
-  "counters": {"comment": 0, "measurement": 0, "area": 0}
-}
