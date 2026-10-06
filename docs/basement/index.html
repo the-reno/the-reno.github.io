@@ -13,7 +13,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
     />
-    <link rel="stylesheet" href="./execution.css?v=6" />
+    <link rel="stylesheet" href="./execution.css?v=7" />
     <script type="importmap">
       {
         "imports": {
@@ -50,18 +50,48 @@
         </nav>
       </div>
     </header>
-    <nav class="source-switch surface" aria-label="Dimension source">
-      <button data-source="model" aria-pressed="true">3D dimensions</button>
-      <button data-source="lighting" aria-pressed="false">Lighting plan</button>
-    </nav>
-    <section
-      class="model-summary surface"
-      aria-label="Measurements from the 3D model"
-    >
-      <span class="eyebrow">FLOOR AREA · KIRI SCAN</span>
-      <strong id="model-area">Calculating…</strong>
-      <small>Includes walls + stairs.</small>
-    </section>
+    <aside id="show-panel" class="surface" aria-label="Show on model">
+      <div class="show-heading">
+        <h1>Show</h1>
+        <details id="add-tools">
+          <summary>Add</summary>
+          <nav class="surface" aria-label="Create annotation">
+            <button data-mode="measure" aria-pressed="false" disabled>
+              Measure
+            </button>
+            <button data-mode="area" aria-pressed="false" disabled>Area</button>
+            <button data-mode="comment" aria-pressed="false" disabled>
+              Comment
+            </button>
+          </nav>
+        </details>
+      </div>
+      <nav class="source-switch" aria-label="Dimension source">
+        <button data-source="model" aria-pressed="true">3D dimensions</button>
+        <button data-source="lighting" aria-pressed="false">
+          Lighting plan
+        </button>
+      </nav>
+      <div id="show-controls"></div>
+      <div id="measure-list" aria-label="Choose wall lengths"></div>
+      <div class="show-summary">
+        <span
+          id="model-area"
+          title="Approximate scan footprint, including walls and stairs"
+        ></span>
+        <span
+          id="area-total"
+          title="Sum of saved areas currently shown"
+          hidden
+        ></span>
+        <button
+          id="hidden-notes"
+          aria-label="Show hidden notes"
+          hidden
+        ></button>
+        <span id="save-state" role="status">Saved on this device</span>
+      </div>
+    </aside>
     <button
       id="plan-note"
       class="surface"
@@ -69,35 +99,12 @@
       aria-label="Open plan dimensions"
     ></button>
 
-    <div class="tools">
-      <nav class="surface primary" aria-label="Tools">
-        <button data-mode="measure" aria-pressed="false" disabled>
-          Measure
-        </button>
-        <button data-mode="area" aria-pressed="false" disabled>Area</button>
-        <button data-mode="comment" aria-pressed="false" disabled>
-          Comment
-        </button>
-        <button
-          id="show-options"
-          aria-expanded="false"
-          aria-controls="panel"
-          disabled
-        >
-          Show
-        </button>
-      </nav>
-    </div>
-
     <div id="status" class="surface" role="status" aria-live="polite">
       Loading your basement…
     </div>
 
-    <div class="prompt surface" id="prompt">
-      <span id="instruction"
-        >Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to
-        pan</span
-      >
+    <div class="prompt surface" id="prompt" hidden>
+      <span id="instruction"></span>
       <div id="drawing-actions" hidden>
         <button id="undo-point">Undo</button>
         <button id="finish-area" class="accent" disabled>Done</button>
@@ -167,20 +174,6 @@
       <div id="ceiling-content"></div>
     </dialog>
 
-    <footer>
-      <div class="summary">
-        <span id="area-total" title="Sum of the saved areas currently shown"
-          >Drawn areas: ≈ 0 ft²</span
-        >
-        <button
-          id="hidden-notes"
-          aria-label="Show hidden notes"
-          hidden
-        ></button>
-        <span id="save-state" role="status">Saved on this device</span>
-      </div>
-    </footer>
-
     <div
       id="toast"
       class="surface"
@@ -188,6 +181,6 @@
       aria-live="polite"
       hidden
     ></div>
-    <script type="module" src="./app.mjs?v=6"></script>
+    <script type="module" src="./app.mjs?v=7"></script>
   </body>
 </html>

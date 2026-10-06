@@ -13,7 +13,7 @@ import {
   validatePolygon,
   validateData,
   loadData,
-} from "./data.mjs?v=5";
+} from "./data.mjs?v=7";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -56,12 +56,14 @@ function saveView() {
   }
 }
 function measureShown(key) {
-  return !preferences.hidden.includes(key);
+  return preferences.shown.includes(key);
 }
 function setMeasureShown(key, show) {
-  preferences.hidden = preferences.hidden.filter((id) => id !== key);
-  if (!show) preferences.hidden.push(key);
-  else visible.measurements = true;
+  preferences.shown = preferences.shown.filter((id) => id !== key);
+  if (show) {
+    preferences.shown.push(key);
+    visible.measurements = true;
+  }
   if (!show && focusedMeasure === key) focusedMeasure = null;
   saveView();
   refresh();
@@ -105,12 +107,13 @@ function locateMeasure(entry) {
   viewer.focusMeasurement(entry.a, entry.b);
   toast(`${entry.title} · highlighted between A and B`);
 }
-function openShowOptions() {
-  const previousFocus = focusedMeasure;
-  setMode("navigate");
-  focusedMeasure = previousFocus;
-  openPanel("Show on model", { type: "view" });
-  $("#show-options").setAttribute("aria-expanded", "true");
+function renderShowOptions() {
+  if (!viewer || !data) return;
+  const controls = $("#show-controls");
+  const list = $("#measure-list");
+  const scroll = list.scrollTop;
+  controls.replaceChildren();
+  list.replaceChildren();
   const units = el("div", undefined, "unit-options");
   units.setAttribute("role", "group");
   units.setAttribute("aria-label", "Measurement units");
@@ -123,18 +126,18 @@ function openShowOptions() {
       saveView();
       refresh();
       if (projectData) renderProjectReferences();
-      openShowOptions();
+      closePanel();
+      renderShowOptions();
     });
     control.dataset.units = value;
     control.setAttribute("aria-pressed", String(preferences.units === value));
     units.append(control);
   }
-  body.append(units);
+  controls.append(units);
   const groups = el("div", undefined, "visibility-options");
   for (const [key, label] of [
-    ["measurements", "Measurements"],
-    ["areas", "Areas"],
-    ["comments", "Comments"],
+    ["measurements", "Walls"],
+    ["areas", "Floor"],
   ]) {
     const control = button(label, () => {
       visible[key] = !visible[key];
@@ -145,27 +148,30 @@ function openShowOptions() {
     control.setAttribute("aria-pressed", String(visible[key]));
     groups.append(control);
   }
-  body.append(groups);
-  note(
-    "Check what stays visible. Locate highlights the related wall or the A–B line.",
-  );
+  controls.append(groups);
   const entries = measurementEntries();
-  actions(
+  const allActions = el("div", undefined, "show-actions");
+  allActions.append(
     ...[
       ["Show all", true],
       ["Hide all", false],
     ].map(([label, show]) =>
       button(label, () => {
         const keys = new Set(entries.map((entry) => entry.key));
-        preferences.hidden = preferences.hidden.filter((key) => !keys.has(key));
-        if (!show) preferences.hidden.push(...keys);
-        visible.measurements = true;
+        preferences.shown = preferences.shown.filter((key) => !keys.has(key));
+        if (show) preferences.shown.push(...keys);
+        else {
+          preferences.shown = [];
+          visible.areas = false;
+        }
+        visible.measurements = show;
         focusedMeasure = null;
         saveView();
-        openShowOptions();
+        refresh();
       }),
     ),
   );
+  controls.append(allActions);
   let group;
   for (const entry of entries) {
     const heading =
@@ -175,7 +181,7 @@ function openShowOptions() {
           ? "Model wall lengths"
           : "Lighting spacings · approximate placement";
     if (heading !== group) {
-      body.append(el("h2", heading, "filter-heading"));
+      list.append(el("h2", heading, "filter-heading"));
       group = heading;
     }
     const row = el("div", undefined, "measurement-option");
@@ -186,7 +192,6 @@ function openShowOptions() {
     checkbox.checked = measureShown(entry.key);
     checkbox.setAttribute("aria-label", `Show ${entry.title}`);
     checkbox.onchange = () => {
-      focusedMeasure = checkbox.checked ? entry.key : focusedMeasure;
       setMeasureShown(entry.key, checkbox.checked);
     };
     const text = el("span");
@@ -195,15 +200,19 @@ function openShowOptions() {
     const locate = button("Locate", () => locateMeasure(entry));
     locate.setAttribute("aria-label", `Locate ${entry.title}`);
     row.append(label, locate);
-    body.append(row);
+    list.append(row);
   }
   if (!entries.length)
-    note(
-      projectLoading
-        ? "Loading reference dimensions…"
-        : "No measurements to show yet.",
+    list.append(
+      el(
+        "p",
+        projectLoading
+          ? "Loading reference dimensions…"
+          : "No measurements to show yet.",
+        "small",
+      ),
     );
-  refresh();
+  list.scrollTop = scroll;
 }
 
 function projectDimensions() {
@@ -225,6 +234,7 @@ function openProjectDimension(item) {
   openPanel(`${item.room} · plan dimension`);
   body.append(el("span", "PROJECT", "badge project-badge"));
   focusedMeasure = `project:${item.id}`;
+  setMeasureShown(focusedMeasure, true);
   body.append(el("p", projectLength(item), "value"), el("p", item.name));
   note(projectData.dimensionNote);
   const source = el("a", "Open lighting drawing image");
@@ -252,7 +262,7 @@ async function loadProjectReferences() {
     projectData = reference;
     renderProjectReferences();
     refresh();
-    if (selected?.type === "view") openShowOptions();
+    renderShowOptions();
   } catch (error) {
     projectData = null;
     console.warn("Project references unavailable:", error);
@@ -350,14 +360,11 @@ function save() {
 function changed() {
   save();
   saveView();
+  renderShowOptions();
   refresh();
 }
 function openPanel(title, selection = null) {
   selected = selection;
-  $("#show-options").setAttribute(
-    "aria-expanded",
-    String(selection?.type === "view"),
-  );
   $("#project-panel").hidden = true;
   $("#panel-title").textContent = title;
   body.replaceChildren();
@@ -366,7 +373,6 @@ function openPanel(title, selection = null) {
 }
 function closePanel() {
   $("#panel").hidden = true;
-  $("#show-options").setAttribute("aria-expanded", "false");
   selected = null;
   editingNote = null;
   refresh();
@@ -609,7 +615,7 @@ function refresh() {
       () => {
         if (mode === "navigate") openItem(type, item);
       },
-      `model-label ${type}${selected?.id === item.id || focusedMeasure === `saved:${item.id}` ? " selected" : ""}`,
+      `model-label ${type}${selected?.id === item.id || type === "measurement" ? " selected" : ""}`,
     );
     node.dataset.id = item.id;
     node.title = text;
@@ -641,15 +647,14 @@ function refresh() {
       ...item,
       type,
       node,
-      selected: type === "measurement" && focusedMeasure === `saved:${item.id}`,
+      selected: type === "measurement",
+      focused: focusedMeasure === `saved:${item.id}`,
     });
   }
-  if (visible.comments) {
-    data.comments
-      .filter((comment) => comment.id !== editingNote?.item.id)
-      .forEach((comment) => add("comment", comment));
-    if (editingNote) add("comment", editingNote.item);
-  }
+  data.comments
+    .filter((comment) => comment.id !== editingNote?.item.id)
+    .forEach((comment) => add("comment", comment));
+  if (editingNote) add("comment", editingNote.item);
   if (visible.measurements)
     data.measurements
       .filter((measurement) => measureShown(`saved:${measurement.id}`))
@@ -675,18 +680,12 @@ function refresh() {
   );
   if (viewer.metrics) {
     const { floor, walls } = viewer.metrics;
-    $("#model-area").textContent = formatArea(floor.squareMeters);
+    $("#model-area").textContent = `Floor ${formatArea(floor.squareMeters)}`;
     if (visible.areas && dimensionSource === "model" && mode === "navigate") {
-      const node = el("span", undefined, "model-label model-floor");
-      node.append(
-        el("span", "FLOOR · SCAN", "label-name"),
-        el("strong", formatArea(floor.squareMeters)),
-      );
       items.push({
         type: "model-floor",
         triangles: floor.triangles,
         position: [floor.position[0], viewer.ceilingY, floor.position[2]],
-        node,
       });
     }
     if (
@@ -702,7 +701,7 @@ function refresh() {
         const node = el(
           "span",
           undefined,
-          `model-label wall-dimension${active ? " selected" : ""}`,
+          "model-label wall-dimension selected",
         );
         node.append(
           el("span", wall.id, "wall-id"),
@@ -720,7 +719,8 @@ function refresh() {
           source: wall.source,
           position: polygonCenter([a, b]),
           node,
-          selected: active,
+          selected: true,
+          focused: active,
         });
       }
     }
@@ -739,7 +739,7 @@ function refresh() {
       const node = el(
         "span",
         `${item.room} · ${projectLength(item)}`,
-        `model-label project-dimension${active ? " selected" : ""}`,
+        "model-label project-dimension selected",
       );
       node.dataset.id = item.id;
       node.title = `PROJECT · ${item.room} · ${item.name}: ${projectLength(item)}`;
@@ -750,29 +750,29 @@ function refresh() {
         b,
         position: polygonCenter([a, b]),
         node,
-        selected: active,
+        selected: true,
+        focused: active,
       });
     }
   }
-  const focused = items.some((item) => item.selected);
-  items.sort(
-    (a, b) => Number(Boolean(b.selected)) - Number(Boolean(a.selected)),
-  );
-  for (const item of items) {
-    item.muted = focused && !item.selected;
-    item.node.classList.toggle("muted", item.muted);
-  }
+  items.sort((a, b) => Number(Boolean(b.focused)) - Number(Boolean(a.focused)));
   viewer.renderItems(items);
   viewer.showDraft(points, mode === "area");
   const total = visible.areas
     ? data.areas.reduce((sum, area) => sum + area.squareMeters, 0)
     : 0;
+  $("#area-total").hidden = total === 0;
   $("#area-total").textContent = `Drawn areas: ${formatArea(total)}`;
   const hiddenCount = data.comments.filter(
     (comment) => comment.resolved,
   ).length;
   $("#hidden-notes").hidden = hiddenCount === 0;
   $("#hidden-notes").textContent = `Hidden · ${hiddenCount}`;
+  $$("[data-measure-key] input").forEach((node) => {
+    node.checked = measureShown(
+      node.closest("[data-measure-key]").dataset.measureKey,
+    );
+  });
   $$("[data-visibility]").forEach((node) =>
     node.setAttribute("aria-pressed", String(visible[node.dataset.visibility])),
   );
@@ -788,10 +788,11 @@ function setMode(next, keepEdit = false) {
   $("#project-panel").hidden = true;
   selected = null;
   focusedMeasure = null;
-  $("#show-options").setAttribute("aria-expanded", "false");
   $$("[data-mode]").forEach((node) =>
     node.setAttribute("aria-pressed", String(node.dataset.mode === mode)),
   );
+  $("#add-tools").open = false;
+  $("#prompt").hidden = mode === "navigate";
   $("#drawing-actions").hidden = mode === "navigate";
   $("#finish-area").hidden = mode !== "area";
   $("#undo-point").hidden = mode === "comment";
@@ -804,7 +805,7 @@ function setMode(next, keepEdit = false) {
 function updateInstruction() {
   $("#instruction").textContent =
     mode === "navigate"
-      ? "Drag to orbit · Scroll / pinch to zoom · Right-drag / two fingers to pan"
+      ? ""
       : mode === "comment"
         ? editGeometry
           ? "Tap the new note position"
@@ -857,7 +858,6 @@ function handleTap(hit, screen) {
         true,
       );
     }
-    visible.comments = true;
     refresh();
     return;
   }
@@ -875,9 +875,7 @@ function handleTap(hit, screen) {
         status: "SCAN",
       };
       data.measurements.push(item);
-      preferences.hidden = preferences.hidden.filter(
-        (key) => key !== `saved:${item.id}`,
-      );
+      preferences.shown.push(`saved:${item.id}`);
       visible.measurements = true;
       changed();
       openMeasurement(item);
@@ -975,8 +973,6 @@ $("#execution-panel").addEventListener("close", () => {
   $("#execution").setAttribute("aria-expanded", "false");
   $("#execution").focus();
 });
-$("#show-options").onclick = () =>
-  selected?.type === "view" ? closePanel() : openShowOptions();
 $$("[data-source]").forEach(
   (node) =>
     (node.onclick = () => {
@@ -984,6 +980,7 @@ $$("[data-source]").forEach(
       dimensionSource = node.dataset.source;
       visible.measurements = true;
       saveView();
+      renderShowOptions();
       refresh();
       if (dimensionSource === "lighting") void loadProjectReferences();
     }),
@@ -1001,7 +998,7 @@ try {
   dimensionSource = preferences.source;
   data = loaded.data;
   writable = loaded.writable;
-  const { createViewer } = await import("./viewer.mjs?v=5");
+  const { createViewer } = await import("./viewer.mjs?v=7");
   viewer = await createViewer($("#view"), handleTap);
   $("#top").onclick = () => viewer.fit("top");
   $("#three").onclick = () => {
@@ -1031,7 +1028,7 @@ try {
           : node.dataset.mode,
       );
   });
-  $("#show-options").disabled = false;
+  renderShowOptions();
   $("#execution").disabled = false;
   for (const id of ["top", "three", "reset"]) $("#" + id).disabled = false;
   document.addEventListener("keydown", (event) => {
@@ -1054,6 +1051,7 @@ try {
       const next = validateData(JSON.parse(event.newValue));
       // Keep an unsaved note in this tab; it will merge into the new record on Save.
       data = next;
+      renderShowOptions();
       if (mode === "navigate") refresh();
     } catch {
       toast("Another tab saved unreadable notes. This view was kept.");

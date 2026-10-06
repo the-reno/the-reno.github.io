@@ -3,24 +3,27 @@ export const LEGACY_STORAGE_KEY = "ronu.basement.execution.v1";
 export const MODEL_ID = "kiri-room3-shell-v1";
 export const M2_TO_FT2 = 10.7639104167;
 export const INCH_TO_M = 0.0254;
-export const VIEW_STORAGE_KEY = "ronu.basement.view.v1";
+export const VIEW_STORAGE_KEY = "ronu.basement.view.v2";
 const EPS = 1e-6;
 
 export function loadView(storage) {
   const result = {
     units: "imperial",
     source: "model",
-    hidden: [],
-    visibility: { measurements: true, areas: true, comments: true },
+    shown: [],
+    visibility: { measurements: false, areas: false },
   };
   try {
     const raw = JSON.parse(storage.getItem(VIEW_STORAGE_KEY));
-    if (raw?.units === "metric") result.units = "metric";
-    if (raw?.source === "lighting") result.source = "lighting";
-    if (Array.isArray(raw?.hidden))
-      result.hidden = [
+    // Keep unit/source choices, but start the new opt-in display with Hide all.
+    const previous =
+      raw || JSON.parse(storage.getItem("ronu.basement.view.v1"));
+    if (previous?.units === "metric") result.units = "metric";
+    if (previous?.source === "lighting") result.source = "lighting";
+    if (Array.isArray(raw?.shown))
+      result.shown = [
         ...new Set(
-          raw.hidden
+          raw.shown
             .filter(
               (id) =>
                 typeof id === "string" &&

@@ -203,7 +203,6 @@ export async function createViewer(host, onTap) {
     leaders.replaceChildren();
     labelItems = [];
     for (const i of items) {
-      const firstObject = annotations.children.length;
       if (i.type === "measurement") {
         const color = i.selected ? 0xad5420 : 0x255d77;
         line(annotations, [i.a, i.b], color);
@@ -247,7 +246,7 @@ export async function createViewer(host, onTap) {
       }
       if (i.type === "area") polygon(annotations, i.points, 0xad5420);
       if (i.type === "comment") dot(annotations, i.position, 0xad5420);
-      addLabel(i.position, i.node);
+      if (i.node) addLabel(i.position, i.node);
       if (i.selected && i.a && i.b) {
         const a = new THREE.Vector3(...i.a),
           b = new THREE.Vector3(...i.b);
@@ -268,13 +267,14 @@ export async function createViewer(host, onTap) {
         );
         stroke.renderOrder = 12;
         annotations.add(stroke);
-        for (const [index, position] of [i.a, i.b].entries()) {
-          dot(annotations, position, 0xad5420);
-          const endpoint = document.createElement("span");
-          endpoint.className = "model-label endpoint";
-          endpoint.textContent = index === 0 ? "A" : "B";
-          addLabel(position, endpoint);
-        }
+        if (i.focused)
+          for (const [index, position] of [i.a, i.b].entries()) {
+            dot(annotations, position, 0xad5420);
+            const endpoint = document.createElement("span");
+            endpoint.className = "model-label endpoint";
+            endpoint.textContent = index === 0 ? "A" : "B";
+            addLabel(position, endpoint);
+          }
         if (i.type === "wall-dimension") {
           const wall = meshes.find((mesh) => mesh.name === i.source);
           if (wall) {
@@ -295,11 +295,6 @@ export async function createViewer(host, onTap) {
           }
         }
       }
-      if (i.muted)
-        for (const object of annotations.children.slice(firstObject)) {
-          object.material.transparent = true;
-          object.material.opacity *= 0.25;
-        }
     }
   }
   function showDraft(points, area = false) {
@@ -395,9 +390,7 @@ export async function createViewer(host, onTap) {
     renderer.render(scene, camera);
     const placed = [
       ".topbar",
-      ".model-summary",
-      ".source-switch",
-      ".tools",
+      "#show-panel",
       ".prompt",
       "#panel",
       "#project-panel",
@@ -466,17 +459,7 @@ export async function createViewer(host, onTap) {
           [w + 6, 0],
         ];
         const wallLabel = node.classList.contains("wall-dimension");
-        if (wallLabel && host.clientWidth < 600) {
-          offsets.splice(
-            0,
-            offsets.length,
-            [0, 0],
-            [0, -h - 6],
-            [0, h + 6],
-            [-w / 2, -h - 6],
-            [w / 2, h + 6],
-          );
-        } else if (wallLabel) {
+        if (wallLabel) {
           for (let ring = 1; ring <= 4; ring++) {
             for (let dx = -ring; dx <= ring; dx++)
               for (let dy = -ring; dy <= ring; dy++)
