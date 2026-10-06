@@ -27,6 +27,7 @@ export function loadView(storage) {
             .filter(
               (id) =>
                 typeof id === "string" &&
+                id !== "wall:W10" &&
                 /^(wall:W\d+|project:P6-\d+|saved:M\d+)$/.test(id),
             )
             .slice(0, 2000),

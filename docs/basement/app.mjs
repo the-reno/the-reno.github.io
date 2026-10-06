@@ -13,7 +13,9 @@ import {
   validatePolygon,
   validateData,
   loadData,
-} from "./data.mjs?v=7";
+} from "./data.mjs?v=8";
+
+import { ROOM_GROUPS } from "./room-groups.mjs?v=8";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -42,6 +44,8 @@ function projectLength(item) {
 }
 let projectData = null;
 let projectLoading = false;
+let revealLighting = false;
+const expandedGroups = new Set();
 let dimensionSource = "model";
 let selectedImage = "lighting";
 
@@ -89,15 +93,18 @@ function measurementEntries() {
           type: "wall",
           item: wall,
         }))
-      : projectDimensions().map((item) => ({
-          key: `project:${item.id}`,
-          title: `${item.room} · ${item.name}`,
-          detail: `${item.id} · ${projectLength(item)} · PROJECT`,
-          a: [item.a[0], viewer.ceilingY, item.a[1]],
-          b: [item.b[0], viewer.ceilingY, item.b[1]],
-          type: "project",
-          item,
-        }));
+      : projectDimensions()
+          .slice()
+          .sort((a, b) => a.room.localeCompare(b.room))
+          .map((item) => ({
+            key: `project:${item.id}`,
+            title: `${item.room} · ${item.name}`,
+            detail: `${item.id} · ${projectLength(item)} · PROJECT`,
+            a: [item.a[0], viewer.ceilingY, item.a[1]],
+            b: [item.b[0], viewer.ceilingY, item.b[1]],
+            type: "project",
+            item,
+          }));
   return [...own, ...reference];
 }
 function locateMeasure(entry) {
@@ -161,6 +168,7 @@ function renderShowOptions() {
         preferences.shown = preferences.shown.filter((key) => !keys.has(key));
         if (show) preferences.shown.push(...keys);
         else {
+          revealLighting = false;
           preferences.shown = [];
           visible.areas = false;
         }
@@ -172,18 +180,7 @@ function renderShowOptions() {
     ),
   );
   controls.append(allActions);
-  let group;
-  for (const entry of entries) {
-    const heading =
-      entry.type === "saved"
-        ? "Your measurements"
-        : dimensionSource === "model"
-          ? "Model wall lengths"
-          : "Lighting spacings · approximate placement";
-    if (heading !== group) {
-      list.append(el("h2", heading, "filter-heading"));
-      group = heading;
-    }
+  const appendEntry = (entry, host) => {
     const row = el("div", undefined, "measurement-option");
     row.dataset.measureKey = entry.key;
     const label = el("label");
@@ -191,16 +188,63 @@ function renderShowOptions() {
     checkbox.type = "checkbox";
     checkbox.checked = measureShown(entry.key);
     checkbox.setAttribute("aria-label", `Show ${entry.title}`);
-    checkbox.onchange = () => {
-      setMeasureShown(entry.key, checkbox.checked);
-    };
+    checkbox.onchange = () => setMeasureShown(entry.key, checkbox.checked);
     const text = el("span");
     text.append(el("strong", entry.title), el("small", entry.detail));
     label.append(checkbox, text);
     const locate = button("Locate", () => locateMeasure(entry));
     locate.setAttribute("aria-label", `Locate ${entry.title}`);
     row.append(label, locate);
-    list.append(row);
+    host.append(row);
+  };
+  const own = entries.filter((entry) => entry.type === "saved");
+  if (own.length) {
+    list.append(el("h2", "Your measurements", "filter-heading"));
+    own.forEach((entry) => appendEntry(entry, list));
+  }
+  if (dimensionSource === "model") {
+    for (const group of ROOM_GROUPS) {
+      const section = el("section", undefined, "room-group");
+      section.dataset.roomGroup = group.id;
+      section.style.setProperty("--room-color", group.color);
+      const checkbox = el("input");
+      checkbox.type = "checkbox";
+      checkbox.dataset.groupCheck = group.id;
+      checkbox.setAttribute("aria-label", `Show ${group.name} walls`);
+      checkbox.onchange = () => setGroupShown(group, checkbox.checked);
+      const details = el("details");
+      details.open = expandedGroups.has(group.id);
+      details.ontoggle = () => {
+        if (!details.isConnected) return;
+        if (details.open) expandedGroups.add(group.id);
+        else expandedGroups.delete(group.id);
+      };
+      const summary = el("summary");
+      summary.append(el("strong", group.name));
+      const area = viewer.metrics?.groups?.find((item) => item.id === group.id);
+      if (area) {
+        const value = el("small", formatArea(area.squareMeters), "group-area");
+        value.hidden = !visible.areas;
+        summary.append(value);
+      }
+      const rows = el("div", undefined, "group-walls");
+      for (const id of group.walls) {
+        const entry = entries.find((item) => item.key === `wall:${id}`);
+        if (entry) appendEntry(entry, rows);
+      }
+      details.append(summary, rows);
+      section.append(checkbox, details);
+      list.append(section);
+    }
+  } else {
+    let room;
+    for (const entry of entries.filter((item) => item.type === "project")) {
+      if (room !== entry.item.room) {
+        room = entry.item.room;
+        list.append(el("h2", room, "filter-heading"));
+      }
+      appendEntry(entry, list);
+    }
   }
   if (!entries.length)
     list.append(
@@ -213,6 +257,53 @@ function renderShowOptions() {
       ),
     );
   list.scrollTop = scroll;
+  updateGroupControls();
+}
+function updateGroupControls() {
+  for (const group of ROOM_GROUPS) {
+    const checkbox = $(`[data-group-check="${group.id}"]`);
+    if (!checkbox) continue;
+    const count = group.walls.filter((id) => measureShown(`wall:${id}`)).length;
+    checkbox.checked = count === group.walls.length;
+    checkbox.indeterminate = count > 0 && count < group.walls.length;
+  }
+  $$(".group-area").forEach((node) => {
+    node.hidden = !visible.areas;
+  });
+}
+function setGroupShown(group, show) {
+  const keys = new Set(group.walls.map((id) => `wall:${id}`));
+  // Keep a shared boundary if another fully selected room still uses it.
+  const retained = new Set(
+    ROOM_GROUPS.filter(
+      (other) =>
+        other.id !== group.id &&
+        other.walls.every((id) => measureShown(`wall:${id}`)),
+    ).flatMap((other) => other.walls.map((id) => `wall:${id}`)),
+  );
+  if (show) {
+    preferences.shown = [...new Set([...preferences.shown, ...keys])];
+    visible.measurements = true;
+  } else
+    preferences.shown = preferences.shown.filter(
+      (key) => !keys.has(key) || retained.has(key),
+    );
+  focusedMeasure = null;
+  saveView();
+  refresh();
+}
+function showLightingReferences() {
+  if (!revealLighting || dimensionSource !== "lighting" || !projectData) return;
+  const dimensions = projectDimensions();
+  preferences.shown = [
+    ...new Set([
+      ...preferences.shown,
+      ...dimensions.map((item) => `project:${item.id}`),
+    ]),
+  ];
+  revealLighting = false;
+  visible.measurements = true;
+  saveView();
 }
 
 function projectDimensions() {
@@ -260,6 +351,7 @@ async function loadProjectReferences() {
     if (!Array.isArray(reference?.pages))
       throw new Error("Invalid project references");
     projectData = reference;
+    showLightingReferences();
     renderProjectReferences();
     refresh();
     renderShowOptions();
@@ -271,6 +363,7 @@ async function loadProjectReferences() {
     $("#plan-note").hidden = dimensionSource !== "lighting";
   } finally {
     projectLoading = false;
+    renderShowOptions();
   }
 }
 
@@ -681,12 +774,27 @@ function refresh() {
   if (viewer.metrics) {
     const { floor, walls } = viewer.metrics;
     $("#model-area").textContent = `Floor ${formatArea(floor.squareMeters)}`;
-    if (visible.areas && dimensionSource === "model" && mode === "navigate") {
-      items.push({
-        type: "model-floor",
-        triangles: floor.triangles,
-        position: [floor.position[0], viewer.ceilingY, floor.position[2]],
-      });
+    if (visible.areas && mode === "navigate") {
+      for (const group of viewer.metrics.groups || []) {
+        const node = el("span", undefined, "model-label room-area");
+        node.dataset.group = group.id;
+        node.style.setProperty("--room-color", group.color);
+        node.append(
+          el("span", group.name, "label-name"),
+          el("strong", formatArea(group.squareMeters)),
+        );
+        items.push({
+          type: "room-floor",
+          color: group.color,
+          triangles: group.triangles,
+          position: [
+            group.position[0],
+            group.position[1] + 0.03,
+            group.position[2],
+          ],
+          node,
+        });
+      }
     }
     if (
       visible.measurements &&
@@ -739,7 +847,7 @@ function refresh() {
       const node = el(
         "span",
         `${item.room} · ${projectLength(item)}`,
-        "model-label project-dimension selected",
+        `model-label project-dimension selected${active ? " focused" : ""}`,
       );
       node.dataset.id = item.id;
       node.title = `PROJECT · ${item.room} · ${item.name}: ${projectLength(item)}`;
@@ -755,7 +863,9 @@ function refresh() {
       });
     }
   }
-  items.sort((a, b) => Number(Boolean(b.focused)) - Number(Boolean(a.focused)));
+  const priority = (item) =>
+    item.focused ? 2 : item.type === "room-floor" ? 1 : 0;
+  items.sort((a, b) => priority(b) - priority(a));
   viewer.renderItems(items);
   viewer.showDraft(points, mode === "area");
   const total = visible.areas
@@ -773,6 +883,7 @@ function refresh() {
       node.closest("[data-measure-key]").dataset.measureKey,
     );
   });
+  updateGroupControls();
   $$("[data-visibility]").forEach((node) =>
     node.setAttribute("aria-pressed", String(visible[node.dataset.visibility])),
   );
@@ -978,6 +1089,10 @@ $$("[data-source]").forEach(
     (node.onclick = () => {
       setMode("navigate");
       dimensionSource = node.dataset.source;
+      revealLighting =
+        dimensionSource === "lighting" &&
+        !preferences.shown.some((key) => key.startsWith("project:"));
+      showLightingReferences();
       visible.measurements = true;
       saveView();
       renderShowOptions();
@@ -998,7 +1113,7 @@ try {
   dimensionSource = preferences.source;
   data = loaded.data;
   writable = loaded.writable;
-  const { createViewer } = await import("./viewer.mjs?v=7");
+  const { createViewer } = await import("./viewer.mjs?v=8");
   viewer = await createViewer($("#view"), handleTap);
   $("#top").onclick = () => viewer.fit("top");
   $("#three").onclick = () => {
