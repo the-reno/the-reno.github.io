@@ -139,9 +139,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await sleep(100);
   };
   const tool = (page, name) => page.getByRole("button", { name, exact: true });
-  const close = (page) => tool(page, "Close editor").click();
+  const close = async (page) => {
+    if (await page.locator("#panel").isVisible())
+      await tool(page, "Close editor").click();
+  };
+  const create = async (page, name) => {
+    if (!(await page.locator("#add-tools").evaluate((node) => node.open)))
+      await page.locator("#add-tools summary").click();
+    await tool(page, name).click();
+  };
   const visibility = async (page, key) => {
-    await tool(page, "Show").click();
     await page.locator(`[data-visibility="${key}"]`).click();
     await close(page);
   };
@@ -177,16 +184,87 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Floor area comes from KIRI geometry",
     );
     check(
-      (await page.locator(".wall-dimension").count()) === 22,
-      "Every model wall has a dimension label",
+      (await page.locator(".wall-dimension").count()) === 0,
+      "Hide all is the default",
     );
     check(
       (await page.locator(".project-dimension").count()) === 0,
       "Lighting spacings are separate from wall sizes",
     );
+    check(
+      await page.locator("#show-panel").isVisible(),
+      "Show menu is always visible",
+    );
+    check(
+      (await tool(page, "Walls").getAttribute("aria-pressed")) === "false",
+      "Walls start hidden",
+    );
+    check(
+      (await tool(page, "Floor").getAttribute("aria-pressed")) === "false",
+      "Floor starts hidden",
+    );
+    check(
+      (await page.locator('[data-visibility="comments"]').count()) === 0,
+      "Comments toggle removed",
+    );
+    check(
+      (await page.locator(".tools, .model-floor, .model-summary").count()) ===
+        0,
+      "Old bottom menu and floor scan badge removed",
+    );
+    check(
+      await page.locator("#prompt").isHidden(),
+      "Default navigation help no longer covers the model",
+    );
+    await screenshot(page, "basement-default-hidden");
+    await page.getByLabel("Show Wall W01", { exact: true }).check();
+    await page.getByLabel("Show Wall W02", { exact: true }).check();
+    for (const id of ["W01", "W02"]) {
+      check(
+        await page
+          .locator(`.wall-dimension.selected[data-id="${id}"]`)
+          .isVisible(),
+        `${id} stays highlighted alongside the other selection`,
+      );
+    }
+    check(
+      (await page.locator(".model-label.muted").count()) === 0,
+      "Selections do not dim one another",
+    );
+    await screenshot(page, "basement-two-walls");
+    await page.reload();
+    await ready(page);
+    for (const id of ["W01", "W02"]) {
+      check(
+        await page.getByLabel(`Show Wall ${id}`, { exact: true }).isChecked(),
+        `${id} checkbox persists`,
+      );
+      check(
+        await page
+          .locator(`.wall-dimension.selected[data-id="${id}"]`)
+          .isVisible(),
+        `${id} highlight persists`,
+      );
+    }
+    await page.getByLabel("Show Wall W01", { exact: true }).uncheck();
+    check(
+      await page.locator('.wall-dimension.selected[data-id="W02"]').isVisible(),
+      "Unchecking one wall preserves the other highlight",
+    );
+    await tool(page, "Floor").click();
+    check(
+      (await page.locator(".model-floor").count()) === 0,
+      "Floor tint has no floating scan badge",
+    );
+    await tool(page, "Hide all").click();
+    check(
+      (await page.locator(".wall-dimension").count()) === 0 &&
+        (await tool(page, "Floor").getAttribute("aria-pressed")) === "false",
+      "Hide all clears walls and floor",
+    );
+    await tool(page, "Show all").click();
     await screenshot(page, "basement-model-dimensions");
     const beforeWalls = await data(page);
-    await tool(page, "Show").click();
     check(
       (await page.locator(".measurement-option").count()) === 22,
       "All 22 walls have individual visibility and size rows",
@@ -207,7 +285,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator('.wall-dimension[data-id="W06"]').count()) === 0,
       "Per-measurement visibility survives refresh",
     );
-    await tool(page, "Show").click();
     await tool(page, "Hide all").click();
     await tool(page, "Locate Wall W06").click();
     check(
@@ -223,7 +300,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "The related line has A and B endpoints",
     );
     await screenshot(page, "basement-located-wall");
-    await tool(page, "Show").click();
     await tool(page, "Metric · m").click();
     check(
       (await page.locator("#model-area").innerText()).includes("79.4 m²"),
@@ -243,21 +319,22 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator("#model-area").innerText()).includes("m²"),
       "Unit selection survives refresh",
     );
-    await tool(page, "Show").click();
     await tool(page, "Imperial · ft/in").click();
     await tool(page, "Show all").click();
     assert.deepEqual(await data(page), beforeWalls);
     checks++;
     await close(page);
     check(
-      (await page.locator(".tools nav").count()) === 1,
-      "Only one toolbar row remains",
+      (await page.locator(".tools nav").count()) === 0,
+      "Bottom toolbar is removed",
     );
     await tool(page, "Lighting plan").click();
     await page
       .locator("#plan-note")
       .getByText("LIGHTING · 42 fixture spacings")
       .waitFor();
+    await page.locator('[data-measure-key="project:P6-01"]').waitFor();
+    await tool(page, "Show all").click();
     check(
       (await page.locator(".project-dimension").count()) === 42,
       "All printed plan dimensions load independently of saved annotations",
@@ -266,7 +343,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator(".project-dimension:not([hidden])").count()) >= 5,
       "Printed lighting dimensions are visibly readable",
     );
-    await tool(page, "Show").click();
     await page.locator('[data-measure-key="project:P6-01"] input').uncheck();
     check(
       (await page.locator('.project-dimension[data-id="P6-01"]').count()) === 0,
@@ -281,10 +357,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Metric lighting value converts printed 2ft 11in, not approximate endpoints",
     );
     check(
-      await page.locator(".project-dimension.selected").isVisible(),
+      await page
+        .locator('.project-dimension.selected[data-id="P6-01"]')
+        .isVisible(),
       "Located lighting measurement is visible",
     );
-    await tool(page, "Show").click();
     await tool(page, "Imperial · ft/in").click();
     await close(page);
     const beforePlan = await data(page);
@@ -369,7 +446,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await tool(page, "Top").click();
 
     // A note is a draft until Save; drags never add geometry.
-    await tool(page, "Comment").click();
+    await create(page, "Comment");
     await page.mouse.move(850, 400);
     await page.mouse.down();
     await page.mouse.move(950, 470, { steps: 8 });
@@ -432,7 +509,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Comment schema has only four fields",
     );
 
-    await tool(page, "Measure").click();
+    await create(page, "Measure");
     await tap(page, [-3, -2]);
     await tap(page, [-1, -2]);
     let m = (await data(page)).measurements[0];
@@ -478,7 +555,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await visibility(page, "measurements");
 
     const beforeUnits = await data(page);
-    await tool(page, "Show").click();
     await page.locator('[data-measure-key="saved:M01"] input').uncheck();
     check(
       (await page.locator(".model-label.measurement").count()) === 0,
@@ -502,13 +578,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     assert.deepEqual(await data(page), beforeUnits);
     checks++;
-    await tool(page, "Show").click();
     await tool(page, "Imperial · ft/in").click();
     await close(page);
     assert.deepEqual(await data(page), beforeUnits);
     checks++;
 
-    await tool(page, "Area").click();
+    await create(page, "Area");
     for (const p of [
       [-4, -4],
       [-2, -4],
@@ -538,11 +613,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     await visibility(page, "areas");
     check(
-      (await page.locator("#area-total").innerText()).includes("≈ 0 ft²"),
+      await page.locator("#area-total").isHidden(),
       "Hidden areas leave visible total",
     );
     await visibility(page, "areas");
-    await tool(page, "Show").click();
     await tool(page, "Metric · m").click();
     await close(page);
     check(
@@ -553,10 +627,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await page.locator("#area-total").innerText()).includes("≈ 3 m²"),
       "Drawn-area total uses metric units",
     );
-    await tool(page, "Show").click();
     await tool(page, "Imperial · ft/in").click();
     await close(page);
-    await tool(page, "Area").click();
+    await create(page, "Area");
     for (const p of [
       [-3.5, -3.5],
       [-2.5, -3.5],
@@ -703,7 +776,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       );
       await tool(isolated, "Project images").click();
       await tool(isolated, "Close project reference").click();
-      await tool(isolated, "Measure").click();
+      await create(isolated, "Measure");
       check(
         (await isolated.locator("#instruction").innerText()) === "Tap Point A",
         `${failure}: tools work during reference loading`,
@@ -716,6 +789,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         await isolated.locator("#status").isHidden(),
         `${failure}: reference failure does not replace viewer status`,
       );
+      await isolated.locator("#add-tools summary").click();
       check(
         (await tool(isolated, "Area").isEnabled()) &&
           (await tool(isolated, "Comment").isEnabled()),
@@ -737,6 +811,18 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await ready(mobile);
     await tool(mobile, "Top").click();
     await screenshot(mobile, "basement-mobile-model");
+    await mobile.getByLabel("Show Wall W01", { exact: true }).check();
+    await mobile.getByLabel("Show Wall W02", { exact: true }).check();
+    for (const id of ["W01", "W02"]) {
+      check(
+        await mobile
+          .locator(`.wall-dimension.selected[data-id="${id}"]`)
+          .isVisible(),
+        `Phone shows ${id} with both walls selected`,
+      );
+    }
+    await screenshot(mobile, "basement-mobile-two-walls");
+    await tool(mobile, "Hide all").click();
     await tool(mobile, "Project images").click();
     await mobile.waitForFunction(
       () => document.querySelector("#project-image").naturalWidth === 2400,
@@ -761,7 +847,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await sleep(200);
     }
     let before = await camera(mobile);
-    await gesture([{ id: 1, x: 165, y: 390 }], [{ id: 1, x: 215, y: 430 }]);
+    await gesture([{ id: 1, x: 165, y: 290 }], [{ id: 1, x: 215, y: 330 }]);
     check(
       JSON.stringify(await camera(mobile)) !== JSON.stringify(before),
       "Touch orbit works",
@@ -770,12 +856,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     before = await camera(mobile);
     await gesture(
       [
-        { id: 1, x: 145, y: 380 },
-        { id: 2, x: 245, y: 480 },
+        { id: 1, x: 145, y: 280 },
+        { id: 2, x: 245, y: 380 },
       ],
       [
-        { id: 1, x: 170, y: 390 },
-        { id: 2, x: 270, y: 490 },
+        { id: 1, x: 170, y: 290 },
+        { id: 2, x: 270, y: 390 },
       ],
     );
     check(
@@ -787,12 +873,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     before = await camera(mobile);
     await gesture(
       [
-        { id: 1, x: 160, y: 380 },
-        { id: 2, x: 230, y: 450 },
+        { id: 1, x: 160, y: 280 },
+        { id: 2, x: 230, y: 350 },
       ],
       [
-        { id: 1, x: 135, y: 355 },
-        { id: 2, x: 255, y: 475 },
+        { id: 1, x: 135, y: 255 },
+        { id: 2, x: 255, y: 375 },
       ],
     );
     check(
@@ -801,7 +887,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Pinch zoom works",
     );
     await tool(mobile, "Top").click();
-    await tool(mobile, "Comment").click();
+    await create(mobile, "Comment");
     let p = await project(mobile, [-3, 0]);
     await touch("touchStart", [{ id: 1, x: p.x, y: p.y }]);
     await touch("touchEnd", []);
@@ -812,15 +898,15 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       (await data(mobile)).comments.length === 1,
       "Touch comment workflow saves",
     );
-    await tool(mobile, "Measure").click();
+    await create(mobile, "Measure");
     await gesture(
       [
-        { id: 1, x: 160, y: 380 },
-        { id: 2, x: 230, y: 450 },
+        { id: 1, x: 160, y: 280 },
+        { id: 2, x: 230, y: 350 },
       ],
       [
-        { id: 1, x: 135, y: 355 },
-        { id: 2, x: 255, y: 475 },
+        { id: 1, x: 135, y: 255 },
+        { id: 2, x: 255, y: 375 },
       ],
     );
     check(
@@ -835,7 +921,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await touch("touchEnd", []);
       await sleep(100);
     }
-    await tool(mobile, "Measure").click();
+    await create(mobile, "Measure");
     await touchPoint([-3, -2]);
     await touchPoint([-1, -2]);
     check(
@@ -850,7 +936,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Phone physical measurement verification works",
     );
     await close(mobile);
-    await tool(mobile, "Show").click();
     await tool(mobile, "Metric · m").click();
     await screenshot(mobile, "basement-mobile-filters");
     await close(mobile);
@@ -871,10 +956,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     );
     checks++;
     await close(mobile);
-    await tool(mobile, "Show").click();
     await tool(mobile, "Imperial · ft/in").click();
     await close(mobile);
-    await tool(mobile, "Area").click();
+    await create(mobile, "Area");
     for (const point of [
       [-4, -4],
       [-2, -4],
@@ -908,7 +992,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         ),
         "Phone has no horizontal overflow",
       );
-      for (const selector of [".primary", ".camera", ".top-actions"]) {
+      for (const selector of ["#show-panel", ".camera", ".top-actions"]) {
         const bounds = await mobile.locator(selector).boundingBox();
         check(
           bounds.x >= 0 && bounds.x + bounds.width <= width,
@@ -973,7 +1057,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await page.reload();
     await ready(page);
     await tool(page, "Top").click();
-    await tool(page, "Comment").click();
+    await create(page, "Comment");
     await tap(page, [-3, 0]);
     await page.getByLabel("Note", { exact: true }).fill("Temporary note");
     await tool(page, "Save").click();
@@ -1066,7 +1150,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await ceiling.locator("#execution-panel").isHidden(),
       "Escape closes the execution dialog",
     );
-    await tool(ceiling, "Show").click();
     await tool(ceiling, "Metric · m").click();
     await close(ceiling);
     await tool(ceiling, "Execution").click();

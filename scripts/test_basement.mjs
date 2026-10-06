@@ -100,7 +100,7 @@ const view = loadView({
     return JSON.stringify({
       units: "metric",
       source: "lighting",
-      hidden: ["wall:W06", "wall:W06", "project:P6-01", "saved:M01", "bad"],
+      shown: ["wall:W06", "wall:W06", "project:P6-01", "saved:M01", "bad"],
       visibility: { areas: false, comments: "invalid" },
     });
   },
@@ -108,8 +108,26 @@ const view = loadView({
 assert.deepEqual(view, {
   units: "metric",
   source: "lighting",
-  hidden: ["wall:W06", "project:P6-01", "saved:M01"],
-  visibility: { measurements: true, areas: false, comments: true },
+  shown: ["wall:W06", "project:P6-01", "saved:M01"],
+  visibility: { measurements: false, areas: false },
+});
+assert.deepEqual(loadView().shown, []);
+assert.deepEqual(loadView().visibility, { measurements: false, areas: false });
+const oldView = {
+  units: "metric",
+  source: "lighting",
+  hidden: [],
+  visibility: { measurements: true, areas: true, comments: true },
+};
+const migratedView = loadView({
+  getItem: (key) => (key === VIEW_STORAGE_KEY ? null : JSON.stringify(oldView)),
+});
+assert.equal(migratedView.units, "metric");
+assert.equal(migratedView.source, "lighting");
+assert.deepEqual(migratedView.shown, []);
+assert.deepEqual(migratedView.visibility, {
+  measurements: false,
+  areas: false,
 });
 assert.equal(loadView({ getItem: () => "not-json" }).units, "imperial");
 assert.equal(loadView().units, "imperial");

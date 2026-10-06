@@ -83,7 +83,7 @@ a {
 #view,
 #labels {
   position: fixed;
-  inset: 0;
+  inset: 0 344px 0 0;
 }
 canvas {
   display: block;
@@ -131,31 +131,10 @@ nav.surface {
   padding: 3px;
   gap: 2px;
 }
-.tools {
-  position: fixed;
-  z-index: 3;
-  left: 50%;
-  bottom: max(50px, calc(env(safe-area-inset-bottom) + 40px));
-  transform: translateX(-50%);
-  display: flex;
-  align-items: stretch;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none;
-}
-.tools > * {
-  pointer-events: auto;
-}
-.primary {
-  font-weight: 600;
-}
-.primary button {
-  flex: 1;
-}
 .prompt {
   position: fixed;
-  left: 50%;
-  bottom: max(108px, calc(env(safe-area-inset-bottom) + 98px));
+  left: calc((100% - 344px) / 2);
+  bottom: 16px;
   transform: translateX(-50%);
   z-index: 3;
   padding: 7px 12px;
@@ -164,12 +143,6 @@ nav.surface {
   color: var(--muted);
   font-size: 12px;
   width: max-content;
-}
-.prompt:not(.drawing) {
-  background: #eeede9b8;
-  box-shadow: none;
-  border-color: transparent;
-  pointer-events: none;
 }
 .prompt.drawing {
   color: var(--ink);
@@ -189,27 +162,6 @@ nav.surface {
   padding: 18px 22px;
   max-width: 85%;
   text-align: center;
-}
-footer {
-  position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: max(10px, env(safe-area-inset-bottom));
-  z-index: 3;
-  pointer-events: none;
-}
-.summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  min-height: 30px;
-  font-size: 12px;
-}
-.summary > span {
-  padding: 3px 6px;
-  background: #eeede9e8;
-  border-radius: 4px;
 }
 #area-total {
   font-weight: 600;
@@ -399,9 +351,6 @@ input[type="number"] {
   border-color: var(--orange);
   background: #fff5e9;
 }
-.model-label.muted {
-  opacity: 0.4;
-}
 .model-label.endpoint {
   pointer-events: none;
   min-height: 28px;
@@ -414,7 +363,7 @@ input[type="number"] {
 .visibility-options {
   display: flex;
   gap: 4px;
-  margin: 10px 0;
+  margin: 0;
 }
 .unit-options button,
 .visibility-options button {
@@ -431,7 +380,7 @@ input[type="number"] {
   content: "✓ ";
 }
 .filter-heading {
-  margin: 16px 0 6px;
+  margin: 8px 0 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
@@ -476,11 +425,6 @@ input[type="number"] {
 .measurement-option button {
   padding: 0 8px;
   font-size: 12px;
-  color: var(--blue);
-}
-#show-options {
-  border-left: 1px solid var(--line);
-  border-radius: 0 6px 6px 0;
   color: var(--blue);
 }
 .model-label.draft {
@@ -550,35 +494,19 @@ input[type="number"] {
   #project {
     padding: 0 10px;
   }
-  .tools {
-    left: 10px;
-    right: 10px;
-    transform: none;
-  }
-  footer {
-    left: 10px;
-    right: 10px;
-  }
-  .summary {
-    font-size: 11px;
-    gap: 3px;
-  }
-  .summary > span {
-    padding: 3px;
-  }
   .prompt {
     max-width: calc(100% - 20px);
     padding: 7px 10px;
   }
   #panel,
   .project-panel {
-    top: auto;
-    bottom: max(102px, calc(env(safe-area-inset-bottom) + 92px));
+    top: 68px;
+    bottom: auto;
     left: 10px;
     right: 10px;
     width: auto;
     max-width: none;
-    max-height: min(52dvh, 460px);
+    max-height: calc(100dvh - var(--show-height) - 92px);
     padding: 0 14px 14px;
   }
   body:has(#panel:not([hidden])) .prompt {
@@ -594,17 +522,6 @@ input[type="number"] {
   }
   .brand span {
     font-size: 11px;
-  }
-}
-@media (max-height: 520px) {
-  #panel,
-  .project-panel {
-    top: 8px;
-    bottom: auto;
-    max-height: calc(100dvh - 16px);
-  }
-  .prompt:not(.drawing) {
-    display: none;
   }
 }
 
@@ -653,13 +570,13 @@ input[type="number"] {
 }
 #plan-note {
   position: fixed;
-  z-index: 3;
+  top: 72px;
   left: 16px;
-  top: 76px;
+  padding: 7px 10px;
+  font-size: 12px;
   text-align: left;
   color: #694a2c;
-  padding: 7px 10px;
-  font-size: 13px;
+  z-index: 3;
 }
 #plan-note small {
   display: block;
@@ -685,65 +602,20 @@ input[type="number"] {
   border-bottom: 1px solid var(--line);
 }
 
-/* A compact workspace: source controls above, drawing tools below. */
+/* Sources and visibility stay beside the model. */
 .source-switch {
-  position: fixed;
-  top: 78px;
-  right: 16px;
-  z-index: 3;
   display: flex;
   padding: 3px;
   gap: 2px;
 }
 .source-switch button {
-  min-height: 38px;
-  font-size: 14px;
+  flex: 1;
+  min-height: 44px;
+  font-size: 13px;
 }
 .source-switch button[aria-pressed="true"] {
   background: var(--blue);
   color: white;
-}
-.model-summary {
-  position: fixed;
-  top: 78px;
-  left: 16px;
-  z-index: 3;
-  padding: 12px 14px;
-  display: grid;
-  gap: 4px;
-  width: 224px;
-}
-.model-summary .eyebrow {
-  font-size: 12px;
-  color: var(--blue);
-  letter-spacing: 0.04em;
-}
-.model-summary strong {
-  font-size: 25px;
-  font-weight: 650;
-  line-height: 1.2;
-}
-.model-summary span:not(.eyebrow),
-.model-summary small {
-  font-size: 12px;
-  color: var(--muted);
-}
-#plan-note {
-  left: auto;
-  right: 16px;
-  top: 136px;
-  max-width: 255px;
-}
-.tools {
-  width: 360px;
-  max-width: calc(100% - 24px);
-  bottom: max(44px, calc(env(safe-area-inset-bottom) + 34px));
-}
-.tools .primary {
-  padding: 4px;
-}
-.tools .primary button {
-  padding: 0 9px;
 }
 .model-label.wall-dimension {
   pointer-events: none;
@@ -771,21 +643,6 @@ input[type="number"] {
   font-size: 12px;
   font-weight: 700;
   opacity: 0.8;
-}
-.model-label.model-floor {
-  pointer-events: none;
-  color: var(--blue);
-  background: #f1f8faeb;
-  border-color: #b7cfd7;
-  text-align: center;
-  padding: 7px 12px;
-}
-.model-floor .label-name {
-  text-align: center;
-  font-size: 12px;
-}
-.model-floor strong {
-  font-size: 18px;
 }
 #project-panel {
   left: 50%;
@@ -866,38 +723,6 @@ body:has(#project-panel:not([hidden])) .prompt {
   visibility: hidden;
 }
 @media (max-width: 800px) {
-  .tools {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-  }
-  .model-summary {
-    top: 126px;
-    left: 12px;
-    width: 195px;
-    padding: 10px 12px;
-  }
-  .model-summary strong {
-    font-size: 23px;
-  }
-  .source-switch {
-    top: 70px;
-    left: 12px;
-    right: 12px;
-    justify-content: center;
-  }
-  .source-switch button {
-    flex: 1;
-  }
-  #plan-note {
-    top: auto;
-    bottom: 150px;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: max-content;
-    max-width: calc(100% - 24px);
-  }
   #project-panel {
     top: 68px;
     bottom: auto;
@@ -1119,5 +944,130 @@ body:has(#project-panel:not([hidden])) .prompt {
   }
   .camera button {
     padding: 0 7px;
+  }
+}
+
+/* Show is always available. The canvas never sits underneath the wall list. */
+#show-panel {
+  position: fixed;
+  top: 72px;
+  right: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: 320px;
+  padding: 0 10px 8px;
+  display: flex;
+  flex-direction: column;
+  z-index: 4;
+}
+.show-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.show-heading h1 {
+  margin: 0;
+  font-size: 16px;
+}
+#add-tools {
+  position: relative;
+}
+#add-tools summary {
+  cursor: pointer;
+  padding: 11px 8px;
+  min-height: 44px;
+  color: var(--blue);
+  font-size: 13px;
+}
+#add-tools nav {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  background: #fafaf8;
+}
+#show-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+.unit-options {
+  grid-column: 1 / -1;
+}
+.show-actions {
+  display: flex;
+  gap: 2px;
+}
+.show-actions button {
+  flex: 1;
+  font-size: 12px;
+  padding: 0 5px;
+}
+#measure-list {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  overscroll-behavior: contain;
+}
+.show-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 5px;
+  font-size: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+#panel {
+  left: 16px;
+  right: auto;
+}
+@media (max-width: 800px) {
+  :root {
+    --show-height: min(38dvh, 320px);
+  }
+  #view,
+  #labels {
+    right: 0;
+    bottom: calc(var(--show-height) + 16px);
+  }
+  #show-panel {
+    top: auto;
+    left: 10px;
+    right: 10px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    height: var(--show-height);
+    padding-bottom: 5px;
+  }
+  #panel {
+    left: 10px;
+    right: 10px;
+  }
+  .prompt {
+    left: 50%;
+    bottom: calc(var(--show-height) + 22px);
+  }
+  .show-summary {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 800px) and (max-height: 600px) {
+  #show-panel {
+    overflow-y: auto;
+  }
+  #measure-list {
+    flex: none;
+    min-height: 90px;
+    max-height: 160px;
   }
 }

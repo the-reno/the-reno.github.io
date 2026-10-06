@@ -6,7 +6,7 @@ GitHub Pages serves `docs/`; `docs/CNAME` sets `ronu.one`. The production path i
 
 ## Use
 
-The existing KIRI shell fills the screen. Drag to orbit, wheel/pinch to zoom and
+The existing KIRI shell occupies the workspace beside the compact Show panel. Drag to orbit, wheel/pinch to zoom and
 right-drag/two fingers to pan. Top, 3D and Reset fit the camera. Navigation is the
 default; pressing an active tool again, Cancel or Escape returns to it.
 
@@ -24,11 +24,11 @@ default; pressing an active tool again, Cancel or Escape returns to it.
   marker to edit, move, resolve/hide or delete. Moving preserves its ID and text
   and saves after the new position is selected. Closing an unsaved note cancels
   it. The temporary Hidden notes panel allows restoring resolved notes.
-- **3D dimensions:** the default view labels all 22 wall segments in the KIRI
-  file. Show lists each wall's length and height. Check/uncheck individual
+- **3D dimensions:** Show lists all 22 wall segments in the KIRI file with
+  their length and height. Everything starts hidden. Check/uncheck individual
   dimensions; Locate centers the view, highlights the actual source wall surface
-  and emphasizes its dimension line with A/B endpoints. Other annotations fade
-  while a measurement is selected. Reset returns to the whole model.
+  and emphasizes its dimension line with A/B endpoints. Every checked wall
+  retains its own highlighted surface, line and label; selections never dim one another. Reset returns to the whole model.
   The model floor footprint is approximately 854.6 ft² / 79.40 m². It includes
   wall and stair footprints and is separate from user-drawn area totals.
 - **Lighting plan:** shows the 42 printed fixture spacings and offsets from
@@ -54,10 +54,13 @@ existing wood framing, not a confirmed ceiling design. Quantities and exclusions
 are explained in the section; framing, soffits, insulation, access panels,
 lighting/utilities, tools/rental and labor remain unpriced.
 
-The single bottom toolbar is **Measure | Area | Comment | Show**. Show opens a
-small temporary panel with Imperial/Metric selection, group visibility, and
-individual checkboxes for your measurements and the active reference source
-(model walls or lighting spacings). Show all/Hide all affect only that list.
+**Show stays visible:** beside the model on desktop and in a compact dock on phones.
+The model viewport leaves room for the scrollable list. Imperial/Metric controls,
+**Walls** and **Floor**, and individual dimension checkboxes live in this panel.
+There is no Comments visibility button, bottom toolbar or floating floor badge.
+**Hide all** clears dimension selections and turns off the floor; **Show all** checks
+the active list. Creation tools remain under **Add → Measure / Area / Comment**.
+The floor footprint appears only as a small number in Show.
 Locate also reveals a previously hidden measurement. Lighting locations remain
 approximate; converted metric values use the original printed dimensions, never
 the lengths of their approximate model lines. The original drawing images are
@@ -67,7 +70,7 @@ Imperial lengths use feet/inches rounded to an eighth; metric lengths use meters
 rounded to a millimeter. Areas, totals, labels, reference lists and verification
 inputs all follow the selected unit system. Switching units never changes model
 geometry, scan endpoints, saved tape values or measurement provenance.
-Editors appear only when creating/selecting an item. There is no permanent sidebar.
+Editors appear only when creating/selecting an item; Show remains available alongside them.
 
 ## Files and model dependencies
 
@@ -144,11 +147,13 @@ message explains that edits are temporary. Browsers denying localStorage also
 show an unsaved state. Saving is per browser/device and origin; there is no
 cloud sync or import/export interface.
 
-View preferences are saved separately in `ronu.basement.view.v1`: units, active
-source, group visibility and hidden measurement keys (`wall:W06`,
+View preferences are saved separately in `ronu.basement.view.v2`: units, active
+source, group visibility and opt-in `shown` measurement keys (`wall:W06`,
 `project:P6-01`, `saved:M01`). Individual choices survive refresh without changing
 the V2 annotation schema. Invalid/unavailable preferences fall back to defaults;
-the original annotation storage and safe migration behavior are unchanged.
+the original annotation storage and safe migration behavior are unchanged. When upgrading
+from view.v1, units/source are retained but visibility starts with Hide all once.
+Subsequent view.v2 selections persist. The old view record is left intact.
 
 Ceiling input preferences use `ronu.basement.ceiling.v1` (square meters and waste
 percentage only). The catalogue and prices are versioned source data, not live
