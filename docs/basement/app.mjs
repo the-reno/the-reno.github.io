@@ -951,6 +951,30 @@ $("#close-project").onclick = () => {
   $("#project-panel").hidden = true;
 };
 $("#plan-note").onclick = () => $("#project").click();
+$("#execution").onclick = async () => {
+  setMode("navigate");
+  $("#execution").disabled = true;
+  try {
+    const { openCeiling } = await import("./ceiling.mjs?v=1");
+    openCeiling({
+      dialog: $("#execution-panel"),
+      storage,
+      units: preferences.units,
+      modelArea: viewer.metrics.floor.squareMeters,
+      drawnArea: data.areas.reduce((sum, area) => sum + area.squareMeters, 0),
+    });
+    $("#execution").setAttribute("aria-expanded", "true");
+  } catch {
+    toast("Could not open the ceiling estimate. Please try again.");
+  } finally {
+    $("#execution").disabled = false;
+  }
+};
+$("#close-execution").onclick = () => $("#execution-panel").close();
+$("#execution-panel").addEventListener("close", () => {
+  $("#execution").setAttribute("aria-expanded", "false");
+  $("#execution").focus();
+});
 $("#show-options").onclick = () =>
   selected?.type === "view" ? closePanel() : openShowOptions();
 $$("[data-source]").forEach(
@@ -1008,6 +1032,7 @@ try {
       );
   });
   $("#show-options").disabled = false;
+  $("#execution").disabled = false;
   for (const id of ["top", "three", "reset"]) $("#" + id).disabled = false;
   document.addEventListener("keydown", (event) => {
     if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {

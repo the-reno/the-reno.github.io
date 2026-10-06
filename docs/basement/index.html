@@ -13,7 +13,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' data:; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'"
     />
-    <link rel="stylesheet" href="./execution.css?v=5" />
+    <link rel="stylesheet" href="./execution.css?v=6" />
     <script type="importmap">
       {
         "imports": {
@@ -30,7 +30,19 @@
     <header class="topbar">
       <div class="brand"><b>RONU</b><span> / BASEMENT</span></div>
       <div class="top-actions">
-        <button id="project" class="surface">Project images</button>
+        <button id="project" class="surface" aria-label="Project images">
+          Project
+        </button>
+        <button
+          id="execution"
+          class="surface"
+          aria-haspopup="dialog"
+          aria-controls="execution-panel"
+          aria-expanded="false"
+          disabled
+        >
+          Execution
+        </button>
         <nav class="surface camera" aria-label="Camera views">
           <button id="top" disabled aria-pressed="false">Top</button>
           <button id="three" disabled aria-pressed="true">3D</button>
@@ -143,6 +155,18 @@
       <div id="lighting-dimensions"></div>
     </aside>
 
+    <dialog
+      id="execution-panel"
+      class="surface"
+      aria-labelledby="execution-title"
+    >
+      <div class="panel-head">
+        <h1 id="execution-title">Execution / Ceiling</h1>
+        <button id="close-execution" aria-label="Close execution">×</button>
+      </div>
+      <div id="ceiling-content"></div>
+    </dialog>
+
     <footer>
       <div class="summary">
         <span id="area-total" title="Sum of the saved areas currently shown"
@@ -164,6 +188,6 @@
       aria-live="polite"
       hidden
     ></div>
-    <script type="module" src="./app.mjs?v=5"></script>
+    <script type="module" src="./app.mjs?v=6"></script>
   </body>
 </html>

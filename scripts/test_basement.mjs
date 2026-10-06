@@ -19,6 +19,66 @@ import {
   loadData,
   migrateLegacy,
 } from "../docs/basement/data.mjs";
+import {
+  PRODUCTS,
+  SQFT_PER_M2,
+  CEILING_STORAGE_KEY,
+  estimateCeiling,
+  loadCeiling,
+} from "../docs/basement/ceiling-data.mjs";
+
+// Independent hand calculation: 30 boards, 2 screw boxes, 2 tape rolls,
+// 3 compound pails, 4 sponges, 1 primer pail and 6 paint cans.
+const ceiling = estimateCeiling(79.39815, 10);
+assert.deepEqual(
+  ceiling.items.map((item) => item.quantity),
+  [30, 2, 2, 3, 4, 1, 6],
+);
+assert.equal(ceiling.totalCents, 95525);
+assert.equal(estimateCeiling(320 / SQFT_PER_M2, 0).totalCents, 37692);
+assert.equal(estimateCeiling(32 / SQFT_PER_M2, 0).items[0].quantity, 1);
+for (const args of [
+  [0, 10],
+  [-1, 10],
+  [NaN, 10],
+  [3, -1],
+  [3, 31],
+  [3, Infinity],
+])
+  assert.throws(() => estimateCeiling(...args));
+assert.deepEqual(loadCeiling({ getItem: () => "broken" }), {
+  squareMeters: null,
+  wastePercent: 10,
+});
+assert.deepEqual(
+  loadCeiling({
+    getItem: () => JSON.stringify({ squareMeters: -2, wastePercent: 10 }),
+  }),
+  { squareMeters: null, wastePercent: 10 },
+);
+assert.deepEqual(
+  loadCeiling({
+    getItem: (key) => {
+      assert.equal(key, CEILING_STORAGE_KEY);
+      return JSON.stringify({
+        squareMeters: 30,
+        wastePercent: 15,
+        unwanted: true,
+      });
+    },
+  }),
+  { squareMeters: 30, wastePercent: 15 },
+);
+for (const product of PRODUCTS) {
+  assert.ok(
+    product.price > 0 && product.url.startsWith("https://www.homedepot.com/p/"),
+  );
+  assert.ok(product.priceSource.startsWith("https://www.homedepot.com/"));
+  const photo = await readFile(
+    new URL(`../docs/basement/${product.image}`, import.meta.url),
+  );
+  assert.deepEqual([...photo.subarray(0, 2)], [255, 216]);
+}
 
 const rect = (x, z, w, h) => [
   [x, 1, z],

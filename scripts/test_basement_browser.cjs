@@ -25,6 +25,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         ".gltf": "model/gltf+json",
         ".pdf": "application/pdf",
         ".png": "image/png",
+        ".jpg": "image/jpeg",
       };
       res.setHeader(
         "Content-Type",
@@ -986,6 +987,140 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         "original data kept",
       ),
       "Unsaved state is explicit",
+    );
+    const ceiling = await newPage({ viewport: { width: 1280, height: 850 } });
+    const materialRequests = [];
+    ceiling.on("request", (request) => {
+      if (/ceiling|\/products\//.test(request.url()))
+        materialRequests.push(request.url());
+    });
+    await ceiling.goto(`${base}/basement/`);
+    await ready(ceiling);
+    check(
+      materialRequests.length === 0,
+      "Ceiling materials do not load during model startup",
+    );
+    const originalAnnotations = await data(ceiling);
+    await tool(ceiling, "Execution").click();
+    await ceiling.locator("#execution-panel").waitFor({ state: "visible" });
+    check(
+      (await ceiling.locator("#ceiling-total").innerText()) === "≈ $955.25",
+      "Full-footprint ceiling estimate has correct package total",
+    );
+    check(
+      (await ceiling.locator(".ceiling-product").count()) === 7,
+      "Ceiling section shows seven material items",
+    );
+    check(
+      (await ceiling
+        .locator('.ceiling-product a[href^="https://www.homedepot.com/p/"]')
+        .count()) === 7,
+      "Every material has a Home Depot product link",
+    );
+    for (const image of await ceiling.locator(".ceiling-product img").all()) {
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate((image) => image.decode());
+      check(
+        await image.evaluate((image) => image.naturalWidth > 0),
+        "Original product image loads",
+      );
+    }
+    await ceiling.locator("#execution-panel").evaluate((dialog) => {
+      dialog.scrollTop = 0;
+    });
+    await screenshot(ceiling, "basement-ceiling-desktop");
+    await ceiling.getByLabel("Ceiling area (ft²)").fill("320");
+    await ceiling.getByLabel("Waste allowance (%)").fill("0");
+    check(
+      (await ceiling.locator("#ceiling-total").innerText()) === "≈ $376.92",
+      "Changing area recalculates quantities and total",
+    );
+    await ceiling.getByLabel("Ceiling area (ft²)").fill("");
+    check(
+      await ceiling.locator(".ceiling-estimate").isHidden(),
+      "Invalid input does not show a stale total",
+    );
+    await ceiling.getByLabel("Ceiling area (ft²)").fill("320");
+    await tool(ceiling, "Close execution").click();
+    await ceiling.waitForFunction(
+      () =>
+        document.querySelector("#execution").getAttribute("aria-expanded") ===
+        "false",
+    );
+    check(
+      (await ceiling.locator("#execution").getAttribute("aria-expanded")) ===
+        "false",
+      "Closing returns to the model",
+    );
+    assert.deepEqual(await data(ceiling), originalAnnotations);
+    checks++;
+    await ceiling.reload();
+    await ready(ceiling);
+    await tool(ceiling, "Execution").click();
+    check(
+      (await ceiling.getByLabel("Ceiling area (ft²)").inputValue()) === "320.0",
+      "Ceiling estimate persists independently after reload",
+    );
+    await ceiling.keyboard.press("Escape");
+    check(
+      await ceiling.locator("#execution-panel").isHidden(),
+      "Escape closes the execution dialog",
+    );
+    await tool(ceiling, "Show").click();
+    await tool(ceiling, "Metric · m").click();
+    await close(ceiling);
+    await tool(ceiling, "Execution").click();
+    check(
+      (await ceiling.getByLabel("Ceiling area (m²)").inputValue()) === "29.73",
+      "Ceiling area follows metric selection",
+    );
+    check(
+      (await ceiling.locator("#ceiling-total").innerText()) === "≈ $376.92",
+      "Unit switching does not change the stored physical area or cost",
+    );
+    await tool(ceiling, "Use model footprint").click();
+    await ceiling.getByLabel("Waste allowance (%)").fill("10");
+    await tool(ceiling, "Close execution").click();
+    // Mobile touch opens the same lightweight section without changing the viewer.
+    await tool(mobile, "Execution").tap();
+    await mobile.locator("#execution-panel").waitFor({ state: "visible" });
+    check(
+      await mobile.locator("#ceiling-total").isVisible(),
+      "Phone shows the ceiling estimate",
+    );
+    await screenshot(mobile, "basement-ceiling-mobile");
+    await tool(mobile, "Use drawn areas").tap();
+    check(
+      Math.abs(
+        Number(await mobile.locator("#ceiling-area").inputValue()) -
+          (await data(mobile)).areas.reduce(
+            (sum, a) => sum + a.squareMeters,
+            0,
+          ) *
+            ((await mobile
+              .locator("#ceiling-area")
+              .evaluate((input) =>
+                input.parentElement.textContent.includes("m²"),
+              ))
+              ? 1
+              : 10.7639104167),
+      ) < 0.1,
+      "Saved ceiling polygons can supply the area",
+    );
+    for (const width of [390, 320]) {
+      await mobile.setViewportSize({ width, height: 844 });
+      check(
+        await mobile
+          .locator("#execution-panel")
+          .evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth + 1),
+        "Ceiling list fits a narrow phone without horizontal scrolling",
+      );
+    }
+    await tool(mobile, "Close execution").tap();
+    const actionsBounds = await mobile.locator(".top-actions").boundingBox();
+    check(
+      actionsBounds.x >= 0 && actionsBounds.x + actionsBounds.width <= 320,
+      "Execution and camera controls fit 320px width",
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(broken, []);

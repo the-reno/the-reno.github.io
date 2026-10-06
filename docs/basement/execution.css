@@ -941,3 +941,183 @@ body:has(#project-panel:not([hidden])) .prompt {
     justify-content: space-between;
   }
 }
+
+/* On-demand materials reference. The model remains the default page. */
+#execution-panel {
+  background: #fafaf8;
+  width: min(860px, calc(100% - 24px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0 22px 20px;
+  color: var(--ink);
+  overscroll-behavior: contain;
+}
+#execution-panel::backdrop {
+  background: #24292280;
+}
+.ceiling-subtitle {
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+.ceiling-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 440px;
+}
+.ceiling-inputs label {
+  margin: 0;
+  font-size: 12px;
+}
+.ceiling-inputs input {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  min-height: 44px;
+}
+.ceiling-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.ceiling-shortcuts button {
+  color: var(--blue);
+  padding: 0 8px;
+  font-size: 12px;
+}
+.ceiling-error {
+  color: #ab342c;
+}
+.ceiling-estimate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #edf0e7;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0 8px;
+}
+.ceiling-estimate span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ceiling-estimate strong {
+  display: block;
+  font-size: 27px;
+}
+.ceiling-estimate small {
+  white-space: pre-line;
+  text-align: right;
+  color: var(--muted);
+}
+.ceiling-product {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 240px;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.ceiling-product img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  background: white;
+  border-radius: 6px;
+}
+.ceiling-description h2 {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 4px;
+}
+.ceiling-description p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.ceiling-description a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+  text-underline-offset: 3px;
+}
+.ceiling-figures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+.ceiling-figures dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.ceiling-figures dd {
+  margin: 3px 0 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ceiling-figures > div:last-child dd {
+  font-weight: 650;
+}
+.ceiling-basis {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.ceiling-basis summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  font-size: 13px;
+}
+.ceiling-basis li {
+  margin-bottom: 8px;
+}
+.ceiling-price-note {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+@media (max-width: 680px) {
+  #execution-panel {
+    padding: 0 14px 16px;
+  }
+  .ceiling-product {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 8px 12px;
+  }
+  .ceiling-product img {
+    width: 76px;
+    height: 76px;
+  }
+  .ceiling-figures {
+    grid-column: 1 / -1;
+    background: #f0f0eb;
+    padding: 10px 12px;
+    border-radius: 5px;
+  }
+  .ceiling-estimate {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ceiling-estimate small {
+    text-align: left;
+  }
+}
+@media (max-width: 360px) {
+  .top-actions {
+    gap: 3px;
+  }
+  .top-actions > button {
+    padding: 0 7px;
+    font-size: 12px;
+  }
+  #project {
+    padding: 0 7px;
+  }
+  .camera button {
+    padding: 0 7px;
+  }
+}
