@@ -148,6 +148,19 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await page.locator("#add-tools summary").click();
     await tool(page, name).click();
   };
+  async function expandGroup(page, id) {
+    const details = page.locator(`[data-room-group="${id}"] details`);
+    if (!(await details.evaluate((node) => node.open)))
+      await details.locator("summary").click();
+  }
+  async function wallOption(page, id) {
+    const row = page.locator(`[data-measure-key="wall:${id}"]`).first();
+    const group = await row.evaluate(
+      (node) => node.closest("[data-room-group]").dataset.roomGroup,
+    );
+    await expandGroup(page, group);
+    return row.locator("input");
+  }
   const visibility = async (page, key) => {
     await page.locator(`[data-visibility="${key}"]`).click();
     await close(page);
@@ -216,9 +229,101 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await page.locator("#prompt").isHidden(),
       "Default navigation help no longer covers the model",
     );
+    check(
+      (await page.locator(".room-group").count()) === 3,
+      "Three screenshot room groups are available",
+    );
+    check(
+      (await page.locator(".room-group details[open]").count()) === 0,
+      "Room lists start compact",
+    );
+    check(
+      (await page.locator('[data-measure-key="wall:W10"]').count()) === 0,
+      "W10 is removed from every group",
+    );
+    check(
+      await page.evaluate(async () => {
+        const v = (
+          await import(document.querySelector('script[type="module"][src]').src)
+        ).viewer;
+        const p = v.project([-2.58, -1.13053, 2.03]);
+        return (
+          !v.metrics.walls.some((w) => w.id === "W10") &&
+          v.pick(p.x, p.y).object.startsWith("floor_")
+        );
+      }),
+      "W10 is absent from rendering, metrics and picking",
+    );
+    await page.getByLabel("Show Main room walls", { exact: true }).check();
+    check(
+      (await page.locator(".wall-dimension").count()) === 11,
+      "Main room selects its full screenshot boundary",
+    );
+    await page.getByLabel("Show Rear room walls", { exact: true }).check();
+    check(
+      (await page.locator(".wall-dimension").count()) === 17,
+      "Adjacent groups render shared walls only once",
+    );
+    await page.getByLabel("Show Main room walls", { exact: true }).uncheck();
+    check(
+      await page
+        .getByLabel("Show Rear room walls", { exact: true })
+        .isChecked(),
+      "Deselecting main keeps the selected rear boundary intact",
+    );
+    check(
+      (await page.locator(".wall-dimension").count()) === 10,
+      "Rear room retains its ten boundary segments",
+    );
+    await page.getByLabel("Show Side room walls", { exact: true }).check();
+    check(
+      (await page.locator(".wall-dimension").count()) === 15,
+      "Side room selects its five walls",
+    );
+    await tool(page, "Hide all").click();
+    await tool(page, "Floor").click();
+    for (const [id, value] of [
+      ["main", "641"],
+      ["rear", "180.2"],
+      ["side", "33.4"],
+    ]) {
+      const label = page.locator(`.room-area[data-group="${id}"]`);
+      check(
+        (await label.isVisible()) && (await label.innerText()).includes(value),
+        `${id} floor area is visible and correct`,
+      );
+    }
+    await screenshot(page, "basement-floor-groups-top");
+    await tool(page, "3D").click();
+    await sleep(250);
+    for (const id of ["main", "rear", "side"])
+      check(
+        await page.locator(`.room-area[data-group="${id}"]`).isVisible(),
+        `${id} floor label follows the 3D view`,
+      );
+    await screenshot(page, "basement-floor-groups-3d");
+    await tool(page, "Metric · m").click();
+    check(
+      (
+        await page.locator('.room-area[data-group="main"]').innerText()
+      ).includes("59.56 m²"),
+      "Room areas follow metric selection",
+    );
+    await page.reload();
+    await ready(page);
+    check(
+      (await page.locator(".room-area").count()) === 3,
+      "Floor group visibility persists",
+    );
+    await tool(page, "Imperial · ft/in").click();
+    await tool(page, "Hide all").click();
+    check(
+      (await page.locator(".room-area").count()) === 0,
+      "Hide all removes all room area labels",
+    );
     await screenshot(page, "basement-default-hidden");
-    await page.getByLabel("Show Wall W01", { exact: true }).check();
-    await page.getByLabel("Show Wall W02", { exact: true }).check();
+    await (await wallOption(page, "W01")).check();
+    await (await wallOption(page, "W02")).check();
     for (const id of ["W01", "W02"]) {
       check(
         await page
@@ -236,7 +341,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await ready(page);
     for (const id of ["W01", "W02"]) {
       check(
-        await page.getByLabel(`Show Wall ${id}`, { exact: true }).isChecked(),
+        await (await wallOption(page, id)).isChecked(),
         `${id} checkbox persists`,
       );
       check(
@@ -246,7 +351,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         `${id} highlight persists`,
       );
     }
-    await page.getByLabel("Show Wall W01", { exact: true }).uncheck();
+    await (await wallOption(page, "W01")).uncheck();
     check(
       await page.locator('.wall-dimension.selected[data-id="W02"]').isVisible(),
       "Unchecking one wall preserves the other highlight",
@@ -266,16 +371,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await screenshot(page, "basement-model-dimensions");
     const beforeWalls = await data(page);
     check(
-      (await page.locator(".measurement-option").count()) === 22,
-      "All 22 walls have individual visibility and size rows",
+      (await page.locator(".measurement-option").count()) === 26,
+      "21 walls are grouped with shared boundaries listed in both adjacent rooms",
     );
-    await page.getByLabel("Show Wall W06", { exact: true }).uncheck();
+    await (await wallOption(page, "W06")).uncheck();
     check(
       (await page.locator('.wall-dimension[data-id="W06"]').count()) === 0,
       "Only the unchecked wall dimension hides",
     );
     check(
-      (await page.locator(".wall-dimension").count()) === 21,
+      (await page.locator(".wall-dimension").count()) === 20,
       "Other wall dimensions stay visible",
     );
     await close(page);
@@ -286,6 +391,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Per-measurement visibility survives refresh",
     );
     await tool(page, "Hide all").click();
+    await expandGroup(page, "rear");
     await tool(page, "Locate Wall W06").click();
     check(
       await page.locator('.wall-dimension.selected[data-id="W06"]').isVisible(),
@@ -334,14 +440,33 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       .getByText("LIGHTING · 42 fixture spacings")
       .waitFor();
     await page.locator('[data-measure-key="project:P6-01"]').waitFor();
-    await tool(page, "Show all").click();
+    await tool(page, "3D").click();
+    await sleep(250);
     check(
       (await page.locator(".project-dimension").count()) === 42,
-      "All printed plan dimensions load independently of saved annotations",
+      "Selecting Lighting plan immediately shows references in 3D without Show all",
     );
     check(
       (await page.locator(".project-dimension:not([hidden])").count()) >= 5,
-      "Printed lighting dimensions are visibly readable",
+      "Printed lighting dimensions are visibly readable in 3D",
+    );
+    await screenshot(page, "basement-lighting-3d");
+    const lightingCamera = await camera(page);
+    await page.mouse.move(650, 350);
+    await page.mouse.down();
+    await page.mouse.move(700, 420, { steps: 8 });
+    await page.mouse.up();
+    await sleep(250);
+    check(
+      JSON.stringify(await camera(page)) !== JSON.stringify(lightingCamera) &&
+        (await page.locator(".project-dimension:not([hidden])").count()) >= 3,
+      "Lighting stays visible while orbiting",
+    );
+    await tool(page, "Top").click();
+    await sleep(250);
+    check(
+      (await page.locator(".project-dimension:not([hidden])").count()) >= 5,
+      "Lighting works in Top as well as 3D",
     );
     await page.locator('[data-measure-key="project:P6-01"] input').uncheck();
     check(
@@ -561,7 +686,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       "Individual saved measurement hides without hiding walls",
     );
     check(
-      (await page.locator(".wall-dimension").count()) === 22,
+      (await page.locator(".wall-dimension").count()) === 21,
       "Saved-measure filtering leaves model dimensions alone",
     );
     await tool(page, "Metric · m").click();
@@ -800,6 +925,51 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       await isolated.context().close();
     }
 
+    // Source activation must survive a late response without undoing Hide all.
+    const delayed = await newPage();
+    let pendingReference;
+    await delayed.route("**/project-data.json*", (route) => {
+      pendingReference = route;
+    });
+    await delayed.goto(`${base}/basement/`);
+    await ready(delayed);
+    await tool(delayed, "3D").click();
+    await tool(delayed, "Lighting plan").click();
+    await tool(delayed, "Hide all").click();
+    await pendingReference.fulfill({
+      contentType: "application/json",
+      body: await fs.readFile(path.join(root, "basement/project-data.json")),
+    });
+    await delayed.locator('[data-measure-key="project:P6-01"]').waitFor();
+    check(
+      (await delayed.locator(".project-dimension").count()) === 0,
+      "Late reference data respects Hide all",
+    );
+    await tool(delayed, "Lighting plan").click();
+    check(
+      (await delayed.locator(".project-dimension").count()) === 42,
+      "Lighting activation reveals references after asynchronous loading",
+    );
+    await delayed.locator('[data-measure-key="project:P6-01"] input').uncheck();
+    await tool(delayed, "3D dimensions").click();
+    await tool(delayed, "Lighting plan").click();
+    check(
+      (await delayed.locator(".project-dimension").count()) === 41,
+      "Source switching preserves individual lighting choices",
+    );
+    await delayed.unroute("**/project-data.json*");
+    await delayed.reload();
+    await ready(delayed);
+    await delayed.waitForFunction(
+      () => document.querySelectorAll(".project-dimension").length === 41,
+    );
+    check(
+      (await delayed.locator('.project-dimension[data-id="P6-01"]').count()) ===
+        0,
+      "Lighting selections survive refresh",
+    );
+    await delayed.context().close();
+
     // Actual touch events with mobile context, including two-finger pan and pinch.
     const mobile = await newPage({
       viewport: { width: 390, height: 844 },
@@ -810,9 +980,30 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await mobile.goto(`${base}/basement/`);
     await ready(mobile);
     await tool(mobile, "Top").click();
+    await tool(mobile, "Floor").click();
+    for (const id of ["main", "rear", "side"])
+      check(
+        await mobile.locator(`.room-area[data-group="${id}"]`).isVisible(),
+        `Phone shows ${id} area`,
+      );
+    await screenshot(mobile, "basement-mobile-floor-groups");
+    await tool(mobile, "Hide all").click();
+    await tool(mobile, "3D").click();
+    await tool(mobile, "Lighting plan").click();
+    await mobile.waitForFunction(
+      () => document.querySelectorAll(".project-dimension").length === 42,
+    );
+    check(
+      (await mobile.locator(".project-dimension:not([hidden])").count()) >= 3,
+      "Phone lighting works directly in 3D",
+    );
+    await screenshot(mobile, "basement-mobile-lighting-3d");
+    await tool(mobile, "3D dimensions").click();
+    await tool(mobile, "Hide all").click();
+    await tool(mobile, "Top").click();
     await screenshot(mobile, "basement-mobile-model");
-    await mobile.getByLabel("Show Wall W01", { exact: true }).check();
-    await mobile.getByLabel("Show Wall W02", { exact: true }).check();
+    await (await wallOption(mobile, "W01")).check();
+    await (await wallOption(mobile, "W02")).check();
     for (const id of ["W01", "W02"]) {
       check(
         await mobile

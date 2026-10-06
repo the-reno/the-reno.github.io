@@ -24,16 +24,26 @@ default; pressing an active tool again, Cancel or Escape returns to it.
   marker to edit, move, resolve/hide or delete. Moving preserves its ID and text
   and saves after the new position is selected. Closing an unsaved note cancels
   it. The temporary Hidden notes panel allows restoring resolved notes.
-- **3D dimensions:** Show lists all 22 wall segments in the KIRI file with
-  their length and height. Everything starts hidden. Check/uncheck individual
-  dimensions; Locate centers the view, highlights the actual source wall surface
-  and emphasizes its dimension line with A/B endpoints. Every checked wall
-  retains its own highlighted surface, line and label; selections never dim one another. Reset returns to the whole model.
-  The model floor footprint is approximately 854.6 ft² / 79.40 m². It includes
-  wall and stair footprints and is separate from user-drawn area totals.
-- **Lighting plan:** shows the 42 printed fixture spacings and offsets from
-  Studio Duo sheet 6. Their placement on the model is approximate. These are
-  lighting references, not wall lengths or physically verified measurements.
+- **3D dimensions:** 21 wall segments are organized into **Main room**, **Rear room**
+  and **Side room**, matching the three supplied screenshots. Check a group to
+  show its walls; expand its name to choose individual lengths. Shared boundary
+  walls appear in both adjacent lists but render only once. Deselecting a group
+  keeps shared walls needed by another fully selected group. W10 is omitted from
+  the displayed model, picking and measurements; the original glTF is unchanged
+  and the other wall IDs are not renumbered. Existing W10 view selections are ignored.
+  Locate centers the view and marks A/B without dimming other selections.
+- **Floor:** shades each of the three groups and shows its approximate area in
+  both Top and 3D views, as well as beside its group name. Main room: **641 ft² /
+  59.56 m²**; Rear room: **180.2 ft² / 16.74 m²**; Side room: **33.4 ft² / 3.10 m²**.
+  The groups partition the original **854.6 ft² / 79.40 m²** footprint. This
+  includes walls and stairs and is separate from user-drawn area totals.
+- **Lighting plan:** selecting this source immediately reveals its 42 printed
+  spacings and offsets in the current Top or 3D camera view. Subsequent individual
+  selections are retained when switching views/sources; selecting Lighting plan
+  when its list is completely hidden reveals it again. Hide all still clears the
+  display, including if the reference is loading. The list is grouped by the
+  original drawing's room names. Crowded labels reappear with zoom; Locate brings
+  a chosen reference into view. Placement is approximate, not physically verified.
 - **Project images:** opens a thumbnail gallery of the existing floor plan,
   proposed layout and lighting sheet, with a full-size image link. No PDF is
   deployed. Close the gallery with × or Escape.
@@ -57,10 +67,10 @@ lighting/utilities, tools/rental and labor remain unpriced.
 **Show stays visible:** beside the model on desktop and in a compact dock on phones.
 The model viewport leaves room for the scrollable list. Imperial/Metric controls,
 **Walls** and **Floor**, and individual dimension checkboxes live in this panel.
-There is no Comments visibility button, bottom toolbar or floating floor badge.
+There is no Comments visibility button, bottom toolbar or floating whole-floor badge.
 **Hide all** clears dimension selections and turns off the floor; **Show all** checks
 the active list. Creation tools remain under **Add → Measure / Area / Comment**.
-The floor footprint appears only as a small number in Show.
+The whole-floor total remains a small number in Show; Floor adds one area label per room.
 Locate also reveals a previously hidden measurement. Lighting locations remain
 approximate; converted metric values use the original printed dimensions, never
 the lengths of their approximate model lines. The original drawing images are
@@ -82,6 +92,7 @@ Editors appear only when creating/selecting an item; Show remains available alon
 | `data.mjs`                                                       | V2 schema, geometry, units, validation and one-time migration              |
 | `execution.css`                                                  | Current interface styles; filename retained to fit the requested structure |
 | `room.gltf`                                                      | Unchanged KIRI model, Git blob `5e6b473d4e7a2bdf0ed78af18d80fe12a76feb0b`  |
+| `room-groups.mjs`                                               | Screenshot wall memberships and nonoverlapping floor partitions            |
 | `model-metrics.mjs`                                              | World-space wall segment dimensions and horizontal floor footprint         |
 | `project-data.json`                                              | Image descriptions and 42 printed lighting dimensions                      |
 | `existing-plan.png`, `proposed-layout.png`, `lighting-sheet.png` | Original Studio Duo sheets 4–6 rendered as images                          |
@@ -107,6 +118,14 @@ its vertical extent. Each numbered wall is a source mesh segment, including
 short or overlapping segments. The floor calculation sums unique horizontal
 top triangles, excluding bottom and side faces. It does not subtract walls,
 stairs or equipment and is not a net usable-area calculation.
+
+Room areas clip the original floor triangles along the shared model wall
+centerlines: W17 separates the side room; W22, W09, W19, W18, W20 and W13 define
+the stepped main/rear boundary. They do not derive area by multiplying wall
+labels, subtract wall thickness, or claim usable/verified floor area. Tests check
+that the three partitions remain inside the scan, do not overlap and preserve
+the complete original area. Membership and partition data stay separate from
+user annotations and the raw model.
 
 Image metadata loads independently after the model is ready. Missing, malformed,
 offline or stalled references cannot stop the viewer or its model measurements.

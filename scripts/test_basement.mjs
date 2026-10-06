@@ -100,7 +100,14 @@ const view = loadView({
     return JSON.stringify({
       units: "metric",
       source: "lighting",
-      shown: ["wall:W06", "wall:W06", "project:P6-01", "saved:M01", "bad"],
+      shown: [
+        "wall:W06",
+        "wall:W06",
+        "wall:W10",
+        "project:P6-01",
+        "saved:M01",
+        "bad",
+      ],
       visibility: { areas: false, comments: "invalid" },
     });
   },

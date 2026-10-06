@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { measureWall, measureFloor } from "./model-metrics.mjs?v=4";
+import { OMITTED_WALLS, groupFloor } from "./room-groups.mjs?v=8";
 
 export async function createViewer(host, onTap) {
   const scene = new THREE.Scene();
@@ -23,8 +24,18 @@ export async function createViewer(host, onTap) {
   const meshes = [],
     floors = [],
     wallBox = new THREE.Box3();
+  let wallNumber = 0;
   model.traverse((o) => {
     if (!o.isMesh) return;
+    if (o.name.startsWith("wall_")) {
+      o.userData.wallId = `W${String(++wallNumber).padStart(2, "0")}`;
+      if (OMITTED_WALLS.has(o.userData.wallId)) {
+        // Omit this unwanted scan segment from rendering and picking. Keep the
+        // original asset and IDs of every other wall unchanged.
+        o.visible = false;
+        return;
+      }
+    }
     meshes.push(o);
     if (o.name.startsWith("floor_")) floors.push(o);
     if (o.name.startsWith("wall_")) wallBox.expandByObject(o);
@@ -69,12 +80,13 @@ export async function createViewer(host, onTap) {
       floor: measureFloor(floors.map(geometry)),
       walls: meshes
         .filter((m) => m.name.startsWith("wall_"))
-        .map((m, i) => ({
+        .map((m) => ({
           ...measureWall(geometry(m).positions),
           source: m.name,
-          id: `W${String(i + 1).padStart(2, "0")}`,
+          id: m.userData.wallId,
         })),
     };
+    metrics.groups = groupFloor(metrics.floor, metrics.walls);
   } catch (error) {
     console.warn("Model measurements unavailable:", error);
   }
@@ -227,16 +239,16 @@ export async function createViewer(host, onTap) {
             color,
           );
       }
-      if (i.type === "model-floor") {
+      if (i.type === "room-floor") {
         const fill = new THREE.Mesh(
           new THREE.BufferGeometry().setAttribute(
             "position",
             new THREE.Float32BufferAttribute(i.triangles.flat(2), 3),
           ),
           new THREE.MeshBasicMaterial({
-            color: 0x255d77,
+            color: i.color,
             transparent: true,
-            opacity: 0.08,
+            opacity: 0.28,
             depthWrite: false,
             side: THREE.DoubleSide,
           }),
@@ -391,6 +403,7 @@ export async function createViewer(host, onTap) {
     const placed = [
       ".topbar",
       "#show-panel",
+      "#plan-note",
       ".prompt",
       "#panel",
       "#project-panel",
@@ -411,41 +424,6 @@ export async function createViewer(host, onTap) {
       if (node.hidden) continue;
       const w = node.offsetWidth,
         h = node.offsetHeight;
-      if (
-        node.classList.contains("project-dimension") &&
-        !node.classList.contains("selected")
-      ) {
-        // Keep source labels close to their endpoints. Crowded labels reappear
-        // as the user zooms; the complete catalogue stays in Project.
-        const r = {
-          left: p.x - w / 2,
-          right: p.x + w / 2,
-          top: p.y - h / 2,
-          bottom: p.y + h / 2,
-        };
-        if (
-          r.left < 6 ||
-          r.right > host.clientWidth - 6 ||
-          r.top < 140 ||
-          r.bottom > host.clientHeight - 110 ||
-          placed.some(
-            (o) =>
-              r.left < o.right + 6 &&
-              r.right + 6 > o.left &&
-              r.top < o.bottom + 6 &&
-              r.bottom + 6 > o.top,
-          )
-        ) {
-          node.hidden = true;
-          leader.style.display = "none";
-          continue;
-        }
-        placed.push(r);
-        node.style.left = `${p.x}px`;
-        node.style.top = `${p.y}px`;
-        leader.style.display = "none";
-        continue;
-      }
       let x = p.x,
         y = p.y;
       if (!node.classList.contains("draft")) {
@@ -459,7 +437,8 @@ export async function createViewer(host, onTap) {
           [w + 6, 0],
         ];
         const wallLabel = node.classList.contains("wall-dimension");
-        if (wallLabel) {
+        const roomLabel = node.classList.contains("room-area");
+        if (wallLabel || roomLabel || node.classList.contains("focused")) {
           for (let ring = 1; ring <= 4; ring++) {
             for (let dx = -ring; dx <= ring; dx++)
               for (let dy = -ring; dy <= ring; dy++)
@@ -498,7 +477,12 @@ export async function createViewer(host, onTap) {
             break;
           }
         }
-        if (wallLabel && !found) {
+        if (
+          (wallLabel ||
+            (node.classList.contains("project-dimension") &&
+              !node.classList.contains("focused"))) &&
+          !found
+        ) {
           node.hidden = true;
           leader.style.display = "none";
           continue;
