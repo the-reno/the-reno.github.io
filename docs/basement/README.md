@@ -37,6 +37,22 @@ default; pressing an active tool again, Cancel or Escape returns to it.
 - **Project images:** opens a thumbnail gallery of the existing floor plan,
   proposed layout and lighting sheet, with a full-size image link. No PDF is
   deployed. Close the gallery with × or Escape.
+- **Execution → Ceiling:** opens an on-demand materials estimate for a painted
+  drywall ceiling. Product photos, Home Depot links, whole-pack quantities,
+  reference unit prices and line totals appear together. Adjust the area/waste,
+  or use the model footprint or saved drawn areas. The existing unit preference
+  applies to the area input. Closing the dialog returns to the model.
+
+The ceiling estimate starts from the approximately 854.6 ft² **floor footprint**,
+including walls/stairs, as a provisional ceiling area. It is not a measured
+ceiling takeoff. At 10% waste, the seven listed material items total approximately
+**$955.25** before tax/delivery, using standard package prices researched at
+Home Depot on October 5, 2026. No store was selected; online source snapshots can
+be older and local price/availability may differ. Bulk discounts are excluded.
+The starting assumption is one painted 5/8-inch drywall layer on suitable
+existing wood framing, not a confirmed ceiling design. Quantities and exclusions
+are explained in the section; framing, soffits, insulation, access panels,
+lighting/utilities, tools/rental and labor remain unpriced.
 
 The single bottom toolbar is **Measure | Area | Comment | Show**. Show opens a
 small temporary panel with Imperial/Metric selection, group visibility, and
@@ -68,6 +84,9 @@ Editors appear only when creating/selecting an item. There is no permanent sideb
 | `existing-plan.png`, `proposed-layout.png`, `lighting-sheet.png` | Original Studio Duo sheets 4–6 rendered as images                          |
 | `lighting-plan.png`                                              | Detail image of the dimensioned lighting drawing                           |
 | `README.md`                                                      | Canonical source, behavior, storage and validation                         |
+| `ceiling.mjs`                                                    | Lazy-loaded execution materials dialog, area input and totals              |
+| `ceiling-data.mjs`                                               | Sourced product catalogue, calculation assumptions and estimate validation |
+| `products/*.jpg`                                                 | Seven original Home Depot product thumbnails for the ceiling list          |
 
 All model buffers are embedded in `room.gltf`; it requires no additional model
 asset files. Three.js and its official addons are pinned to 0.180.0 in the import
@@ -130,6 +149,12 @@ source, group visibility and hidden measurement keys (`wall:W06`,
 `project:P6-01`, `saved:M01`). Individual choices survive refresh without changing
 the V2 annotation schema. Invalid/unavailable preferences fall back to defaults;
 the original annotation storage and safe migration behavior are unchanged.
+
+Ceiling input preferences use `ronu.basement.ceiling.v1` (square meters and waste
+percentage only). The catalogue and prices are versioned source data, not live
+retailer quotes. Original source-photo and price URLs are retained on each
+product. Materials and photos load only when Execution opens; they do not block
+model startup. The estimate never writes to measurement/area/comment records.
 
 ## Duplicate implementation audit
 
