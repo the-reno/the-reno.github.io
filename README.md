@@ -39,6 +39,33 @@ For browser integration checks, install Playwright with Chromium in your develop
 
 Article and section navigation uses the History API with ordinary crawlable links. Old `#topic/...`, `#section/...`, part anchors, `/preview/` links and historical `.html` URLs retain compatibility. Unknown paths return GitHub Pages' real 404. Spark is retired in the current catalogue, so its old hash still leads to Science; no empty Spark article is generated. Archived experiments and development files are not part of this repository's current file tree.
 
+## Maker: garage-door project
+
+The canonical page is `https://ronu.one/topic/garage-door/`, linked from the Maker
+section and included in global search. Edit `docs/articles/garage-door.json` for
+the project copy, exact cut references, 12 assembly steps and downloads.
+`docs/project.js` validates and renders the structured project blocks;
+`docs/project.css` scopes the wider model, drawings and step layout to Maker
+projects. Existing articles and the Maker image carousel retain their renderers.
+
+The local assets live in `docs/assets/garage-door/`. The 3D viewer externalizes
+the existing CAD payload into `viewer/index.html`, `viewer/viewer.css` and
+`viewer/viewer.js`. Its `?embed=1` layout hides duplicate reference copy and reports
+its height using an origin- and source-checked message. The parent permits only
+same-origin frames; scripts still require `'self'`. The public inspector uses
+inches. Purchased stock and hardware use imperial labels, while cuts and workshop
+layout marks use centimeters. Geometry is provisional and must be reconciled
+with the actual opening, framing and hardware before fabrication. The asset
+manifest records the unchanged CAD and dimensional-constant hashes.
+
+After edits, increment the article/affected asset versions and run the ordinary
+build and static checks above. `node scripts/test_garage_browser.cjs` covers the
+Maker/search/history paths, static assembly and downloads, model interaction,
+imperial inspection, step controls and responsive iframe sizing. Both this check
+and `test_browser.js` accept `RONU_CHROMIUM_PATH` for an existing Chromium binary.
+Playwright is a development-only dependency; the published page uses no CDN or
+external 3D library.
+
 ## Search Console after publication
 
 1. Verify the `ronu.one` Domain property using the DNS TXT value supplied by [Google Search Console](https://support.google.com/webmasters/answer/9008080), if not already verified.

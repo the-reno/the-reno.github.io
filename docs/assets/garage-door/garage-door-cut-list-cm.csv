@@ -1,0 +1,13 @@
+part_id,part,quantity_both_doors,stock_imperial,length_cm,width_cm,dimension_use,cut_status,cuts
+F1,Frame uprights,4,2 × 4 timber; actual 1-1/2 × 3-1/2 in,213.865,8.89,Cut length; width is finished reference from retained stock,CUT ONLY IF REPLACING,Keep stock width. Cut length and 3 half-laps. Keep sound existing members.
+F2,Frame cross rails,6,2 × 4 timber; actual 1-1/2 × 3-1/2 in,127.565,8.89,Cut length; width is finished reference from retained stock,CUT ONLY IF REPLACING,Keep stock width. Cut full leaf width and 2 end half-laps; retain sound rails.
+I1,Insulation inserts,4,1-1/2 in rigid foam,109.485,93.2975,Cut length and width,YES - CUT RECTANGLES,Cut length and width. Fit flush in the actual frame cavities.
+P1,Outside main panels,2,15/32 in exterior plywood; 4 ft wide,213.865,121.92,Cut length; width is finished reference from retained stock,YES - CUT HEIGHT,Shorten to the shown length. Keep the actual usable stock width.
+P2,Outside infill strips,2,15/32 in matching exterior plywood,213.865,5.325,Cut length and width,YES - CUT TO SIZE,Cut width and length unless your existing strips fit. Support on timber.
+P3,Inside main panels,2,1/5 in inner plywood; 4 ft wide,213.865,121.92,Cut length; width is finished reference from retained stock,YES - CUT HEIGHT,Shorten to the shown length. Keep the actual usable stock width.
+P4,Inside infill strips,2,1/5 in matching inner plywood,213.865,5.325,Cut length and width,YES - CUT TO SIZE,Cut width and length unless your existing strips fit. Support on timber.
+T1,Vertical white trim,4,Model thickness: approx. 0.236 in*,213.865,7.5,Cut length and width,YES - CUT TO SIZE,Cut length and width. One at each vertical edge of each door.
+T2,Horizontal white trim,6,Model thickness: approx. 0.236 in*,112.565,7.5,Cut length and width,YES - CUT TO SIZE,Cut length and width. Three between the vertical trims on each door.
+C1,White center cover,1,Model thickness: approx. 0.236 in*,213.865,6,Cut length and width,YES - CUT AND FIT,Cut length and width; fit both ends. Attach to the RIGHT door only.
+C2,Center-cover spacer,1,Model thickness: approx. 0.118 in*,213.865,3,Cut length and width,YES - CUT AND FIT,Cut length and width. Thickness follows the selected gasket; RIGHT only.
+S1,Center rubber seal,1,Model section: 0.866 × 0.118 in**,213.865,,Cut length only; select factory seal width from imperial stock reference,CUT TO LENGTH ONLY,"Choose the seal profile, then cut its length. Do not cut its width to this model."

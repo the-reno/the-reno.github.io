@@ -26,6 +26,11 @@ function articleTile(topic) {
   const preview = ARTICLE_PREVIEWS[topic.id] || {icon: 'article', summary: topic.description};
   return `<a class="article-tile" href="${topicPath(topic.id)}" aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}">${articleIcon(preview.icon)}<div class="article-tile-copy"><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p class="article-tile-summary" id="summary-${esc(topic.id)}">${esc(preview.summary)}</p></div><span class="article-tile-arrow" aria-hidden="true">${arrow}</span></a>`;
 }
+function makerProjectTile(topic) {
+  const preview = ARTICLE_PREVIEWS[topic.id];
+  if (!preview?.image) return articleTile(topic);
+  return `<a class="maker-project-feature" href="${topicPath(topic.id)}" aria-labelledby="card-${esc(topic.id)}" aria-describedby="summary-${esc(topic.id)}"><div class="maker-project-art"><img src="${esc(preview.image)}" alt="${esc(preview.alt)}" width="1600" height="1100" decoding="async"></div><div class="maker-project-copy"><p class="maker-project-kicker">${esc(topic.type)} / 3D + assembly</p><h3 id="card-${esc(topic.id)}">${esc(topic.title)}</h3><p id="summary-${esc(topic.id)}">${esc(preview.summary)}</p><span class="maker-project-cta">${esc(preview.action)} ${arrow}</span></div></a>`;
+}
 function carouselMarkup(id, items, kind) {
   const imageMode = kind === 'images';
   const labels = SITE.labels;
@@ -47,10 +52,12 @@ function pageCollection(pageId) {
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2>${carouselMarkup('section-carousel', slides, 'sections')}`;
   }
   if (page.kind === 'gallery') {
-    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${esc(image.width)}" height="${esc(image.height)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div></a></figure>`}));
     const film = MAKER_GALLERY.film;
     const filmMarkup = film ? `<details class="gallery-film" data-gallery-film><summary>${esc(film.label)}</summary><video controls playsinline preload="none" poster="${esc(film.poster)}" aria-label="Football memories, Manhattan reflections and a waterfront run, joined by slow camera movement and dissolves"><source src="${esc(film.src)}" type="video/mp4">Your browser cannot play this video. <a href="${esc(film.src)}">Download the sequence</a>.</video></details>` : '';
-    return `<h2 class="sr-only" id="collection-title">${esc(SITE.labels.images)}</h2>${carouselMarkup('maker-gallery', slides, 'images')}${filmMarkup}`;
+    const projects = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
+    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${esc(image.width)}" height="${esc(image.height)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div></a></figure>`}));
+    const projectMarkup = projects.length ? `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.projects)}</h2>${projects.map(makerProjectTile).join('')}` : '';
+    return `${projectMarkup}<h2 class="${projects.length ? 'collection-heading maker-gallery-heading' : 'sr-only'}" id="${projects.length ? 'maker-gallery-title' : 'collection-title'}">${esc(SITE.labels.images)}</h2>${carouselMarkup('maker-gallery', slides, 'images')}${filmMarkup}`;
   }
   const topics = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
   if (!topics.length) return '';

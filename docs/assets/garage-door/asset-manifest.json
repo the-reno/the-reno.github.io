@@ -1,0 +1,287 @@
+{
+  "project": "Garage door rebuild",
+  "version": "V4 / imperial stock, metric cuts",
+  "assets": [
+    {
+      "file": "garage-door-final-cad.png",
+      "role": "final_result",
+      "bytes": 38274,
+      "sha256": "0a4d2b4359e823406a4d7228348f180c5485959715b34f293203cee26242cead",
+      "title": "Final door assembly"
+    },
+    {
+      "file": "frame-half-lap-cut-map-cm.png",
+      "role": "detail_frame_cut",
+      "bytes": 195181,
+      "sha256": "637e5ddf708276dfa7c648b25e649d965f81ef8a45f778cc7a1624355ee91602",
+      "title": "Where to cut the frame"
+    },
+    {
+      "file": "frame-half-lap-method-cm.png",
+      "role": "detail_frame_method",
+      "bytes": 210653,
+      "sha256": "83e13571ed5f7656c479f56dc99f74ac41745c8cec9bd8c85089e3e2fe71f0d6",
+      "title": "How to cut the half-lap"
+    },
+    {
+      "file": "strip-fixing-section-cm.png",
+      "role": "detail_strip_fixing",
+      "bytes": 302025,
+      "sha256": "1a7d2b5d34986719c92fe8d02cca3b1a2c07933a2aea2028bd79a740c517a924",
+      "title": "How to fasten the strips"
+    },
+    {
+      "file": "trim-screw-layout-cm.png",
+      "role": "detail_trim_layout",
+      "bytes": 306646,
+      "sha256": "65bbf297b682d99101a5b9534f90ab2eebcf6017cbd21c315a5c377a5598ba76",
+      "title": "Decorative trim fixing layout"
+    },
+    {
+      "file": "parts-01-frame-plywood.png",
+      "role": "parts_01",
+      "bytes": 398136,
+      "sha256": "94b80a6d2eb7c09e5a077de59c2e2ca2cd726c803f971577ced2cb43b58c3e6c",
+      "title": "Frame and plywood"
+    },
+    {
+      "file": "parts-02-insulation-trim.png",
+      "role": "parts_02",
+      "bytes": 363502,
+      "sha256": "898bf2a71e525dbfe5d860b58eea6491043dbe9cdc5b2aa79834e1d80720a879",
+      "title": "Insulation, trim and center joint"
+    },
+    {
+      "file": "parts-03-hardware-seals.png",
+      "role": "parts_03",
+      "bytes": 226600,
+      "sha256": "64d08f95cab76ac2a5269bc25816090753fdf533be4c8c81319b865b56328464",
+      "title": "Hardware and edge seals"
+    },
+    {
+      "file": "garage-door-assembly-manual.pdf",
+      "role": "manual",
+      "bytes": 2156670,
+      "sha256": "94c8426365303bb43f6826b824fadd2c521cf05e30bcd5a5deb928116b878823",
+      "title": "Assembly manual"
+    },
+    {
+      "file": "garage-door-cut-list-cm.csv",
+      "role": "cuts_csv",
+      "bytes": 2500,
+      "sha256": "9071de4d5b135d4be20870044b95a356d5573acb4d7931653035e86076d312f0",
+      "title": "Exact cut list"
+    },
+    {
+      "file": "stage-01-frame-exploded.png",
+      "role": "assembly_stage",
+      "bytes": 189960,
+      "sha256": "8c4a3713071f7f0630ec893b8c7f1ad83675539ed90593ec07c8a45295e43af1"
+    },
+    {
+      "file": "stage-02-outside-skins.png",
+      "role": "assembly_stage",
+      "bytes": 167677,
+      "sha256": "0f317cd62fea7305311380b08ab16e85ba93bf043ec51dd24e1cd4a91c5f60d7"
+    },
+    {
+      "file": "stage-03-inside-frame.png",
+      "role": "assembly_stage",
+      "bytes": 175724,
+      "sha256": "66f1082d8ce441afc0bf7fba24e763942929207c217d73a2f34cfdde19897252"
+    },
+    {
+      "file": "stage-04-foam.png",
+      "role": "assembly_stage",
+      "bytes": 174549,
+      "sha256": "74d23994c0ad731764837d918252d716e44f3d7d778365d88d06a9d672c68564"
+    },
+    {
+      "file": "stage-05-inside-lining.png",
+      "role": "assembly_stage",
+      "bytes": 157346,
+      "sha256": "c4014f427417ec138a5e355892599ec05172b78a9cbd0367b4939dd46192b368"
+    },
+    {
+      "file": "stage-06-outside-trim.png",
+      "role": "assembly_stage",
+      "bytes": 232507,
+      "sha256": "cdaeb420f65946e7b08eba609c7f31e72dfab1e9a88151177bda7fd051d9b66d"
+    },
+    {
+      "file": "stage-07-complete.png",
+      "role": "assembly_stage",
+      "bytes": 38274,
+      "sha256": "0a4d2b4359e823406a4d7228348f180c5485959715b34f293203cee26242cead"
+    },
+    {
+      "file": "stage-08-right-open.png",
+      "role": "assembly_stage",
+      "bytes": 70896,
+      "sha256": "b582baafe37e69918503468739955dd48f85258fa7cc66eb9483b9d7eea1525e"
+    },
+    {
+      "file": "stage-09-both-open.png",
+      "role": "assembly_stage",
+      "bytes": 122027,
+      "sha256": "373d23815e2c1b9eedec86ff7602f6b7d152493eac29271159773895126a7ccb"
+    },
+    {
+      "file": "detail-01-half-lap-assembly-cm.png",
+      "role": "assembly_detail",
+      "bytes": 130157,
+      "sha256": "0887b1c95d7049a5222dd4f57e5bad9e0f65863d2385646abbff05765a11241d"
+    },
+    {
+      "file": "detail-02-stile-notch-layout-cm.png",
+      "role": "assembly_detail",
+      "bytes": 157358,
+      "sha256": "f7a904fe320c0496c4fd351320b1773d4cc8621866a1f7ccb2054149fd42463f"
+    },
+    {
+      "file": "detail-03-plywood-seam-cm.png",
+      "role": "assembly_detail",
+      "bytes": 173504,
+      "sha256": "3b5d46c60730ce7a913acafd4e7b490da35085fc616e14ceecbb2b8a52383828"
+    },
+    {
+      "file": "detail-04-center-cover-cm.png",
+      "role": "assembly_detail",
+      "bytes": 173866,
+      "sha256": "b75673728a9aba715743030680d3e56004bc2ffc652338027bcfc1c1c7bd051a"
+    },
+    {
+      "file": "garage-door-parts.pdf",
+      "role": "parts_pdf",
+      "bytes": 234942,
+      "sha256": "00d52b4359c266129bf2c817078611871a082ff0d35140d2defa7484dc17037c",
+      "title": "Parts and cut dimensions"
+    },
+    {
+      "file": "garage-door-complete-package.zip",
+      "role": "complete_package",
+      "bytes": 6520576,
+      "sha256": "92eb844473eb2ec360b97a03af0013b308bf5998583a6b657cb9d2f9bccd2fdd",
+      "title": "Complete project package"
+    },
+    {
+      "file": "viewer/index.html",
+      "role": "interactive_viewer",
+      "bytes": 9940,
+      "sha256": "2f16fdcea6b4b8ccca1b00a96ef5fce30ca804b331d6af1f7d4bb3a456b56d1c"
+    },
+    {
+      "file": "viewer/viewer.css",
+      "role": "interactive_viewer",
+      "bytes": 10330,
+      "sha256": "9539385f338b591e0f6b0848dbcc74c221bf2cdcc19772fbe2abb99b476cd069"
+    },
+    {
+      "file": "viewer/viewer.js",
+      "role": "interactive_viewer",
+      "bytes": 242853,
+      "sha256": "c7b5467ec0cb9f80c8eb0389a8e84e3a164c11730faf6ccac06fec001400ce05"
+    }
+  ],
+  "verification": {
+    "cad_payload_byte_identical": true,
+    "cad_payload_sha256": "65ae84cd7e2b46dd75bd82ed007a182fc5afac7b4381d007e93f2c02b716af77",
+    "dimensional_constants_byte_identical": true,
+    "dimensional_constants_sha256": "753a77dec7ac301e290fecc39685b263d50cbb14e3df5049800f747c1866b8df",
+    "cad_parts": 65,
+    "source_script_sha256": "e216699afbf25465ce2132425b444b5a446307b64669aeca1dfc775e6a58945d",
+    "inline_script_count": 0,
+    "inline_style_count": 0,
+    "inspector_units": [
+      "in"
+    ],
+    "cut_instructions": "Original centimeter text preserved; font size only changed in canvas dimension labels.",
+    "asset_count": 28,
+    "total_bytes": 13182673,
+    "privacy": "Selected public assets contain no personal contact/address/credentials; package text scan only found a Python matrix multiplication expression resembling email. Package has no transfer helpers or upload receipts.",
+    "browser_layout_test": "Chromium: actual same-origin iframe at parent widths 320,375,768,1280px, no horizontal overflow or clipped controls. External script/style obeyed strict CSP. Resize handshake, frame mode, build-step controls and opening animation passed without browser errors.",
+    "content_security_policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'",
+    "functional_checks": [
+      "Externalized viewer initialization",
+      "Imperial-only inspector",
+      "Embed CSS class selection",
+      "Same-origin resize sender and target",
+      "Reject foreign origins and windows",
+      "Reject unsupported protocol version",
+      "Valid resize request accepted",
+      "Canvas redraw at four widths",
+      "All five modes",
+      "All eight construction steps",
+      "Right-first opening",
+      "Part selection"
+    ],
+    "functional_test_method": "Actual externalized JS executed in existing DOM/Canvas harness; root performing browser layout QA.",
+    "browser_layout_results": [
+      {
+        "parentWidth": 320,
+        "viewport": 286,
+        "scrollWidth": 286,
+        "bodyScrollWidth": 286,
+        "mainHeight": 2443.203125,
+        "viewportHeight": 2446,
+        "canvasHeight": 410,
+        "mainVisible": true,
+        "hiddenHeading": "none",
+        "hiddenReference": "none",
+        "units": [
+          "in"
+        ],
+        "controlFont": "16px"
+      },
+      {
+        "parentWidth": 375,
+        "viewport": 341,
+        "scrollWidth": 341,
+        "bodyScrollWidth": 341,
+        "mainHeight": 2241.234375,
+        "viewportHeight": 2244,
+        "canvasHeight": 410,
+        "mainVisible": true,
+        "hiddenHeading": "none",
+        "hiddenReference": "none",
+        "units": [
+          "in"
+        ],
+        "controlFont": "16px"
+      },
+      {
+        "parentWidth": 768,
+        "viewport": 734,
+        "scrollWidth": 734,
+        "bodyScrollWidth": 734,
+        "mainHeight": 1727.015625,
+        "viewportHeight": 1730,
+        "canvasHeight": 480,
+        "mainVisible": true,
+        "hiddenHeading": "none",
+        "hiddenReference": "none",
+        "units": [
+          "in"
+        ],
+        "controlFont": "16px"
+      },
+      {
+        "parentWidth": 1280,
+        "viewport": 1166,
+        "scrollWidth": 1166,
+        "bodyScrollWidth": 1166,
+        "mainHeight": 1153.421875,
+        "viewportHeight": 1156,
+        "canvasHeight": 560,
+        "mainVisible": true,
+        "hiddenHeading": "none",
+        "hiddenReference": "none",
+        "units": [
+          "in"
+        ],
+        "controlFont": "16px"
+      }
+    ],
+    "visual_review": "Mobile iframe screenshot inspected. No overlap/clipping. Explore select moved to a full-width mobile row to avoid truncating option labels; inspection copy simplified for imperial-only units."
+  }
+}
