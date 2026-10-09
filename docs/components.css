@@ -41,10 +41,23 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 .gallery-figure {margin:0}
 .image-carousel .carousel-toggle span {display:none}
 .gallery-link {display:block}
-.gallery-image {position:relative; width:100%; aspect-ratio:2/1; background:#0d0d0d}
+.gallery-image {position:relative; width:100%; aspect-ratio:2.39/1; background:#0d0d0d; overflow:hidden}
 .gallery-image img {display:block; width:100%; height:100%; object-fit:contain; user-select:none}
 .gallery-error {position:absolute; inset:0; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--muted); font-size:13px}
 .gallery-error:not([hidden]) {display:flex}
+/* A restrained dissolve connects the three scenes; Explore stays unchanged. */
+.image-carousel .carousel-slide {transition:opacity 2.2s ease-in-out,visibility 0s linear 2.2s}
+.image-carousel .carousel-slide.is-active {transition:opacity 2.2s ease-in-out,visibility 0s; z-index:1}
+.image-carousel .carousel-slide.is-active img {animation:ronu-gallery-drift 8s linear both; transform-origin:center}
+.image-carousel[data-playing="false"] .carousel-slide.is-active img {animation-play-state:paused}
+.image-carousel .carousel-slide:nth-child(2) img {transform-origin:68% 55%}
+.image-carousel .carousel-slide:nth-child(3) img {transform-origin:40% 50%}
+@keyframes ronu-gallery-drift {from {transform:scale(1)} to {transform:scale(1.018)}}
+.gallery-film {margin-top:16px; color:var(--muted)}
+.gallery-film summary {width:fit-content; padding:10px 0; min-height:44px; font:400 14px/1.6 var(--sans); cursor:pointer}
+.gallery-film summary:hover {color:var(--text)}
+.gallery-film summary:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
+.gallery-film video {display:block; width:100%; height:auto; aspect-ratio:1920/804; background:var(--bg); margin-top:8px}
 @media(max-width:780px) {
   .article-grid {grid-template-columns:1fr}
   .article-tile-summary {max-width:55ch}
@@ -78,4 +91,6 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 }
 @media(prefers-reduced-motion:reduce) {
   .article-tile,.article-tile-arrow,.carousel-slide,.carousel-dots button span {transition:none}
+  .image-carousel .carousel-slide,.image-carousel .carousel-slide.is-active {transition:none}
+  .image-carousel .carousel-slide.is-active img {animation:none; transform:none}
 }
