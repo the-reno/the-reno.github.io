@@ -57,9 +57,10 @@ const ARTICLE_PREVIEWS = {
   prediction: {icon: 'prediction', summary: 'Patterns and uncertainty, starting with a roll of the dice.'}
 };
 const MAKER_GALLERY = {
+  film: {src: '/assets/night-scenes.mp4', poster: '/assets/football-night-hd.webp', label: 'Watch the sequence · 20 seconds'},
   images: [
-    {id: 'football', title: 'Football at night', src: '/assets/young-memory.svg', alt: 'A night-time football scene viewed through a fence.'},
-    {id: 'manhattan', title: 'Manhattan reflections', src: '/assets/present-reflection.webp', alt: 'A reflective night-time view toward the Manhattan skyline.'},
-    {id: 'runner', title: 'Night runner', src: '/assets/runner-card.jpg', alt: 'A runner beside the waterfront at night.'}
+    {id: 'football', title: 'Football at night', src: '/assets/football-night-hd.webp', width: 1940, height: 811, alt: 'Four young friends watching a floodlit football game through a fence at night.'},
+    {id: 'manhattan', title: 'Manhattan reflections', src: '/assets/manhattan-reflections-hd.webp', width: 1941, height: 810, alt: 'A man sitting in a quiet garden, looking across the Hudson toward Manhattan at night.'},
+    {id: 'runner', title: 'Night runner', src: '/assets/night-runner-hd.webp', width: 1932, height: 814, alt: 'A tall, lean runner on a lamplit waterfront path, with Manhattan across the river at night.'}
   ]
 };

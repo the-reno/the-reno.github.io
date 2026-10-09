@@ -2,6 +2,22 @@
 
 Static website. GitHub Pages serves `docs/` on the custom domain in `docs/CNAME`.
 
+## Maker night images
+
+The three gallery scenes use high-detail imagegen masters (`docs/assets/*-hd.png`)
+and quality-94 WebP files for the page. Original legacy assets are preserved.
+The runner's proportions follow a 193 cm / 90 kg lean endurance build; the
+illustration is not an exact facial likeness. The shared night lighting and
+graphite treatment connect the football memory, city reflection and waterfront run.
+
+The image carousel uses a 2.2-second dissolve and a restrained 1.8% camera move,
+with existing pause, keyboard and touch controls. Reduced-motion preferences
+disable movement and automatic rotation. An optional native video player opens
+only when requested; no video download is initiated on page load.
+The silent 20-second MP4 uses slow movement over still art, not character animation.
+Run `python scripts/build_night_film.py` with Pillow and FFmpeg installed to encode
+the WebP files and film. Then regenerate the site normally.
+
 ## Editing
 
 - `docs/page-content.js`: section wording, navigation order, selected article IDs, gallery images and footer.

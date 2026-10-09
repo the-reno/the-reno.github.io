@@ -52,10 +52,12 @@ function pageCollection(pageId) {
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2>${carouselMarkup('section-carousel', slides, 'sections')}`;
   }
   if (page.kind === 'gallery') {
+    const film = MAKER_GALLERY.film;
+    const filmMarkup = film ? `<details class="gallery-film" data-gallery-film><summary>${esc(film.label)}</summary><video controls playsinline preload="none" poster="${esc(film.poster)}" aria-label="Football memories, Manhattan reflections and a waterfront run, joined by slow camera movement and dissolves"><source src="${esc(film.src)}" type="video/mp4">Your browser cannot play this video. <a href="${esc(film.src)}">Download the sequence</a>.</video></details>` : '';
     const projects = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
-    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div></a></figure>`}));
+    const slides = MAKER_GALLERY.images.map(image => ({name: image.title, html: `<figure class="gallery-figure"><a class="gallery-link" href="${esc(image.src)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(image.title)} in a new tab"><div class="gallery-image"><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${esc(image.width)}" height="${esc(image.height)}" decoding="async" draggable="false"><span class="gallery-error" hidden>${esc(SITE.labels.imageError)}</span></div></a></figure>`}));
     const projectMarkup = projects.length ? `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.projects)}</h2>${projects.map(makerProjectTile).join('')}` : '';
-    return `${projectMarkup}<h2 class="${projects.length ? 'collection-heading maker-gallery-heading' : 'sr-only'}" id="${projects.length ? 'maker-gallery-title' : 'collection-title'}">${esc(SITE.labels.images)}</h2>${carouselMarkup('maker-gallery', slides, 'images')}`;
+    return `${projectMarkup}<h2 class="${projects.length ? 'collection-heading maker-gallery-heading' : 'sr-only'}" id="${projects.length ? 'maker-gallery-title' : 'collection-title'}">${esc(SITE.labels.images)}</h2>${carouselMarkup('maker-gallery', slides, 'images')}${filmMarkup}`;
   }
   const topics = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
   if (!topics.length) return '';
