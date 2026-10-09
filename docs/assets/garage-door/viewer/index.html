@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>Garage door assembly in 3D | ronu.one</title>
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="https://ronu.one/topic/garage-door/">
+  <link rel="stylesheet" href="./viewer.css">
+</head>
+<body>
+<nav class="standalone-nav" aria-label="Project"><a href="/topic/garage-door/">← Garage door project</a></nav>
+<main id="garage-door-execution">
+  <header class="heading">
+    <div><div class="eyebrow">Garage door rebuild / V4</div><h1>Measured assembly, in 3D.</h1><p class="subhead">Your 2×4 frame, 15/32-inch outside plywood and 1/5-inch inside plywood, with insulated panel fields and a clean center overlap.</p></div>
+    <div class="version"><strong>EXECUTION STUDY</strong><br>09 October 2026<br>Equipment: imperial · cuts: cm</div>
+  </header>
+  <div class="status"><strong>Provisional geometry — verify before cutting.</strong> The 257 × 216 cm opening is an assumed reference for the cut layout. Inspect the existing frame and joints, confirm clearances and actual stock sizes, and select the load-rated hardware before final fabrication.</div>
+  <div class="workbench">
+    <section class="workspace" aria-label="Interactive assembly">
+      <div class="toolbar">
+        <label class="field">Explore<select data-mode aria-label="Explore construction"><option value="whole">Whole doors</option><option value="leaf">Single leaf · layers</option><option value="joint">Center joint</option><option value="lap">Frame half-lap</option><option value="build">Build sequence</option></select></label>
+        <label class="field">Camera<select data-angle aria-label="Camera angle"><option value="3d">3D</option><option value="front">Front / outside</option><option value="inside">Inside</option><option value="top">Top</option><option value="custom" hidden>Custom</option></select></label>
+        <label class="field units">Inspection<select data-units aria-label="Inspection units: inches"><option value="in" selected>in</option></select></label>
+        <label class="field stage" data-step-label hidden>Build step<select data-step aria-label="Build step"><option value="1">1 · Fit the frame</option><option value="2">2 · Outside plywood</option><option value="3">3 · Insulation</option><option value="4">4 · Inside plywood</option><option value="5">5 · Applied trim</option><option value="6">6 · Right spacer</option><option value="7">7 · Center cover and seal</option><option value="8">8 · Hang, align and test</option></select></label>
+      </div>
+      <div class="scene-wrap">
+        <div class="scene-top"><span data-scene-tag>Outside view · right leaf active</span><span>Drag to rotate · tap to inspect</span></div>
+        <canvas data-scene role="img" aria-label="Rotatable measured model of two outward-opening garage doors. The right leaf opens first. Select parts for dimensions and choose construction layers, the center joint, or the frame half-lap detail.">Interactive 3D garage door assembly. This file needs JavaScript enabled in a modern browser.</canvas>
+        <div class="scene-hint" data-view-hint>Choose Front for overall dimension lines; select any part for its size.</div>
+      </div>
+      <div class="scene-tools">
+        <label class="check"><input type="checkbox" data-exploded>Separate layers</label>
+        <label class="check"><input type="checkbox" data-dimensions checked>Dimensions</label>
+        <label class="check"><input type="checkbox" data-hardware>Schematic hardware</label>
+        <div class="zoom"><button type="button" data-minus aria-label="Zoom out">−</button><button type="button" data-plus aria-label="Zoom in">+</button><button type="button" data-fit>Fit</button></div>
+      </div>
+      <div class="toolbar"><label class="field">Visible materials<select data-layers aria-label="Visible material layers"><option value="all">All layers</option><option value="core">Frame + insulation</option><option value="frame">Frame only</option></select></label></div>
+      <div class="step-buttons" data-step-buttons hidden><button type="button" data-prev>Previous step</button><button type="button" data-next>Next step</button></div>
+      <div class="opening">
+        <label class="opening-label" for="door-opening">Opening sequence <output data-opening-value>Closed</output></label>
+        <div class="opening-controls"><input id="door-opening" type="range" min="0" max="100" step="1" value="0" data-opening aria-label="Open right leaf first, then left"><button type="button" data-play>Open doors</button></div>
+        <p class="opening-note">Right opens first. Left closes first. Animation uses an illustrative hinge axis.</p>
+      </div>
+    </section>
+    <aside class="side" aria-label="Construction details">
+      <section class="panel">
+        <label class="field part-field">Part and dimensions<select data-part-select aria-label="Select a visible part"><option value="">Select a visible part…</option></select></label>
+        <h2 data-part-title>Select a part</h2>
+        <p class="part-size" data-part-size>Tap the model or use the part list</p>
+        <p class="axis" data-part-axis>Inspection in inches. Cut instructions use cm.</p>
+        <p data-part-note aria-live="polite">Separate the layers or choose Frame only to inspect the timber, skins and insulation.</p>
+        <p class="part-id" data-part-id></p>
+      </section>
+      <section class="panel"><h2 data-step-title>Two outward-opening leaves</h2><p data-instruction aria-live="polite">The proposed pair fits the reference opening. Actual measurements control final cuts.</p></section>
+      <section class="panel overview"><h2>Assembly reference</h2>
+        <dl class="measure"><dt>Leaf cut size</dt><dd>127.565 × 213.865 cm</dd><dt>Body depth</dt><dd>2.169 in</dd><dt>Depth at trim</dt><dd>2.405 in</dd><dt>Depth at center cover</dt><dd>2.759 in</dd><dt>Set center gap</dt><dd>0.6 cm example</dd></dl>
+        <div class="legend"><span><i class="swatch timber"></i>Timber</span><span><i class="swatch foam"></i>Insulation</span><span><i class="swatch plywood"></i>Outside skin</span><span><i class="swatch inside"></i>Inside skin</span><span><i class="swatch trim"></i>Trim / cover</span><span><i class="swatch gasket"></i>Gasket</span></div>
+      </section>
+    </aside>
+  </div>
+  <section class="reference" aria-label="Measured construction reference">
+    <h2>Dimensions to carry to the workshop</h2>
+    <p class="reference-intro">Cuts and layout marks use centimeters. Purchased stock, hardware and equipment use imperial sizes. The 3D part inspector uses inches. Verify the opening, timber condition and actual stock before cutting.</p>
+    <div class="reference-grid">
+      <div><h3>Opening and panel assembly</h3><table><tbody>
+        <tr><th>Opening for cut layout</th><td>257 cm wide × 216 cm high, assumed</td></tr>
+        <tr><th>Horizontal fit marks, cm</th><td>0.635 + 127.565 + 0.6 + 127.565 + 0.635 = 257</td></tr>
+        <tr><th>Vertical fit marks, cm</th><td>1.5 bottom + 213.865 leaf + 0.635 top = 216</td></tr>
+        <tr><th>Outside / core / inside</th><td>15/32 + 1-1/2 + 1/5 = 2.16875 in</td></tr>
+        <tr><th>Main skin + joint + strip, cm</th><td>121.92 + 0.32 + 5.325 = 127.565</td></tr>
+        <tr><th>Layout on meeting stile, cm</th><td>3.245 main-sheet bearing + 0.32 joint + 5.325 strip = 8.89</td></tr>
+        <tr><th>Each foam insert</th><td>Cut 109.485 × 93.2975 cm from 1-1/2 in foam<br>2 per leaf; set 0.15 cm edge clearance</td></tr>
+      </tbody></table><p class="small">Keep both adjoining plywood edges continuously supported by the meeting stile. Confirm the actual sheet width before calculating the strip cut width. Set a 0.32 cm movement seam; this allowance is separate from saw kerf.</p></div>
+      <div><h3>Frame, trim and center connection</h3><table><tbody>
+        <tr><th>Frame stile blank</th><td>Cut 213.865 cm long from 2×4<br>Actual stock: 3-1/2 × 1-1/2 in; 2 per leaf</td></tr>
+        <tr><th>Full-width frame rail blank</th><td>Cut 127.565 cm long from 2×4<br>Actual stock: 3-1/2 × 1-1/2 in; 3 per leaf</td></tr>
+        <tr><th>Proposed half-lap cuts</th><td>8.89 cm long × 1.905 cm deep<br>Complementary cuts in rails and stiles</td></tr>
+        <tr><th>Trim cuts</th><td>7.5 cm wide from 0.236 in model stock<br>Stiles 213.865 cm; rails 112.565 cm</td></tr>
+        <tr><th>Center cover / spacer cuts</th><td>Cover 6 cm wide, 0.236 in stock; spacer 3 cm wide, 0.118 in example stock<br>Each 213.865 cm long before final fitting</td></tr>
+        <tr><th>Cover layout, cm</th><td>2.4 left overlap + 0.6 gap + 3 right support = 6</td></tr>
+        <tr><th>Gasket working envelope</th><td>0.866 in wide × 0.118 in compressed, example only</td></tr>
+      </tbody></table><p class="small">The modeled 0.236 in trim is not exactly 1/4 in; verify your stock. Half-laps are a replacement-frame reference; retain sound existing joints where appropriate. Final bonding, reinforcing, fasteners and hardware require selection for the actual door. Cover and spacer attach to the right leaf only.</p></div>
+    </div>
+  </section>
+  <p class="footer">This viewer embeds the same V4 geometry used for the CAD export. The main solids, dimensions and moving-leaf assignments can be inspected here. Opening motion, gasket compression and optional hardware are illustrative. The model does not establish actual site fit, selected hardware capacity, frame racking strength, weather performance or field-ready fastening details.</p>
+</main>
+<script src="./viewer.js" defer></script>
+</body>
+</html>

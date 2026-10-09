@@ -9,7 +9,7 @@ const SITE = {
   footer: 'Since 2022',
   carousel: {intervalMs: 8000, autoplay: true, introParagraphs: 1},
   labels: {
-    sections: 'Sections', articles: 'Articles', images: 'Maker images',
+    sections: 'Sections', articles: 'Articles', topics: 'Topics', projects: 'Projects', images: 'Maker images',
     pause: 'Pause', play: 'Play', previous: 'Previous', next: 'Next',
     chooseSection: 'Choose a section', chooseImage: 'Choose an image',
     imageError: 'This image could not load. Open the original.',
@@ -45,12 +45,14 @@ const MAIN_PAGES = {
   maker: {
     name: 'Maker', kind: 'gallery', icon: 'maker',
     start: 'What happens when ', end: 'an idea becomes real?',
-    intro: ''
+    intro: '',
+    articleIds: ['garage-door']
   }
 };
 
 // Short card summaries only. Full article metadata remains in content.js.
 const ARTICLE_PREVIEWS = {
+  'garage-door': {icon: 'maker', summary: 'An insulated timber-and-plywood rebuild. Explore the 3D model, cuts and illustrated assembly.', image: '/assets/garage-door/garage-door-final-cad.png', alt: 'CAD view of two outward-opening garage doors with a clean white panel finish.', action: 'Explore the build'},
   'sunlight-to-step': {icon: 'endurance', summary: 'A race, a plate of pasta and the work inside a muscle.'},
   prediction: {icon: 'prediction', summary: 'Patterns and uncertainty, starting with a roll of the dice.'}
 };

@@ -63,7 +63,7 @@ function navigate() {
     window.scrollTo({top: 0, behavior: 'instant'});
     $('#page-title').focus({preventScroll: true});
     if (MAIN_PAGES[pageId].kind === 'gallery' && new URLSearchParams(search).get('gallery') === 'images') {
-      requestAnimationFrame(() => $('#page-collection').scrollIntoView({block: 'start', behavior: 'instant'}));
+      requestAnimationFrame(() => ($('#maker-gallery') || $('#page-collection')).scrollIntoView({block: 'start', behavior: 'instant'}));
     }
   }
   if (anchor === 'main') $('#main').focus();
@@ -82,7 +82,7 @@ function renderSearch() {
   const topics = query ? TOPICS.filter(t => match(t.title + ' ' + t.description + ' ' + SECTIONS[t.section].name + ' ' + t.type + ' ' + (t.tags || ''))) : [];
   const sectionRows = sections.map(id => `<a class="search-result" href="${routeFor(id)}"><span class="result-symbol">${icon(id)}</span><span class="result-copy"><strong>${esc(MAIN_PAGES[id].name)}</strong><span>${esc(MAIN_PAGES[id].start + MAIN_PAGES[id].end)}</span></span>${arrow}</a>`).join('');
   const topicRows = topics.map(t => `<a class="search-result" href="${topicPath(t.id)}"><span class="result-symbol">${icon(t.section)}</span><span class="result-copy"><strong>${esc(t.title)}</strong><span>${esc(SECTIONS[t.section].name)} · ${esc(t.type)}</span></span>${arrow}</a>`).join('');
-  $('#search-results').innerHTML = (sectionRows ? `<p class="search-group-title">${esc(SITE.labels.sections)}</p>` + sectionRows : '') + (topicRows ? `<p class="search-group-title">${esc(SITE.labels.articles)}</p>` + topicRows : '') || '<div class="search-no-results">No results found. Try a different word.</div>';
+  $('#search-results').innerHTML = (sectionRows ? `<p class="search-group-title">${esc(SITE.labels.sections)}</p>` + sectionRows : '') + (topicRows ? `<p class="search-group-title">${esc(SITE.labels.topics)}</p>` + topicRows : '') || '<div class="search-no-results">No results found. Try a different word.</div>';
   $('#search-result-count').textContent = query ? (sections.length + topics.length) + ' results' : 'Choose a section or search for a topic';
 }
 function openSearch() {$('#global-search').value = ''; renderSearch(); searchDialog.showModal(); $('#global-search').focus();}

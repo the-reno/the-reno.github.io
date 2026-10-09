@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const site = path.join(root, 'docs');
 const context = vm.createContext({URL});
-for (const file of ['page-content.js', 'content.js', 'routes.js', 'main-pages.js', 'narrative.js']) {
+for (const file of ['page-content.js', 'content.js', 'routes.js', 'main-pages.js', 'project.js', 'narrative.js']) {
   vm.runInContext(fs.readFileSync(path.join(site, file), 'utf8'), context, {filename: file});
 }
 const run = code => vm.runInContext(code, context);

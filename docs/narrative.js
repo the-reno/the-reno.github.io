@@ -5,6 +5,7 @@
 const narrativeCache = new Map();
 let articleController = null, pendingAnchor = '';
 function stopArticle() {
+  stopProjectPage();
   if (articleController) {articleController.abort(); articleController = null;}
 }
 function goAnchor(id) {
@@ -23,6 +24,7 @@ function narrativeBlocks(section) {
   const text = value => typeof value === 'string' && value.trim().length > 0;
   if (!blocks.length || blocks.length > 300) throw new Error('Invalid article blocks');
   for (const block of blocks) {
+    if (block && projectBlockTypes.has(block.type)) {validateProjectBlock(block); continue;}
     if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts', 'closing'].includes(block.type)) throw new Error('Invalid block type');
     if (block.label !== undefined && !text(block.label)) throw new Error('Invalid block label');
     if (block.type === 'table') {
@@ -76,6 +78,7 @@ function narrativeSections(value, expectedId) {
   });
 }
 function narrativeBlockMarkup(block) {
+  if (projectBlockTypes.has(block.type)) return projectBlockMarkup(block);
   const lines = text => esc(text).replace(/\n/g, '<br>');
   if (block.type === 'paragraph') {
     const content = block.runs ? block.runs.map(run => run.strong ? '<strong>' + lines(run.text) + '</strong>' : lines(run.text)).join('') : lines(block.text);
@@ -125,7 +128,7 @@ function narrativeMarkup(topic, content = '') {
   const back = routeFor(topic.section);
   const sectionName = SECTIONS[topic.section].name;
   return `<div class="reader-top story-top"><a class="quiet-link" href="${back}">${icon('back')}Back to ${esc(sectionName)}</a></div>
-    <article class="story-article" id="article-start" aria-labelledby="reader-title">
+    <article class="story-article${topic.type === 'Project' ? ' project-article' : ''}" id="article-start" aria-labelledby="reader-title">
       <header class="story-header">
         <p class="story-kicker">${esc(sectionName)} / ${esc(topic.type)}</p>
         <h1 class="index-title story-title" id="reader-title" tabindex="-1">${esc(topic.title)}</h1>
@@ -155,7 +158,7 @@ function renderNarrative(topic) {
     delete reader.dataset.articleVersion;
     reader.innerHTML = narrativeMarkup(topic);
     loadNarrative(topic);
-  }
+  } else initProjectPage();
   document.title = topic.title + ' — ' + SITE.name;
   updateProgress();
 }
@@ -193,6 +196,7 @@ async function loadNarrative(topic) {
     if (!isCurrent()) return;
     host.innerHTML = narrativeSectionsMarkup(sections);
     host.setAttribute('aria-busy', 'false');
+    initProjectPage();
     if (pendingAnchor) goAnchor(pendingAnchor);
     updateProgress();
   } catch (error) {

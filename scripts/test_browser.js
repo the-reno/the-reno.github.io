@@ -8,7 +8,7 @@ const path = require('node:path');
 const http = require('node:http');
 const {chromium} = require('playwright');
 const site = path.resolve(__dirname, '../docs');
-const mime = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.webp':'image/webp', '.xml':'application/xml', '.txt':'text/plain'};
+const mime = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.webp':'image/webp', '.png':'image/png', '.pdf':'application/pdf', '.zip':'application/zip', '.csv':'text/csv', '.xml':'application/xml', '.txt':'text/plain'};
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   let file = path.resolve(site, '.' + decodeURIComponent(url.pathname));
@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = 'http://127.0.0.1:' + server.address().port;
-  const browser = await chromium.launch({headless: true});
+  const browser = await chromium.launch({headless: true, ...(process.env.RONU_CHROMIUM_PATH ? {executablePath:process.env.RONU_CHROMIUM_PATH, args:['--no-sandbox','--disable-dev-shm-usage']} : {})});
   let checks = 0;
   const check = (value, message) => {assert.ok(value, message); checks++;};
   try {
@@ -39,6 +39,7 @@ const server = http.createServer((req, res) => {
     page.on('pageerror', error => errors.push(error.message));
     const ready = async () => {await page.locator('#narrative-content[aria-busy="false"]').waitFor();};
     const topics = [
+      ['garage-door', 'Rebuilding the garage doors'],
       ['prediction', 'The Complexity of Prediction'],
       ['sunlight-to-step', 'From sunlight to a single step']
     ];
@@ -137,7 +138,7 @@ const server = http.createServer((req, res) => {
     const screenshotDir = process.env.RONU_SCREENSHOT_DIR;
     for (const width of [1440, 390]) {
       await page.setViewportSize({width, height: 900});
-      for (const route of ['/', '/section/science/', '/topic/prediction/', '/topic/sunlight-to-step/', '/section/maker/']) {
+      for (const route of ['/', '/section/science/', '/topic/prediction/', '/topic/sunlight-to-step/', '/topic/garage-door/', '/section/maker/']) {
         await page.goto(base + route);
         if (route.startsWith('/topic/')) await ready();
         check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No horizontal overflow: ' + width + route);
