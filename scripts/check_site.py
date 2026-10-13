@@ -143,8 +143,8 @@ for phrase in ('active_seconds','max_scroll','session_id','visibilitychange'):
 for file in site.rglob('*'):
     if file.is_file() and file.suffix.lower() in {'.html','.js','.css','.json','.txt','.xml'}:
         text_value = file.read_text(encoding='utf-8', errors='ignore')
-        if 'ronu-private.rafatreno.workers.dev' in text_value:
-            errors.append(f'{file.relative_to(root)}: obsolete private Worker reference')
+        if re.search(r"https?://[^/'\"\s]*private[^/'\"\s]*\.(?:workers\.dev|ronu\.one)\b", text_value, re.IGNORECASE):
+            errors.append(f'{file.relative_to(root)}: private service URL in public files')
         if 'ADMIN_TOKEN' in text_value:
             errors.append(f'{file.relative_to(root)}: administrator credential name must not be in public site files')
 
