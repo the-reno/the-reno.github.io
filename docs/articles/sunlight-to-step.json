@@ -11,11 +11,15 @@
         },
         {
           "type": "paragraph",
-          "text": "Gravity pulls its material inward. As the Sun formed, this compression raised the pressure and temperature. Deep in the core, conditions became hot and dense enough for nuclear fusion to begin."
+          "text": "Gravity pulls its material inward. As the Sun formed, the gas compressed. Pressure increased. Temperature rose."
         },
         {
           "type": "paragraph",
-          "text": "Through a chain of reactions, hydrogen nuclei combine to form helium. Energy is released."
+          "text": "Deep in the core, conditions became hot and dense enough for nuclear fusion to begin."
+        },
+        {
+          "type": "paragraph",
+          "text": "Hydrogen nuclei—the central parts of hydrogen atoms—combine through a chain of reactions. They form helium. Energy is released."
         },
         {
           "type": "paragraph",
@@ -26,46 +30,104 @@
           "label": "Quantum physics",
           "items": [
             {
-              "term": "Why can hydrogen nuclei fuse?",
-              "text": "Hydrogen nuclei carry positive charges. They repel each other.\n\nQuantum tunnelling gives them a chance to reach distances that their electrical repulsion would otherwise prevent at these energies. It is a probability—not a guarantee."
+              "term": "From an atom to a plasma.",
+              "text": "A neutral hydrogen-1 atom has one positively charged proton and one negatively charged electron. Their electrical attraction binds the electron to the nucleus.\n\nIn the Sun’s core, energetic collisions prevent electrons from remaining bound to individual nuclei. Nuclei and free electrons form a hot mixture called plasma."
             },
             {
-              "term": "Getting close is still not enough.",
-              "text": "In the first proton–proton reaction, one proton must become a neutron through the weak nuclear interaction. The proton and neutron bind together, forming deuterium—a heavier form of hydrogen. A positron and a neutrino are also released."
+              "term": "Why do the nuclei resist joining?",
+              "text": "Ordinary hydrogen nuclei are single protons. Their positive charges repel. Heat makes them move rapidly. High density brings frequent encounters. But neither removes the electrical repulsion."
             },
             {
-              "term": "Source · U.S. Department of Energy",
+              "term": "Quantum tunnelling.",
+              "text": "Quantum physics describes particles using probability waves. There is a small chance of finding two approaching protons close enough to interact even when they lack the energy to overcome their repulsion classically. This is quantum tunnelling.\n\nThere is no physical tunnel. No extra energy appears. We can calculate the probability, but not predict each individual outcome with certainty."
+            },
+            {
+              "term": "Getting close does not guarantee fusion.",
+              "text": "In the first proton–proton reaction, one proton changes into a neutron through the weak nuclear interaction. A neutron is a nuclear particle with no electric charge. The proton and neutron bind to form deuterium, a heavier form of hydrogen.\n\nThe reaction also releases a positron—the electron’s positively charged counterpart—and a neutrino, a particle that interacts very weakly with matter."
+            },
+            {
+              "term": "Source · U.S. Department of Energy — Plasma",
+              "text": "https://www.energy.gov/science/doe-explainsplasma"
+            },
+            {
+              "term": "Source · U.S. Department of Energy — Proton–proton fusion",
               "text": "https://www.energy.gov/science/np/articles/proton-proton-fusion-powering-sun"
             }
           ],
-          "conclusion": "It is this first fusion reaction that is extremely unlikely in any one encounter—not the emission of photons. Across the enormous number of encounters inside the Sun, these rare reactions keep happening. They begin the chain that powers the star."
+          "conclusion": "The first proton–proton fusion reaction is exceptionally unlikely in any one encounter. Photon emission is not the rare step. Across the enormous number of encounters inside the Sun, these reactions keep happening."
         },
         {
           "type": "paragraph",
-          "runs": [
-            {
-              "text": "The resulting particles have slightly less total rest mass than the starting particles. That difference appears as energy. The relationship is "
-            },
-            {
-              "text": "E = mc²",
-              "strong": true
-            },
-            {
-              "text": ". A small difference in mass corresponds to a large amount of energy."
-            }
-          ]
+          "text": "But where does that energy come from?"
+        },
+        {
+          "type": "paragraph",
+          "text": "The particles form a more tightly bound arrangement. The final products have slightly less mass at rest than the starting material. That difference appears as released energy."
+        },
+        {
+          "type": "paragraph",
+          "text": "Einstein connected mass and energy with an equation."
+        },
+        {
+          "type": "paragraph",
+          "text": "E = mc².",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "For a reaction, the energy released equals the decrease in mass multiplied by the speed of light squared. Even a tiny mass difference can therefore correspond to a large amount of energy."
+        },
+        {
+          "type": "paragraph",
+          "text": "How much?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Imagine one gram of hydrogen completing the Sun’s fusion process. About 0.7% of its mass becomes released energy. Most of the mass remains in the helium."
+        },
+        {
+          "type": "paragraph",
+          "text": "That small difference corresponds to roughly 175,000 kilowatt-hours."
+        },
+        {
+          "type": "paragraph",
+          "text": "An equivalent amount of energy would run a 1,000-watt appliance, day and night, for about 20 years. This compares amounts of energy—not electricity we could collect without losses."
         },
         {
           "type": "concepts",
           "label": "Mass & energy",
           "items": [
             {
-              "term": "E = mc²",
-              "text": "E represents energy. m represents mass. c is the speed of light.\n\nFor the fusion reaction, the released energy equals the decrease in total rest mass multiplied by c²."
+              "term": "What Einstein’s equation means.",
+              "text": "E = mc² relates rest energy to rest mass. E is energy. m is mass. c is the speed of light in a vacuum: 299,792,458 metres per second. The ² means multiplying that speed by itself.\n\nThis relationship comes from special relativity. It tells us how a mass difference relates to released energy. It does not explain the reaction mechanism; that requires nuclear and quantum physics."
             },
             {
-              "term": "Source · U.S. Department of Energy",
-              "text": "https://www.energy.gov/science/doe-explainsfusion-reactions"
+              "term": "Use the difference, not all the mass.",
+              "text": "For a reaction, energy released = Δm × c². The symbol Δm means the decrease in the total rest mass of the reacting material.\n\nThe helium nucleus is a more tightly bound arrangement. The lower rest mass reflects lower stored energy—not missing protons or neutrons. Energy is conserved when we include the radiation and moving particles released."
+            },
+            {
+              "term": "One gram, worked through.",
+              "text": "Comparing the measured masses of four hydrogen-1 atoms and one helium-4 atom gives a decrease of about 0.7%. Using atomic masses accounts for electrons across the complete chain, including positron annihilation.\n\nUsing the rounded 0.7% for one gram of hydrogen:\nMass difference ≈ 0.007 grams = 0.000007 kilograms.\nEnergy ≈ 0.000007 × (299,792,458)².\nResult ≈ 630 billion joules ≈ 175,000 kilowatt-hours.\n\nA joule and a kilowatt-hour are units of energy. One kilowatt-hour equals 3.6 million joules. These figures are calculated and rounded, not measurements of a power plant."
+            },
+            {
+              "term": "Why the comparison is about 20 years.",
+              "text": "A 1,000-watt appliance uses one kilowatt-hour in one hour. Dividing 175,000 kilowatt-hours by one kilowatt gives 175,000 hours—about 20 years of continuous use.\n\nThis assumes the hydrogen completes the fusion chain. It is a total-energy comparison, not usable electricity. Some fusion energy escapes with neutrinos. Converting the remaining energy into electricity would also involve losses."
+            },
+            {
+              "term": "Source · Einstein Online — Binding energy",
+              "text": "https://www.einstein-online.info/en/spotlight/binding_energy/"
+            },
+            {
+              "term": "Source · NIST — Hydrogen isotope masses",
+              "text": "https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=H"
+            },
+            {
+              "term": "Source · NIST — Helium isotope masses",
+              "text": "https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=He"
+            },
+            {
+              "term": "Source · NIST — Speed of light and the metre",
+              "text": "https://www.nist.gov/pml/owm/si-units-length"
             }
           ]
         }
@@ -77,41 +139,50 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "That energy gradually makes its way outward."
+          "text": "Some of the released energy is carried by photons. These are individual packets of electromagnetic radiation. Visible light is one form of that radiation."
         },
         {
           "type": "paragraph",
-          "text": "It passes through the Sun’s layers. Radiation carries it through the deep interior. Farther out, rising hot material helps carry it towards the surface. There, energy escapes into space as light. We are following the energy—not one original photon travelling directly from the core to Earth."
+          "text": "But there is no clear path out of the Sun."
         },
         {
           "type": "paragraph",
-          "runs": [
-            {
-              "text": "Light carries energy in individual packets called "
-            },
-            {
-              "text": "photons",
-              "strong": true
-            },
-            {
-              "text": "."
-            }
-          ]
+          "text": "Radiation repeatedly interacts with the dense material inside. Energy passes between radiation and matter as it gradually moves outward. Farther out, rising hot material helps carry it towards the surface. There, energy escapes into space as light."
         },
         {
           "type": "paragraph",
-          "text": "It has both wave-like and particle-like properties. A photon is not a tiny piece of hydrogen thrown out of the Sun. It is a particle of electromagnetic radiation."
+          "text": "We are following the energy. Not one original photon travelling directly from the core to Earth."
+        },
+        {
+          "type": "paragraph",
+          "text": "Light has both wave-like and particle-like properties. A photon is not a tiny piece of hydrogen thrown out of the Sun."
         },
         {
           "type": "concepts",
           "label": "Light & photons",
           "items": [
             {
-              "term": "A particle of light.",
-              "text": "A photon is a packet of electromagnetic energy. It is not an atom or an electron.\n\nLight has both wave-like and particle-like properties. These describe the same physical phenomenon—not a photon switching between two everyday objects."
+              "term": "Where does a photon come from?",
+              "text": "In one step of the Sun’s main fusion chain, a deuterium nucleus captures another proton. They form helium-3: two protons and one neutron. A gamma-ray photon carries away part of the released energy.\n\nGamma rays and visible light are both electromagnetic radiation. A gamma-ray photon carries much more energy than a visible-light photon."
             },
             {
-              "term": "Source · NASA",
+              "term": "Why not follow the same photon?",
+              "text": "Inside the Sun, radiation is repeatedly absorbed, emitted and scattered. Energy is exchanged with the surrounding matter. Farther out, convection—the movement of hotter material upward and cooler material downward—also carries energy.\n\nMost visible sunlight escapes from the photosphere, the layer we see as the Sun’s surface. The journey of energy is not the uninterrupted journey of one photon from the core."
+            },
+            {
+              "term": "Waves and particles.",
+              "text": "Light spreads and interferes in wave-like ways. But it exchanges energy with matter in individual packets: photons. These are two aspects of the same phenomenon, not a tiny object switching between two forms.\n\nA photon is not an atom or an electron. It has no rest mass, but it carries energy and momentum. Its energy depends on its frequency. Higher-frequency light carries more energy per photon."
+            },
+            {
+              "term": "Source · NASA — The solar interior",
+              "text": "https://solarscience.msfc.nasa.gov/interior.shtml"
+            },
+            {
+              "term": "Source · NASA — Sun facts",
+              "text": "https://science.nasa.gov/sun/facts/"
+            },
+            {
+              "term": "Source · NASA — Electromagnetic waves and photons",
               "text": "https://science.nasa.gov/ems/02_anatomy/"
             }
           ]
@@ -132,7 +203,11 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Sunlight spreads out into space. Earth intercepts only a small fraction. Some of that light is reflected back into space. Some is absorbed by the atmosphere. Some passes through and reaches the ground."
+          "text": "Sunlight spreads out into space. Earth intercepts only a small fraction."
+        },
+        {
+          "type": "paragraph",
+          "text": "Some of that light is reflected back into space. Some is absorbed by the atmosphere. Some passes through and reaches the ground."
         },
         {
           "type": "paragraph",
@@ -151,15 +226,19 @@
           "label": "Reading & sources",
           "items": [
             {
-              "term": "NASA · How stars form",
-              "text": "https://science.nasa.gov/universe/stars/"
+              "term": "NASA · Gravity, heat and the life of a star",
+              "text": "https://imagine.gsfc.nasa.gov/science/objects/stars1.html"
             },
             {
-              "term": "NASA · The solar interior",
+              "term": "NASA · The Sun’s composition",
+              "text": "https://imagine.gsfc.nasa.gov/science/objects/sun1.html"
+            },
+            {
+              "term": "NASA · The solar interior and fusion chain",
               "text": "https://solarscience.msfc.nasa.gov/interior.shtml"
             },
             {
-              "term": "NASA · Sun facts",
+              "term": "NASA · Sun facts and the journey outward",
               "text": "https://science.nasa.gov/sun/facts/"
             },
             {
@@ -167,11 +246,11 @@
               "text": "https://science.nasa.gov/earth/earth-observatory/climate-and-earths-energy-budget/"
             },
             {
-              "term": "U.S. Department of Energy · Fusion",
+              "term": "U.S. Department of Energy · Fusion and energy release",
               "text": "https://www.energy.gov/science/doe-explainsfusion-reactions"
             },
             {
-              "term": "NASA · Anatomy of an electromagnetic wave",
+              "term": "NASA · Light, waves and photons",
               "text": "https://science.nasa.gov/ems/02_anatomy/"
             }
           ]
