@@ -38,6 +38,11 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 .section-slide-marker {padding-top:2px}
 .section-slide-arrow {padding-top:9px; color:var(--accent)}
 /* Actual image assets retain their original colors and proportions. */
+.maker-billboard {position:relative; width:min(100%,640px); aspect-ratio:2.39/1; margin:0 0 28px; overflow:hidden; border-radius:var(--radius); background:#0d0d0d}
+.maker-billboard img {position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; opacity:0; animation:ronu-billboard 12s linear infinite}
+.maker-billboard img:nth-child(2) {animation-delay:-8s}
+.maker-billboard img:nth-child(3) {animation-delay:-4s}
+@keyframes ronu-billboard {0%,25% {opacity:1} 33.333%,91.667% {opacity:0} 100% {opacity:1}}
 .gallery-figure {margin:0}
 .image-carousel .carousel-toggle span {display:none}
 .gallery-link {display:block}
@@ -90,6 +95,8 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
   .section-slide-link .index-statement {font-size:20px}
 }
 @media(prefers-reduced-motion:reduce) {
+  .maker-billboard img {animation:none; opacity:0}
+  .maker-billboard img:first-child {opacity:1}
   .article-tile,.article-tile-arrow,.carousel-slide,.carousel-dots button span {transition:none}
   .image-carousel .carousel-slide,.image-carousel .carousel-slide.is-active {transition:none}
   .image-carousel .carousel-slide.is-active img {animation:none; transform:none}
