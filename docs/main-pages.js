@@ -8,6 +8,10 @@ function introMarkup(page, {slide = false} = {}) {
 }
 function mainHero(pageId, {slide = false} = {}) {
   const page = MAIN_PAGES[pageId];
+  if (pageId === 'all' && !slide) {
+    const [welcome, ...purpose] = page.intro.split('\n');
+    return `<div class="index-copy home-hero-copy"><div class="home-hero-heading"><h1 class="index-title" id="page-title" tabindex="-1">${esc(page.name)}<span>.</span></h1><p class="index-statement is-inline">${esc(page.start)}<em>${esc(page.end)}</em></p></div><div class="index-intro home-hero-intro"><p class="home-welcome">${esc(welcome)}</p><p>${esc(purpose.join(' '))}</p></div></div>`;
+  }
   const heading = slide ? 'h3' : 'h1';
   const id = slide ? 'section-title-' + pageId : 'page-title';
   return `<div class="index-copy"><${heading} class="index-title" id="${id}"${slide ? '' : ' tabindex="-1"'}>${esc(page.name)}<span>.</span></${heading}><p class="index-statement${page.breakSentence === false ? ' is-inline' : ''}">${esc(page.start)}<em>${esc(page.end)}</em></p>${introMarkup(page, {slide})}</div>`;
@@ -46,6 +50,15 @@ function carouselMarkup(id, items, kind) {
     <p class="sr-only" data-status role="status" aria-live="polite" aria-atomic="true"></p>
   </div>`;
 }
+function homeSectionIcon(id) {
+  const drawings = {
+    triathlon: '<g class="home-icon-detail"><circle cx="8" cy="19" r="2.5"/><path d="m4 24 7-2 6-7 5 3M2 30q3-3 6 0t6 0t6 0"/><circle cx="29" cy="31" r="6"/><circle cx="44" cy="31" r="6"/><path d="m29 31 6-11 9 11H29l8-7M32 20h5m3-4h3l2 5"/><circle cx="61" cy="13" r="2.5"/><path d="m59 20-4 7 7 5-3 8m-4-13-5 10m6-14 7 3 5-4"/></g><path class="home-icon-accent" d="m14 25 3-4m18-1 2 4m20-5 3 4"/>',
+    science: '<path class="home-icon-detail" d="m33 9 16 28H17L33 9ZM3 24h22m17 0h10m-7 6h10m-7 7h12"/><path class="home-icon-accent" d="m25 24 11-2 16-9m-16 9 21-1m-21 1 22 8"/>',
+    markets: '<path class="home-icon-detail" d="M9 8v32h54M21 12v8m0 13v5m16-28v4m0 12v9m16-29v7m0 12v5"/><path class="home-icon-accent" d="M17 20h8v13h-8zM33 14h8v12h-8zM49 13h8v12h-8z"/>',
+    maker: '<path class="home-icon-detail" d="m40 19 15 8v15l-15 8-15-8V27l15-8Zm0 16 15-8m-15 8-15-8m15 8v15" transform="translate(0 -5)"/><path class="home-icon-accent" d="m9 30 3-10L32 0l7 7-20 20-10 3Zm3-10 7 7M28 4l7 7" transform="translate(0 4)"/>'
+  };
+  return `<span class="home-section-icon" aria-hidden="true"><svg viewBox="0 0 72 52" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">${drawings[id]}</svg></span>`;
+}
 function pageCollection(pageId) {
   const page = MAIN_PAGES[pageId];
   if (page.kind === 'sections') {
@@ -54,7 +67,7 @@ function pageCollection(pageId) {
       const statement = section.parts
         ? section.parts.map((text, i) => i % 2 ? `<em>${esc(text)}</em>` : esc(text)).join('')
         : `${esc(section.start)}<em>${esc(section.end)}</em>`;
-      return `<a class="home-section" href="${routeFor(id)}" aria-labelledby="section-title-${id}"><div class="home-section-heading">${articleIcon(section.icon)}<h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3><span class="home-section-arrow" aria-hidden="true">${arrow}</span></div><p class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}</a>`;
+      return `<a class="home-section" href="${routeFor(id)}" aria-labelledby="section-title-${id}" aria-describedby="section-summary-${id}"><div class="home-section-heading"><h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3>${homeSectionIcon(id)}</div><p id="section-summary-${id}" class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}</a>`;
     }).join('');
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
   }
@@ -70,4 +83,5 @@ function pageCollection(pageId) {
   if (!topics.length) return '';
   return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>`;
 }
+
 

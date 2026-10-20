@@ -52,8 +52,8 @@ const MAIN_PAGES = {
 
 // Explore-only summaries. Section pages keep their own wording above.
 const HOME_SECTIONS = {
-  triathlon: {start: 'Getting comfortable ', end: 'with discomfort.'},
-  science: {icon: 'science', start: 'Asking why. ', end: 'Understanding how.'},
+  triathlon: {start: 'Getting comfortable ', end: 'with discomfort.', intro: ''},
+  science: {icon: 'science', start: 'Asking why. ', end: 'Understanding how.', intro: ''},
   markets: {parts: ['Pricing the future ', 'before it happens.', ' Make the best decision ', 'the data can support.'], intro: ''},
   maker: {start: 'Turning ideas ', end: 'into things that work.'}
 };
@@ -72,4 +72,5 @@ const MAKER_GALLERY = {
     {id: 'runner', title: 'Night runner', src: '/assets/night-runner-hd.webp', width: 1932, height: 814, alt: 'A tall, lean runner on a lamplit waterfront path, with Manhattan across the river at night.'}
   ]
 };
+
 
