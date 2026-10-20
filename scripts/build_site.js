@@ -37,7 +37,11 @@ for (const route of routes) {
   for (const key of ['TITLE', 'DESCRIPTION', 'CANONICAL']) {
     context.value = values[key]; values[key] = run('esc(value)');
   }
-  const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
+  // Give the enhanced article a fresh catalogue/loader without changing other pages.
+  const pageTemplate = route.topic?.id === 'sunlight-to-step'
+    ? template.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=' + route.topic.articleVersion)
+    : template;
+  const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];
   });

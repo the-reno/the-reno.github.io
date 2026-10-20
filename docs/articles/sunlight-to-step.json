@@ -7,11 +7,15 @@
       "blocks": [
         {
           "type": "paragraph",
-          "text": "The Sun is made mostly of hydrogen. As it formed, gravity pulled the gas inward. The gas compressed. Pressure increased. Temperature rose."
+          "text": "The Sun is made mostly of hydrogen."
         },
         {
           "type": "paragraph",
-          "text": "Deep in the core, these conditions allowed nuclear fusion to begin. Through a chain of reactions, hydrogen nuclei combine to form helium. Energy is released."
+          "text": "Gravity pulls its material inward. As the Sun formed, this compression raised the pressure and temperature. Deep in the core, conditions became hot and dense enough for nuclear fusion to begin."
+        },
+        {
+          "type": "paragraph",
+          "text": "Through a chain of reactions, hydrogen nuclei combine to form helium. Energy is released."
         },
         {
           "type": "paragraph",
@@ -22,19 +26,155 @@
           "label": "Quantum physics",
           "items": [
             {
-              "term": "How do the nuclei get close enough to fuse?",
-              "text": "Inside the Sun, matter exists as plasma. In the core, electrons are no longer bound to individual nuclei. They move separately within the same hot mixture.\n\nBut the hydrogen nuclei still carry positive charges. They repel one another. This electrical repulsion creates a barrier to getting close.\n\nAt this scale, particles also have wave-like properties. These give them a chance to cross an energy barrier they could not overcome under classical physics. We call this quantum tunnelling. There is no physical tunnel. And no extra energy appears."
+              "term": "Why can hydrogen nuclei fuse?",
+              "text": "Hydrogen nuclei carry positive charges. They repel each other.\n\nQuantum tunnelling gives them a chance to reach distances that their electrical repulsion would otherwise prevent at these energies. It is a probability—not a guarantee."
             },
             {
-              "term": "The outcome is a matter of probability.",
-              "text": "We can calculate the chance of tunnelling. But we cannot predict each individual outcome with certainty. This is not an occasional exception to the laws of physics. Probability is part of those laws."
+              "term": "Getting close is still not enough.",
+              "text": "In the first proton–proton reaction, one proton must become a neutron through the weak nuclear interaction. The proton and neutron bind together, forming deuterium—a heavier form of hydrogen. A positron and a neutrino are also released."
             },
             {
-              "term": "Getting close does not guarantee fusion.",
-              "text": "In the first reaction of the Sun’s main fusion chain, one proton becomes a neutron through the weak nuclear interaction. The proton and neutron bind together to form deuterium, a heavier form of hydrogen. A positron and a neutrino are also released."
+              "term": "Source · U.S. Department of Energy",
+              "text": "https://www.energy.gov/science/np/articles/proton-proton-fusion-powering-sun"
             }
           ],
-          "conclusion": "The reaction is extremely unlikely in any one encounter. But inside the Sun, the number of encounters is enormous. These rare events begin the chain that powers the star."
+          "conclusion": "It is this first fusion reaction that is extremely unlikely in any one encounter—not the emission of photons. Across the enormous number of encounters inside the Sun, these rare reactions keep happening. They begin the chain that powers the star."
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "The resulting particles have slightly less total rest mass than the starting particles. That difference appears as energy. The relationship is "
+            },
+            {
+              "text": "E = mc²",
+              "strong": true
+            },
+            {
+              "text": ". A small difference in mass corresponds to a large amount of energy."
+            }
+          ]
+        },
+        {
+          "type": "concepts",
+          "label": "Mass & energy",
+          "items": [
+            {
+              "term": "E = mc²",
+              "text": "E represents energy. m represents mass. c is the speed of light.\n\nFor the fusion reaction, the released energy equals the decrease in total rest mass multiplied by c²."
+            },
+            {
+              "term": "Source · U.S. Department of Energy",
+              "text": "https://www.energy.gov/science/doe-explainsfusion-reactions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light",
+      "heading": "Light.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "That energy gradually makes its way outward."
+        },
+        {
+          "type": "paragraph",
+          "text": "It passes through the Sun’s layers. Radiation carries it through the deep interior. Farther out, rising hot material helps carry it towards the surface. There, energy escapes into space as light. We are following the energy—not one original photon travelling directly from the core to Earth."
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Light carries energy in individual packets called "
+            },
+            {
+              "text": "photons",
+              "strong": true
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "It has both wave-like and particle-like properties. A photon is not a tiny piece of hydrogen thrown out of the Sun. It is a particle of electromagnetic radiation."
+        },
+        {
+          "type": "concepts",
+          "label": "Light & photons",
+          "items": [
+            {
+              "term": "A particle of light.",
+              "text": "A photon is a packet of electromagnetic energy. It is not an atom or an electron.\n\nLight has both wave-like and particle-like properties. These describe the same physical phenomenon—not a photon switching between two everyday objects."
+            },
+            {
+              "term": "Source · NASA",
+              "text": "https://science.nasa.gov/ems/02_anatomy/"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "I still find that difficult to picture."
+        },
+        {
+          "type": "paragraph",
+          "text": "But we can follow what happens next."
+        }
+      ]
+    },
+    {
+      "id": "leaf",
+      "heading": "A leaf.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Sunlight spreads out into space. Earth intercepts only a small fraction. Some of that light is reflected back into space. Some is absorbed by the atmosphere. Some passes through and reaches the ground."
+        },
+        {
+          "type": "paragraph",
+          "text": "For our story, we follow a photon that reaches a field of wheat."
+        },
+        {
+          "type": "paragraph",
+          "text": "Then a leaf."
+        },
+        {
+          "type": "paragraph",
+          "text": "This is where the next part begins."
+        },
+        {
+          "type": "concepts",
+          "label": "Reading & sources",
+          "items": [
+            {
+              "term": "NASA · How stars form",
+              "text": "https://science.nasa.gov/universe/stars/"
+            },
+            {
+              "term": "NASA · The solar interior",
+              "text": "https://solarscience.msfc.nasa.gov/interior.shtml"
+            },
+            {
+              "term": "NASA · Sun facts",
+              "text": "https://science.nasa.gov/sun/facts/"
+            },
+            {
+              "term": "NASA · Earth’s energy budget",
+              "text": "https://science.nasa.gov/earth/earth-observatory/climate-and-earths-energy-budget/"
+            },
+            {
+              "term": "U.S. Department of Energy · Fusion",
+              "text": "https://www.energy.gov/science/doe-explainsfusion-reactions"
+            },
+            {
+              "term": "NASA · Anatomy of an electromagnetic wave",
+              "text": "https://science.nasa.gov/ems/02_anatomy/"
+            }
+          ]
         }
       ]
     }
