@@ -3,13 +3,39 @@
   "sections": [
     {
       "id": "opening",
-      "paragraphs": [
-        "I cross the finish line. The race is over, but getting here started long before the starting horn.",
-        "I followed a training plan based on my own numbers, watched how my body responded and made adjustments along the way.",
-        "The night before, I had pasta for dinner—my usual choice before a race. I thought of the carbohydrates as fuel for the hours ahead.",
-        "When the horn sounded, I felt ready. I knew the next few hours would test my body’s limits. The training had given me an idea of what to expect, but I still had to go out and do it.",
-        "I usually think about that preparation in terms of training and food. But I’m interested in the connection between them: how something on my plate becomes available to a muscle, and how that muscle produces a pull.",
-        "That takes me back to the wheat used to make the pasta, and the sunlight that helped it grow."
+      "heading": "Photon.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The Sun is made mostly of hydrogen. As it formed, gravity pulled the gas inward. The gas compressed. Pressure increased. Temperature rose."
+        },
+        {
+          "type": "paragraph",
+          "text": "Deep in the core, these conditions allowed nuclear fusion to begin. Through a chain of reactions, hydrogen nuclei combine to form helium. Energy is released."
+        },
+        {
+          "type": "paragraph",
+          "text": "This is what powers the Sun."
+        },
+        {
+          "type": "concepts",
+          "label": "Quantum physics",
+          "items": [
+            {
+              "term": "How do the nuclei get close enough to fuse?",
+              "text": "Inside the Sun, matter exists as plasma. In the core, electrons are no longer bound to individual nuclei. They move separately within the same hot mixture.\n\nBut the hydrogen nuclei still carry positive charges. They repel one another. This electrical repulsion creates a barrier to getting close.\n\nAt this scale, particles also have wave-like properties. These give them a chance to cross an energy barrier they could not overcome under classical physics. We call this quantum tunnelling. There is no physical tunnel. And no extra energy appears."
+            },
+            {
+              "term": "The outcome is a matter of probability.",
+              "text": "We can calculate the chance of tunnelling. But we cannot predict each individual outcome with certainty. This is not an occasional exception to the laws of physics. Probability is part of those laws."
+            },
+            {
+              "term": "Getting close does not guarantee fusion.",
+              "text": "In the first reaction of the Sun’s main fusion chain, one proton becomes a neutron through the weak nuclear interaction. The proton and neutron bind together to form deuterium, a heavier form of hydrogen. A positron and a neutrino are also released."
+            }
+          ],
+          "conclusion": "The reaction is extremely unlikely in any one encounter. But inside the Sun, the number of encounters is enormous. These rare events begin the chain that powers the star."
+        }
       ]
     }
   ]
