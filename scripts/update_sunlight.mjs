@@ -14,7 +14,7 @@ const requireText = (value, message) => { if (!value?.trim()) throw new Error(me
 function paragraph(value) {
   const text = requireText(value, 'Empty paragraph.');
   if (/<[^>]+>/.test(text)) throw new Error('Use plain text, not HTML, in the narrative.');
-  if (text === '**E = mc².**') return {type:'paragraph', text:'E = mc².', highlight:true};
+  if (/^\*\*E = mc²\.?\*\*$/.test(text)) return {type:'paragraph', text:'E = mc²', highlight:true};
   if (!text.includes('**')) return {type:'paragraph', text};
   const chunks = text.split('**');
   if (chunks.length % 2 !== 1) throw new Error('Unclosed **bold** formatting.');

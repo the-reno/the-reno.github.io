@@ -15,7 +15,7 @@ Temperature rose.
 
 Deep in the core, it became hot and dense enough for nuclear fusion to begin.
 
-Hydrogen nuclei—the centres of hydrogen atoms—combine through a chain of reactions.
+Hydrogen nuclei, the centres of hydrogen atoms, combine through a chain of reactions.
 The net result is four hydrogen nuclei becoming one helium nucleus.
 Other particles are released.
 So is energy.
@@ -33,7 +33,7 @@ That difference appears as energy.
 
 Einstein connected the dots.
 
-**E = mc².**
+**E = mc²**
 
 Take the difference in mass.
 Multiply it by the speed of light squared.
@@ -86,7 +86,7 @@ Gradually, it moves outward.
 How long does this take?
 
 One solar model puts this slow, random journey at about **170,000 years**.
-With roughly **ten trillion trillion interactions** along the way.
+With roughly **10²⁵ interactions** along the way.
 
 And that only gets us through the dense inner layers.
 We are not at the surface yet.
@@ -272,7 +272,7 @@ Gamma rays and visible light are both electromagnetic radiation. A gamma-ray pho
 
 ### How long, and how many interactions?
 
-Mitalas and Sills (1992) calculated about 170,000 years and 10²⁵ random-walk steps for radiation to diffuse from the centre to the base of the Sun’s convection zone. In this model, steps represent travel between interactions. 10²⁵ is ten trillion trillion: a one followed by 25 zeros.
+Mitalas and Sills (1992) calculated about 170,000 years and 10²⁵ random-walk steps for radiation to diffuse from the centre to the base of the Sun’s convection zone. In this model, steps represent travel between interactions. 10²⁵ is a one followed by 25 zeros.
 
 These are model estimates, not a measured itinerary. The step length changes with the density and opacity of the solar material. The outer convective stage is much quicker.
 

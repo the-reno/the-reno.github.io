@@ -18,7 +18,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Hydrogen nuclei—the centres of hydrogen atoms—combine through a chain of reactions.\nThe net result is four hydrogen nuclei becoming one helium nucleus.\nOther particles are released.\nSo is energy."
+          "text": "Hydrogen nuclei, the centres of hydrogen atoms, combine through a chain of reactions.\nThe net result is four hydrogen nuclei becoming one helium nucleus.\nOther particles are released.\nSo is energy."
         },
         {
           "type": "paragraph",
@@ -81,7 +81,7 @@
         },
         {
           "type": "paragraph",
-          "text": "E = mc².",
+          "text": "E = mc²",
           "highlight": true
         },
         {
@@ -224,7 +224,7 @@
               "text": ".\nWith roughly "
             },
             {
-              "text": "ten trillion trillion interactions",
+              "text": "10²⁵ interactions",
               "strong": true
             },
             {
@@ -304,7 +304,7 @@
             },
             {
               "term": "How long, and how many interactions?",
-              "text": "Mitalas and Sills (1992) calculated about 170,000 years and 10²⁵ random-walk steps for radiation to diffuse from the centre to the base of the Sun’s convection zone. In this model, steps represent travel between interactions. 10²⁵ is ten trillion trillion: a one followed by 25 zeros.\n\nThese are model estimates, not a measured itinerary. The step length changes with the density and opacity of the solar material. The outer convective stage is much quicker."
+              "text": "Mitalas and Sills (1992) calculated about 170,000 years and 10²⁵ random-walk steps for radiation to diffuse from the centre to the base of the Sun’s convection zone. In this model, steps represent travel between interactions. 10²⁵ is a one followed by 25 zeros.\n\nThese are model estimates, not a measured itinerary. The step length changes with the density and opacity of the solar material. The outer convective stage is much quicker."
             },
             {
               "term": "We are following energy, not one surviving photon.",
