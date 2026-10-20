@@ -1,183 +1,129 @@
 'use strict';
-/* Progressive enhancement: the complete article remains readable without JavaScript. */
+/* Same-page chapter binder. Photon uses the existing article renderer; Leaf uses
+ * editable data. If that optional data cannot load, the ordinary article stays. */
 (() => {
-  const reader = document.getElementById('reader-page');
-  if (!reader) return;
-  let dispose = () => {}, queued = false;
-  const onArticle = () => reader.dataset.topicId === 'sunlight-to-step' ||
-    (typeof currentTopic !== 'undefined' && currentTopic?.id === 'sunlight-to-step') ||
-    /\/topic\/sunlight-to-step\/?$/.test(location.pathname);
-  const definitions = {
-    'Quantum physics': ['quantum', '01'],
-    'Mass & energy': ['mass', '02'],
-    'Light & photons': ['photons', '03'],
-    'Reading & sources': ['sources', '04']
-  };
-  const element = (tag, className, text) => {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text) node.textContent = text;
-    return node;
-  };
-  function enhance() {
-    queued = false;
-    if (!onArticle()) { dispose(); return; }
-    const host = reader.querySelector('#narrative-content');
-    if (!host || host.dataset.sunlightEnhanced || host.getAttribute('aria-busy') === 'true') return;
-    const sections = [...host.querySelectorAll(':scope > .story-section')];
-    if (!sections.length || !host.querySelector('.story-concepts')) return;
-    dispose();
-    host.dataset.sunlightEnhanced = 'true';
-    const article = host.closest('article');
-    article.classList.add('has-science-layout');
-    const controller = new AbortController(), signal = controller.signal;
-    const mobile = matchMedia('(max-width: 860px)');
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    const root = element('div', 'science-reader');
-    const nav = element('nav', 'science-nav'); nav.setAttribute('aria-label', 'In this chapter');
-    const labels = ['The Sun', 'Light', 'A leaf'];
-    sections.forEach((section, index) => {
-      const a = element('a', 'science-nav-link', labels[index] || section.querySelector('h2')?.textContent || 'Part ' + (index + 1));
-      a.href = '#' + section.id; a.dataset.storyPart = section.id;
-      nav.append(a);
-    });
-    const jump = element('a', 'science-jump', 'Science'); jump.href = '#science-quantum'; nav.append(jump);
-    const columns = element('div', 'science-columns');
-    const story = element('div', 'science-story');
-    const aside = element('aside', 'science-aside'); aside.id = 'science-panel'; aside.setAttribute('aria-labelledby', 'science-panel-title');
-    const asideHead = element('header', 'science-aside-head');
-    const asideTitle = element('h2', '', 'Science'); asideTitle.id = 'science-panel-title';
-    asideHead.append(asideTitle, element('p', '', 'The details behind the story.'));
-    const noteList = element('div', 'science-note-list'); aside.append(asideHead, noteList);
-    const notes = [];
-    sections.forEach(section => {
-      section.querySelectorAll('.story-concepts').forEach(original => {
-        const label = original.querySelector('.story-concepts-label')?.textContent?.trim();
-        const definition = definitions[label];
-        if (!definition) return;
-        const [key, number] = definition;
-        const note = element('details', 'science-note'); note.id = 'science-' + key;
-        const summary = element('summary', 'science-summary');
-        summary.append(element('span', 'science-number', number), element('span', '', label), element('span', 'science-toggle', '+'));
-        summary.lastElementChild.setAttribute('aria-hidden', 'true');
-        const body = element('div', 'science-note-body');
-        const items = [...original.querySelectorAll('.story-concept')];
-        items.forEach(item => {
-          const term = item.querySelector('strong')?.textContent || '';
-          const text = item.querySelector('span')?.textContent || '';
-          let url;
-          try { url = new URL(text); } catch (_) { /* Prose, not a source URL. */ }
-          if (url?.protocol === 'https:') {
-            const p = element('p', 'science-source');
-            const a = element('a', '', term); a.href = url.href; a.target = '_blank'; a.rel = 'noopener noreferrer';
-            a.setAttribute('aria-label', term + ' (opens in a new tab)'); p.append(a); body.append(p);
-          } else {
-            body.append(element('h3', '', term));
-            text.split(/\n\s*\n/).forEach(paragraph => body.append(element('p', '', paragraph)));
-          }
-        });
-        const conclusion = original.querySelector('.story-concepts-conclusion');
-        if (conclusion) {
-          const p = element('p', 'science-takeaway', conclusion.textContent);
-          const firstSource = body.querySelector('.science-source');
-          if (firstSource) body.insertBefore(p, firstSource); else body.append(p);
-        }
-        const slot = element('div', 'science-inline-slot');
-        const previous = original.previousElementSibling;
-        let ref;
-        if (key !== 'sources') {
-          ref = element('a', 'science-ref', number + '  ' + label);
-          ref.href = '#' + note.id; ref.setAttribute('aria-controls', note.id); ref.setAttribute('aria-expanded', 'false');
-          slot.append(ref); original.replaceWith(slot);
-          if (previous) { previous.id = 'story-' + key; previous.tabIndex = -1; }
-          const back = element('a', 'science-return', 'Back to the story');
-          back.href = '#story-' + key; back.dataset.returnNote = key; body.append(back);
-        } else original.remove();
-        note.append(summary, body); noteList.append(note);
-        notes.push({key, note, summary, ref, slot, previous, section});
-        note.addEventListener('toggle', () => {
-          if (note.open && !mobile.matches) notes.forEach(item => {if (item.note !== note) item.note.open = false;});
-          if (ref) ref.setAttribute('aria-expanded', String(note.open));
-          summary.lastElementChild.textContent = note.open ? '−' : '+';
-        }, {signal});
-      });
-      story.append(section);
-    });
-    columns.append(story, aside); root.append(nav, columns); host.replaceChildren(root);
-    let firstLayout = true, frame = 0;
-    const layout = () => {
-      notes.forEach(item => {
-        if (mobile.matches && item.key !== 'sources') item.slot.append(item.note);
-        else noteList.append(item.note);
-        if (firstLayout) item.note.open = !mobile.matches && item.key === 'quantum';
-      });
-      firstLayout = false;
-      aside.classList.toggle('is-mobile-sources', mobile.matches);
-    };
-    const measure = () => {
-      root.style.setProperty('--science-header', Math.ceil(document.querySelector('.site-header')?.getBoundingClientRect().height || 80) + 'px');
-      root.style.setProperty('--science-nav', Math.ceil(nav.getBoundingClientRect().height) + 'px');
-    };
-    const activePart = () => {
-      const threshold = (document.querySelector('.site-header')?.getBoundingClientRect().height || 80) + nav.getBoundingClientRect().height + 55;
-      let active = sections[0];
-      sections.forEach(section => {if (section.getBoundingClientRect().top <= threshold) active = section;});
-      if (scrollY + innerHeight >= document.documentElement.scrollHeight - 3) active = sections[sections.length - 1];
-      nav.querySelectorAll('[data-story-part]').forEach(a => {
-        if (a.dataset.storyPart === active.id) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-      });
-    };
-    const moveTo = target => {
-      const offset = (document.querySelector('.site-header')?.getBoundingClientRect().height || 80) + nav.getBoundingClientRect().height + 25;
-      window.scrollTo({top:Math.max(0, target.getBoundingClientRect().top + scrollY - offset), behavior:reduced.matches ? 'instant' : 'smooth'});
-      target.focus?.({preventScroll:true});
-    };
-    const openNote = item => {
-      if (!mobile.matches) notes.forEach(entry => {if (entry !== item) entry.note.open = false;});
-      item.note.open = true;
-      if (mobile.matches) moveTo(item.summary);
-      else {
-        const scroll = item.note.getBoundingClientRect().top - aside.getBoundingClientRect().top + aside.scrollTop - 75;
-        aside.scrollTo({top:Math.max(0, scroll), behavior:reduced.matches ? 'instant' : 'smooth'});
-        item.summary.focus({preventScroll:true});
-      }
-    };
-    const hashAction = () => {
-      const id = location.hash.slice(1);
-      const item = notes.find(entry => entry.note.id === id);
-      if (item) openNote(item);
-      else {const target = document.getElementById(id); if (target && story.contains(target)) moveTo(target);}
-    };
-    root.addEventListener('click', event => {
-      const link = event.target.closest('a[href^="#"]');
-      if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const id = link.hash.slice(1), target = document.getElementById(id);
-      if (!target) return;
-      event.preventDefault();
-      const item = notes.find(entry => entry.note.id === id);
-      if (item) openNote(item);
-      else if (link.dataset.returnNote) {
-        const current = notes.find(entry => entry.key === link.dataset.returnNote);
-        if (mobile.matches && current) current.note.open = false;
-        moveTo(target);
-      } else { target.tabIndex = -1; moveTo(target); }
-      if (location.hash !== link.hash) history.pushState(null, '', link.hash);
-    }, {signal});
-    const scroll = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => { frame = 0; activePart(); });
-    };
-    mobile.addEventListener('change', () => {layout(); measure(); activePart();}, {signal});
-    window.addEventListener('scroll', scroll, {passive:true, signal});
-    window.addEventListener('hashchange', hashAction, {signal});
-    window.addEventListener('popstate', hashAction, {signal});
-    const observer = new ResizeObserver(measure);
-    const header = document.querySelector('.site-header'); if (header) observer.observe(header); observer.observe(nav);
-    layout(); measure(); activePart(); hashAction();
-    dispose = () => {controller.abort(); observer.disconnect(); cancelAnimationFrame(frame);};
+  const reader=document.getElementById('reader-page');
+  if(!reader)return;
+  const chapters=[
+    {id:'photon',number:'01',title:'Photon.',label:'From the Sun to a leaf'},
+    {id:'leaf',number:'02',title:'The leaf.',label:'From light to chemistry'},
+    {id:'plant',number:'03',title:'The plant.',construction:true},
+    {id:'pasta',number:'04',title:'Pasta.',construction:true},
+    {id:'energy',number:'05',title:'Energy.',construction:true},
+    {id:'muscle',number:'06',title:'Muscle.',construction:true}
+  ];
+  const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const lines=value=>escape(value).replace(/\n/g,'<br>');
+  const element=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;return n;};
+  const onArticle=()=>/\/topic\/sunlight-to-step\/?$/.test(location.pathname);
+  let busyHost=null,mountedHost=null,release=()=>{},cache=null;
+  const saved={active:'photon',scroll:{}};
+  const sourceLink=(title,href)=>{const a=element('a','',title),url=new URL(href);if(url.protocol!=='https:')throw new Error('Invalid source');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';return a;};
+  function note(title,index,open=false){
+    const d=element('details');d.open=open;
+    d.innerHTML=`<summary><span class="n">${String(index+1).padStart(2,'0')}</span><span>${escape(title)}</span><span class="toggle" aria-hidden="true">${open?'−':'+'}</span></summary><div class="note-body"></div>`;return d;
   }
-  const schedule = () => {if (!queued) {queued = true; queueMicrotask(enhance);}};
-  new MutationObserver(schedule).observe(reader, {childList:true, subtree:true});
-  window.addEventListener('ronu:navigate', schedule);
-  schedule();
+  function navButton(key,label,next=true){
+    const c=chapters.find(c=>c.id===key),b=element('button',next?'continue-button':'return-button');b.type='button';b.dataset.go=key;
+    b.innerHTML=`<span><small>${escape(label)}</small>${escape(c.title)}</span><span class="arrow" aria-hidden="true">${next?'›':'‹'}</span>`;return b;
+  }
+  function panelMarkup(c,i){
+    const key=c.id,building=c.construction;
+    const toolbar=`<div class="sheet-toolbar"><span class="chapter-label">${c.number} / ${escape(c.label||c.title.replace(/\.$/,''))}</span><div class="toolbar-right">${building?'<span class="construction-toolbar-status">Under construction</span>':`<span class="reading-counter">0%</span><button type="button" class="science-control" aria-controls="science-${key}" aria-expanded="false">Science</button>`}</div></div>`;
+    const nav=building?`<nav class="placeholder-nav" aria-label="${escape(c.title)} section navigation"><button type="button" class="placeholder-link" data-go="${chapters[i-1].id}"><span class="direction" aria-hidden="true">‹</span><span><small>Previous section</small>${escape(chapters[i-1].title)}</span></button>${i<chapters.length-1?`<button type="button" class="placeholder-link next" data-go="${chapters[i+1].id}"><span><small>Next section</small>${escape(chapters[i+1].title)}</span><span class="direction" aria-hidden="true">›</span></button>`:''}</nav>`:'';
+    return `<section class="page-sheet ${i?'front-sheet':'base-sheet'}${building?' construction-sheet':''}" id="panel-${key}" role="tabpanel" aria-labelledby="tab-${key}" aria-hidden="true" inert>${toolbar}${building?'':'<div class="reading-line" aria-hidden="true"><span></span></div>'}<div class="sheet-scroll${building?' placeholder-scroll':''}" tabindex="0" role="region" aria-label="${escape(c.title)} chapter text"><header class="chapter-heading"><h2>${escape(c.title)}</h2></header>${building?'<div class="construction-content"><p class="construction-state"><span class="construction-dot" aria-hidden="true"></span>Under construction.</p></div>'+nav:`<div class="sheet-content"><div class="narrative" aria-label="${escape(c.title)} narrative"></div><aside class="sheet-science" id="science-${key}" aria-label="${escape(c.title)} science notes"><h3>Science</h3><p class="science-caption">The details behind the story.</p></aside></div>`}</div></section>`;
+  }
+  function build(host,data){
+    const root=element('div','sunlight-binder');
+    root.innerHTML=`<div class="binder" data-active="photon" data-background="false"><div class="binder-tabbar"><div class="binder-tabs" role="tablist" aria-label="Story chapters" aria-orientation="horizontal">${chapters.map(c=>`<button type="button" class="chapter-tab${c.construction?' is-upcoming':''}" id="tab-${c.id}" role="tab" aria-controls="panel-${c.id}" aria-selected="false" tabindex="-1" data-chapter="${c.id}"><span class="tab-num">${c.number}</span><span class="tab-copy"><span>${escape(c.title)}</span>${c.construction?'<small class="tab-status">Under construction</small>':''}</span><span class="tab-dot" aria-hidden="true"></span></button>`).join('')}</div><span class="binder-meta" aria-hidden="true"><b id="chapter-number">01</b> / 06</span></div><div class="binder-stage">${chapters.map(panelMarkup).join('')}<div class="base-shade" aria-hidden="true"></div></div><footer class="binder-bottom"><span class="stack-label"><span class="stack-mark" aria-hidden="true"></span><span id="stack-text">The journey begins here.</span></span><span class="keyboard-hint">Six parts. One journey.</span><span id="reading-value" aria-label="Current chapter reading progress">0%</span></footer></div><p id="chapter-status" class="sr-only" role="status" aria-live="polite"></p>`;
+    const prose=root.querySelector('#panel-photon .narrative'),science=root.querySelector('#science-photon');let noteIndex=0;
+    // Reuse rendered Photon content, keeping the editable master authoritative.
+    host.querySelectorAll(':scope > .story-section').forEach((original,index)=>{
+      const section=element('section','binder-section');section.id=original.id;const heading=original.querySelector('h2');
+      if(index&&heading){const h=element('h3','section-title',heading.textContent);h.id=heading.id;section.append(h);}
+      for(const child of original.children){
+        if(child.matches('.story-section-head'))continue;
+        if(!child.matches('.story-concepts')){section.append(child.cloneNode(true));continue;}
+        const d=note(child.querySelector('.story-concepts-label')?.textContent||'Science',noteIndex,noteIndex===0),body=d.querySelector('.note-body');
+        child.querySelectorAll('.story-concept').forEach(item=>{
+          const title=item.querySelector('strong')?.textContent||'',value=item.querySelector('span')?.textContent||'';
+          if(/^https:\/\/\S+$/.test(value.trim())){const p=element('p');p.append(sourceLink(title,value.trim()));body.append(p);}
+          else{body.append(element('h4','',title));value.split(/\n\s*\n/).forEach(t=>body.append(element('p','',t)));}
+        });
+        const conclusion=child.querySelector('.story-concepts-conclusion');if(conclusion)body.append(element('p','note-conclusion',conclusion.textContent));science.append(d);noteIndex++;
+      }
+      prose.append(section);
+    });
+    prose.append(navButton('leaf','Next chapter'));
+    const leaf=root.querySelector('#panel-leaf .narrative'),allowed=new Set(['personal','question','handover']);
+    for(const block of data.leaf.blocks){const p=element(block.style==='handover'?'div':'p',allowed.has(block.style)?block.style:'');p.innerHTML=lines(block.text);if(block.strong)p.append(element('strong','',block.strong));leaf.append(p);}
+    leaf.append(navButton('plant','Next section · Under construction'),navButton('photon','Previous chapter',false));
+    data.leaf.notes.forEach((item,index)=>{const d=note(item.title,index,index===0),body=d.querySelector('.note-body');item.paragraphs.forEach(t=>body.append(element('p','',t)));item.sources.forEach(s=>body.append(sourceLink(s.title,s.url)));root.querySelector('#science-leaf').append(d);});
+    return root;
+  }
+  function activate(root){
+    const controller=new AbortController(),signal=controller.signal;
+    const listen=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal});
+    const binder=root.querySelector('.binder'),rail=root.querySelector('[role="tablist"]'),tabs=[...rail.querySelectorAll('[role="tab"]')];
+    const panels=Object.fromEntries(chapters.map(c=>[c.id,root.querySelector('#panel-'+c.id)]));
+    const scrollers=Object.fromEntries(chapters.map(c=>[c.id,panels[c.id].querySelector('.sheet-scroll')]));
+    const mobile=matchMedia('(max-width:860px)'),reduce=matchMedia('(prefers-reduced-motion:reduce)');
+    const shade=root.querySelector('.base-shade'),stage=root.querySelector('.binder-stage');let active='photon',frame=0;
+    const chapterFor=key=>chapters.find(c=>c.id===key);
+    const refresh=key=>{
+      if(chapterFor(key).construction){if(key===active)root.querySelector('#reading-value').textContent='Under construction';return;}
+      const el=scrollers[key],max=el.scrollHeight-el.clientHeight,n=max<=0?100:Math.round(Math.min(100,Math.max(0,el.scrollTop/max*100)));
+      panels[key].querySelector('.reading-line span').style.width=n+'%';panels[key].querySelector('.reading-counter').textContent=n+'%';if(key===active)root.querySelector('#reading-value').textContent=n+'%';
+    };
+    const revealTab=(tab,instant=false)=>{const r=rail.getBoundingClientRect(),t=tab.getBoundingClientRect();let left=rail.scrollLeft;if(t.left<r.left+2)left+=t.left-r.left-2;else if(t.right>r.right-2)left+=t.right-r.right+2;rail.scrollTo({left:Math.max(0,left),behavior:instant||reduce.matches?'instant':'smooth'});};
+    function change(key,{historyMode='push',focus=false,initial=false}={}){
+      const c=chapterFor(key);if(!c)return;const old=active,index=chapters.indexOf(c),background=index?chapters[index-1]:null;
+      active=key;saved.active=key;binder.dataset.active=key;binder.dataset.background=String(Boolean(background));const selected=tabs[index];
+      if(!initial&&(focus||Object.values(panels).some(p=>p!==panels[key]&&p.contains(document.activeElement))))selected.focus({preventScroll:true});
+      tabs.forEach(t=>{const yes=t.dataset.chapter===key;t.setAttribute('aria-selected',String(yes));t.tabIndex=yes?0:-1;});
+      Object.entries(panels).forEach(([id,p])=>{p.classList.toggle('is-current',id===key);p.classList.toggle('is-underlay',id===background?.id);p.inert=id!==key;p.setAttribute('aria-hidden',String(id!==key));});
+      root.querySelector('#chapter-number').textContent=c.number;root.querySelector('#stack-text').textContent=background?background.title.replace(/\.$/,'')+' is underneath.':'The journey begins here.';shade.dataset.go=background?.id||'photon';
+      if(historyMode&&location.hash!=='#'+key)history[historyMode==='replace'?'replaceState':'pushState'](null,'','#'+key);
+      if(focus)scrollers[key].focus({preventScroll:true});if(!initial&&old!==key)root.querySelector('#chapter-status').textContent=c.title+(c.construction?' Under construction.':' Selected.');revealTab(selected,initial);refresh(key);
+    }
+    function routeHash(){
+      if(!onArticle())return;const id=location.hash.slice(1);
+      if(chapterFor(id))change(id,{historyMode:null,initial:true});
+      else{change('photon',{historyMode:null,initial:true});const target=id?root.querySelector('[id="'+CSS.escape(id)+'"]'):null;if(target&&panels.photon.contains(target))target.scrollIntoView({block:'start',behavior:'instant'});}
+    }
+    tabs.forEach((tab,index)=>{
+      listen(tab,'click',()=>change(tab.dataset.chapter));
+      listen(tab,'keydown',e=>{const next=e.key==='ArrowRight'?(index+1)%tabs.length:e.key==='ArrowLeft'?(index+tabs.length-1)%tabs.length:e.key==='Home'?0:e.key==='End'?tabs.length-1:null;if(next===null)return;e.preventDefault();tabs[next].focus({preventScroll:true});change(tabs[next].dataset.chapter);});
+    });
+    root.querySelectorAll('[data-go]').forEach(b=>listen(b,'click',()=>change(b.dataset.go,{focus:true})));
+    listen(shade,'click',()=>change(shade.dataset.go));
+    listen(document,'keydown',e=>{if(e.key!=='Escape'||active==='photon'||document.querySelector('dialog[open]')||!onArticle())return;e.preventDefault();const previous=chapters[chapters.findIndex(c=>c.id===active)-1];change(previous.id);tabs[chapters.indexOf(previous)].focus({preventScroll:true});});
+    listen(window,'popstate',routeHash);listen(window,'hashchange',routeHash);
+    Object.entries(panels).forEach(([key,panel])=>{
+      const scroller=scrollers[key];scroller.scrollTop=saved.scroll[key]||0;
+      listen(scroller,'scroll',()=>{saved.scroll[key]=scroller.scrollTop;refresh(key);},{passive:true});
+      const button=panel.querySelector('.science-control'),notes=panel.querySelector('.sheet-science');if(!button||!notes)return;
+      listen(button,'click',()=>{const expanded=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'Hide science':'Science';if(expanded)panel.dataset.storyScroll=String(scroller.scrollTop);notes.hidden=mobile.matches&&!expanded;panel.classList.toggle('science-expanded',mobile.matches&&expanded);scroller.scrollTo({top:expanded?0:Number(panel.dataset.storyScroll||0),behavior:expanded&&!reduce.matches?'smooth':'instant'});refresh(key);});
+      notes.querySelectorAll('details').forEach(d=>listen(d,'toggle',()=>{d.querySelector('.toggle').textContent=d.open?'−':'+';refresh(key);}));
+    });
+    function responsive(){
+      Object.values(panels).forEach(p=>{const b=p.querySelector('.science-control'),n=p.querySelector('.sheet-science');if(!b||!n)return;const expanded=b.getAttribute('aria-expanded')==='true';n.hidden=mobile.matches&&!expanded;p.classList.toggle('science-expanded',mobile.matches&&expanded);});
+      const top=stage.getBoundingClientRect().top+scrollY,height=Math.max(mobile.matches?360:460,innerHeight-top-39);root.style.setProperty('--stage-height',height+'px');refresh(active);revealTab(tabs[chapters.findIndex(c=>c.id===active)],true);
+    }
+    const resize=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(responsive);};listen(mobile,'change',responsive);listen(window,'resize',resize);
+    const observer=new ResizeObserver(resize);observer.observe(document.querySelector('.site-header'));responsive();routeHash();
+    return()=>{controller.abort();observer.disconnect();cancelAnimationFrame(frame);};
+  }
+  async function enhance(){
+    if(!onArticle()){release();release=()=>{};mountedHost=null;reader.classList.remove('has-binder');return;}
+    const host=reader.querySelector('#narrative-content');if(!host||host===mountedHost||host===busyHost||host.getAttribute('aria-busy')==='true'||!host.querySelector(':scope > .story-section'))return;busyHost=host;
+    try{
+      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261020-binder1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
+      if(!onArticle()||!host.isConnected||reader.querySelector('#narrative-content')!==host)return;
+      if(!Array.isArray(cache.leaf?.blocks)||!Array.isArray(cache.leaf?.notes))throw new Error('Invalid Leaf content');
+      const root=build(host,cache);release();mountedHost=host;host.replaceChildren(root);reader.classList.add('has-binder');const progress=document.getElementById('reading-progress');if(progress)progress.hidden=true;release=activate(root);
+    }catch(error){console.warn('Chapter binder unavailable; keeping the article.',error.message);}finally{if(busyHost===host)busyHost=null;}
+  }
+  let queued=false;const schedule=()=>{if(!queued){queued=true;queueMicrotask(()=>{queued=false;enhance();});}};
+  new MutationObserver(schedule).observe(reader,{childList:true,subtree:true});window.addEventListener('ronu:navigate',schedule);schedule();
 })();

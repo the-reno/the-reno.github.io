@@ -1,79 +1,101 @@
-/* Article-only reading layout, using Ronu's existing palette and type. */
-.story-article.has-science-layout {max-width:none}
-.has-science-layout .story-header {padding-bottom:30px}
-.has-science-layout .story-body {max-width:none}
-.has-science-layout .story-title {max-width:26ch}
-.science-reader {--science-header:80px;--science-nav:52px}
-.science-nav {position:sticky;top:var(--science-header);z-index:10;display:flex;align-items:stretch;gap:28px;min-height:52px;margin:0 0 36px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg)}
-.science-nav a {display:flex;align-items:center;min-height:50px;padding:0 2px;border-bottom:2px solid transparent;font:12px/1.4 var(--mono);color:var(--muted)}
-.science-nav a:hover,.science-nav a[aria-current] {color:var(--text);border-bottom-color:var(--accent)}
-.science-nav .science-jump {margin-left:auto;color:var(--accent)}
-.science-columns {display:grid;grid-template-columns:minmax(0,1fr) 322px;gap:64px;align-items:start}
-.science-story {min-width:0;font-size:17px;line-height:1.9}
-.science-story .story-section p {margin-bottom:22px}
-.science-story .story-section + .story-section {margin-top:55px}
-.science-story .story-section,.science-story [id],.science-note,.science-summary {scroll-margin-top:calc(var(--science-header) + var(--science-nav) + 25px)}
-.science-story .story-section-head {margin-bottom:28px}
-.science-story .story-section-head h2 {font-size:28px}
-.science-story p:focus {outline:none}
-.science-inline-slot {margin:-8px 0 25px}
-.science-ref {display:inline-flex;align-items:center;min-height:35px;padding:2px 0;color:var(--accent);font:11px/1.6 var(--mono);text-underline-offset:5px}
-.science-ref:hover,.science-source a:hover,.science-return:hover {text-decoration:underline}
-.science-aside {position:sticky;top:calc(var(--science-header) + var(--science-nav) + 24px);max-height:calc(100dvh - var(--science-header) - var(--science-nav) - 44px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding:0 12px 6px 25px;border-left:1px solid var(--line);font:13px/1.75 var(--sans);color:var(--muted);overscroll-behavior:auto}
-.science-aside-head {padding:0 0 19px}
-.science-aside-head h2 {margin:0 0 4px;font:11px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
-.science-aside-head p {margin:0;font-size:12px;color:var(--faint)}
-.science-note {border-top:1px solid var(--line);padding:0}
-.science-summary {list-style:none;display:grid;grid-template-columns:21px minmax(0,1fr) 14px;gap:9px;align-items:baseline;min-height:52px;padding:15px 0;cursor:pointer;color:var(--text);font:14px/1.5 var(--mono)}
-.science-summary::-webkit-details-marker {display:none}
-.science-number {font-size:10px;color:var(--faint)}
-.science-toggle {font-size:17px;color:var(--accent);text-align:right}
-.science-note[open] > .science-summary {color:var(--accent)}
-.science-note-body {padding:0 0 20px 30px;overflow-wrap:anywhere}
-.science-note-body h3 {margin:4px 0 10px;color:var(--text);font:500 13px/1.65 var(--sans)}
-.science-note-body h3:not(:first-child) {margin-top:20px}
-.science-note-body p {margin:0 0 13px;font:13px/1.8 var(--sans)}
-.science-note-body .science-takeaway {border-left:2px solid var(--accent-border);padding-left:12px;margin:21px 0 17px;color:var(--text)}
-.science-note-body .science-source {margin:16px 0 0;font:11px/1.65 var(--sans);color:var(--faint)}
-.science-source a {text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
-.science-return {display:inline-flex;align-items:center;min-height:40px;margin-top:12px;font:10px/1.5 var(--mono);color:var(--accent)}
-.has-science-layout .story-bottom {margin-top:43px}
-@media(max-width:1050px) and (min-width:861px) {
-  .science-columns {grid-template-columns:minmax(0,1fr) 295px;gap:34px}
-  .science-aside {padding-left:20px;padding-right:8px}
-  .science-story {font-size:16px}
-}
-@media(max-width:860px) {
-  .science-columns {display:block}
-  .science-story {max-width:650px}
-  .science-nav {gap:24px;margin-bottom:30px}
-  .science-nav a {font-size:11px}
-  .science-inline-slot {margin:-5px 0 23px}
-  .science-ref {display:none}
-  .science-inline-slot .science-note {border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface);padding:0 14px;border-radius:3px}
-  .science-inline-slot .science-summary {padding:12px 0;min-height:47px;font-size:12px}
-  .science-inline-slot .science-note-body {padding:0 5px 14px 30px}
-  .science-note-body p {font-size:14px;line-height:1.8;margin-bottom:15px}
-  .science-aside.is-mobile-sources {position:static;max-height:none;overflow:visible;border-left:0;padding:0;max-width:650px;margin-top:35px}
-  .is-mobile-sources .science-aside-head {display:none}
-  .is-mobile-sources .science-summary {font-size:12px}
-  .science-story .story-section + .story-section {margin-top:42px}
-}
-@media(max-width:500px) {
-  .has-science-layout .story-header {padding-bottom:26px}
-  .science-nav {gap:20px;min-height:48px;margin-bottom:28px}
-  .science-nav a {min-height:46px;font-size:11px}
-  .science-story {font-size:16px;line-height:1.85}
-  .science-story .story-section p {margin-bottom:20px}
-  .science-story .story-section-head h2 {font-size:25px}
-  .science-story .story-section-head {margin-bottom:24px}
-  .science-note-body {padding-left:20px}
-}
-@media(max-width:360px) {.science-nav {gap:13px}.science-nav a {font-size:10px}}
-@media(prefers-reduced-motion:reduce) {.science-reader * {scroll-behavior:auto}}
-@media print {
-  .science-nav,.science-ref,.science-return {display:none}
-  .science-columns {display:block}
-  .science-aside {position:static;max-height:none;overflow:visible;border:0}
-  .science-note::details-content {display:block;height:auto;content-visibility:visible}
-}
+/* Same-page chapter binder. These styles do not affect other articles. */
+.sunlight-binder{color-scheme:dark;--paper:#15191e;--back:#101318;--text:#ecefe9;--muted:#bac0c6;--faint:#929ba5;--line:#30363e;--line-soft:#242a31;--orange:#ff7a1a;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;--tab-height:60px;--sheet-offset:203px;--stage-height:calc(100dvh - 285px);font-family:var(--sans);color:var(--text)}
+.sunlight-binder *{box-sizing:border-box}
+.sunlight-binder button{border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.sunlight-binder a{color:inherit}
+.sunlight-binder :is(button,a,summary,[tabindex="0"]):focus-visible{outline:2px solid var(--orange);outline-offset:4px}
+.sunlight-binder :is(h2,h3,h4){font-family:var(--mono);font-weight:400}
+.sunlight-binder .binder{position:relative;margin-bottom:20px}
+.sunlight-binder .binder-tabbar{position:relative;display:flex;align-items:flex-end;min-width:0;isolation:isolate;border-bottom:1px solid var(--line);z-index:8}
+.sunlight-binder .binder-tabs{position:relative;display:flex;align-items:end;height:var(--tab-height);flex:1;min-width:0;z-index:8;isolation:isolate;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;scroll-behavior:smooth}
+.sunlight-binder .binder-tabs::-webkit-scrollbar{display:none}
+.sunlight-binder .chapter-tab{position:relative;display:flex;align-items:center;gap:12px;height:calc(var(--tab-height) - 5px);flex:0 0 210px;min-width:210px;padding:0 30px 0 24px;border:1px solid var(--line);border-bottom:0;border-radius:12px 18px 0 0;background:#101318;color:var(--faint);font:13px/1.5 var(--mono);text-align:left;margin-right:-7px;transition:background .22s,color .22s,height .3s;z-index:1;box-shadow:5px 0 15px #0002}
+.sunlight-binder .chapter-tab .tab-num{font-size:10px;color:var(--faint);letter-spacing:.04em}
+.sunlight-binder .chapter-tab[aria-selected="true"]{height:var(--tab-height);background:var(--paper);color:var(--text);z-index:3;border-top:2px solid var(--orange);margin-bottom:-1px;border-bottom:1px solid var(--paper)}
+.sunlight-binder .chapter-tab[aria-selected="true"] :is(.tab-num,.tab-status){color:var(--orange)}
+.sunlight-binder .chapter-tab:hover{color:var(--text);background:#1a1f25}
+.sunlight-binder .chapter-tab[aria-selected="true"]:hover{background:var(--paper)}
+.sunlight-binder .chapter-tab:focus-visible{outline-offset:-6px}
+.sunlight-binder .tab-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);margin-left:10px;opacity:0}
+.sunlight-binder .chapter-tab[aria-selected="true"] .tab-dot{opacity:1}
+.sunlight-binder .tab-copy{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+.sunlight-binder .tab-status{font:7px/1.5 var(--mono);letter-spacing:.015em;color:var(--faint);white-space:nowrap}
+.sunlight-binder .binder-meta{flex:none;padding:0 10px 16px 18px;min-width:76px;text-align:right;color:var(--faint);font:10px/1.4 var(--mono)}
+.sunlight-binder .binder-meta b{color:var(--orange);font-weight:400}
+.sunlight-binder .binder-stage{position:relative;min-height:460px;height:var(--stage-height);isolation:isolate}
+.sunlight-binder .page-sheet{position:absolute;inset:0;border:1px solid var(--line);border-top:0;background:var(--paper);border-radius:0 0 9px 9px;display:flex;flex-direction:column;min-width:0;overflow:hidden;box-shadow:0 20px 60px #0004;transition:transform .42s cubic-bezier(.22,.75,.2,1),opacity .24s,visibility .42s,filter .42s;transform-origin:top left;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(8px);z-index:0}
+.sunlight-binder .front-sheet{border-top:1px solid #48505a;border-left:1px solid #48505a;box-shadow:-25px 13px 55px #0009,0 5px 28px #0007;border-radius:7px 0 9px 9px}
+.sunlight-binder .front-sheet::before{content:"";position:absolute;left:0;top:0;width:3px;height:72px;background:var(--orange);opacity:.8;z-index:2}
+.sunlight-binder .page-sheet.is-current{opacity:1;visibility:visible;pointer-events:auto;transform:none;z-index:4;left:var(--sheet-offset);filter:none;background:var(--paper)}
+.sunlight-binder .base-sheet.is-current{left:0}
+.sunlight-binder .page-sheet.is-underlay{opacity:1;visibility:visible;pointer-events:none;transform:none;z-index:1;left:0;filter:brightness(.72);background:var(--back)}
+.sunlight-binder .page-sheet.is-underlay .sheet-scroll{opacity:.75}
+.sunlight-binder .base-shade{position:absolute;inset:0;z-index:2;background:rgba(6,8,11,.53);opacity:0;visibility:hidden;transition:opacity .42s,visibility .42s;cursor:pointer;border-radius:0 0 9px 9px}
+.sunlight-binder .binder[data-background="true"] .base-shade{opacity:1;visibility:visible}
+.sunlight-binder .sheet-toolbar{min-height:48px;padding:0 38px;display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid var(--line-soft);font:9px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);background:var(--paper)}
+.sunlight-binder .chapter-label{color:var(--orange)}
+.sunlight-binder .toolbar-right{display:flex;align-items:center;gap:18px}
+.sunlight-binder .reading-counter{font-size:9px;font-variant-numeric:tabular-nums;color:var(--faint)}
+.sunlight-binder .science-control{display:none;font:10px/1.4 var(--mono);text-transform:none;color:var(--text);min-height:42px}
+.sunlight-binder .science-control[aria-expanded="true"]{color:var(--orange)}
+.sunlight-binder .reading-line{height:2px;background:var(--line-soft);flex:none}
+.sunlight-binder .reading-line span{height:100%;display:block;width:0;background:var(--orange);transition:width .08s linear}
+.sunlight-binder .sheet-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#444d57 transparent;flex:1;min-height:0;padding:31px 38px 70px;scroll-behavior:smooth;scroll-padding-top:18px;transition:opacity .36s}
+.sunlight-binder .chapter-heading{margin:0 0 28px}
+.sunlight-binder .chapter-heading h2{margin:0;font-size:clamp(31px,3.4vw,44px);line-height:1.2;letter-spacing:-1px}
+.sunlight-binder .sheet-content{display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:42px;align-items:start}
+.sunlight-binder .narrative{min-width:0;max-width:650px;font:16px/1.85 var(--sans);color:var(--muted)}
+.sunlight-binder .narrative p{margin:0 0 22px}
+.sunlight-binder .narrative p:first-child,.sunlight-binder .personal{color:var(--text)}
+.sunlight-binder .narrative strong{font-weight:550;color:var(--text)}
+.sunlight-binder .section-title{margin:48px 0 26px;padding-top:18px;border-top:1px solid var(--line);font-size:27px;color:var(--text)}
+.sunlight-binder .narrative .story-highlight{color:var(--orange);font:27px/1.45 var(--mono);margin:28px 0}
+.sunlight-binder .binder-section{scroll-margin-top:18px}
+.sunlight-binder .handover{margin:34px 0 27px;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font:16px/1.8 var(--mono);color:var(--text)}
+.sunlight-binder .handover strong{display:block;color:var(--orange);font-weight:400}
+.sunlight-binder .narrative .question{font:21px/1.5 var(--mono);color:var(--orange);margin-top:32px}
+.sunlight-binder .sheet-science{position:sticky;top:0;border-left:1px solid var(--line);padding-left:24px;color:var(--muted);font:13px/1.75 var(--sans);align-self:start;max-height:calc(var(--stage-height) - 115px);overflow:auto;scrollbar-width:thin;scrollbar-color:#444d57 transparent;overscroll-behavior:contain}
+.sunlight-binder .sheet-science>h3{color:var(--orange);font:10px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;margin:0 0 5px}
+.sunlight-binder .science-caption{font-size:12px;color:var(--faint);margin:0 0 21px}
+.sunlight-binder .sheet-science details{border-top:1px solid var(--line);padding:0}
+.sunlight-binder .sheet-science summary{list-style:none;display:grid;grid-template-columns:20px 1fr 12px;gap:9px;align-items:baseline;padding:14px 0;min-height:50px;cursor:pointer;font:12px/1.6 var(--mono);color:var(--text)}
+.sunlight-binder summary::-webkit-details-marker{display:none}
+.sunlight-binder .sheet-science summary .n{font-size:9px;color:var(--faint)}
+.sunlight-binder .toggle{color:var(--orange);font-size:15px}
+.sunlight-binder .sheet-science details[open]>summary{color:var(--orange)}
+.sunlight-binder .note-body{padding:0 1px 16px 29px;overflow-wrap:anywhere}
+.sunlight-binder .note-body p{margin:0 0 14px;white-space:pre-line}
+.sunlight-binder .note-body h4{margin:18px 0 8px;font:500 13px/1.6 var(--sans);color:var(--text)}
+.sunlight-binder .note-body a{color:var(--orange);font-size:11px;text-underline-offset:4px}
+.sunlight-binder .note-body .note-conclusion{border-left:2px solid var(--orange);padding-left:12px}
+.sunlight-binder :is(.continue-button,.return-button){display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;margin:38px 0 0;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font:14px/1.55 var(--mono);text-align:left;color:var(--text)}
+.sunlight-binder :is(.continue-button,.return-button) small{display:block;color:var(--faint);font:9px/1.6 var(--mono);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.sunlight-binder :is(.continue-button,.return-button) .arrow{color:var(--orange);font-size:24px}
+.sunlight-binder :is(.continue-button,.return-button):hover{color:var(--orange)}
+.sunlight-binder .binder-bottom{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 0 0;color:var(--faint);font:9px/1.5 var(--mono)}
+.sunlight-binder .stack-label{display:flex;align-items:center;gap:7px}
+.sunlight-binder .stack-mark{position:relative;width:15px;height:10px;border:1px solid #59636f;display:inline-block}
+.sunlight-binder .stack-mark::before{content:"";position:absolute;width:13px;height:8px;border:1px solid #59636f;left:2px;top:-4px;z-index:-1}
+.sunlight-binder #reading-value{white-space:nowrap}
+.sunlight-binder .placeholder-scroll{display:flex;flex-direction:column;min-height:0}
+.sunlight-binder .construction-content{flex:1;min-height:150px;display:flex;align-items:flex-start;padding:30px 0 65px}
+.sunlight-binder .construction-state{display:flex;align-items:center;gap:13px;margin:0;padding:18px 0;color:var(--muted);font:clamp(16px,1.6vw,21px)/1.5 var(--mono)}
+.sunlight-binder .construction-dot{width:7px;height:7px;flex:none;border:1px solid var(--orange);border-radius:50%}
+.sunlight-binder .construction-toolbar-status{font-size:9px;color:var(--faint);text-transform:none;letter-spacing:.02em}
+.sunlight-binder .placeholder-nav{display:flex;align-items:stretch;justify-content:space-between;gap:24px;border-top:1px solid var(--line);padding-top:17px}
+.sunlight-binder .placeholder-link{display:flex;align-items:center;gap:18px;min-height:55px;padding:4px 0;text-align:left;font:13px/1.6 var(--mono);color:var(--text)}
+.sunlight-binder .placeholder-link small{display:block;margin-bottom:6px;color:var(--faint);font:8px/1.5 var(--mono);text-transform:uppercase;letter-spacing:.07em}
+.sunlight-binder .placeholder-link .direction{font-size:24px;color:var(--orange)}
+.sunlight-binder .placeholder-link.next{margin-left:auto;text-align:right}
+.sunlight-binder .placeholder-link:hover{color:var(--orange)}
+body[data-page-mode="landing"] #reader-page.has-binder{width:min(1392px,calc(100% - 96px));padding-bottom:18px}
+.has-binder .story-top,.has-binder .story-bottom{display:none}
+.has-binder .story-article,.has-binder .story-body{max-width:none}
+.has-binder .story-header{border:0;padding:28px 0}
+.has-binder .story-kicker{margin-bottom:10px}
+.has-binder .story-title{max-width:none;font-size:clamp(24px,2.65vw,39px);line-height:1.24;letter-spacing:-1.3px;text-wrap:initial}
+@media(max-width:1150px){.sunlight-binder{--sheet-offset:183px}.sunlight-binder .chapter-tab{flex-basis:190px;min-width:190px}.sunlight-binder .sheet-scroll{padding-left:28px;padding-right:28px}.sunlight-binder .sheet-toolbar{padding-left:28px;padding-right:28px}.sunlight-binder .sheet-content{grid-template-columns:minmax(0,1fr) 245px;gap:30px}.sunlight-binder .sheet-science{padding-left:18px}}
+@media(max-width:860px){.sunlight-binder{--sheet-offset:18px}.sunlight-binder .chapter-tab{flex-basis:175px;min-width:175px}.sunlight-binder .binder-meta,.sunlight-binder .keyboard-hint{display:none}.sunlight-binder .sheet-content{display:block}.sunlight-binder .narrative{max-width:none}.sunlight-binder .sheet-science{position:static;max-height:none;overflow:visible;border-left:0;padding-left:0}.sunlight-binder .science-control{display:block}.sunlight-binder .science-expanded .narrative{display:none}.sunlight-binder .science-expanded .sheet-science{display:block}.sunlight-binder .construction-content{padding-top:15px;min-height:125px}.sunlight-binder .placeholder-link{font-size:12px;gap:11px}.sunlight-binder .construction-toolbar-status{font-size:8px}.sunlight-binder .reading-counter{display:none}body[data-page-mode="landing"] #reader-page.has-binder{width:calc(100% - 40px)}.has-binder .story-header{padding:23px 0}}
+@media(max-width:500px){.sunlight-binder{--sheet-offset:13px;--tab-height:54px}.sunlight-binder .chapter-tab{flex-basis:164px;min-width:164px;padding:0 15px;gap:8px;font-size:12px;margin-right:-4px;border-radius:10px 15px 0 0}.sunlight-binder .tab-num{font-size:9px}.sunlight-binder .tab-dot{margin-left:auto;width:4px;height:4px}.sunlight-binder .binder-stage{min-height:360px}.sunlight-binder .sheet-toolbar{padding:0 19px;font-size:8px;letter-spacing:.04em;gap:8px;min-height:45px}.sunlight-binder .toolbar-right{gap:8px}.sunlight-binder .sheet-scroll{padding:24px 19px 45px}.sunlight-binder .chapter-heading{margin-bottom:24px}.sunlight-binder .chapter-heading h2{font-size:32px}.sunlight-binder .narrative{font-size:15px;line-height:1.85}.sunlight-binder .narrative p{margin-bottom:23px}.sunlight-binder .handover{font-size:14px;line-height:1.85}.sunlight-binder .narrative .question{font-size:19px}.sunlight-binder .binder-bottom{gap:10px;font-size:8px;padding-left:3px;padding-right:3px}.sunlight-binder .sheet-science summary{font-size:12px}.sunlight-binder .front-sheet::before{height:54px;width:2px}.sunlight-binder .construction-content{min-height:100px;padding-top:6px;padding-bottom:35px}.sunlight-binder .construction-state{font-size:16px;gap:10px}.sunlight-binder .placeholder-nav{gap:16px;padding-top:14px}.sunlight-binder .placeholder-link{font-size:11px;gap:9px}.sunlight-binder .placeholder-link small{font-size:7px;letter-spacing:.035em}.sunlight-binder .construction-toolbar-status{font-size:7px}.sunlight-binder .construction-sheet .sheet-scroll{padding-bottom:26px}body[data-page-mode="landing"] #reader-page.has-binder{width:calc(100% - 24px)}.has-binder .story-header{padding:20px 4px}.has-binder .story-title{font-size:25px;max-width:24ch;letter-spacing:-.8px}.has-binder .story-kicker{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.sunlight-binder *{scroll-behavior:auto!important;transition:none!important}}
+@media print{.sunlight-binder{--text:#000;--muted:#222;--paper:#fff}.sunlight-binder :is(.binder-tabbar,.binder-bottom,.base-shade,.sheet-toolbar,.reading-line,.continue-button,.return-button,.placeholder-nav){display:none}.sunlight-binder .binder-stage{height:auto;min-height:0}.sunlight-binder .page-sheet{position:static;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;background:white;box-shadow:none;border:0;overflow:visible;break-before:page}.sunlight-binder .sheet-scroll{overflow:visible;height:auto;padding:20px 0;opacity:1!important}.sunlight-binder .sheet-content{display:block}.sunlight-binder .sheet-science{position:static;max-height:none;overflow:visible;display:block!important}.sunlight-binder .narrative{display:block!important}.sunlight-binder details::details-content{content-visibility:visible;display:block}}

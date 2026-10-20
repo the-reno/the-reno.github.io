@@ -1,0 +1,82 @@
+{
+  "leaf": {
+    "blocks": [
+      {
+        "text": "We have reached the leaf.\nNow we need to go inside."
+      },
+      {
+        "text": "Inside a cell.\nThen inside a chloroplast.\nA small structure where photosynthesis happens."
+      },
+      {
+        "text": "Here, membranes hold molecules of chlorophyll.\nThese molecules can absorb light."
+      },
+      {
+        "text": "I know the word.\nBut “absorbing light” is still hard for me to picture.",
+        "style": "personal"
+      },
+      {
+        "text": "What actually changes?",
+        "style": "personal"
+      },
+      {
+        "text": "The chlorophyll molecule already contains electrons.\nWhen it absorbs our photon, it enters a higher-energy electronic state.\nWe call this an excited state."
+      },
+      {
+        "text": "The photon has not become an electron.\nIt has transferred its energy."
+      },
+      {
+        "text": "And at this first moment, the electron is still part of the molecule.\nIt has not been passed to another molecule yet."
+      },
+      {
+        "text": "The photon’s journey ends here.\nBut the energy’s journey continues.",
+        "style": "handover",
+        "strong": "This is the handover."
+      },
+      {
+        "text": "No sugar has been made yet.\nThe first change is much smaller.\nA molecule now has energy it did not have before."
+      },
+      {
+        "text": "What can the plant do with it?",
+        "style": "question"
+      }
+    ],
+    "notes": [
+      {
+        "title": "Inside the leaf",
+        "paragraphs": [
+          "A chloroplast is a structure inside a plant cell. Its thylakoid membranes contain light-harvesting complexes: proteins holding chlorophyll and other pigments."
+        ],
+        "sources": [
+          {
+            "title": "Berkeley Lab · source",
+            "url": "https://newscenter.lbl.gov/2016/01/18/seeing-the-big-picture-in-photosynthetic-light-harvesting/"
+          }
+        ]
+      },
+      {
+        "title": "Absorption is not electron transfer",
+        "paragraphs": [
+          "Absorption creates electronic excitation. It does not mean that an electron has already been passed to another molecule. Excitation energy can move later through the pigment network."
+        ],
+        "sources": [
+          {
+            "title": "Berkeley Lab · source",
+            "url": "https://biosciences.lbl.gov/2018/02/06/tracking-energy-flow-in-light-harvesting-systems/"
+          }
+        ]
+      },
+      {
+        "title": "Where this draft stops",
+        "paragraphs": [
+          "This passage covers arrival, chlorophyll and absorption only. Reaction centres, water, ATP, NADPH and carbon fixation come later."
+        ],
+        "sources": [
+          {
+            "title": "Berkeley Lab · source",
+            "url": "https://newscenter.lbl.gov/2023/06/14/photosynthesis-key-to-life-on-earth-starts-with-a-single-photon/"
+          }
+        ]
+      }
+    ]
+  }
+}
