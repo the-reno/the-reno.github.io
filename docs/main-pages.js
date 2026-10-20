@@ -14,7 +14,12 @@ function mainHero(pageId, {slide = false} = {}) {
   }
   const heading = slide ? 'h3' : 'h1';
   const id = slide ? 'section-title-' + pageId : 'page-title';
-  return `<div class="index-copy"><${heading} class="index-title" id="${id}"${slide ? '' : ' tabindex="-1"'}>${esc(page.name)}<span>.</span></${heading}><p class="index-statement${page.breakSentence === false ? ' is-inline' : ''}">${esc(page.start)}<em>${esc(page.end)}</em></p>${introMarkup(page, {slide})}</div>`;
+  const copy = `<div class="index-copy"><${heading} class="index-title" id="${id}"${slide ? '' : ' tabindex="-1"'}>${esc(page.name)}<span>.</span></${heading}><p class="index-statement${page.breakSentence === false ? ' is-inline' : ''}">${esc(page.start)}<em>${esc(page.end)}</em></p>${introMarkup(page, {slide})}</div>`;
+  if (pageId === 'maker' && !slide) {
+    const images = MAKER_GALLERY.images.map(image => `<img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${esc(image.width)}" height="${esc(image.height)}" decoding="async" draggable="false">`).join('');
+    return `<div class="maker-hero">${copy}<div class="maker-billboard" role="group" aria-label="Three night scenes"><div class="maker-billboard-art">${images}</div></div></div>`;
+  }
+  return copy;
 }
 function articleIcon(kind) {
   const paths = {
@@ -70,11 +75,6 @@ function pageCollection(pageId) {
       return `<a class="home-section" href="${routeFor(id)}" aria-labelledby="section-title-${id}" aria-describedby="section-summary-${id}"><div class="home-section-heading"><h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3>${homeSectionIcon(id)}</div><p id="section-summary-${id}" class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}</a>`;
     }).join('');
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
-  }
-  if (page.kind === 'gallery') {
-    const projects = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
-    const images = MAKER_GALLERY.images.map(image => `<img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${esc(image.width)}" height="${esc(image.height)}" decoding="async" draggable="false">`).join('');
-    return `<h2 class="sr-only" id="collection-title">Maker</h2><div class="maker-billboard" role="group" aria-label="Three night scenes">${images}</div>${projects.map(makerProjectTile).join('')}`;
   }
   const topics = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
   if (!topics.length) return '';
