@@ -52,12 +52,12 @@ function carouselMarkup(id, items, kind) {
 }
 function homeSectionIcon(id) {
   const drawings = {
-    triathlon: '<g class="home-icon-detail"><circle cx="8" cy="19" r="2.5"/><path d="m4 24 7-2 6-7 5 3M2 30q3-3 6 0t6 0t6 0"/><circle cx="29" cy="31" r="6"/><circle cx="44" cy="31" r="6"/><path d="m29 31 6-11 9 11H29l8-7M32 20h5m3-4h3l2 5"/><circle cx="61" cy="13" r="2.5"/><path d="m59 20-4 7 7 5-3 8m-4-13-5 10m6-14 7 3 5-4"/></g><path class="home-icon-accent" d="m14 25 3-4m18-1 2 4m20-5 3 4"/>',
+    triathlon: '<g stroke-width="1.8"><g class="home-icon-detail"><circle cx="8" cy="26" r="3"/><path d="m3 34 9-5 10-1m-10-3 8-8 7 5M2 40q3-3 6 0t6 0t6 0t6 0"/><circle cx="39" cy="37" r="7"/><circle cx="63" cy="37" r="7"/><path d="m39 37 8-11 5 11H39m8-11h11l-6 11m6-11 5 11m-6-11-1-4h5m-17 3h6"/><circle cx="50" cy="13" r="3"/><path d="m48 19-5 6 10 5-2 6m-3-17 7 4h4"/><circle cx="91" cy="12" r="3"/><path d="m88 19-5 11 9 6-3 9m-6-15-7 9-5 1m16-18 8 5 7-4m-15-3-7 3-3 6"/></g><g class="home-icon-accent"><path d="m12 25 8-8 7 5m21-3 7 4h4m29-4-5 11 9 6"/></g></g>',
     science: '<path class="home-icon-detail" d="m33 9 16 28H17L33 9ZM3 24h22m17 0h10m-7 6h10m-7 7h12"/><path class="home-icon-accent" d="m25 24 11-2 16-9m-16 9 21-1m-21 1 22 8"/>',
     markets: '<path class="home-icon-detail" d="M9 8v32h54M21 12v8m0 13v5m16-28v4m0 12v9m16-29v7m0 12v5"/><path class="home-icon-accent" d="M17 20h8v13h-8zM33 14h8v12h-8zM49 13h8v12h-8z"/>',
     maker: '<path class="home-icon-detail" d="m40 19 15 8v15l-15 8-15-8V27l15-8Zm0 16 15-8m-15 8-15-8m15 8v15" transform="translate(0 -5)"/><path class="home-icon-accent" d="m9 30 3-10L32 0l7 7-20 20-10 3Zm3-10 7 7M28 4l7 7" transform="translate(0 4)"/>'
   };
-  return `<span class="home-section-icon" aria-hidden="true"><svg viewBox="0 0 72 52" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">${drawings[id]}</svg></span>`;
+  return `<span class="home-section-icon${id === 'triathlon' ? ' is-triathlon' : ''}" aria-hidden="true"><svg viewBox="0 0 ${id === 'triathlon' ? '108' : '72'} 52" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">${drawings[id]}</svg></span>`;
 }
 function pageCollection(pageId) {
   const page = MAIN_PAGES[pageId];
@@ -80,5 +80,6 @@ function pageCollection(pageId) {
   if (!topics.length) return '';
   return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>`;
 }
+
 
 
