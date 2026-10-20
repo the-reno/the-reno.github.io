@@ -57,7 +57,7 @@ function carouselMarkup(id, items, kind) {
 }
 function homeSectionIcon(id) {
   const drawings = {
-    triathlon: '<g stroke-width="1.8"><g class="home-icon-detail"><circle cx="8" cy="26" r="3"/><path d="m3 34 9-5 10-1m-10-3 8-8 7 5M2 40q3-3 6 0t6 0t6 0t6 0"/><circle cx="39" cy="37" r="7"/><circle cx="63" cy="37" r="7"/><path d="m39 37 8-11 5 11H39m8-11h11l-6 11m6-11 5 11m-6-11-1-4h5m-17 3h6"/><circle cx="50" cy="13" r="3"/><path d="m48 19-5 6 10 5-2 6m-3-17 7 4h4"/><circle cx="91" cy="12" r="3"/><path d="m88 19-5 11 9 6-3 9m-6-15-7 9-5 1m16-18 8 5 7-4m-15-3-7 3-3 6"/></g><g class="home-icon-accent"><path d="m12 25 8-8 7 5m21-3 7 4h4m29-4-5 11 9 6"/></g></g>',
+    triathlon: '<g stroke-width="2"><g class="home-icon-accent"><path d="M2 38q3-2.5 6 0t6 0t6 0t6 0M2 44q3-2.5 6 0t6 0t6 0t6 0"/><circle cx="40" cy="38" r="7.5"/><circle cx="65" cy="38" r="7.5"/><path d="m40 38 8-11 6 11H40m8-11h11l-5 11m5-11 6 11m-6-11-1-3h6m-19 2h6"/></g><g class="home-icon-athlete" stroke-width="2.2"><circle cx="8" cy="25" r="2.8" fill="currentColor" stroke="none"/><path d="m4 33 10-5 11 1m-12-4 8-7 7 5"/><circle cx="57" cy="16" r="2.8" fill="currentColor" stroke="none"/><path d="m48 21 6-2 7 4h4m-17-2-3 5 9 4-3 6 4 1m-8-13 2 7 7 5"/><circle cx="92" cy="12" r="3" fill="currentColor" stroke="none"/><path d="m89 19-6 11 9 6-4 9h-3m-2-15-6 8h-6m17-16 7 4 7-5m-14-1-8 3-3 6"/></g></g>',
     science: '<path class="home-icon-detail" d="m33 9 16 28H17L33 9ZM3 24h22m17 0h10m-7 6h10m-7 7h12"/><path class="home-icon-accent" d="m25 24 11-2 16-9m-16 9 21-1m-21 1 22 8"/>',
     markets: '<path class="home-icon-detail" d="M9 8v32h54M21 12v8m0 13v5m16-28v4m0 12v9m16-29v7m0 12v5"/><path class="home-icon-accent" d="M17 20h8v13h-8zM33 14h8v12h-8zM49 13h8v12h-8z"/>',
     maker: '<path class="home-icon-detail" d="m40 19 15 8v15l-15 8-15-8V27l15-8Zm0 16 15-8m-15 8-15-8m15 8v15" transform="translate(0 -5)"/><path class="home-icon-accent" d="m9 30 3-10L32 0l7 7-20 20-10 3Zm3-10 7 7M28 4l7 7" transform="translate(0 4)"/>'
@@ -80,6 +80,7 @@ function pageCollection(pageId) {
   if (!topics.length) return '';
   return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>`;
 }
+
 
 
 
