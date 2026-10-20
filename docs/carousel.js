@@ -21,6 +21,17 @@ class RonuCarousel {
     this.suppressClick = false;
     this.destroyed = false;
     const on = (target, event, handler, settings = {}) => target.addEventListener(event, handler, {...settings, signal: this.events.signal});
+    const film = root.parentElement.querySelector('[data-gallery-film]');
+    this.video = film?.querySelector('video') || null;
+    if (film && this.video) {
+      on(film, 'toggle', () => {
+        if (film.open) {this.requested = false; this.schedule();}
+        else this.video.pause();
+      });
+      on(this.video, 'play', () => {this.requested = false; this.schedule();});
+      on(document, 'visibilitychange', () => {if (document.hidden) this.video.pause();});
+      on(window, 'pagehide', () => this.video.pause());
+    }
     this.tabs.forEach((tab, i) => on(tab, 'click', () => this.select(i)));
     root.querySelectorAll('[data-step]').forEach(button => on(button, 'click', () => this.select(this.current + Number(button.dataset.step))));
     on(root.querySelector('[role="tablist"]'), 'keydown', event => {
@@ -105,6 +116,7 @@ class RonuCarousel {
   }
   destroy() {
     const snapshot = {index: this.current, requested: this.requested};
+    this.video?.pause();
     this.destroyed = true;
     clearTimeout(this.timer);
     this.events.abort();
