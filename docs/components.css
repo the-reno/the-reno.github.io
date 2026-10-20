@@ -42,10 +42,19 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 .maker-hero .index-statement {max-width:24ch}
 .maker-billboard {min-width:0; padding:5px; border:1px solid #ffffff1c; border-radius:9px; background:linear-gradient(145deg,#25282c,#121519); box-shadow:0 8px 24px #00000026,inset 0 1px 0 #ffffff0a}
 .maker-billboard-art {position:relative; aspect-ratio:2.39/1; overflow:hidden; border-radius:4px; background:#0d0d0d; box-shadow:0 0 0 1px #00000080}
-.maker-billboard img {position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; opacity:0; animation:ronu-billboard 12s linear infinite}
+.maker-billboard img {position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; opacity:0; mask-image:linear-gradient(to right,#000 40%,transparent 60%); mask-size:250% 100%; mask-repeat:no-repeat; mask-position:0% 0; animation:ronu-billboard 12s linear infinite}
 .maker-billboard img:nth-child(2) {animation-delay:-8s}
 .maker-billboard img:nth-child(3) {animation-delay:-4s}
-@keyframes ronu-billboard {0%,25% {opacity:1} 33.333%,91.667% {opacity:0} 100% {opacity:1}}
+/* Reveal the incoming scene over the complete outgoing image, avoiding a dark dip. */
+@keyframes ronu-billboard {
+  0%,33.333% {opacity:1; mask-position:0% 0; z-index:1}
+  33.334%,91.666% {opacity:0; mask-position:100% 0; z-index:0}
+  91.667% {opacity:1; mask-position:100% 0; z-index:2}
+  100% {opacity:1; mask-position:0% 0; z-index:2}
+}
+@supports not (mask-image:linear-gradient(to right,#000,transparent)) {
+  @keyframes ronu-billboard {0%,25% {opacity:1} 33.333%,91.667% {opacity:0} 100% {opacity:1}}
+}
 .gallery-figure {margin:0}
 .image-carousel .carousel-toggle span {display:none}
 .gallery-link {display:block}
@@ -100,7 +109,7 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
   .section-slide-link .index-statement {font-size:20px}
 }
 @media(prefers-reduced-motion:reduce) {
-  .maker-billboard img {animation:none; opacity:0}
+  .maker-billboard img {animation:none; opacity:0; mask-image:none}
   .maker-billboard img:first-child {opacity:1}
   .article-tile,.article-tile-arrow,.carousel-slide,.carousel-dots button span {transition:none}
   .image-carousel .carousel-slide,.image-carousel .carousel-slide.is-active {transition:none}
