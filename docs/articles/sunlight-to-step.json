@@ -3,23 +3,26 @@
   "sections": [
     {
       "id": "opening",
-      "heading": "Photon.",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "The Sun is made mostly of hydrogen."
+          "text": "The Sun is mostly hydrogen."
         },
         {
           "type": "paragraph",
-          "text": "Gravity pulls its material inward. As the Sun formed, the gas compressed. Pressure increased. Temperature rose."
+          "text": "Its enormous mass gives it a strong gravitational pull.\nAs it formed, gravity pulled the gas inward.\nThe gas compressed.\nPressure increased.\nTemperature rose."
         },
         {
           "type": "paragraph",
-          "text": "Deep in the core, conditions became hot and dense enough for nuclear fusion to begin."
+          "text": "Deep in the core, it became hot and dense enough for nuclear fusion to begin."
         },
         {
           "type": "paragraph",
-          "text": "Hydrogen nuclei—the central parts of hydrogen atoms—combine through a chain of reactions. They form helium. Energy is released."
+          "text": "Hydrogen nuclei—the centres of hydrogen atoms—combine through a chain of reactions.\nThe net result is four hydrogen nuclei becoming one helium nucleus.\nOther particles are released.\nSo is energy."
+        },
+        {
+          "type": "paragraph",
+          "text": "And the process keeps repeating."
         },
         {
           "type": "paragraph",
@@ -27,7 +30,6 @@
         },
         {
           "type": "concepts",
-          "label": "Quantum physics",
           "items": [
             {
               "term": "From an atom to a plasma.",
@@ -46,6 +48,14 @@
               "text": "In the first proton–proton reaction, one proton changes into a neutron through the weak nuclear interaction. A neutron is a nuclear particle with no electric charge. The proton and neutron bind to form deuterium, a heavier form of hydrogen.\n\nThe reaction also releases a positron—the electron’s positively charged counterpart—and a neutrino, a particle that interacts very weakly with matter."
             },
             {
+              "term": "Across the whole chain.",
+              "text": "For the main proton–proton branch, a compact net description is:\n4 hydrogen nuclei → 1 helium-4 nucleus + 2 positrons + 2 electron neutrinos + released energy.\n\nThis is the result of several reactions, not one four-way collision. The helium-4 nucleus has two protons and two neutrons. The positrons then annihilate with electrons, releasing additional radiation. The atomic-mass comparison in the next note includes this annihilation energy."
+            },
+            {
+              "term": "Source · NASA — The solar interior and fusion chain",
+              "text": "https://solarscience.msfc.nasa.gov/interior.shtml"
+            },
+            {
               "term": "Source · U.S. Department of Energy — Plasma",
               "text": "https://www.energy.gov/science/doe-explainsplasma"
             },
@@ -54,6 +64,7 @@
               "text": "https://www.energy.gov/science/np/articles/proton-proton-fusion-powering-sun"
             }
           ],
+          "label": "Quantum physics",
           "conclusion": "The first proton–proton fusion reaction is exceptionally unlikely in any one encounter. Photon emission is not the rare step. Across the enormous number of encounters inside the Sun, these reactions keep happening."
         },
         {
@@ -62,11 +73,11 @@
         },
         {
           "type": "paragraph",
-          "text": "The particles form a more tightly bound arrangement. The final products have slightly less mass at rest than the starting material. That difference appears as released energy."
+          "text": "After the reactions, the final particles have slightly less mass than the starting material.\nThat difference appears as energy."
         },
         {
           "type": "paragraph",
-          "text": "Einstein connected mass and energy with an equation."
+          "text": "Einstein connected the dots."
         },
         {
           "type": "paragraph",
@@ -75,27 +86,60 @@
         },
         {
           "type": "paragraph",
-          "text": "For a reaction, the energy released equals the decrease in mass multiplied by the speed of light squared. Even a tiny mass difference can therefore correspond to a large amount of energy."
+          "text": "Take the difference in mass.\nMultiply it by the speed of light squared."
         },
         {
           "type": "paragraph",
-          "text": "How much?"
+          "text": "The mass difference is tiny.\nThe multiplier is enormous."
         },
         {
           "type": "paragraph",
-          "text": "Imagine one gram of hydrogen completing the Sun’s fusion process. About 0.7% of its mass becomes released energy. Most of the mass remains in the helium."
+          "text": "It is a lot of energy."
         },
         {
           "type": "paragraph",
-          "text": "That small difference corresponds to roughly 175,000 kilowatt-hours."
+          "text": "But how much?"
         },
         {
           "type": "paragraph",
-          "text": "An equivalent amount of energy would run a 1,000-watt appliance, day and night, for about 20 years. This compares amounts of energy—not electricity we could collect without losses."
+          "text": "Imagine starting with one gram of hydrogen.\nLet it complete the Sun’s fusion process."
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Most of the mass remains in the helium.\nOnly about "
+            },
+            {
+              "text": "0.7%",
+              "strong": true
+            },
+            {
+              "text": " becomes released energy."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "Think of a car with a 50-litre fuel tank.\nNow picture "
+            },
+            {
+              "text": "400 of those tanks",
+              "strong": true
+            },
+            {
+              "text": ", all full of gasoline.\nTogether, that fuel contains roughly the same amount of energy."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "And we started with just one gram of hydrogen."
         },
         {
           "type": "concepts",
-          "label": "Mass & energy",
           "items": [
             {
               "term": "What Einstein’s equation means.",
@@ -107,11 +151,11 @@
             },
             {
               "term": "One gram, worked through.",
-              "text": "Comparing the measured masses of four hydrogen-1 atoms and one helium-4 atom gives a decrease of about 0.7%. Using atomic masses accounts for electrons across the complete chain, including positron annihilation.\n\nUsing the rounded 0.7% for one gram of hydrogen:\nMass difference ≈ 0.007 grams = 0.000007 kilograms.\nEnergy ≈ 0.000007 × (299,792,458)².\nResult ≈ 630 billion joules ≈ 175,000 kilowatt-hours.\n\nA joule and a kilowatt-hour are units of energy. One kilowatt-hour equals 3.6 million joules. These figures are calculated and rounded, not measurements of a power plant."
+              "text": "Comparing the measured masses of four hydrogen-1 atoms and one helium-4 atom gives a decrease of about 0.7%. Using atomic masses accounts for electrons across the complete chain, including positron annihilation.\n\nUsing the rounded 0.7% for one gram of hydrogen:\n\nMass difference ≈ 0.007 grams = 0.000007 kilograms.\n\nEnergy ≈ 0.000007 × (299,792,458)².\n\nResult ≈ 630 billion joules ≈ 175,000 kilowatt-hours.\n\nA joule and a kilowatt-hour are units of energy. One kilowatt-hour equals 3.6 million joules. These figures are calculated and rounded, not measurements of a power plant."
             },
             {
-              "term": "Why the comparison is about 20 years.",
-              "text": "A 1,000-watt appliance uses one kilowatt-hour in one hour. Dividing 175,000 kilowatt-hours by one kilowatt gives 175,000 hours—about 20 years of continuous use.\n\nThis assumes the hydrogen completes the fusion chain. It is a total-energy comparison, not usable electricity. Some fusion energy escapes with neutrinos. Converting the remaining energy into electricity would also involve losses."
+              "term": "The fuel-tank comparison.",
+              "text": "This is a calculated comparison of energy amounts. We assume a 50-litre tank; this is an example, not a claim about the average car.\n\nThe U.S. Department of Energy lists 112,114–116,090 Btu per U.S. gallon for gasoline/E10, using the lower heating value. This is about 31–32 megajoules per litre. A full 50-litre tank therefore contains about 1.6 billion joules of combustion energy.\n\nDivide the approximate 630 billion joules released by fusing one gram of hydrogen by about 1.6 billion joules per tank. The result is roughly 400 full tanks.\n\nThe comparison is between total fusion energy and fuel energy. It is not usable electricity, engine output, or a prediction of driving distance. Some fusion energy escapes with neutrinos; converting energy into useful work also involves losses."
             },
             {
               "term": "Source · Einstein Online — Binding energy",
@@ -126,48 +170,145 @@
               "text": "https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=He"
             },
             {
-              "term": "Source · NIST — Speed of light and the metre",
-              "text": "https://www.nist.gov/pml/owm/si-units-length"
+              "term": "Source · U.S. Department of Energy — Gasoline energy content",
+              "text": "https://afdc.energy.gov/fuels/properties"
             }
-          ]
+          ],
+          "label": "Mass & energy"
         }
-      ]
+      ],
+      "heading": "Photon."
     },
     {
       "id": "light",
-      "heading": "Light.",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Some of the released energy is carried by photons. These are individual packets of electromagnetic radiation. Visible light is one form of that radiation."
+          "text": "Some of the energy released in these reactions is carried by photons."
         },
         {
           "type": "paragraph",
-          "text": "But there is no clear path out of the Sun."
+          "text": "But we are still deep inside the Sun.\nThe surface is hundreds of thousands of kilometres away.\nAnd there is no clear path out."
         },
         {
           "type": "paragraph",
-          "text": "Radiation repeatedly interacts with the dense material inside. Energy passes between radiation and matter as it gradually moves outward. Farther out, rising hot material helps carry it towards the surface. There, energy escapes into space as light."
+          "text": "Radiation keeps interacting with the surrounding material.\nPhotons are absorbed.\nNew ones are emitted.\nOthers are scattered."
         },
         {
           "type": "paragraph",
-          "text": "We are following the energy. Not one original photon travelling directly from the core to Earth."
+          "text": "A short step.\nAnother interaction.\nA new direction."
         },
         {
           "type": "paragraph",
-          "text": "Light has both wave-like and particle-like properties. A photon is not a tiny piece of hydrogen thrown out of the Sun."
+          "text": "Sometimes outward.\nSometimes back towards the centre."
+        },
+        {
+          "type": "paragraph",
+          "text": "Energy passes between radiation and matter.\nGradually, it moves outward."
+        },
+        {
+          "type": "paragraph",
+          "text": "How long does this take?"
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "One solar model puts this slow, random journey at about "
+            },
+            {
+              "text": "170,000 years",
+              "strong": true
+            },
+            {
+              "text": ".\nWith roughly "
+            },
+            {
+              "text": "ten trillion trillion interactions",
+              "strong": true
+            },
+            {
+              "text": " along the way."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "And that only gets us through the dense inner layers.\nWe are not at the surface yet."
+        },
+        {
+          "type": "paragraph",
+          "text": "Farther out, hot material rises.\nIt carries energy towards the surface.\nThis part is much quicker."
+        },
+        {
+          "type": "paragraph",
+          "text": "So we are following the energy.\nNot one original photon travelling all the way from the core."
+        },
+        {
+          "type": "paragraph",
+          "text": "Eventually, light escapes into space."
+        },
+        {
+          "type": "paragraph",
+          "text": "Now, what exactly is leaving the Sun?"
+        },
+        {
+          "type": "paragraph",
+          "text": "Light carries energy.\nWhen it is emitted or absorbed, that energy is exchanged in individual packets."
+        },
+        {
+          "type": "paragraph",
+          "runs": [
+            {
+              "text": "We call each packet a "
+            },
+            {
+              "text": "photon",
+              "strong": true
+            },
+            {
+              "text": "."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "It is not an atom.\nIt is not an electron.\nAnd it is not a tiny piece of hydrogen thrown out of the Sun."
+        },
+        {
+          "type": "paragraph",
+          "text": "Light has both wave-like and particle-like properties."
+        },
+        {
+          "type": "paragraph",
+          "text": "I still find that hard to visualise."
+        },
+        {
+          "type": "paragraph",
+          "text": "I can picture a wave.\nI can picture a small ball.\nBut neither gives me the full picture of a photon."
+        },
+        {
+          "type": "paragraph",
+          "text": "So, for now, I will follow what it does."
+        },
+        {
+          "type": "paragraph",
+          "text": "It carries energy.\nWhen it is absorbed, its journey ends.\nIts energy is transferred."
         },
         {
           "type": "concepts",
-          "label": "Light & photons",
           "items": [
             {
               "term": "Where does a photon come from?",
               "text": "In one step of the Sun’s main fusion chain, a deuterium nucleus captures another proton. They form helium-3: two protons and one neutron. A gamma-ray photon carries away part of the released energy.\n\nGamma rays and visible light are both electromagnetic radiation. A gamma-ray photon carries much more energy than a visible-light photon."
             },
             {
-              "term": "Why not follow the same photon?",
-              "text": "Inside the Sun, radiation is repeatedly absorbed, emitted and scattered. Energy is exchanged with the surrounding matter. Farther out, convection—the movement of hotter material upward and cooler material downward—also carries energy.\n\nMost visible sunlight escapes from the photosphere, the layer we see as the Sun’s surface. The journey of energy is not the uninterrupted journey of one photon from the core."
+              "term": "How long, and how many interactions?",
+              "text": "Mitalas and Sills (1992) calculated about 170,000 years and 10²⁵ random-walk steps for radiation to diffuse from the centre to the base of the Sun’s convection zone. In this model, steps represent travel between interactions. 10²⁵ is ten trillion trillion: a one followed by 25 zeros.\n\nThese are model estimates, not a measured itinerary. The step length changes with the density and opacity of the solar material. The outer convective stage is much quicker."
+            },
+            {
+              "term": "We are following energy, not one surviving photon.",
+              "text": "Absorption destroys a photon and transfers its energy to matter. Emission creates a new photon. Scattering can change a photon’s direction and energy. Repeating these processes redistributes energy among many particles and photons. The narrative follows energy and its transformations, not a tagged packet that remains unchanged. Once light has escaped the Sun, we can focus on a photon travelling towards Earth. When that photon is absorbed, its journey ends; its energy has been transferred.\n\nThe random-walk calculation is a model of radiation transport. It does not mean one identifiable fusion photon survives to become the sunlight reaching a leaf. Most visible sunlight escapes from the photosphere, the layer we see as the Sun’s surface. It is not a solid boundary."
             },
             {
               "term": "Waves and particles.",
@@ -184,46 +325,58 @@
             {
               "term": "Source · NASA — Electromagnetic waves and photons",
               "text": "https://science.nasa.gov/ems/02_anatomy/"
+            },
+            {
+              "term": "Source · Mitalas & Sills (1992) — Photon diffusion, pages 759–760",
+              "text": "https://articles.adsabs.harvard.edu/pdf/1992ApJ...401..759M"
             }
-          ]
+          ],
+          "label": "Light & photons"
         },
         {
           "type": "paragraph",
-          "text": "I still find that difficult to picture."
+          "text": "Our story follows that energy.\nFor this part of the journey, it travels as light."
         },
         {
           "type": "paragraph",
-          "text": "But we can follow what happens next."
+          "text": "So let’s follow a photon."
         }
-      ]
+      ],
+      "heading": "Light."
     },
     {
       "id": "leaf",
-      "heading": "A leaf.",
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Sunlight spreads out into space. Earth intercepts only a small fraction."
+          "text": "Sunlight spreads out into space."
         },
         {
           "type": "paragraph",
-          "text": "Some of that light is reflected back into space. Some is absorbed by the atmosphere. Some passes through and reaches the ground."
+          "text": "A photon heading towards Earth now has a much clearer path.\nThe journey takes a little over eight minutes."
         },
         {
           "type": "paragraph",
-          "text": "For our story, we follow a photon that reaches a field of wheat."
+          "text": "Only a small fraction of the Sun’s light reaches our planet."
+        },
+        {
+          "type": "paragraph",
+          "text": "Some is reflected back into space.\nSome is absorbed by the atmosphere.\nSome passes through and reaches the ground."
+        },
+        {
+          "type": "paragraph",
+          "text": "We follow one that gets through."
+        },
+        {
+          "type": "paragraph",
+          "text": "It reaches a field of wheat."
         },
         {
           "type": "paragraph",
           "text": "Then a leaf."
         },
         {
-          "type": "paragraph",
-          "text": "This is where the next part begins."
-        },
-        {
           "type": "concepts",
-          "label": "Reading & sources",
           "items": [
             {
               "term": "NASA · Gravity, heat and the life of a star",
@@ -252,8 +405,13 @@
             {
               "term": "NASA · Light, waves and photons",
               "text": "https://science.nasa.gov/ems/02_anatomy/"
+            },
+            {
+              "term": "NASA / ESA · SOHO — Radiation, convection and the journey outward",
+              "text": "https://soho.nascom.nasa.gov/classroom/sun101.html"
             }
-          ]
+          ],
+          "label": "Reading & sources"
         }
       ]
     }
