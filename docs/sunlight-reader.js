@@ -97,7 +97,7 @@
     });
     root.querySelectorAll('[data-go]').forEach(b=>listen(b,'click',()=>change(b.dataset.go,{focus:true})));
     listen(shade,'click',()=>change(shade.dataset.go));
-    listen(document,'keydown',e=>{if(e.key!=='Escape'||active==='photon'||document.querySelector('dialog[open]')||!onArticle())return;e.preventDefault();const previous=chapters[chapters.findIndex(c=>c.id===active)-1];change(previous.id);tabs[chapters.indexOf(previous)].focus({preventScroll:true});});
+    listen(document,'keydown',e=>{if(e.defaultPrevented||e.key!=='Escape'||active==='photon'||document.querySelector('dialog[open]')||!onArticle())return;e.preventDefault();const previous=chapters[chapters.findIndex(c=>c.id===active)-1];change(previous.id);tabs[chapters.indexOf(previous)].focus({preventScroll:true});});
     listen(window,'popstate',routeHash);listen(window,'hashchange',routeHash);
     Object.entries(panels).forEach(([key,panel])=>{
       const scroller=scrollers[key];scroller.scrollTop=saved.scroll[key]||0;
