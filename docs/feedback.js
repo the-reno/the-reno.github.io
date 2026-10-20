@@ -40,7 +40,7 @@
       </div>
       <label class="feedback-check"><input name="updates" type="checkbox" id="feedback-updates"><span>Send me occasional updates from Ronu.</span></label>
       <div class="feedback-trap" aria-hidden="true"><label>Leave this empty<input name="_gotcha" type="text" autocomplete="off" tabindex="-1"></label></div>
-      <p class="feedback-privacy">Sent privately, never posted on the website. Saved until manually deleted. Email is used to reply; updates only when you opt in. <a href="/privacy/" target="_blank" rel="noopener noreferrer">Privacy</a></p>
+      <p class="feedback-privacy">Sent privately, never posted on the website. Saved until manually deleted. Email is used to reply; updates only when you opt in.</p>
       <p class="feedback-error" id="feedback-error" role="alert" hidden></p>
       <button class="feedback-submit" id="feedback-submit" type="submit">${preview ? 'Preview submission' : 'Send feedback'} ${svg('<path d="M4 12h15m-5-5 5 5-5 5"/>', 'width="18" height="18"')}</button>
     </form>

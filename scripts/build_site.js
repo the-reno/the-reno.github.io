@@ -44,7 +44,7 @@ for (const route of routes) {
   outputs.set(path.join(site, route.path, 'index.html'), html);
 }
 outputs.set(path.join(site, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-  [...routes.map(route => route.path), '/privacy/'].map(route => `  <url><loc>https://ronu.one${route}</loc></url>`).join('\n') + '\n</urlset>\n');
+  routes.map(route => route.path).map(route => `  <url><loc>https://ronu.one${route}</loc></url>`).join('\n') + '\n</urlset>\n');
 const check = process.argv.includes('--check');
 let stale = false;
 for (const [file, content] of outputs) {
