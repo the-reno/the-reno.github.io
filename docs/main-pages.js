@@ -15,6 +15,7 @@ function mainHero(pageId, {slide = false} = {}) {
 function articleIcon(kind) {
   const paths = {
     endurance: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+    science: '<circle cx="12" cy="12" r="1.5"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/>',
     prediction: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01" stroke-width="3"/>',
     markets: '<path d="M4 4v16h16M7 16l4-5 4 2 5-7M16 6h4v4"/>',
     maker: '<path d="m12 3 9 5v9l-9 5-9-5V8l9-5Zm0 10 9-5m-9 5L3 8m9 5v9"/>',
@@ -48,8 +49,14 @@ function carouselMarkup(id, items, kind) {
 function pageCollection(pageId) {
   const page = MAIN_PAGES[pageId];
   if (page.kind === 'sections') {
-    const slides = SITE.sectionOrder.map(id => ({name: MAIN_PAGES[id].name, html: `<a class="section-slide-link" href="${routeFor(id)}" aria-labelledby="section-title-${id}"><div class="section-slide-marker">${articleIcon(MAIN_PAGES[id].icon)}</div>${mainHero(id, {slide: true})}<span class="section-slide-arrow" aria-hidden="true">${arrow}</span></a>`}));
-    return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2>${carouselMarkup('section-carousel', slides, 'sections')}`;
+    const sections = SITE.sectionOrder.map(id => {
+      const section = {...MAIN_PAGES[id], ...HOME_SECTIONS[id]};
+      const statement = section.parts
+        ? section.parts.map((text, i) => i % 2 ? `<em>${esc(text)}</em>` : esc(text)).join('')
+        : `${esc(section.start)}<em>${esc(section.end)}</em>`;
+      return `<a class="home-section" href="${routeFor(id)}" aria-labelledby="section-title-${id}"><div class="home-section-heading">${articleIcon(section.icon)}<h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3><span class="home-section-arrow" aria-hidden="true">${arrow}</span></div><p class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}</a>`;
+    }).join('');
+    return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
   }
   if (page.kind === 'gallery') {
     const projects = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
@@ -61,3 +68,4 @@ function pageCollection(pageId) {
   if (!topics.length) return '';
   return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>`;
 }
+

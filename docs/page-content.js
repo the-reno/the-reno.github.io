@@ -50,6 +50,14 @@ const MAIN_PAGES = {
   }
 };
 
+// Explore-only summaries. Section pages keep their own wording above.
+const HOME_SECTIONS = {
+  triathlon: {start: 'Getting comfortable ', end: 'with discomfort.'},
+  science: {icon: 'science', start: 'Asking why. ', end: 'Understanding how.'},
+  markets: {parts: ['Pricing the future ', 'before it happens.', ' Make the best decision ', 'the data can support.'], intro: ''},
+  maker: {start: 'Turning ideas ', end: 'into things that work.'}
+};
+
 // Short card summaries only. Full article metadata remains in content.js.
 const ARTICLE_PREVIEWS = {
   'garage-door': {icon: 'maker', summary: 'An insulated timber-and-plywood rebuild. Explore the 3D model, cuts and illustrated assembly.', image: '/assets/garage-door/garage-door-final-cad.png', alt: 'CAD view of two outward-opening garage doors with a clean white panel finish.', action: 'Explore the build'},
@@ -63,3 +71,4 @@ const MAKER_GALLERY = {
     {id: 'runner', title: 'Night runner', src: '/assets/runner-card.jpg', alt: 'A runner beside the waterfront at night.'}
   ]
 };
+
