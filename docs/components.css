@@ -38,7 +38,10 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 .section-slide-marker {padding-top:2px}
 .section-slide-arrow {padding-top:9px; color:var(--accent)}
 /* Actual image assets retain their original colors and proportions. */
-.maker-billboard {position:relative; width:min(100%,640px); aspect-ratio:2.39/1; margin:0 0 28px; overflow:hidden; border-radius:var(--radius); background:#0d0d0d}
+.maker-hero {display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); align-items:center; gap:40px}
+.maker-hero .index-statement {max-width:24ch}
+.maker-billboard {min-width:0; padding:5px; border:1px solid #ffffff1c; border-radius:9px; background:linear-gradient(145deg,#25282c,#121519); box-shadow:0 8px 24px #00000026,inset 0 1px 0 #ffffff0a}
+.maker-billboard-art {position:relative; aspect-ratio:2.39/1; overflow:hidden; border-radius:4px; background:#0d0d0d; box-shadow:0 0 0 1px #00000080}
 .maker-billboard img {position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; opacity:0; animation:ronu-billboard 12s linear infinite}
 .maker-billboard img:nth-child(2) {animation-delay:-8s}
 .maker-billboard img:nth-child(3) {animation-delay:-4s}
@@ -64,6 +67,8 @@ a.article-tile:hover .article-tile-arrow {transform:translateX(2px)}
 .gallery-film summary:focus-visible {outline:2px solid var(--accent); outline-offset:4px}
 .gallery-film video {display:block; width:100%; height:auto; aspect-ratio:1920/804; background:var(--bg); margin-top:8px}
 @media(max-width:780px) {
+  .maker-hero {grid-template-columns:1fr; gap:26px}
+  .maker-billboard {width:100%; max-width:640px; box-sizing:border-box}
   .article-grid {grid-template-columns:1fr}
   .article-tile-summary {max-width:55ch}
   .section-slide-link {padding:24px; gap:18px}
