@@ -38,9 +38,14 @@ for (const route of routes) {
     context.value = values[key]; values[key] = run('esc(value)');
   }
   // Give the enhanced article a fresh catalogue/loader without changing other pages.
-  const pageTemplate = route.topic?.id === 'sunlight-to-step'
+  let pageTemplate = route.topic?.id === 'sunlight-to-step'
     ? template.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=' + route.topic.articleVersion)
     : template;
+  // Refresh homepage assets for this promotion without changing other page layouts.
+  if (route.pageId === 'all') {
+    pageTemplate = pageTemplate.replace(/\/(page-content\.js|main-pages\.(?:js|css))\?v=[^"]+/g,
+      (_, asset) => '/' + asset + '?v=20261021-featured-read1');
+  }
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];

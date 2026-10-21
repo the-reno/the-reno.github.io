@@ -119,3 +119,22 @@ dialog,.small-cta{border-color:var(--accent-border)}
 
 
 
+
+/* A quiet, direct article link inside the homepage Triathlon section. */
+#browse-page[data-page="all"] .has-featured-read:hover {background:transparent}
+#browse-page[data-page="all"] .home-section-main {display:block;color:inherit;text-decoration:none;border-radius:var(--radius)}
+#browse-page[data-page="all"] .home-section-main:focus-visible {outline:2px solid var(--accent);outline-offset:5px}
+#browse-page[data-page="all"] .has-featured-read:is(:hover,:focus-visible) h3 {text-decoration-line:none}
+#browse-page[data-page="all"] .has-featured-read:hover .home-section-icon {transform:none}
+#browse-page[data-page="all"] .has-featured-read:hover .home-section-statement em {color:var(--text)}
+#browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) h3 {text-decoration:underline;text-decoration-color:var(--accent)}
+#browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) .home-section-statement em {color:#ff9b55}
+#browse-page[data-page="all"] .home-featured-read {display:flex;align-items:center;gap:12px;min-height:56px;margin-top:21px;padding:13px 10px 0 0;border-top:1px solid var(--line-soft);color:var(--text);text-decoration:none}
+#browse-page[data-page="all"] .home-featured-read .article-tile-icon {display:flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;margin:0;border:0;background:none;color:var(--accent)}
+#browse-page[data-page="all"] .home-featured-read .article-tile-icon svg {width:26px;height:26px}
+#browse-page[data-page="all"] .home-feature-copy {display:grid;gap:4px;min-width:0}
+#browse-page[data-page="all"] .home-feature-label {font:10px/1.4 var(--mono);letter-spacing:.07em;color:var(--accent)}
+#browse-page[data-page="all"] .home-feature-title {font:400 14px/1.5 var(--sans);color:var(--text);text-wrap:balance;text-underline-offset:4px;text-decoration-thickness:1px}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible) .home-feature-title {text-decoration:underline;text-decoration-color:var(--accent)}
+#browse-page[data-page="all"] .home-featured-read:focus-visible {outline:2px solid var(--accent);outline-offset:5px;border-radius:var(--radius)}
+@media(max-width:580px) {#browse-page[data-page="all"] .home-featured-read {margin-top:18px}}

@@ -72,7 +72,12 @@ function pageCollection(pageId) {
       const statement = section.parts
         ? section.parts.map((text, i) => i % 2 ? `<em>${esc(text)}</em>` : esc(text)).join('')
         : `${esc(section.start)}<em>${esc(section.end)}</em>`;
-      return `<a class="home-section" href="${routeFor(id)}" aria-labelledby="section-title-${id}" aria-describedby="section-summary-${id}"><div class="home-section-heading"><h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3>${homeSectionIcon(id)}</div><p id="section-summary-${id}" class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}</a>`;
+      const content = `<div class="home-section-heading"><h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3>${homeSectionIcon(id)}</div><p id="section-summary-${id}" class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}`;
+      const attributes = `href="${routeFor(id)}" aria-labelledby="section-title-${id}" aria-describedby="section-summary-${id}"`;
+      const featured = section.featured && TOPICS.find(topic => topic.id === section.featured.articleId);
+      if (!featured) return `<a class="home-section" ${attributes}>${content}</a>`;
+      // Keep section and article as separate links, never nested anchors.
+      return `<div class="home-section has-featured-read"><a class="home-section-main" ${attributes}>${content}</a><a class="home-featured-read" href="${topicPath(featured.id)}" aria-labelledby="home-feature-label-${id} home-feature-title-${id}">${articleIcon('endurance')}<span class="home-feature-copy"><span class="home-feature-label" id="home-feature-label-${id}">${esc(section.featured.label)}</span><span class="home-feature-title" id="home-feature-title-${id}">${esc(featured.title)}</span></span></a></div>`;
     }).join('');
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
   }
