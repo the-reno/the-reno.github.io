@@ -22,7 +22,7 @@
 .sunlight-binder .tab-status{font:7px/1.5 var(--mono);letter-spacing:.015em;color:var(--faint);white-space:nowrap}
 .sunlight-binder .binder-meta{flex:none;padding:0 10px 16px 18px;min-width:76px;text-align:right;color:var(--faint);font:10px/1.4 var(--mono)}
 .sunlight-binder .binder-meta b{color:var(--orange);font-weight:400}
-.sunlight-binder .binder-stage{position:relative;min-height:460px;height:var(--stage-height);isolation:isolate}
+.sunlight-binder .binder-stage{position:relative;min-height:240px;height:var(--stage-height);isolation:isolate}
 .sunlight-binder .page-sheet{position:absolute;inset:0;border:1px solid var(--line);border-top:0;background:var(--paper);border-radius:0 0 9px 9px;display:flex;flex-direction:column;min-width:0;overflow:hidden;box-shadow:0 20px 60px #0004;transition:transform .42s cubic-bezier(.22,.75,.2,1),opacity .24s,visibility .42s,filter .42s;transform-origin:top left;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(8px);z-index:0}
 .sunlight-binder .front-sheet{border-top:1px solid #48505a;border-left:1px solid #48505a;box-shadow:-25px 13px 55px #0009,0 5px 28px #0007;border-radius:7px 0 9px 9px}
 .sunlight-binder .front-sheet::before{content:"";position:absolute;left:0;top:0;width:3px;height:72px;background:var(--orange);opacity:.8;z-index:2}
@@ -68,10 +68,6 @@
 .sunlight-binder .note-body h4{margin:18px 0 8px;font:500 13px/1.6 var(--sans);color:var(--text)}
 .sunlight-binder .note-body a{color:var(--orange);font-size:11px;text-underline-offset:4px}
 .sunlight-binder .note-body .note-conclusion{border-left:2px solid var(--orange);padding-left:12px}
-.sunlight-binder :is(.continue-button,.return-button){display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;margin:38px 0 0;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font:14px/1.55 var(--mono);text-align:left;color:var(--text)}
-.sunlight-binder :is(.continue-button,.return-button) small{display:block;color:var(--faint);font:9px/1.6 var(--mono);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
-.sunlight-binder :is(.continue-button,.return-button) .arrow{color:var(--orange);font-size:24px}
-.sunlight-binder :is(.continue-button,.return-button):hover{color:var(--orange)}
 .sunlight-binder .binder-bottom{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 0 0;color:var(--faint);font:9px/1.5 var(--mono)}
 .sunlight-binder .stack-label{display:flex;align-items:center;gap:7px}
 .sunlight-binder .stack-mark{position:relative;width:15px;height:10px;border:1px solid #59636f;display:inline-block}
@@ -96,6 +92,59 @@ body[data-page-mode="landing"] #reader-page.has-binder{width:min(1392px,calc(100
 .has-binder .story-title{max-width:none;font-size:clamp(24px,2.65vw,39px);line-height:1.24;letter-spacing:-1.3px;text-wrap:initial}
 @media(max-width:1150px){.sunlight-binder{--sheet-offset:183px}.sunlight-binder .chapter-tab{flex-basis:190px;min-width:190px}.sunlight-binder .sheet-scroll{padding-left:28px;padding-right:28px}.sunlight-binder .sheet-toolbar{padding-left:28px;padding-right:28px}.sunlight-binder .sheet-content{grid-template-columns:minmax(0,1fr) 245px;gap:30px}.sunlight-binder .sheet-science{padding-left:18px}}
 @media(max-width:860px){.sunlight-binder{--sheet-offset:18px}.sunlight-binder .chapter-tab{flex-basis:175px;min-width:175px}.sunlight-binder .binder-meta,.sunlight-binder .keyboard-hint{display:none}.sunlight-binder .sheet-content{display:block}.sunlight-binder .narrative{max-width:none}.sunlight-binder .sheet-science{position:static;max-height:none;overflow:visible;border-left:0;padding-left:0}.sunlight-binder .science-control{display:block}.sunlight-binder .science-expanded .narrative{display:none}.sunlight-binder .science-expanded .sheet-science{display:block}.sunlight-binder .construction-content{padding-top:15px;min-height:125px}.sunlight-binder .placeholder-link{font-size:12px;gap:11px}.sunlight-binder .construction-toolbar-status{font-size:8px}.sunlight-binder .reading-counter{display:none}body[data-page-mode="landing"] #reader-page.has-binder{width:calc(100% - 40px)}.has-binder .story-header{padding:23px 0}}
-@media(max-width:500px){.sunlight-binder{--sheet-offset:13px;--tab-height:54px}.sunlight-binder .chapter-tab{flex-basis:164px;min-width:164px;padding:0 15px;gap:8px;font-size:12px;margin-right:-4px;border-radius:10px 15px 0 0}.sunlight-binder .tab-num{font-size:9px}.sunlight-binder .tab-dot{margin-left:auto;width:4px;height:4px}.sunlight-binder .binder-stage{min-height:360px}.sunlight-binder .sheet-toolbar{padding:0 19px;font-size:8px;letter-spacing:.04em;gap:8px;min-height:45px}.sunlight-binder .toolbar-right{gap:8px}.sunlight-binder .sheet-scroll{padding:24px 19px 45px}.sunlight-binder .chapter-heading{margin-bottom:24px}.sunlight-binder .chapter-heading h2{font-size:32px}.sunlight-binder .narrative{font-size:15px;line-height:1.85}.sunlight-binder .narrative p{margin-bottom:23px}.sunlight-binder .handover{font-size:14px;line-height:1.85}.sunlight-binder .narrative .question{font-size:19px}.sunlight-binder .binder-bottom{gap:10px;font-size:8px;padding-left:3px;padding-right:3px}.sunlight-binder .sheet-science summary{font-size:12px}.sunlight-binder .front-sheet::before{height:54px;width:2px}.sunlight-binder .construction-content{min-height:100px;padding-top:6px;padding-bottom:35px}.sunlight-binder .construction-state{font-size:16px;gap:10px}.sunlight-binder .placeholder-nav{gap:16px;padding-top:14px}.sunlight-binder .placeholder-link{font-size:11px;gap:9px}.sunlight-binder .placeholder-link small{font-size:7px;letter-spacing:.035em}.sunlight-binder .construction-toolbar-status{font-size:7px}.sunlight-binder .construction-sheet .sheet-scroll{padding-bottom:26px}body[data-page-mode="landing"] #reader-page.has-binder{width:calc(100% - 24px)}.has-binder .story-header{padding:20px 4px}.has-binder .story-title{font-size:25px;max-width:24ch;letter-spacing:-.8px}.has-binder .story-kicker{font-size:8px}}
+@media(max-width:500px){.sunlight-binder{--sheet-offset:13px;--tab-height:54px}.sunlight-binder .chapter-tab{flex-basis:164px;min-width:164px;padding:0 15px;gap:8px;font-size:12px;margin-right:-4px;border-radius:10px 15px 0 0}.sunlight-binder .tab-num{font-size:9px}.sunlight-binder .tab-dot{margin-left:auto;width:4px;height:4px}.sunlight-binder .binder-stage{min-height:240px}.sunlight-binder .sheet-toolbar{padding:0 19px;font-size:8px;letter-spacing:.04em;gap:8px;min-height:45px}.sunlight-binder .toolbar-right{gap:8px}.sunlight-binder .sheet-scroll{padding:24px 19px 45px}.sunlight-binder .chapter-heading{margin-bottom:24px}.sunlight-binder .chapter-heading h2{font-size:32px}.sunlight-binder .narrative{font-size:15px;line-height:1.85}.sunlight-binder .narrative p{margin-bottom:23px}.sunlight-binder .handover{font-size:14px;line-height:1.85}.sunlight-binder .narrative .question{font-size:19px}.sunlight-binder .binder-bottom{gap:10px;font-size:8px;padding-left:3px;padding-right:3px}.sunlight-binder .sheet-science summary{font-size:12px}.sunlight-binder .front-sheet::before{height:54px;width:2px}.sunlight-binder .construction-content{min-height:100px;padding-top:6px;padding-bottom:35px}.sunlight-binder .construction-state{font-size:16px;gap:10px}.sunlight-binder .placeholder-nav{gap:16px;padding-top:14px}.sunlight-binder .placeholder-link{font-size:11px;gap:9px}.sunlight-binder .placeholder-link small{font-size:7px;letter-spacing:.035em}.sunlight-binder .construction-toolbar-status{font-size:7px}.sunlight-binder .construction-sheet .sheet-scroll{padding-bottom:26px}body[data-page-mode="landing"] #reader-page.has-binder{width:calc(100% - 24px)}.has-binder .story-header{padding:20px 4px}.has-binder .story-title{font-size:25px;max-width:24ch;letter-spacing:-.8px}.has-binder .story-kicker{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.sunlight-binder *{scroll-behavior:auto!important;transition:none!important}}
 @media print{.sunlight-binder{--text:#000;--muted:#222;--paper:#fff}.sunlight-binder :is(.binder-tabbar,.binder-bottom,.base-shade,.sheet-toolbar,.reading-line,.continue-button,.return-button,.placeholder-nav){display:none}.sunlight-binder .binder-stage{height:auto;min-height:0}.sunlight-binder .page-sheet{position:static;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;background:white;box-shadow:none;border:0;overflow:visible;break-before:page}.sunlight-binder .sheet-scroll{overflow:visible;height:auto;padding:20px 0;opacity:1!important}.sunlight-binder .sheet-content{display:block}.sunlight-binder .sheet-science{position:static;max-height:none;overflow:visible;display:block!important}.sunlight-binder .narrative{display:block!important}.sunlight-binder details::details-content{content-visibility:visible;display:block}}
+
+
+/* Introduction only. The approved chapter content is unchanged. */
+.has-intro .story-header {padding-bottom:22px;}
+.story-prologue {padding:26px 0 32px;margin:0 0 28px;border-top:1px solid var(--line);color:var(--muted);}
+.story-prologue h2 {margin:0 0 23px;color:var(--text);font:400 clamp(23px,2.1vw,29px)/1.35 var(--mono);letter-spacing:-.7px;}
+.prologue-columns {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:70px;max-width:1100px;}
+.prologue-column {font:400 16px/1.75 var(--sans);min-width:0;}
+.prologue-column p {margin:0 0 18px;}
+.prologue-column p:last-child {margin-bottom:0;}
+.prologue-feeling {color:var(--text);}
+.prologue-bottom {display:flex;align-items:flex-end;justify-content:space-between;gap:30px;padding-top:27px;max-width:1100px;}
+.prologue-bottom p {font:400 15px/1.85 var(--sans);margin:0;}
+.prologue-bottom strong {font-weight:400;color:var(--accent);}
+.prologue-start {display:flex;flex-direction:column;gap:5px;flex:none;min-height:44px;padding:3px 0 6px;border-bottom:1px solid var(--accent-border);font:12px/1.6 var(--mono);color:var(--text);}
+.prologue-start span {font-size:10px;color:var(--faint);}
+.prologue-start:hover {color:var(--accent);border-bottom-color:var(--accent);}
+.has-intro .sunlight-binder .binder-stage {max-height:none;}
+@media(max-width:1100px) and (min-width:781px) {
+ .prologue-columns {column-gap:38px;}
+ .prologue-column {font-size:15px;}
+}
+@media(max-width:780px) {
+ .has-intro .story-header {padding-bottom:20px;}
+ .story-prologue {padding:23px 3px 28px;margin-bottom:22px;}
+ .prologue-columns {grid-template-columns:1fr;gap:20px;max-width:560px;}
+ .story-prologue h2 {font-size:25px;margin-bottom:20px;}
+ .prologue-column {font-size:16px;line-height:1.75;}
+ .prologue-bottom {align-items:flex-start;flex-direction:column;padding-top:23px;gap:20px;}
+ .prologue-bottom p {font-size:15px;max-width:540px;}
+ .prologue-start {flex-direction:row;align-items:center;justify-content:space-between;width:100%;max-width:540px;}
+}
+@media(max-width:500px) {
+ .story-prologue {padding-inline:8px;}
+ .story-prologue h2 {font-size:23px;letter-spacing:-.6px;}
+ .prologue-column {font-size:15px;line-height:1.8;}
+ .prologue-column p {margin-bottom:19px;}
+ .prologue-bottom p {font-size:14px;line-height:1.9;}
+ .prologue-start {font-size:11px;}
+}
+
+/* Explicit navigation only. The forward action is primary, the return is quiet. */
+.sunlight-binder .chapter-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;margin:32px 0 0;padding:0;max-width:100%}
+.sunlight-binder .chapter-nav-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:112px;min-height:44px;padding:10px 16px;border:1px solid #56606b;border-radius:4px;background:transparent;color:var(--muted);font:500 12px/1.5 var(--mono);transition:background .16s,border-color .16s,color .16s,box-shadow .16s}
+.sunlight-binder .chapter-nav-button.is-next{margin-left:auto;border-color:var(--orange);background:var(--orange);color:#11151a;box-shadow:0 2px 6px #0003}
+.sunlight-binder .chapter-nav-button.is-next:hover{background:#ff913f;border-color:#ff913f;box-shadow:0 3px 10px #0005}
+.sunlight-binder .chapter-nav-button.is-previous:hover{color:var(--text);border-color:var(--muted);background:#ffffff06}
+.sunlight-binder .chapter-nav-button:active{box-shadow:none}
+.sunlight-binder .chapter-nav-icon{display:block;flex:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sunlight-binder .construction-sheet .chapter-actions{margin-top:auto;padding-top:20px}
+.has-intro .sunlight-binder{scroll-margin-top:0}
+@media(max-width:500px){.sunlight-binder .chapter-actions{margin-top:27px;gap:12px}.sunlight-binder .chapter-nav-button{min-width:110px;min-height:44px;padding:10px 14px}}
+@media print{.prologue-start,.sunlight-binder .chapter-actions{display:none}.story-prologue{break-after:page}}

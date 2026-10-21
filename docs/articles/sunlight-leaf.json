@@ -78,5 +78,24 @@
         ]
       }
     ]
+  },
+  "introduction": {
+    "heading": "The race is tomorrow.",
+    "columns": [
+      [
+        "I’m sitting down to a plate of pasta.\nBut my mind is already running.",
+        "I see myself at the rolling start.\nMoving closer.\nAlmost my turn.",
+        "I’m still at the dinner table.\nBut I can already feel it.\nThe adrenaline is high."
+      ],
+      [
+        "I replay the journey.\nThe training.\nThe moments that stayed with me.",
+        "Then I rehearse the transitions.\nStep by step.",
+        "As I eat, I start putting it all on a timeline.\nWhat brought me here.\nWhat comes next."
+      ]
+    ],
+    "closing": [
+      "The sequence of events that makes this experience possible.",
+      "A story that starts long before race day."
+    ]
   }
 }

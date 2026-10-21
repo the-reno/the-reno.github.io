@@ -23,14 +23,41 @@
     const d=element('details');d.open=open;
     d.innerHTML=`<summary><span class="n">${String(index+1).padStart(2,'0')}</span><span>${escape(title)}</span><span class="toggle" aria-hidden="true">${open?'−':'+'}</span></summary><div class="note-body"></div>`;return d;
   }
-  function navButton(key,label,next=true){
-    const c=chapters.find(c=>c.id===key),b=element('button',next?'continue-button':'return-button');b.type='button';b.dataset.go=key;
-    b.innerHTML=`<span><small>${escape(label)}</small>${escape(c.title)}</span><span class="arrow" aria-hidden="true">${next?'›':'‹'}</span>`;return b;
+  function chapterNavigation(key){
+    const index=chapters.findIndex(c=>c.id===key),nav=element('nav','chapter-actions');
+    nav.setAttribute('aria-label','Section navigation');
+    const add=(target,forward)=>{
+      const label=forward?'Next':'Previous',button=element('button','chapter-nav-button '+(forward?'is-next':'is-previous'));
+      button.type='button';button.dataset.go=target.id;
+      button.setAttribute('aria-label',label+' section: '+target.title);
+      const arrow='<svg class="chapter-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+(forward?'M5 12h14m-6-6 6 6-6 6':'M19 12H5m6-6-6 6 6 6')+'"/></svg>';
+      button.innerHTML=forward?'<span>Next</span>'+arrow:arrow+'<span>Previous</span>';
+      nav.append(button);
+    };
+    if(index>0)add(chapters[index-1],false);
+    if(index<chapters.length-1)add(chapters[index+1],true);
+    return nav;
+  }
+  function introductionMarkup(data){
+    if(!data||typeof data.heading!=='string'||!Array.isArray(data.columns)||!Array.isArray(data.closing))return null;
+    const intro=element('section','story-prologue');intro.setAttribute('aria-labelledby','race-eve-heading');
+    const heading=element('h2','',data.heading);heading.id='race-eve-heading';intro.append(heading);
+    const columns=element('div','prologue-columns');
+    data.columns.forEach(paragraphs=>{
+      const column=element('div','prologue-column');
+      paragraphs.forEach(text=>{
+        const p=element('p');p.innerHTML=lines(text).replace('But I can already feel it.','<span class="prologue-feeling">But I can already feel it.</span>');column.append(p);
+      });columns.append(column);
+    });intro.append(columns);
+    const bottom=element('div','prologue-bottom'),closing=element('p');
+    data.closing.forEach((text,index)=>{if(index)closing.append(document.createElement('br'));closing.append(index===data.closing.length-1?element('strong','',text):document.createTextNode(text));});
+    const start=element('a','prologue-start');start.href='#photon';start.dataset.startStory='';start.append(document.createTextNode('Start the story'),element('span','','01 / Photon.'));
+    bottom.append(closing,start);intro.append(bottom);return intro;
   }
   function panelMarkup(c,i){
     const key=c.id,building=c.construction;
     const toolbar=`<div class="sheet-toolbar"><span class="chapter-label">${c.number} / ${escape(c.label||c.title.replace(/\.$/,''))}</span><div class="toolbar-right">${building?'<span class="construction-toolbar-status">Under construction</span>':`<span class="reading-counter">0%</span><button type="button" class="science-control" aria-controls="science-${key}" aria-expanded="false">Science</button>`}</div></div>`;
-    const nav=building?`<nav class="placeholder-nav" aria-label="${escape(c.title)} section navigation"><button type="button" class="placeholder-link" data-go="${chapters[i-1].id}"><span class="direction" aria-hidden="true">‹</span><span><small>Previous section</small>${escape(chapters[i-1].title)}</span></button>${i<chapters.length-1?`<button type="button" class="placeholder-link next" data-go="${chapters[i+1].id}"><span><small>Next section</small>${escape(chapters[i+1].title)}</span><span class="direction" aria-hidden="true">›</span></button>`:''}</nav>`:'';
+    const nav=building?chapterNavigation(key).outerHTML:'';
     return `<section class="page-sheet ${i?'front-sheet':'base-sheet'}${building?' construction-sheet':''}" id="panel-${key}" role="tabpanel" aria-labelledby="tab-${key}" aria-hidden="true" inert>${toolbar}${building?'':'<div class="reading-line" aria-hidden="true"><span></span></div>'}<div class="sheet-scroll${building?' placeholder-scroll':''}" tabindex="0" role="region" aria-label="${escape(c.title)} chapter text"><header class="chapter-heading"><h2>${escape(c.title)}</h2></header>${building?'<div class="construction-content"><p class="construction-state"><span class="construction-dot" aria-hidden="true"></span>Under construction.</p></div>'+nav:`<div class="sheet-content"><div class="narrative" aria-label="${escape(c.title)} narrative"></div><aside class="sheet-science" id="science-${key}" aria-label="${escape(c.title)} science notes"><h3>Science</h3><p class="science-caption">The details behind the story.</p></aside></div>`}</div></section>`;
   }
   function build(host,data){
@@ -54,10 +81,10 @@
       }
       prose.append(section);
     });
-    prose.append(navButton('leaf','Next chapter'));
+    prose.append(chapterNavigation('photon'));
     const leaf=root.querySelector('#panel-leaf .narrative'),allowed=new Set(['personal','question','handover']);
     for(const block of data.leaf.blocks){const p=element(block.style==='handover'?'div':'p',allowed.has(block.style)?block.style:'');p.innerHTML=lines(block.text);if(block.strong)p.append(element('strong','',block.strong));leaf.append(p);}
-    leaf.append(navButton('plant','Next section · Under construction'),navButton('photon','Previous chapter',false));
+    leaf.append(chapterNavigation('leaf'));
     data.leaf.notes.forEach((item,index)=>{const d=note(item.title,index,index===0),body=d.querySelector('.note-body');item.paragraphs.forEach(t=>body.append(element('p','',t)));item.sources.forEach(s=>body.append(sourceLink(s.title,s.url)));root.querySelector('#science-leaf').append(d);});
     return root;
   }
@@ -96,6 +123,13 @@
       listen(tab,'keydown',e=>{const next=e.key==='ArrowRight'?(index+1)%tabs.length:e.key==='ArrowLeft'?(index+tabs.length-1)%tabs.length:e.key==='Home'?0:e.key==='End'?tabs.length-1:null;if(next===null)return;e.preventDefault();tabs[next].focus({preventScroll:true});change(tabs[next].dataset.chapter);});
     });
     root.querySelectorAll('[data-go]').forEach(b=>listen(b,'click',()=>change(b.dataset.go,{focus:true})));
+    const start=reader.querySelector('[data-start-story]');
+    if(start)listen(start,'click',event=>{
+      event.preventDefault();change('photon');
+      const headerHeight=document.querySelector('.site-header')?.getBoundingClientRect().height||80;
+      window.scrollTo({top:Math.max(0,root.getBoundingClientRect().top+scrollY-headerHeight-16),behavior:reduce.matches?'instant':'smooth'});
+      tabs[0].focus({preventScroll:true});
+    });
     listen(shade,'click',()=>change(shade.dataset.go));
     listen(document,'keydown',e=>{if(e.defaultPrevented||e.key!=='Escape'||active==='photon'||document.querySelector('dialog[open]')||!onArticle())return;e.preventDefault();const previous=chapters[chapters.findIndex(c=>c.id===active)-1];change(previous.id);tabs[chapters.indexOf(previous)].focus({preventScroll:true});});
     listen(window,'popstate',routeHash);listen(window,'hashchange',routeHash);
@@ -108,20 +142,28 @@
     });
     function responsive(){
       Object.values(panels).forEach(p=>{const b=p.querySelector('.science-control'),n=p.querySelector('.sheet-science');if(!b||!n)return;const expanded=b.getAttribute('aria-expanded')==='true';n.hidden=mobile.matches&&!expanded;p.classList.toggle('science-expanded',mobile.matches&&expanded);});
-      const top=stage.getBoundingClientRect().top+scrollY,height=Math.max(mobile.matches?360:460,innerHeight-top-39);root.style.setProperty('--stage-height',height+'px');refresh(active);revealTab(tabs[chapters.findIndex(c=>c.id===active)],true);
+      const headerHeight=document.querySelector('.site-header')?.getBoundingClientRect().height||80;
+      const tabsHeight=root.querySelector('.binder-tabbar').getBoundingClientRect().height;
+      const height=Math.max(240,Math.min(780,innerHeight-headerHeight-tabsHeight-64));
+      root.style.setProperty('--stage-height',height+'px');refresh(active);revealTab(tabs[chapters.findIndex(c=>c.id===active)],true);
     }
     const resize=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(responsive);};listen(mobile,'change',responsive);listen(window,'resize',resize);
     const observer=new ResizeObserver(resize);observer.observe(document.querySelector('.site-header'));responsive();routeHash();
     return()=>{controller.abort();observer.disconnect();cancelAnimationFrame(frame);};
   }
   async function enhance(){
-    if(!onArticle()){release();release=()=>{};mountedHost=null;reader.classList.remove('has-binder');return;}
+    if(!onArticle()){release();release=()=>{};mountedHost=null;reader.classList.remove('has-binder','has-intro');return;}
     const host=reader.querySelector('#narrative-content');if(!host||host===mountedHost||host===busyHost||host.getAttribute('aria-busy')==='true'||!host.querySelector(':scope > .story-section'))return;busyHost=host;
     try{
-      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261020-binder1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
+      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261021-buttons1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
       if(!onArticle()||!host.isConnected||reader.querySelector('#narrative-content')!==host)return;
       if(!Array.isArray(cache.leaf?.blocks)||!Array.isArray(cache.leaf?.notes))throw new Error('Invalid Leaf content');
-      const root=build(host,cache);release();mountedHost=host;host.replaceChildren(root);reader.classList.add('has-binder');const progress=document.getElementById('reading-progress');if(progress)progress.hidden=true;release=activate(root);
+      const root=build(host,cache);release();mountedHost=host;
+      reader.querySelector('.story-prologue')?.remove();
+      const intro=introductionMarkup(cache.introduction);
+      if(intro)reader.querySelector('.story-header').after(intro);
+      reader.classList.toggle('has-intro',Boolean(intro));
+      host.replaceChildren(root);reader.classList.add('has-binder');const progress=document.getElementById('reading-progress');if(progress)progress.hidden=true;release=activate(root);
     }catch(error){console.warn('Chapter binder unavailable; keeping the article.',error.message);}finally{if(busyHost===host)busyHost=null;}
   }
   let queued=false;const schedule=()=>{if(!queued){queued=true;queueMicrotask(()=>{queued=false;enhance();});}};
