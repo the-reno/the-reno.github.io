@@ -130,41 +130,66 @@ dialog,.small-cta{border-color:var(--accent-border)}
 #browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) h3 {text-decoration:underline;text-decoration-color:var(--accent)}
 #browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) .home-section-statement em {color:#ff9b55}
 #browse-page[data-page="all"] .home-featured-read {
-  position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;
+  position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;overflow:hidden;
   width:216px;max-width:100%;min-height:64px;margin:13px 0 0 auto;padding:10px 17px;
-  border:1px solid #b56a30;border-radius:23px 23px 23px 8px;
-  background:linear-gradient(125deg,#3b2619 0%,#241a13 65%,#1b1713 100%);
+  border:1px solid #bc6b32;border-radius:6px;
+  background:linear-gradient(120deg,#231b15,#171616 60%,#2e1b10);
   box-shadow:0 4px 16px #0004,inset 0 1px 0 #ffd4a61a;
   color:var(--text);text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
-  animation:home-promo-welcome 4.6s ease-in-out 1;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+/* Two offset light waves, clipped within the box. The title never flashes. */
+#browse-page[data-page="all"] .home-featured-read::before,
+#browse-page[data-page="all"] .home-featured-read::after {
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  border:0;border-radius:inherit;transform:none;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20144%2064%22%20preserveAspectRatio%3D%22none%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23ff8b3d%22%20stroke-width%3D%221.2%22%3E%3Cpath%20d%3D%22M0%2014%20C18%20-4%2054%20-4%2072%2014%20S126%2032%20144%2014%22%2F%3E%3Cpath%20d%3D%22M0%2032%20C18%2010%2054%2010%2072%2032%20S126%2054%20144%2032%22%2F%3E%3Cpath%20d%3D%22M0%2050%20C18%2032%2054%2032%2072%2050%20S126%2068%20144%2050%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-repeat:repeat-x;background-size:144px 100%;
+  mask-image:linear-gradient(90deg,#000, #0005 38%,#0005 66%,#000);
+  opacity:.48;
 }
 #browse-page[data-page="all"] .home-featured-read::before {
-  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
-  background:linear-gradient(110deg,transparent 36%,#ffd6a82b 48%,transparent 60%);
-  background-size:260% 100%;background-position:100% 0;
-  animation:home-promo-sheen 4.6s ease-in-out 1;
+  background-position:0 0;animation:home-promo-waves 4.8s linear 1;
 }
 #browse-page[data-page="all"] .home-featured-read::after {
-  content:"";position:absolute;left:17px;bottom:-5px;width:9px;height:9px;
-  background:#322216;border-right:1px solid #b56a30;border-bottom:1px solid #b56a30;
-  transform:rotate(45deg);border-radius:0 0 3px 0;pointer-events:none;
-  transition:border-color .22s ease;
+  background-position:72px 0;filter:blur(3px);opacity:.3;
+  animation:home-promo-wave-glow 4.8s linear 1;
 }
-#browse-page[data-page="all"] .home-feature-copy {position:relative;z-index:1;display:grid;gap:1px;text-align:center;font:400 14px/1.55 var(--mono);letter-spacing:-.3px}
+#browse-page[data-page="all"] .home-feature-copy {
+  position:relative;z-index:1;display:grid;gap:1px;text-align:center;
+  font:400 14px/1.55 var(--mono);letter-spacing:-.3px;text-shadow:0 1px 5px #100e0d,0 0 12px #100e0d;
+}
 #browse-page[data-page="all"] .home-feature-copy span {display:block;white-space:nowrap}
-#browse-page[data-page="all"] .home-feature-copy span:last-child {color:#ffad70;font-weight:600}
+#browse-page[data-page="all"] .home-feature-copy span:last-child {color:#ffb27a;font-weight:600}
 #browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible) {
-  animation:none;transform:translateY(-3px);border-color:var(--accent);
-  box-shadow:0 7px 22px #0005,0 0 18px #ff7a1a1a,inset 0 1px 0 #ffd4a626;
+  transform:translateY(-2px);border-color:var(--accent);
+  box-shadow:0 6px 20px #0005,0 0 18px #ff7a1a20,inset 0 0 14px #ff7a1a10;
 }
-#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::after {border-color:var(--accent)}
-#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::before {animation:home-promo-hover .8s ease-out 1}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::before {animation:home-promo-wave-hover 4.8s linear 1}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::after {animation:home-promo-glow-hover 4.8s linear 1}
 #browse-page[data-page="all"] .home-featured-read:focus-visible {outline:2px solid var(--accent);outline-offset:5px}
-#browse-page[data-page="all"] .home-featured-read:active {transform:translateY(-1px)}
-@keyframes home-promo-welcome {0%,100% {transform:translateY(0)} 40% {transform:translateY(-3px)}}
-@keyframes home-promo-sheen {0%,14% {opacity:0;background-position:100% 0} 30%,70% {opacity:1} 100% {opacity:0;background-position:0% 0}}
-@keyframes home-promo-hover {0% {opacity:0;background-position:100% 0} 25%,70% {opacity:1} 100% {opacity:0;background-position:0% 0}}
+#browse-page[data-page="all"] .home-featured-read:active {transform:translateY(0)}
+/* A brief invitation, not continuous flashing; movement settles after 4.8 seconds. */
+@keyframes home-promo-waves {
+  0% {background-position:0 0;opacity:.48}
+  25% {opacity:.85} 50% {opacity:.35} 75% {opacity:.85}
+  100% {background-position:288px 0;opacity:.48}
+}
+@keyframes home-promo-wave-glow {
+  0% {background-position:72px 0;opacity:.3}
+  25% {opacity:.6} 50% {opacity:.2} 75% {opacity:.6}
+  100% {background-position:360px 0;opacity:.3}
+}
+@keyframes home-promo-wave-hover {
+  0% {background-position:0 0;opacity:.48}
+  25% {opacity:.85} 50% {opacity:.35} 75% {opacity:.85}
+  100% {background-position:288px 0;opacity:.48}
+}
+@keyframes home-promo-glow-hover {
+  0% {background-position:72px 0;opacity:.3}
+  25% {opacity:.6} 50% {opacity:.2} 75% {opacity:.6}
+  100% {background-position:360px 0;opacity:.3}
+}
 @media(max-width:580px) {#browse-page[data-page="all"] .home-featured-read {margin-top:10px}}
 @media(prefers-reduced-motion:reduce) {
   #browse-page[data-page="all"] .home-featured-read,
