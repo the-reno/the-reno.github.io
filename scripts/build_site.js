@@ -44,7 +44,7 @@ for (const route of routes) {
   // Refresh homepage assets for this promotion without changing other page layouts.
   if (route.pageId === 'all') {
     pageTemplate = pageTemplate.replace(/\/(page-content\.js|main-pages\.(?:js|css))\?v=[^"]+/g,
-      (_, asset) => '/' + asset + '?v=20261021-featured-read1');
+      (_, asset) => '/' + asset + '?v=20261021-sunlight-bubble1');
   }
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);

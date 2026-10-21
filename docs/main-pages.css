@@ -120,7 +120,7 @@ dialog,.small-cta{border-color:var(--accent-border)}
 
 
 
-/* A quiet, direct article link inside the homepage Triathlon section. */
+/* Homepage article invitation. The section layout and original links stay intact. */
 #browse-page[data-page="all"] .has-featured-read:hover {background:transparent}
 #browse-page[data-page="all"] .home-section-main {display:block;color:inherit;text-decoration:none;border-radius:var(--radius)}
 #browse-page[data-page="all"] .home-section-main:focus-visible {outline:2px solid var(--accent);outline-offset:5px}
@@ -129,12 +129,46 @@ dialog,.small-cta{border-color:var(--accent-border)}
 #browse-page[data-page="all"] .has-featured-read:hover .home-section-statement em {color:var(--text)}
 #browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) h3 {text-decoration:underline;text-decoration-color:var(--accent)}
 #browse-page[data-page="all"] .home-section-main:is(:hover,:focus-visible) .home-section-statement em {color:#ff9b55}
-#browse-page[data-page="all"] .home-featured-read {display:flex;align-items:center;gap:12px;min-height:56px;margin-top:21px;padding:13px 10px 0 0;border-top:1px solid var(--line-soft);color:var(--text);text-decoration:none}
-#browse-page[data-page="all"] .home-featured-read .article-tile-icon {display:flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;margin:0;border:0;background:none;color:var(--accent)}
-#browse-page[data-page="all"] .home-featured-read .article-tile-icon svg {width:26px;height:26px}
-#browse-page[data-page="all"] .home-feature-copy {display:grid;gap:4px;min-width:0}
-#browse-page[data-page="all"] .home-feature-label {font:10px/1.4 var(--mono);letter-spacing:.07em;color:var(--accent)}
-#browse-page[data-page="all"] .home-feature-title {font:400 14px/1.5 var(--sans);color:var(--text);text-wrap:balance;text-underline-offset:4px;text-decoration-thickness:1px}
-#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible) .home-feature-title {text-decoration:underline;text-decoration-color:var(--accent)}
-#browse-page[data-page="all"] .home-featured-read:focus-visible {outline:2px solid var(--accent);outline-offset:5px;border-radius:var(--radius)}
-@media(max-width:580px) {#browse-page[data-page="all"] .home-featured-read {margin-top:18px}}
+#browse-page[data-page="all"] .home-featured-read {
+  position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;
+  width:216px;max-width:100%;min-height:64px;margin:13px 0 0 auto;padding:10px 17px;
+  border:1px solid #b56a30;border-radius:23px 23px 23px 8px;
+  background:linear-gradient(125deg,#3b2619 0%,#241a13 65%,#1b1713 100%);
+  box-shadow:0 4px 16px #0004,inset 0 1px 0 #ffd4a61a;
+  color:var(--text);text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+  animation:home-promo-welcome 4.6s ease-in-out 1;
+}
+#browse-page[data-page="all"] .home-featured-read::before {
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  background:linear-gradient(110deg,transparent 36%,#ffd6a82b 48%,transparent 60%);
+  background-size:260% 100%;background-position:100% 0;
+  animation:home-promo-sheen 4.6s ease-in-out 1;
+}
+#browse-page[data-page="all"] .home-featured-read::after {
+  content:"";position:absolute;left:17px;bottom:-5px;width:9px;height:9px;
+  background:#322216;border-right:1px solid #b56a30;border-bottom:1px solid #b56a30;
+  transform:rotate(45deg);border-radius:0 0 3px 0;pointer-events:none;
+  transition:border-color .22s ease;
+}
+#browse-page[data-page="all"] .home-feature-copy {position:relative;z-index:1;display:grid;gap:1px;text-align:center;font:400 14px/1.55 var(--mono);letter-spacing:-.3px}
+#browse-page[data-page="all"] .home-feature-copy span {display:block;white-space:nowrap}
+#browse-page[data-page="all"] .home-feature-copy span:last-child {color:#ffad70;font-weight:600}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible) {
+  animation:none;transform:translateY(-3px);border-color:var(--accent);
+  box-shadow:0 7px 22px #0005,0 0 18px #ff7a1a1a,inset 0 1px 0 #ffd4a626;
+}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::after {border-color:var(--accent)}
+#browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible)::before {animation:home-promo-hover .8s ease-out 1}
+#browse-page[data-page="all"] .home-featured-read:focus-visible {outline:2px solid var(--accent);outline-offset:5px}
+#browse-page[data-page="all"] .home-featured-read:active {transform:translateY(-1px)}
+@keyframes home-promo-welcome {0%,100% {transform:translateY(0)} 40% {transform:translateY(-3px)}}
+@keyframes home-promo-sheen {0%,14% {opacity:0;background-position:100% 0} 30%,70% {opacity:1} 100% {opacity:0;background-position:0% 0}}
+@keyframes home-promo-hover {0% {opacity:0;background-position:100% 0} 25%,70% {opacity:1} 100% {opacity:0;background-position:0% 0}}
+@media(max-width:580px) {#browse-page[data-page="all"] .home-featured-read {margin-top:10px}}
+@media(prefers-reduced-motion:reduce) {
+  #browse-page[data-page="all"] .home-featured-read,
+  #browse-page[data-page="all"] .home-featured-read::before,
+  #browse-page[data-page="all"] .home-featured-read::after {animation:none!important;transition:none}
+  #browse-page[data-page="all"] .home-featured-read:is(:hover,:focus-visible) {transform:none}
+}

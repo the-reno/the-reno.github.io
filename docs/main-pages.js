@@ -77,7 +77,8 @@ function pageCollection(pageId) {
       const featured = section.featured && TOPICS.find(topic => topic.id === section.featured.articleId);
       if (!featured) return `<a class="home-section" ${attributes}>${content}</a>`;
       // Keep section and article as separate links, never nested anchors.
-      return `<div class="home-section has-featured-read"><a class="home-section-main" ${attributes}>${content}</a><a class="home-featured-read" href="${topicPath(featured.id)}" aria-labelledby="home-feature-label-${id} home-feature-title-${id}">${articleIcon('endurance')}<span class="home-feature-copy"><span class="home-feature-label" id="home-feature-label-${id}">${esc(section.featured.label)}</span><span class="home-feature-title" id="home-feature-title-${id}">${esc(featured.title)}</span></span></a></div>`;
+      const featureLines = section.featured.lines || featured.title.replace(/\.$/, '').replace(' to ', '\nto ').split('\n');
+      return `<div class="home-section has-featured-read"><a class="home-section-main" ${attributes}>${content}</a><a class="home-featured-read" href="${topicPath(featured.id)}" aria-label="Read ${esc(featured.title)}"><span class="home-feature-copy">${featureLines.map(text => `<span>${esc(text)}</span>`).join('')}</span></a></div>`;
     }).join('');
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
   }
