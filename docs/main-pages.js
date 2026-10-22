@@ -75,10 +75,10 @@ function pageCollection(pageId) {
       const content = `<div class="home-section-heading"><h3 id="section-title-${id}">${esc(section.name)}<span>.</span></h3>${homeSectionIcon(id)}</div><p id="section-summary-${id}" class="home-section-statement${section.parts ? ' is-continuous' : ''}">${statement}</p>${introMarkup(section, {slide: true})}`;
       const attributes = `href="${routeFor(id)}" aria-labelledby="section-title-${id}" aria-describedby="section-summary-${id}"`;
       const featured = section.featured && TOPICS.find(topic => topic.id === section.featured.articleId);
-      if (!featured) return `<a class="home-section" ${attributes}>${content}</a>`;
-      // Keep section and article as separate links, never nested anchors.
-      const featureLines = section.featured.lines || featured.title.replace(/\.$/, '').replace(' to ', '\nto ').split('\n');
-      return `<div class="home-section has-featured-read"><a class="home-section-main" ${attributes}>${content}</a><a class="home-featured-read" href="${topicPath(featured.id)}" aria-label="Read ${esc(featured.title)}"><span class="home-feature-copy">${featureLines.map(text => `<span>${esc(text)}</span>`).join('')}</span></a></div>`;
+      // Separate section and article links, with a consistent slot for future promotions.
+      const featureLines = featured && (section.featured.lines || [featured.title.replace(/\.$/, '')]);
+      const promotion = featured ? `<a class="home-featured-read" href="${topicPath(featured.id)}" aria-label="Read ${esc(featured.title)}"><span class="home-feature-copy">${featureLines.map(text => `<span>${esc(text)}</span>`).join('')}</span></a>` : '';
+      return `<div class="home-section${featured ? ' has-featured-read' : ''}"><a class="home-section-main" ${attributes}>${content}</a><div class="home-section-actions"${featured ? '' : ' aria-hidden="true"'}>${promotion}</div></div>`;
     }).join('');
     return `<h2 class="collection-heading" id="collection-title">${esc(SITE.labels.sections)}</h2><div class="home-sections">${sections}</div>`;
   }

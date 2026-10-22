@@ -51,9 +51,10 @@ const MAIN_PAGES = {
 };
 
 // Explore-only summaries. Section pages keep their own wording above.
+// Optional featured links share a reserved button area in every section.
 const HOME_SECTIONS = {
   triathlon: {start: 'Getting comfortable ', end: 'with discomfort.', intro: '', featured: {articleId: 'sunlight-to-step', lines: ['From Sunlight', 'to the Finish Line']}},
-  science: {icon: 'science', start: 'Asking why. ', end: 'Understanding how.', intro: ''},
+  science: {icon: 'science', start: 'Asking why. ', end: 'Understanding how.', intro: '', featured: {articleId: 'prediction', lines: ['The Complexity', 'of Prediction']}},
   markets: {parts: ['Pricing the future ', 'before it happens.', ' Make the best decision ', 'the data can support.'], intro: ''},
   maker: {start: 'Turning ideas ', end: 'into things that work.'}
 };
