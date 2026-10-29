@@ -46,7 +46,7 @@ const MAIN_PAGES = {
     name: 'Maker', kind: 'gallery', icon: 'maker',
     start: 'What happens when ', end: 'an idea becomes real?',
     intro: '',
-    articleIds: ['garage-door']
+    articleIds: ['garage-door', 'series-63-study-guide']
   }
 };
 

@@ -1,0 +1,124 @@
+{
+  "id": "series-63-study-guide",
+  "sections": [
+    {
+      "id": "introduction",
+      "anchor": "article-opening",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Learning securities law becomes easier when each rule has a place. Start with the legal framework, identify the people and businesses involved, then work through registration, duties, exceptions and enforcement."
+        },
+        {
+          "type": "paragraph",
+          "text": "This interactive study guide turns that structure into a connected reading experience. It brings together 7 chapters, 28 sections, 41 concepts and 66 definitions, with original explanations, applied examples and learning checks."
+        },
+        {
+          "type": "project-links",
+          "items": [
+            {
+              "label": "Open the Series 63 Study Guide",
+              "href": "/assets/series-63/index.html",
+              "note": "Read the chapters, explore related concepts and check your understanding.",
+              "meta": "Interactive guide"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "learning-structure",
+      "anchor": "part-1",
+      "heading": "01 — Give every rule a place",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The guide follows seven connected questions. Each chapter builds on the earlier ones, while related concepts let you move directly to the rule that explains an exception or a consequence."
+        },
+        {
+          "type": "concepts",
+          "label": "The learning structure",
+          "items": [
+            {
+              "term": "1. Legal framework and authorities",
+              "text": "Which law applies, and which authority has the relevant power?"
+            },
+            {
+              "term": "2. Participants and relationships",
+              "text": "Who is acting, for whom, and in what capacity?"
+            },
+            {
+              "term": "3. Securities, activities and transactions",
+              "text": "What is being offered, recommended, bought or sold?"
+            },
+            {
+              "term": "4. Registration and continuing status",
+              "text": "Who or what needs registration, and what keeps that status effective?"
+            },
+            {
+              "term": "5. Duties and obligations",
+              "text": "What must the participant do for the client and the business?"
+            },
+            {
+              "term": "6. Exclusions, exemptions and limits",
+              "text": "Which requirement changes, under what conditions, and what duties remain?"
+            },
+            {
+              "term": "7. Enforcement, procedures and remedies",
+              "text": "What happens after a possible violation, and who can take each action?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "applied-reasoning",
+      "anchor": "part-2",
+      "heading": "02 — Follow the facts through the rules",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Maya has sold her business and wants to invest the proceeds. Lucas works with her through Harbor Securities in a brokerage role, or through Cedar Advisory in an advisory role. Northstar Solar is the issuer she encounters along the way. These recurring fictional participants make it easier to see which facts change the analysis."
+        },
+        {
+          "type": "paragraph",
+          "text": "Change Lucas's capacity, move an office to another state, or give Maya an imminent tax payment. The guide asks how each change affects registration, client care or the available exception. Its 69 original examples connect the concepts to decisions, with checks that explain the reasoning."
+        },
+        {
+          "type": "paragraph",
+          "text": "Useful distinctions return throughout the material: a firm and its representative, an exempt security and an exempt transaction, disclosure and consent, an administrative order and a court remedy."
+        }
+      ]
+    },
+    {
+      "id": "study-routine",
+      "anchor": "part-3",
+      "heading": "03 — Read, explain, revisit",
+      "blocks": [
+        {
+          "type": "project-list",
+          "items": [
+            "Read the chapter to understand where its rules fit. Use the definitions when a term is unfamiliar.",
+            "Work through an example and answer the learning check before revealing its explanation.",
+            "Follow the related concepts when two rules seem similar. Return to the distinction and explain it in your own words."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "This is an original, independent learning project. Links to official sources and dated rule notes help keep the legal framework, state variations and examination context clear as you study."
+        },
+        {
+          "type": "project-links",
+          "items": [
+            {
+              "label": "Start with the legal framework",
+              "href": "/assets/series-63/index.html",
+              "note": "Open the full guide and work through the structure at your own pace.",
+              "meta": "7 chapters"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

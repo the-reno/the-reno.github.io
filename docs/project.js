@@ -4,6 +4,7 @@ const projectBlockTypes = new Set(['project-intro', 'project-model', 'project-li
 const projectAsset = value => typeof value === 'string' && /^\/assets\/garage-door\/[a-z0-9/_.-]+(?:\?embed=1)?$/.test(value) && !value.includes('..');
 const projectText = value => typeof value === 'string' && value.trim().length > 0;
 function projectLink(value) {
+  if (value === '/assets/series-63/index.html') return true;
   if (projectAsset(value) || /^#(?:part-[1-9][0-9]*|article-opening)$/.test(value)) return true;
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
 }
