@@ -96,6 +96,10 @@
       "heading": "03 — Read, explain, revisit",
       "blocks": [
         {
+          "type": "paragraph",
+          "text": "Choose Read with a guide to hear each passage and follow its highlight. Practical commentary connects the rules to Maya’s decisions across all 28 sections. Pause, change the pace or begin at a particular section; the explanations are also available to read on the page."
+        },
+        {
           "type": "project-list",
           "items": [
             "Read the chapter to understand where its rules fit. Use the definitions when a term is unfamiliar.",

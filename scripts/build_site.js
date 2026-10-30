@@ -47,7 +47,7 @@ for (const route of routes) {
   // Refresh shared catalogue, Maker selection and link validation on every entry
   // point so client-side navigation can reach the new guide from existing pages.
   pageTemplate = pageTemplate.replace(/\/(content\.js|page-content\.js|project\.js)\?v=[^"]+/g,
-    (_, asset) => '/' + asset + '?v=20261029-series63-1');
+    (_, asset) => '/' + asset + '?v=20261029-guided-1');
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];
