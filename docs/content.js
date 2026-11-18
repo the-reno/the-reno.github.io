@@ -16,11 +16,11 @@ if (typeof window !== 'undefined') {
       if (requested || !(/\/topic\/sunlight-to-step(?:\/|$)/.test(location.pathname) || /^#topic\/sunlight-to-step(?:[/?]|$)/.test(location.hash))) return;
       requested = true;
       const style = document.createElement('link');
-      style.rel = 'stylesheet'; style.href = '/sunlight-reader.css?v=20261118-leaf-clip1';
+      style.rel = 'stylesheet'; style.href = '/sunlight-reader.css?v=20261118-leaf2';
       const scienceStyle = document.createElement('link');
       scienceStyle.rel = 'stylesheet'; scienceStyle.href = '/sunlight-science.css?v=20261021-science-modal1';
       const script = document.createElement('script');
-      script.src = '/sunlight-reader.js?v=20261118-leaf-clip1'; script.defer = true;
+      script.src = '/sunlight-reader.js?v=20261118-leaf2'; script.defer = true;
       document.head.append(style, scienceStyle, script);
     };
     window.addEventListener('ronu:navigate', loadScienceReader);

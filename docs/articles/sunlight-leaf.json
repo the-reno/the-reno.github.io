@@ -17,15 +17,6 @@
         "text": "This is what it means to say that chlorophyll is excited."
       },
       {
-        "type": "video",
-        "src": "/assets/sunlight/chlorophyll-excitation.mp4",
-        "poster": "/assets/sunlight/chlorophyll-excitation-poster.webp",
-        "duration": 10.5,
-        "label": "Animation of photon absorption by chlorophyll",
-        "caption": "Chlorophyll remains intact as its electronic energy increases.",
-        "description": "A photon, represented by an orange wave packet, approaches a chlorophyll molecule and disappears when absorbed. The molecular drawing retains the same linked atoms. A separate electronic-energy indicator changes from a lower level to a higher level. The molecule is now in an excited state. This is a schematic, with time expanded to make the change visible."
-      },
-      {
         "text": "Energy that travelled from the Sun has become an excitation in a molecule inside the leaf."
       },
       {
@@ -75,8 +66,7 @@
         "paragraphs": [
           "An electronic state describes the quantum state of a molecule’s electrons and its associated energy. The ground state has the lowest electronic energy; an electronically excited state has more.",
           "Absorbing a suitable photon can promote chlorophyll to an excited electronic state. At this absorption step, the molecule has the same atoms and total number of electrons. An electron has not yet been transferred to another molecule.",
-          "A higher energy level is not a physical shelf or a planetary orbit. In a molecule, electrons occupy molecular orbitals that can extend across several atoms. The story follows the change in energy without assigning a classical path to an individual electron.",
-          "The animation uses a two-dimensional drawing based on chlorophyll a in the RCSB PDB Chemical Component Dictionary. Hydrogen atoms and the distinction between single and double bonds are omitted. The separate indicator shows electronic energy, not an electron’s position. The structure is held still for clarity; colours are illustrative and time is expanded to make the change visible."
+          "A higher energy level is not a physical shelf or a planetary orbit. In a molecule, electrons occupy molecular orbitals that can extend across several atoms. The story follows the change in energy without assigning a classical path to an individual electron."
         ],
         "sources": [
           {
@@ -86,10 +76,6 @@
           {
             "title": "IUPAC Gold Book · Molecular orbital",
             "url": "https://goldbook.iupac.org/terms/view/M03996"
-          },
-          {
-            "title": "RCSB PDB · Chlorophyll a structure (CLA)",
-            "url": "https://www.rcsb.org/ligand/CLA"
           }
         ]
       },

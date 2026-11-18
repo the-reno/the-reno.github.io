@@ -23,25 +23,6 @@
     const d=element('details');d.open=open;
     d.innerHTML=`<summary><span class="n">${String(index+1).padStart(2,'0')}</span><span>${escape(title)}</span><span class="toggle" aria-hidden="true">${open?'−':'+'}</span></summary><div class="note-body"></div>`;return d;
   }
-  function clipMarkup(block,index){
-    // Media is authored alongside the story and served by the same site.
-    const localAsset=value=>typeof value==='string'&&/^\/assets\/sunlight\/[a-z0-9-]+\.(mp4|webp|png)$/.test(value);
-    if(!localAsset(block.src)||!localAsset(block.poster))throw new Error('Invalid story media');
-    const figure=element('figure','leaf-clip'),video=element('video');
-    const caption=element('figcaption','',block.caption);caption.id='leaf-clip-caption-'+index;
-    video.src=block.src;video.poster=block.poster;video.width=960;video.height=720;video.id='leaf-clip-video-'+index;
-    video.controls=true;video.playsInline=true;video.muted=true;video.defaultMuted=true;video.preload='none';
-    video.setAttribute('aria-label',block.label);video.setAttribute('aria-describedby',caption.id);
-    const fallback=element('a','','Watch the animation');fallback.href=block.src;video.append(fallback);
-    const controls=element('div','leaf-clip-controls'),play=element('button','leaf-clip-play','Play clip');
-    controls.hidden=true;play.type='button';play.setAttribute('aria-controls',video.id);
-    controls.append(play,element('span','leaf-clip-duration',block.duration+' s · silent'));
-    const description=element('details','leaf-clip-description');
-    description.append(element('summary','','Animation description'),element('p','',block.description));
-    const error=element('p','leaf-clip-error','The video could not load. '),download=element('a','','Open the clip');
-    download.href=block.src;error.append(download);error.hidden=true;error.setAttribute('role','status');
-    figure.append(video,controls,caption,description,error);return figure;
-  }
   function chapterNavigation(key){
     const index=chapters.findIndex(c=>c.id===key),nav=element('nav','chapter-actions');
     nav.setAttribute('aria-label','Section navigation');
@@ -184,10 +165,7 @@
     });
     prose.append(chapterNavigation('photon'));
     const leaf=root.querySelector('#panel-leaf .narrative'),allowed=new Set(['personal','question','handover']);
-    data.leaf.blocks.forEach((block,index)=>{
-      if(block.type==='video'){leaf.append(clipMarkup(block,index));return;}
-      const p=element(block.style==='handover'?'div':'p',allowed.has(block.style)?block.style:'');p.innerHTML=lines(block.text);if(block.strong)p.append(element('strong','',block.strong));leaf.append(p);
-    });
+    for(const block of data.leaf.blocks){const p=element(block.style==='handover'?'div':'p',allowed.has(block.style)?block.style:'');p.innerHTML=lines(block.text);if(block.strong)p.append(element('strong','',block.strong));leaf.append(p);}
     leaf.append(chapterNavigation('leaf'));
     data.leaf.notes.forEach((item,index)=>{const d=note(item.title,index,index===0),body=d.querySelector('.note-body');item.paragraphs.forEach(t=>body.append(element('p','',t)));item.sources.forEach(s=>body.append(sourceLink(s.title,s.url)));root.querySelector('#science-leaf').append(d);});
     return root;
@@ -198,21 +176,6 @@
     const binder=root.querySelector('.binder'),rail=root.querySelector('[role="tablist"]'),tabs=[...rail.querySelectorAll('[role="tab"]')];
     const panels=Object.fromEntries(chapters.map(c=>[c.id,root.querySelector('#panel-'+c.id)]));
     const scrollers=Object.fromEntries(chapters.map(c=>[c.id,panels[c.id].querySelector('.sheet-scroll')]));
-    const videos=[...root.querySelectorAll('.leaf-clip video')],pauseClips=()=>videos.forEach(video=>video.pause());
-    videos.forEach(video=>{
-      const figure=video.closest('.leaf-clip'),button=figure.querySelector('.leaf-clip-play'),error=figure.querySelector('.leaf-clip-error');
-      const update=()=>{button.textContent=video.ended?'Replay clip':video.paused?'Play clip':'Pause clip';};
-      listen(button,'click',()=>{
-        if(!video.paused&&!video.ended){video.pause();return;}
-        if(video.ended)video.currentTime=0;
-        video.play().catch(()=>{error.hidden=false;update();});
-      });
-      for(const event of ['play','pause','ended'])listen(video,event,update);
-      listen(video,'error',()=>{error.hidden=false;update();});
-      figure.querySelector('.leaf-clip-controls').hidden=false;video.controls=false;
-    });
-    listen(document,'visibilitychange',()=>{if(document.hidden)pauseClips();});
-    listen(window,'pagehide',pauseClips);
     const reduce=matchMedia('(prefers-reduced-motion:reduce)');
     const shade=root.querySelector('.base-shade'),stage=root.querySelector('.binder-stage');let active='photon',frame=0;
     const scienceModal=mountScienceModal(root,panels,scrollers,()=>active,listen);
@@ -225,7 +188,7 @@
     const revealTab=(tab,instant=false)=>{const r=rail.getBoundingClientRect(),t=tab.getBoundingClientRect();let left=rail.scrollLeft;if(t.left<r.left+2)left+=t.left-r.left-2;else if(t.right>r.right-2)left+=t.right-r.right+2;rail.scrollTo({left:Math.max(0,left),behavior:instant||reduce.matches?'instant':'smooth'});};
     function change(key,{historyMode='push',focus=false,initial=false}={}){
       const c=chapterFor(key);if(!c)return;const old=active,index=chapters.indexOf(c),background=index?chapters[index-1]:null;
-      if(old!==key){scienceModal.close();pauseClips();}
+      if(old!==key)scienceModal.close();
       active=key;saved.active=key;binder.dataset.active=key;binder.dataset.background=String(Boolean(background));const selected=tabs[index];
       if(!initial&&(focus||Object.values(panels).some(p=>p!==panels[key]&&p.contains(document.activeElement))))selected.focus({preventScroll:true});
       tabs.forEach(t=>{const yes=t.dataset.chapter===key;t.setAttribute('aria-selected',String(yes));t.tabIndex=yes?0:-1;});
@@ -266,13 +229,13 @@
     }
     const resize=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(responsive);};listen(window,'resize',resize);
     const observer=new ResizeObserver(resize);observer.observe(document.querySelector('.site-header'));responsive();routeHash();
-    return()=>{pauseClips();scienceModal.destroy();controller.abort();observer.disconnect();cancelAnimationFrame(frame);};
+    return()=>{scienceModal.destroy();controller.abort();observer.disconnect();cancelAnimationFrame(frame);};
   }
   async function enhance(){
     if(!onArticle()){release();release=()=>{};mountedHost=null;reader.classList.remove('has-binder','has-intro');return;}
     const host=reader.querySelector('#narrative-content');if(!host||host===mountedHost||host===busyHost||host.getAttribute('aria-busy')==='true'||!host.querySelector(':scope > .story-section'))return;busyHost=host;
     try{
-      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261118-leaf-clip1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
+      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261118-leaf2',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
       if(!onArticle()||!host.isConnected||reader.querySelector('#narrative-content')!==host)return;
       if(!Array.isArray(cache.leaf?.blocks)||!Array.isArray(cache.leaf?.notes))throw new Error('Invalid Leaf content');
       const root=build(host,cache);release();mountedHost=host;
