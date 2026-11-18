@@ -49,7 +49,7 @@ for (const route of routes) {
   pageTemplate = pageTemplate.replace(/\/(content\.js|page-content\.js|project\.js)\?v=[^"]+/g,
     (_, asset) => '/' + asset + '?v=20261029-guided-1');
   // Refresh the Leaf reader when entering through any page of the site.
-  pageTemplate = pageTemplate.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=20261118-leaf1');
+  pageTemplate = pageTemplate.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=20261118-leaf-clip1');
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];

@@ -2,40 +2,35 @@
   "leaf": {
     "blocks": [
       {
-        "text": "We have reached the leaf.\nNow we need to go inside."
+        "text": "The photon reaches a molecule of chlorophyll."
       },
       {
-        "text": "Inside a cell.\nThen inside a chloroplast.\nA small structure where the plant uses light energy to help make sugars."
+        "text": "A molecule is a group of atoms held together by chemical bonds. In chlorophyll, the arrangement of those atoms and their electrons allows it to absorb certain colours of light."
       },
       {
-        "text": "Inside are thin membranes.\nProteins in these membranes hold groups of light-absorbing molecules close together."
+        "text": "Our photon is absorbed."
       },
       {
-        "text": "One of those molecules is chlorophyll.\nThe pigment that gives leaves much of their green colour."
+        "text": "Its energy changes the electronic state of the molecule. The atoms remain linked, and the molecule still has the same number of electrons. But it now holds more electronic energy."
       },
       {
-        "text": "“Absorbing light.”\nI know the words.\nBut what actually changes?",
-        "style": "personal"
+        "text": "This is what it means to say that chlorophyll is excited."
       },
       {
-        "text": "Chlorophyll is made of atoms joined together.\nIt already contains electrons."
+        "type": "video",
+        "src": "/assets/sunlight/chlorophyll-excitation.mp4",
+        "poster": "/assets/sunlight/chlorophyll-excitation-poster.webp",
+        "duration": 10.5,
+        "label": "Animation of photon absorption by chlorophyll",
+        "caption": "Chlorophyll remains intact as its electronic energy increases.",
+        "description": "A photon, represented by an orange wave packet, approaches a chlorophyll molecule and disappears when absorbed. The molecular drawing retains the same linked atoms. A separate electronic-energy indicator changes from a lower level to a higher level. The molecule is now in an excited state. This is a schematic, with time expanded to make the change visible."
       },
       {
-        "text": "Those electrons can occupy particular energy states.\nReaching a higher state takes a particular amount of energy."
+        "text": "Energy that travelled from the Sun has become an excitation in a molecule inside the leaf."
       },
       {
-        "text": "Our photon carries the energy needed for one of those changes.\nChlorophyll absorbs it."
-      },
-      {
-        "text": "The molecule now has more electronic energy.\nThis is what we mean by an excited state."
-      },
-      {
-        "text": "The molecule still has the same atoms and the same number of electrons.\nWhat has changed is its electronic state."
-      },
-      {
-        "text": "The photon’s journey ends here.\nIts energy is now in the molecule.",
-        "style": "handover",
-        "strong": "This is the handover."
+        "text": "What happens to that energy next?",
+        "style": "question"
       },
       {
         "text": "This is a temporary change.\nThe molecule can release energy as heat or emit a new photon."
@@ -80,7 +75,8 @@
         "paragraphs": [
           "An electronic state describes the quantum state of a molecule’s electrons and its associated energy. The ground state has the lowest electronic energy; an electronically excited state has more.",
           "Absorbing a suitable photon can promote chlorophyll to an excited electronic state. At this absorption step, the molecule has the same atoms and total number of electrons. An electron has not yet been transferred to another molecule.",
-          "A higher energy level is not a physical shelf or a planetary orbit. In a molecule, electrons occupy molecular orbitals that can extend across several atoms. The story follows the change in energy without assigning a classical path to an individual electron."
+          "A higher energy level is not a physical shelf or a planetary orbit. In a molecule, electrons occupy molecular orbitals that can extend across several atoms. The story follows the change in energy without assigning a classical path to an individual electron.",
+          "The animation uses a two-dimensional drawing based on chlorophyll a in the RCSB PDB Chemical Component Dictionary. Hydrogen atoms and the distinction between single and double bonds are omitted. The separate indicator shows electronic energy, not an electron’s position. The structure is held still for clarity; colours are illustrative and time is expanded to make the change visible."
         ],
         "sources": [
           {
@@ -90,6 +86,10 @@
           {
             "title": "IUPAC Gold Book · Molecular orbital",
             "url": "https://goldbook.iupac.org/terms/view/M03996"
+          },
+          {
+            "title": "RCSB PDB · Chlorophyll a structure (CLA)",
+            "url": "https://www.rcsb.org/ligand/CLA"
           }
         ]
       },
