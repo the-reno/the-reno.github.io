@@ -235,7 +235,7 @@
     if(!onArticle()){release();release=()=>{};mountedHost=null;reader.classList.remove('has-binder','has-intro');return;}
     const host=reader.querySelector('#narrative-content');if(!host||host===mountedHost||host===busyHost||host.getAttribute('aria-busy')==='true'||!host.querySelector(':scope > .story-section'))return;busyHost=host;
     try{
-      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261021-buttons1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
+      if(!cache){const r=await fetch('/articles/sunlight-leaf.json?v=20261118-leaf1',{credentials:'same-origin',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Leaf data unavailable');cache=await r.json();}
       if(!onArticle()||!host.isConnected||reader.querySelector('#narrative-content')!==host)return;
       if(!Array.isArray(cache.leaf?.blocks)||!Array.isArray(cache.leaf?.notes))throw new Error('Invalid Leaf content');
       const root=build(host,cache);release();mountedHost=host;

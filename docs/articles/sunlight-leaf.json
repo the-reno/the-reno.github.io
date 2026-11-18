@@ -5,75 +5,131 @@
         "text": "We have reached the leaf.\nNow we need to go inside."
       },
       {
-        "text": "Inside a cell.\nThen inside a chloroplast.\nA small structure where photosynthesis happens."
+        "text": "Inside a cell.\nThen inside a chloroplast.\nA small structure where the plant uses light energy to help make sugars."
       },
       {
-        "text": "Here, membranes hold molecules of chlorophyll.\nThese molecules can absorb light."
+        "text": "Inside are thin membranes.\nProteins in these membranes hold groups of light-absorbing molecules close together."
       },
       {
-        "text": "I know the word.\nBut “absorbing light” is still hard for me to picture.",
+        "text": "One of those molecules is chlorophyll.\nThe pigment that gives leaves much of their green colour."
+      },
+      {
+        "text": "“Absorbing light.”\nI know the words.\nBut what actually changes?",
         "style": "personal"
       },
       {
-        "text": "What actually changes?",
-        "style": "personal"
+        "text": "Chlorophyll is made of atoms joined together.\nIt already contains electrons."
       },
       {
-        "text": "The chlorophyll molecule already contains electrons.\nWhen it absorbs our photon, it enters a higher-energy electronic state.\nWe call this an excited state."
+        "text": "Those electrons can occupy particular energy states.\nReaching a higher state takes a particular amount of energy."
       },
       {
-        "text": "The photon has not become an electron.\nIt has transferred its energy."
+        "text": "Our photon carries the energy needed for one of those changes.\nChlorophyll absorbs it."
       },
       {
-        "text": "And at this first moment, the electron is still part of the molecule.\nIt has not been passed to another molecule yet."
+        "text": "The molecule now has more electronic energy.\nThis is what we mean by an excited state."
       },
       {
-        "text": "The photon’s journey ends here.\nBut the energy’s journey continues.",
+        "text": "The molecule still has the same atoms and the same number of electrons.\nWhat has changed is its electronic state."
+      },
+      {
+        "text": "The photon’s journey ends here.\nIts energy is now in the molecule.",
         "style": "handover",
         "strong": "This is the handover."
       },
       {
-        "text": "No sugar has been made yet.\nThe first change is much smaller.\nA molecule now has energy it did not have before."
+        "text": "This is a temporary change.\nThe molecule can release energy as heat or emit a new photon."
       },
       {
-        "text": "What can the plant do with it?",
+        "text": "But the pigments around it create another possibility.\nThey are close enough for the excitation energy to pass from one to another."
+      },
+      {
+        "text": "That is why their arrangement matters.\nTogether, they collect light and channel its energy towards a place where an electron can be passed to another molecule.\nA reaction centre."
+      },
+      {
+        "text": "Passing on excitation energy and transferring an electron are two different steps."
+      },
+      {
+        "text": "No sugar has been made by this first step.\nFor now, light has changed the energy of a molecule."
+      },
+      {
+        "text": "What happens when that energy reaches the reaction centre?",
         "style": "question"
       }
     ],
     "notes": [
       {
-        "title": "Inside the leaf",
+        "title": "Where the light is caught",
         "paragraphs": [
-          "A chloroplast is a structure inside a plant cell. Its thylakoid membranes contain light-harvesting complexes: proteins holding chlorophyll and other pigments."
+          "Many cells inside a leaf contain chloroplasts. Within each chloroplast, thylakoid membranes carry the protein complexes that collect light and carry out the first energy-conversion steps of photosynthesis.",
+          "Proteins hold chlorophyll and other pigments in particular positions and orientations. Their arrangement allows excitation energy to move through the light-harvesting network. The structure of a spinach light-harvesting complex provides a detailed example of this organisation."
         ],
         "sources": [
           {
-            "title": "Berkeley Lab · source",
-            "url": "https://newscenter.lbl.gov/2016/01/18/seeing-the-big-picture-in-photosynthetic-light-harvesting/"
+            "title": "RCSB PDB · Photosynthetic supercomplexes",
+            "url": "https://pdb101.rcsb.org/motm/244"
+          },
+          {
+            "title": "Liu et al. · Structure of the spinach light-harvesting complex",
+            "url": "https://www.rcsb.org/structure/1RWT"
           }
         ]
       },
       {
-        "title": "Absorption is not electron transfer",
+        "title": "What an excited state means",
         "paragraphs": [
-          "Absorption creates electronic excitation. It does not mean that an electron has already been passed to another molecule. Excitation energy can move later through the pigment network."
+          "An electronic state describes the quantum state of a molecule’s electrons and its associated energy. The ground state has the lowest electronic energy; an electronically excited state has more.",
+          "Absorbing a suitable photon can promote chlorophyll to an excited electronic state. At this absorption step, the molecule has the same atoms and total number of electrons. An electron has not yet been transferred to another molecule.",
+          "A higher energy level is not a physical shelf or a planetary orbit. In a molecule, electrons occupy molecular orbitals that can extend across several atoms. The story follows the change in energy without assigning a classical path to an individual electron."
         ],
         "sources": [
           {
-            "title": "Berkeley Lab · source",
-            "url": "https://biosciences.lbl.gov/2018/02/06/tracking-energy-flow-in-light-harvesting-systems/"
+            "title": "IUPAC Gold Book · Electronically excited state",
+            "url": "https://goldbook.iupac.org/terms/view/E01994"
+          },
+          {
+            "title": "IUPAC Gold Book · Molecular orbital",
+            "url": "https://goldbook.iupac.org/terms/view/M03996"
           }
         ]
       },
       {
-        "title": "Where this draft stops",
+        "title": "Why the colour of light matters",
         "paragraphs": [
-          "This passage covers arrival, chlorophyll and absorption only. Reaction centres, water, ATP, NADPH and carbon fixation come later."
+          "A photon’s energy depends on its frequency. For absorption, that energy must correspond to a transition available to the molecule: ΔE = hν. Here ΔE is the energy gained, h is Planck’s constant, and ν is the light’s frequency.",
+          "Chlorophyll’s molecular structure gives it strong absorption in red and blue regions of visible light. Green light is absorbed less strongly, so more can be reflected or transmitted. This contributes to a leaf’s green appearance; it does not mean green light can never be absorbed or used.",
+          "Real pigments absorb over bands of wavelengths. Molecular vibrations and interactions with their surroundings affect those bands. Matching an available transition makes absorption possible; it does not guarantee that every passing photon will be absorbed."
         ],
         "sources": [
           {
-            "title": "Berkeley Lab · source",
-            "url": "https://newscenter.lbl.gov/2023/06/14/photosynthesis-key-to-life-on-earth-starts-with-a-single-photon/"
+            "title": "IUPAC Gold Book · Electromagnetic transition",
+            "url": "https://goldbook.iupac.org/terms/view/08243"
+          },
+          {
+            "title": "RCSB PDB · Photosystem I and light absorption",
+            "url": "https://pdb101.rcsb.org/motm/022"
+          },
+          {
+            "title": "Terashima et al. · How green light contributes to photosynthesis",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/19246458/"
+          }
+        ]
+      },
+      {
+        "title": "What can happen to the excitation",
+        "paragraphs": [
+          "An excited state is temporary. Its energy may be dissipated as heat, emitted as a new photon through fluorescence, or transferred to neighbouring pigments. The emitted photon is a new photon; the absorbed one no longer exists.",
+          "In the antenna, excitation-energy transfer can occur without a net transfer of an electron from one pigment to the next. At a reaction centre, excitation enables a distinct event: an electron moves from a donor to an acceptor, creating separated electrical charges. This is the beginning of the subsequent electron-transfer chemistry.",
+          "One absorption event does not make a sugar molecule. Photosynthesis requires many light-driven events and further chemical reactions. The distinction here is between capturing light energy briefly and using it to drive those later steps."
+        ],
+        "sources": [
+          {
+            "title": "RCSB PDB · Photosystem II and antenna energy transfer",
+            "url": "https://pdb101.rcsb.org/motm/59"
+          },
+          {
+            "title": "Larom et al. · Light harvesting, charge separation and electron transfer",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2906871/"
           }
         ]
       }

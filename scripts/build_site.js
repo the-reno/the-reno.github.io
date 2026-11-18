@@ -48,6 +48,8 @@ for (const route of routes) {
   // point so client-side navigation can reach the new guide from existing pages.
   pageTemplate = pageTemplate.replace(/\/(content\.js|page-content\.js|project\.js)\?v=[^"]+/g,
     (_, asset) => '/' + asset + '?v=20261029-guided-1');
+  // Refresh the Leaf reader when entering through any page of the site.
+  pageTemplate = pageTemplate.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=20261118-leaf1');
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];

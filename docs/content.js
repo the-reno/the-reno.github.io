@@ -20,7 +20,7 @@ if (typeof window !== 'undefined') {
       const scienceStyle = document.createElement('link');
       scienceStyle.rel = 'stylesheet'; scienceStyle.href = '/sunlight-science.css?v=20261021-science-modal1';
       const script = document.createElement('script');
-      script.src = '/sunlight-reader.js?v=20261021-science-modal1'; script.defer = true;
+      script.src = '/sunlight-reader.js?v=20261118-leaf1'; script.defer = true;
       document.head.append(style, scienceStyle, script);
     };
     window.addEventListener('ronu:navigate', loadScienceReader);
