@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>USD Cash Allocation | SOFR Model</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+  <script src="/walkthrough.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="shell masthead-content">
+      <div class="edition"><span>Treasury · SOFR model</span><span id="asof"></span></div>
+      <h1>Where should USD cash sit?</h1>
+      <p>Trace the article from its rate data, then test what your own allocation would earn.</p>
+    </div>
+  </header>
+  <main class="shell">
+    <p id="loading" role="status">Loading the cash allocation model.</p>
+    <div id="simulator" hidden>
+      <div class="dataset-bar panel">
+        <div class="dataset-control">
+          <label for="dataset">Rate dataset</label>
+          <select id="dataset">
+            <option value="july">July 10, 2026 · Article</option>
+            <option value="september">September 1, 2026 · v10 rerun</option>
+          </select>
+        </div>
+        <div>
+          <button type="button" id="import-rates" class="download">Import CSV</button>
+          <input type="file" id="rate-file" accept=".csv,text/csv" hidden>
+        </div>
+        <p id="dataset-status" class="hint" role="status"></p>
+      </div>
+      <nav class="steps" role="tablist" aria-label="Model walkthrough">
+        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="true" data-step="rates"><span>1</span> Rates</button>
+        <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1"><span>2</span> Historical test</button>
+        <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1"><span>3</span> Cycle replay</button>
+        <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1"><span>4</span> Scenarios</button>
+        <button type="button" id="tab-allocation" role="tab" aria-controls="step-allocation" aria-selected="false" data-step="allocation" tabindex="-1"><span>5</span> Allocation</button>
+      </nav>
+
+      <section id="step-rates" role="tabpanel" aria-labelledby="tab-rates">
+        <div class="panel">
+          <div class="result-header">
+            <div><h2>Rate history</h2><p id="rate-source" class="hint"></p></div>
+            <a class="download" id="curve-download" href="/curve.csv">Download rates</a>
+          </div>
+          <dl id="rate-snapshot" class="snapshots" aria-label="Latest rate observation"></dl>
+          <figure>
+            <figcaption>ON, 1M, 3M and 6M <span class="chart-unit">% per year</span></figcaption>
+            <canvas class="wide-chart" id="history-rates-chart" role="img" aria-label="Four historical USD curve rates"></canvas>
+            <div id="rate-legend" class="legend"></div>
+          </figure>
+          <details class="formula">
+            <summary>Full-sample rates and rolling returns</summary>
+            <div class="table-scroll"><table id="rate-summary"><thead><tr><th scope="col">Measure</th><th scope="col">ON</th><th scope="col">6M</th><th scope="col">6M − ON</th></tr></thead><tbody></tbody></table></div>
+            <p class="hint section-note" id="rolling-note"></p>
+          </details>
+        </div>
+        <div class="panel table-panel">
+          <div class="result-header">
+            <div><h2>Source observations</h2><p class="hint">CSV layout <code>Date,ON,1M,3M,6M</code>. Enter 3.66% as 0.0366.</p></div>
+            <div class="paging">
+              <button type="button" id="rates-prev" class="download" aria-label="Previous observations">Previous</button>
+              <button type="button" id="rates-next" class="download" aria-label="Next observations">Next</button>
+            </div>
+          </div>
+          <p id="rate-rows" class="hint" role="status"></p>
+          <div class="table-scroll">
+            <table id="rate-table"><thead><tr><th scope="col">Date</th><th scope="col">ON</th><th scope="col">1M</th><th scope="col">3M</th><th scope="col">6M</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="step-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <div class="panel">
+          <div class="result-header">
+            <div><h2>Did the six-month spread pay off?</h2><p class="hint">Compare a six-calendar-month lock with rolling ON over the same dates.</p></div>
+            <a class="download" id="history-download" href="/history.csv">Download decisions</a>
+          </div>
+          <p id="history-empty" class="hint" hidden>The dataset ends before any six-month decision matures.</p>
+          <div id="history-results">
+            <dl id="history-metrics" class="snapshots"></dl>
+            <div class="view-controls" role="group" aria-label="Choose a historical chart">
+              <button type="button" class="download" id="timeline-view" aria-pressed="true">Over time</button>
+              <button type="button" class="download" id="scatter-view" aria-pressed="false">Spread vs. outcome</button>
+            </div>
+            <figure>
+              <figcaption id="history-chart-title"></figcaption>
+              <canvas class="wide-chart" id="history-check-chart" role="img" aria-label="Priced spread and realized excess"></canvas>
+              <div class="legend" id="history-legend"></div>
+            </figure>
+            <p class="hint" id="history-method"></p>
+          </div>
+        </div>
+        <div class="panel table-panel" id="decision-details">
+          <div class="result-header">
+            <div><h2>Follow one decision</h2><p class="hint">See the starting quotes, maturity adjustment and both returns.</p></div>
+            <div><label for="decision-date">Decision date</label><select id="decision-date"></select></div>
+          </div>
+          <div class="table-scroll"><table id="decision-table"><tbody></tbody></table></div>
+          <details class="formula">
+            <summary>How this decision is calculated</summary>
+            <ol>
+              <li>Add six calendar months to the decision date. Move to the next observed business day unless it falls in the next month, then use the previous one.</li>
+              <li>Calculate locked interest as the starting 6M quote × actual days ÷ 360.</li>
+              <li>For each ON observation, use 1 + rate × calendar days to the next observation ÷ 360. Multiply the factors through maturity and subtract 1.</li>
+              <li>Subtract the compounded ON return from the locked return and multiply by 10,000 for holding-period basis points.</li>
+            </ol>
+          </details>
+        </div>
+      </section>
+
+      <section id="step-cycle" role="tabpanel" aria-labelledby="tab-cycle" hidden>
+        <div class="panel">
+          <h2>What if the cycle flips?</h2>
+          <p class="hint section-note">Start ON and 6M at 5.50%, then add or subtract each tenor’s cumulative historical move.</p>
+          <figure>
+            <figcaption>Synthetic rising and falling paths <span class="chart-unit">% per year</span></figcaption>
+            <canvas class="wide-chart" id="mirror-chart" role="img" aria-label="Mirrored overnight and six-month rates"></canvas>
+            <div class="legend" id="cycle-legend"></div>
+          </figure>
+          <div class="table-scroll"><table id="mirror-table"><thead></thead><tbody></tbody></table></div>
+          <p id="cycle-note" class="hint section-note"></p>
+        </div>
+      </section>
+
+      <section id="step-scenarios" role="tabpanel" aria-labelledby="tab-scenarios" hidden>
+        <div class="panel">
+          <h2>Compare five rate paths</h2>
+          <p id="scenario-method" class="hint section-note"></p>
+          <figure>
+            <figcaption>Illustrative overnight rates <span class="chart-unit">% per year</span></figcaption>
+            <canvas class="wide-chart" id="paths-chart" role="img" aria-label="Five hypothetical overnight rate paths"></canvas>
+            <div class="legend" id="scenario-legend"></div>
+          </figure>
+          <dl class="snapshots" id="scenario-metrics"></dl>
+          <div class="table-scroll">
+            <table id="scenario-table">
+              <thead><tr><th scope="col">Rate path</th><th scope="col">100% ON</th><th scope="col">Model mix</th><th scope="col">100% 6M</th></tr></thead><tbody></tbody>
+            </table>
+          </div>
+          <p id="scenario-note" class="hint section-note"></p>
+          <details id="archived-scenarios" class="formula" hidden>
+            <summary>Figures used in the July article’s scenario chart</summary>
+            <div class="table-scroll"><table id="archive-table"><thead><tr><th scope="col">Rate path</th><th scope="col">100% ON</th><th scope="col">Article mix</th><th scope="col">100% 6M</th></tr></thead><tbody></tbody></table></div>
+          </details>
+        </div>
+        <div class="panel table-panel">
+          <h2>Compare the feasible mixes</h2>
+          <p id="frontier-label" class="hint section-note"></p>
+          <canvas class="wide-chart" id="frontier-chart" role="img" aria-label="Feasible allocation mixes plotted against worst-case regret"></canvas>
+          <div class="legend" id="frontier-legend"></div>
+        </div>
+      </section>
+
+      <section id="step-allocation" role="tabpanel" aria-labelledby="tab-allocation" hidden>
+        <div class="workspace">
+          <form id="controls" class="panel controls">
+            <h2>Set up a scenario</h2>
+            <label for="scenario">Rate path</label>
+            <select id="scenario" name="scenario"></select>
+            <div class="input-pair">
+              <div><label for="amount">Cash (USD)</label><input type="number" id="amount" min="1" max="1000000000000" step="any" required></div>
+              <div><label for="entry-date">Entry date</label><input type="date" id="entry-date" required></div>
+            </div>
+            <fieldset>
+              <legend>Allocate the cash</legend>
+              <div class="weights">
+                <div><label for="on">ON</label><div class="weight-input"><output id="on" for="weight-1m weight-3m weight-6m">0</output><span>%</span></div></div>
+                <div><label for="weight-1m">1M</label><div class="weight-input"><input id="weight-1m" type="number" min="0" max="100" step="1" required><span>%</span></div></div>
+                <div><label for="weight-3m">3M</label><div class="weight-input"><input id="weight-3m" type="number" min="0" max="100" step="1" required><span>%</span></div></div>
+                <div><label for="weight-6m">6M</label><div class="weight-input"><input id="weight-6m" type="number" min="0" max="100" step="1" required><span>%</span></div></div>
+              </div>
+              <p class="hint">ON receives the remaining cash.</p>
+              <div class="presets" id="presets" aria-label="Allocation presets"></div>
+              <p id="constraint-note" class="hint" hidden></p>
+            </fieldset>
+            <details class="assumption-control" id="shift-control">
+              <summary>Adjust the overnight path</summary>
+              <label for="shift" class="slider-label">Additional ON move <output id="shift-label" for="shift">0 bp</output></label>
+              <input type="range" id="shift" min="-150" max="150" step="25" value="0">
+              <p class="hint">The move builds over 180 days and then holds relative to the selected path.</p>
+            </details>
+            <p id="input-error" class="error" role="alert" hidden></p>
+          </form>
+          <section class="panel result" aria-labelledby="result-title">
+            <div class="result-header">
+              <div><h2 id="result-title">What the mix earns</h2><p class="hint" id="window"></p></div>
+              <a class="download" id="download" href="/results.csv">Download results</a>
+            </div>
+            <div class="results" aria-live="polite" aria-atomic="true">
+              <div><span class="metric-label" id="interest-label">Interest earned</span><strong id="interest"></strong></div>
+              <div><span class="metric-label">Compared with 100% ON</span><strong id="incremental"></strong></div>
+            </div>
+            <figure>
+              <figcaption>Assumed rates <span class="chart-unit">% per year</span></figcaption>
+              <canvas id="rate-chart" role="img" aria-label="Scenario rates and selected allocation window"></canvas>
+              <div class="legend"><span><i class="line-key"></i>Overnight</span><span id="term-legend"><i class="line-key term"></i>6-month</span><span><i class="shade-key"></i>Selected window</span></div>
+            </figure>
+          </section>
+        </div>
+        <div class="analysis-grid">
+          <section class="panel tables">
+            <h2>Compare the alternatives</h2>
+            <p class="hint">Same entry date, cash amount and rate path.</p>
+            <div class="table-scroll"><table id="benchmarks">
+              <thead><tr><th scope="col">Allocation</th><th scope="col">Interest</th><th scope="col">Annualized</th></tr></thead><tbody></tbody>
+            </table></div>
+          </section>
+          <section class="panel tables">
+            <h2>How far your mix could lag</h2>
+            <p class="hint" id="stress-hint"></p>
+            <div class="table-scroll"><table id="stress">
+              <thead><tr><th scope="col">Rate path</th><th scope="col">Avg. annualized</th><th scope="col">Worst gap</th></tr></thead><tbody></tbody><tfoot></tfoot>
+            </table></div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="shell notes">
+    <p>Historical term rates are SOFR OIS par-rate proxies. Scenario interest excludes fees, credit losses and liquidity costs.</p>
+    <p>Historical series <a href="https://www.newyorkfed.org/markets/reference-rates/sofr">NY Fed overnight SOFR</a> · <a href="https://files.erisfutures.com/ftp/Eris_Historical_ParCouponCurve_SOFR.csv">Eris SOFR par coupon curve</a></p>
+  </footer>
+</body>
+</html>
