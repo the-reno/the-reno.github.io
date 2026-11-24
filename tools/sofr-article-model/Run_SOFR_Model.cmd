@@ -3,9 +3,9 @@ setlocal
 cd /d "%~dp0"
 where py >nul 2>nul
 if not errorlevel 1 (
-    py -3 app.py --port 0
+    py -3 Open_SOFR.py %*
 ) else (
-    python app.py --port 0
+    python Open_SOFR.py %*
 )
 if errorlevel 1 (
     echo.

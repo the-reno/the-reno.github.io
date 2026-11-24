@@ -4,28 +4,19 @@ Open the article’s original rate history and follow the calculations through t
 
 ## Open the model
 
-Open the local copy of **tools/sofr-article-model** and double-click **Run_SOFR_Model.cmd** on Windows. Python 3.10 or later starts the model on localhost and opens the HTML in your browser. Keep the command window open while you work.
+Save [Open_SOFR.py](https://raw.githubusercontent.com/the-reno/the-reno.github.io/main/tools/sofr-article-model/Open_SOFR.py) once. From that folder on Windows, run this command with Python 3.10 or later.
 
-To get a local copy of this folder with Git, run:
+    py -3 .\Open_SOFR.py
 
-    git clone --filter=blob:none --sparse https://github.com/the-reno/the-reno.github.io.git ronu-one
-    cd ronu-one
-    git sparse-checkout set tools/sofr-article-model
-    cd tools/sofr-article-model
+On macOS or Linux, run **python3 Open_SOFR.py**. If you already have the project folder on Windows, double-click **Run_SOFR_Model.cmd** to use the same launcher.
 
-On macOS or Linux, run this command from the extracted folder.
-
-    python3 app.py --port 0
-
-On Windows, the terminal command is:
-
-    py -3 app.py --port 0
+The launcher checks GitHub for the current project, downloads its code and data from one commit, and opens the model in your browser at localhost. Keep the command window open while you work. It reuses the last downloaded version when GitHub is unavailable.
 
 ### Data from GitHub
 
-At startup the launcher reads the July curve, the July scenario inputs and the September curve from a single commit on the repository’s main branch. **Rates** links to the exact CSV revision.
+**Rates** links to the exact CSV revision used in the open model. Cash amounts, allocations, imported CSVs and notes are processed and stored on this computer.
 
-If the connection fails, the model uses the included rate files and displays that source in **Rates**. Add **--source github** to require a GitHub connection or **--source local** to start with the included files. Cash amounts, allocations and imported CSVs are processed on localhost.
+If you are working on a local checkout of the code, run **py -3 app.py --source local --port 0** to open its included files. Run **py -3 Open_SOFR.py --check** to verify both baselines in the current GitHub version.
 
 ## Follow the article
 

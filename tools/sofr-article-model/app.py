@@ -572,9 +572,16 @@ def load_models(source: str) -> tuple[Simulator, Simulator]:
                 raise ValueError(f"Could not load the GitHub datasets: {error}") from error
             label = "Local rate files · GitHub unavailable"
             print(f"Could not load the GitHub datasets. Using the local rate files. {error}", file=sys.stderr)
+    return local_models(label)
+
+
+def local_models(label: str, revision: str | None = None) -> tuple[Simulator, Simulator]:
+    source = f"https://github.com/{GITHUB_REPO}/blob/{revision}/{GITHUB_FOLDER}" if revision else ""
     return (
-        Simulator(JULY_CURVE, "july", source_label=label),
-        Simulator(SEPTEMBER_CURVE, source_label=label),
+        Simulator(JULY_CURVE, "july", source_label=label,
+                  source_url=f"{source}/{GITHUB_INPUTS[0]}" if source else ""),
+        Simulator(SEPTEMBER_CURVE, source_label=label,
+                  source_url=f"{source}/{GITHUB_INPUTS[2]}" if source else ""),
     )
 
 
@@ -584,6 +591,7 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8765, help="Use 0 to find an available port.")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--check", action="store_true", help="Verify both original model baselines.")
+    parser.add_argument("--github-revision", help="Identify the GitHub revision downloaded by the launcher.")
     parser.add_argument("--dataset-dir", type=Path, default=default_dataset_dir(),
                         help="Directory for imported CSVs and dataset observations.")
     parser.add_argument(
@@ -594,7 +602,12 @@ def main() -> None:
     if not 0 <= args.port <= 65535:
         parser.error("Choose a port between 0 and 65535.")
     try:
-        july, september = load_models(args.source or ("local" if args.check else "auto"))
+        if args.github_revision is None:
+            july, september = load_models(args.source or ("local" if args.check else "auto"))
+        else:
+            if not re.fullmatch(r"[0-9a-f]{40}", args.github_revision):
+                raise ValueError("Supply a full GitHub commit SHA.")
+            july, september = local_models(f"GitHub · {args.github_revision[:7]}", args.github_revision)
     except ValueError as error:
         parser.exit(1, f"{error}\n")
     if args.check:
