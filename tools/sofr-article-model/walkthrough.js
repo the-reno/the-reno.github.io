@@ -1,7 +1,7 @@
 "use strict";
 
 const palette = ["#176873", "#4e648e", "#795786", "#a24019", "#906406"];
-const pageSize = 12;
+const pageSize = 2000;
 const tabs = Array.from(document.querySelectorAll(".steps [role=tab]"));
 let activeStep = "rates";
 let historyView = "timeline";
@@ -122,17 +122,20 @@ function snapshots(id, items) {
 function renderRatePage() {
   const start = ratePage * pageSize;
   const datedRows = defaults.rates.slice(start, start + pageSize);
-  $("rate-table").tBodies[0].replaceChildren(...datedRows.map(([day, ...rates]) =>
-    row(prettyDate(day), rates.map(quote))
-  ));
+  const rows = document.createDocumentFragment();
+  for (const [day, ...rates] of datedRows) rows.append(row(day, rates.map(quote)));
+  $("rate-table").tBodies[0].replaceChildren(rows);
+  $("rate-sheet").scrollTop = 0;
+  $("sheet-pages").hidden = defaults.observations <= pageSize;
   $("rates-prev").disabled = start === 0;
   $("rates-next").disabled = start + pageSize >= defaults.observations;
   $("rate-rows").textContent = number.format(start + 1) + "–" + number.format(start + datedRows.length) +
-    " of " + number.format(defaults.observations) + " observations";
+    " of " + number.format(defaults.observations);
 }
 
 function renderRates() {
   $("asof").textContent = "As of " + prettyDate(defaults.anchor_date);
+  $("rate-date").textContent = "Latest observation · " + prettyDate(defaults.anchor_date);
   const source = $("rate-source");
   source.textContent = prettyDate(defaults.historical_start) + " – " +
     prettyDate(defaults.anchor_date) + " · " + defaults.source_name;
@@ -149,14 +152,11 @@ function renderRates() {
   const quotes = defaults.tenors.map((tenor) => [tenor, percent(defaults.curve[tenor])]);
   quotes.push(["6M − ON", signedBp((defaults.curve["6M"] - defaults.curve.ON) * 10000)]);
   snapshots("rate-snapshot", quotes);
-  $("rate-summary").tBodies[0].replaceChildren(...defaults.rate_summary.rows.map(([label, on, term, spread]) =>
-    row(label, [quote(on), quote(term), signedBp(spread)])
-  ));
+  $("rate-summary").tBodies[0].replaceChildren(...defaults.rate_summary.rows.slice(1)
+    .map(([label, on, term, spread]) => row(label, [quote(on), quote(term), signedBp(spread)])));
   $("rolling-note").textContent = defaults.rate_summary.common_maturity ?
-    "The strategy returns share the final completed 6M maturity of " +
-      prettyDate(defaults.rate_summary.common_maturity) + " and use 365-day annualization." : "";
-  ratePage = Math.floor((defaults.observations - 1) / pageSize);
-  renderRatePage();
+    "Rolling returns annualize on a 365-day basis through " +
+      prettyDate(defaults.rate_summary.common_maturity) + "." : "";
 }
 
 function selectDecision() {
@@ -330,45 +330,81 @@ function setHistoryView(view) {
   drawActiveChart();
 }
 
-async function selectDataset(url, options, uploadedName) {
-  const select = $("dataset");
-  select.disabled = true;
-  $("import-rates").disabled = true;
-  $("dataset-status").classList.remove("error");
-  $("dataset-status").textContent = options ? "Validating and calculating the imported curve…" : "Calculating from the rate data…";
+function setDatasetBusy(busy) {
+  for (const id of ["dataset", "import-rates", "dataset-name", "dataset-observations", "save-dataset"]) {
+    $(id).disabled = busy;
+  }
+}
+
+function setDatasetStatus(message, isError = false) {
+  const status = $("dataset-status");
+  status.classList.toggle("error", isError);
+  status.textContent = message;
+}
+
+function renderDatasetDetails() {
+  const active = defaults.datasets.find(({ id }) => id === defaults.model_id);
+  const options = defaults.datasets.map(({ id, name }) => new Option(name, id));
+  $("dataset").replaceChildren(...options);
+  $("dataset").value = active.id;
+  $("dataset-name").value = active.name;
+  $("dataset-observations").value = active.observations;
+  $("active-dataset").textContent = active.name;
+}
+
+async function selectDataset(url, options) {
+  setDatasetBusy(true);
+  setDatasetStatus(options ? "Validating the imported CSV…" : "Loading the rate data…");
   try {
     const data = await json(url, options);
-    if (data.profile === "custom") {
-      select.querySelector("[data-upload]")?.remove();
-      const option = new Option(uploadedName || "Custom CSV", data.model_id);
-      option.dataset.upload = "";
-      select.add(option);
-      data.source_name = uploadedName || data.source_name;
-    }
-    select.value = data.model_id;
     setupCalculator(data);
     const query = "?model=" + encodeURIComponent(data.model_id);
     $("curve-download").href = "/curve.csv" + query;
     $("history-download").href = "/history.csv" + query;
+    renderDatasetDetails();
     renderRates();
     renderHistory();
     renderCycle();
     renderScenarios();
+    ratePage = 0;
+    if ($("dataset-dialog").open) renderRatePage();
     $("loading").hidden = true;
     $("simulator").hidden = false;
-    $("dataset-status").textContent = number.format(data.observations) + " observations loaded";
+    $("open-datasets").disabled = false;
+    setDatasetStatus(number.format(data.observations) + " observations loaded");
     selectStep(activeStep);
   } catch (error) {
     if (defaults) {
-      select.value = defaults.model_id;
-      $("dataset-status").classList.add("error");
-      $("dataset-status").textContent = error.message;
+      $("dataset").value = defaults.model_id;
+      setDatasetStatus(error.message, true);
     } else {
       $("loading").textContent = "The model could not load. " + error.message;
     }
   } finally {
-    select.disabled = false;
-    $("import-rates").disabled = false;
+    setDatasetBusy(false);
+  }
+}
+
+async function saveDatasetDetails(event) {
+  event.preventDefault();
+  const body = JSON.stringify({
+    name: $("dataset-name").value,
+    observations: $("dataset-observations").value,
+  });
+  setDatasetBusy(true);
+  setDatasetStatus("Saving details…");
+  try {
+    const query = "?model=" + encodeURIComponent(defaults.model_id);
+    const result = await json("/dataset-details" + query, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body,
+    });
+    defaults.datasets = result.datasets;
+    renderDatasetDetails();
+    setDatasetStatus("Details saved · " + number.format(defaults.observations) + " observations");
+  } catch (error) {
+    setDatasetStatus(error.message, true);
+  } finally {
+    setDatasetBusy(false);
   }
 }
 
@@ -383,6 +419,12 @@ tabs.forEach((tab, index) => {
     next.focus();
   });
 });
+$("open-datasets").addEventListener("click", () => {
+  $("dataset-dialog").showModal();
+  renderRatePage();
+});
+$("close-datasets").addEventListener("click", () => $("dataset-dialog").close());
+$("dataset-details").addEventListener("submit", saveDatasetDetails);
 $("rates-prev").addEventListener("click", () => { ratePage--; renderRatePage(); });
 $("rates-next").addEventListener("click", () => { ratePage++; renderRatePage(); });
 $("timeline-view").addEventListener("click", () => setHistoryView("timeline"));
@@ -392,7 +434,10 @@ $("dataset").addEventListener("change", (event) => selectDataset("/model?model="
 $("import-rates").addEventListener("click", () => $("rate-file").click());
 $("rate-file").addEventListener("change", (event) => {
   const file = event.target.files[0];
-  if (file) selectDataset("/model", { method: "POST", body: file }, file.name);
+  if (file) {
+    const query = "?filename=" + encodeURIComponent(file.name);
+    selectDataset("/model" + query, { method: "POST", body: file });
+  }
   event.target.value = "";
 });
 window.addEventListener("resize", drawActiveChart);

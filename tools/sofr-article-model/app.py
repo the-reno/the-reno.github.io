@@ -8,7 +8,7 @@ import io
 import json
 import math
 import re
-import secrets
+import sqlite3
 import sys
 import webbrowser
 from collections import OrderedDict
@@ -24,10 +24,12 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 import sofr_model as model
+from dataset_store import DatasetStore, default_dataset_dir
 
 ROOT = Path(__file__).resolve().parent
 MAX_SHIFT_BP = 150
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
+MAX_DETAILS_BYTES = 16 * 1024
 OVERNIGHT = (100, 0, 0, 0)
 SIX_MONTH = (0, 0, 0, 100)
 JULY_ARCHIVE = ROOT / "data" / "july-article.json"
@@ -38,6 +40,11 @@ GITHUB_FOLDER = "tools/sofr-article-model"
 GITHUB_BRANCH = "main"
 GITHUB_INPUTS = ("data/july-curve.csv", "data/july-article.json", "curve.csv")
 GITHUB_TIMEOUT = 5
+BUILTIN_DATASETS = {
+    "july": "July 10, 2026 · Article",
+    "september": "September 1, 2026 · v10 rerun",
+    "custom": "Custom CSV",
+}
 
 
 @dataclass(frozen=True)
@@ -358,9 +365,7 @@ def verify_july(simulator: Simulator) -> None:
     print("July workbook matched: first-trade replay -23.66 / +15.82 bp, minimax regret 3.05 bp.")
 
 
-def make_handler(
-    models: dict[str, Simulator], default_model: str
-):
+def make_handler(models: dict[str, Simulator], default_model: str, dataset_store: DatasetStore):
     assets = {
         "/": ("index.html", "text/html; charset=utf-8"),
         "/styles.css": ("styles.css", "text/css; charset=utf-8"),
@@ -369,6 +374,28 @@ def make_handler(
     }
     uploads: OrderedDict[str, Simulator] = OrderedDict()
     upload_lock = Lock()
+
+    def remember_model(key: str, simulator: Simulator):
+        with upload_lock:
+            uploads[key] = simulator
+            uploads.move_to_end(key)
+            if len(uploads) > 8:
+                uploads.popitem(last=False)
+
+    def dataset_catalog() -> list[dict]:
+        saved = dataset_store.summaries()
+        builtins = [
+            saved.get(key, {"id": key, "name": BUILTIN_DATASETS[key], "observations": "", "filename": None})
+            for key in models
+        ]
+        return builtins + [entry for entry in saved.values() if entry["filename"]]
+
+    def analysis_payload(key: str, analysis: dict) -> dict:
+        catalog = dataset_catalog()
+        dataset = next(entry for entry in catalog if entry["id"] == key)
+        if dataset["filename"]:
+            analysis["source_name"] = dataset["filename"]
+        return {"model_id": key, **analysis, "datasets": catalog}
 
     class Handler(BaseHTTPRequestHandler):
         def send_body(self, status, mime_type, body, filename=None):
@@ -395,11 +422,33 @@ def make_handler(
             if simulator is None:
                 with upload_lock:
                     simulator = uploads.get(key)
+                    if simulator:
+                        uploads.move_to_end(key)
             if simulator is None:
-                raise ValueError("Choose a built-in dataset or import the CSV again.")
+                content = dataset_store.read_csv(key)
+                if content is None:
+                    raise ValueError("Choose a saved dataset or import a CSV.")
+                simulator = Simulator(content, "custom")
+                remember_model(key, simulator)
             return key, simulator
 
+        def local_request(self):
+            host = self.headers.get("Host", "").lower().split(":", 1)[0]
+            origin = self.headers.get("Origin")
+            local_origins = {
+                f"http://127.0.0.1:{self.server.server_port}",
+                f"http://localhost:{self.server.server_port}",
+            }
+            if self.server.server_port == 80:
+                local_origins.update(("http://127.0.0.1", "http://localhost"))
+            if host in {"127.0.0.1", "localhost"} and (origin is None or origin in local_origins):
+                return True
+            self.send_json(403, {"error": "Open the model using its local launcher."})
+            return False
+
         def do_GET(self):
+            if not self.local_request():
+                return
             url = urlsplit(self.path)
             if url.path in assets:
                 filename, mime_type = assets[url.path]
@@ -415,7 +464,7 @@ def make_handler(
                 if url.path == "/defaults":
                     self.send_json(200, {"model_id": key, **simulator.defaults()})
                 elif url.path == "/model":
-                    self.send_json(200, {"model_id": key, **simulator.analysis()})
+                    self.send_json(200, analysis_payload(key, simulator.analysis()))
                 elif url.path == "/curve.csv":
                     self.send_body(200, "text/csv; charset=utf-8", simulator.download_rates(), "SOFR_rates.csv")
                 elif url.path == "/history.csv":
@@ -427,31 +476,50 @@ def make_handler(
                                        "SOFR_scenario_results.csv")
                     else:
                         self.send_json(200, simulator.simulate(inputs))
-            except ValueError as error:
+            except (ValueError, OverflowError) as error:
                 self.send_json(400, {"error": str(error)})
+            except sqlite3.Error:
+                self.send_json(500, {"error": "Could not read the saved local datasets."})
 
-        def do_POST(self):
-            if urlsplit(self.path).path != "/model":
-                self.send_error(404)
-                return
+        def read_body(self, limit: int, message: str) -> bytes:
             try:
                 length = int(self.headers.get("Content-Length", "0"))
             except ValueError:
                 length = 0
-            if length <= 0 or length > MAX_UPLOAD_BYTES:
-                self.send_json(400, {"error": "Choose a CSV file smaller than 2 MB."})
+            if length <= 0 or length > limit:
+                raise ValueError(message)
+            return self.rfile.read(length)
+
+        def do_POST(self):
+            if not self.local_request():
+                return
+            url = urlsplit(self.path)
+            if url.path not in ("/model", "/dataset-details"):
+                self.send_error(404)
                 return
             try:
-                simulator = Simulator(self.rfile.read(length), "custom")
+                fields = parse_qs(url.query, max_num_fields=8)
+                if url.path == "/dataset-details":
+                    key = fields.get("model", [""])[0]
+                    if key not in models and key not in dataset_store.summaries():
+                        raise ValueError("Select a saved dataset first.")
+                    details = json.loads(self.read_body(MAX_DETAILS_BYTES, "Enter a name and observations."))
+                    if not isinstance(details, dict):
+                        raise ValueError("Enter a name and observations.")
+                    dataset_store.save_details(key, details.get("name"), details.get("observations", ""))
+                    self.send_json(200, {"datasets": dataset_catalog()})
+                    return
+                content = self.read_body(MAX_UPLOAD_BYTES, "Choose a CSV file smaller than 2 MB.")
+                simulator = Simulator(content, "custom")
+                analysis = simulator.analysis()
+                filename = fields.get("filename", ["Imported rates.csv"])[0]
+                key = dataset_store.add_csv(content, filename)
+                remember_model(key, simulator)
+                self.send_json(200, analysis_payload(key, analysis))
             except (ValueError, OverflowError) as error:
                 self.send_json(400, {"error": str(error)})
-                return
-            key = secrets.token_urlsafe(12)
-            with upload_lock:
-                uploads[key] = simulator
-                if len(uploads) > 8:
-                    uploads.popitem(last=False)
-            self.send_json(200, {"model_id": key, **simulator.analysis()})
+            except sqlite3.Error:
+                self.send_json(500, {"error": "Could not save the dataset on this computer."})
 
         def log_message(self, _format, *_args):
             return
@@ -516,6 +584,8 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8765, help="Use 0 to find an available port.")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--check", action="store_true", help="Verify both original model baselines.")
+    parser.add_argument("--dataset-dir", type=Path, default=default_dataset_dir(),
+                        help="Directory for imported CSVs and dataset observations.")
     parser.add_argument(
         "--source", choices=("auto", "github", "local"),
         help="Auto uses GitHub first. Choose github to require it or local to use the included files.",
@@ -536,7 +606,13 @@ def main() -> None:
     if args.curve:
         models["custom"] = Simulator(args.curve, "custom")
         default_model = "custom"
-    with ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(models, default_model)) as server:
+    try:
+        dataset_store = DatasetStore(args.dataset_dir)
+    except (OSError, sqlite3.Error) as error:
+        parser.exit(1, f"Could not open the local dataset folder. {error}\n")
+    with ThreadingHTTPServer(
+        ("127.0.0.1", args.port), make_handler(models, default_model, dataset_store)
+    ) as server:
         url = f"http://127.0.0.1:{server.server_port}"
         print(f"SOFR simulator running at {url}. Press Ctrl+C to exit.", flush=True)
         if not args.no_browser:

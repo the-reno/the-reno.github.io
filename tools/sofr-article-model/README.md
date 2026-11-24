@@ -31,7 +31,7 @@ If the connection fails, the model uses the included rate files and displays tha
 
 | Screen | What to do |
 | --- | --- |
-| **1. Rates** | Start with **July 10, 2026 · Article**. Check the four annual rates, the 6M–ON spread, and the 1,127 source observations. |
+| **1. Rates** | Read the rate history beside the latest quotes and full-sample analysis. Open **Rate datasets** in the header to inspect the source observations. |
 | **2. Historical test** | Recalculate the 1,003 complete six-month decisions. Switch between the history and the scatter plot. Select an entry date to see Modified Following maturity, ACT/360 day count, the compounded ON return and the simple locked return. |
 | **3. Cycle replay** | Compare rates-up and rates-down paths from a common 5.50% start. The table shows the article values and two reproducible calculations with their observation counts. |
 | **4. Scenarios** | Compare the five original 36-month paths and annualized regret across pure ON, pure 6M and the ladder. Compare the archived chart values with the calculated table. |
@@ -39,9 +39,11 @@ If the connection fails, the model uses the included rate files and displays tha
 
 ### Use a different curve
 
-Select **September 1, 2026 · v10 rerun** for the later model with 1,164 observations. Its 180-day scenario tool supports changes to the entry date and an extra ON shock. **Import CSV** uses the September scenario method with your curve’s latest quotes.
+Use **Rate datasets** in the header to switch between the July article, the September rerun, and saved imports. The spreadsheet keeps the headers visible while you scroll and displays each annual rate to four decimal places. **Import CSV** updates the spreadsheet, chart, and analysis. The imported curve uses the September scenario method with your latest quotes.
 
-The CSV header is **Date,ON,1M,3M,6M**. Use UTF-8 and unique dates in ascending order. Use dates such as 2026-09-01 and annual rate decimals such as 0.0366 for 3.66%. Use **Download rates** for a template. Across calendar-day gaps, the calculation holds the overnight quote until the next observation.
+Enter a **Dataset name** and any **Observations**, then choose **Save details**. Imports, names, and observations are stored on this computer and are available when you reopen the model.
+
+The CSV header is **Date,ON,1M,3M,6M**. Use UTF-8 and unique dates in ascending order. Use dates such as 2026-09-01 and annual rate decimals such as 0.0366 for 3.66%. Use **Download CSV** for a template. Across calendar-day gaps, the calculation holds the overnight quote until the next observation.
 
 ## Reconciliation
 
