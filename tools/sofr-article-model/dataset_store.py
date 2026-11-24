@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import secrets
 import sqlite3
@@ -12,6 +14,19 @@ from pathlib import Path
 
 NAME_LIMIT = 80
 OBSERVATIONS_LIMIT = 2000
+
+
+def clean_details(name: str, observations: str) -> tuple[str, str]:
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > NAME_LIMIT:
+        raise ValueError(f"Enter a dataset name up to {NAME_LIMIT} characters.")
+    if not isinstance(observations, str) or len(observations) > OBSERVATIONS_LIMIT:
+        raise ValueError(f"Keep observations to {OBSERVATIONS_LIMIT:,} characters.")
+    return name.strip(), observations.strip()
+
+
+def record_version(record: dict) -> str:
+    details = json.dumps([record["name"], record["observations"]]).encode("utf-8")
+    return hashlib.sha256(details + b"\0" + (record["csv_data"] or b"")).hexdigest()
 
 
 def default_dataset_dir() -> Path:
@@ -52,33 +67,55 @@ class DatasetStore:
             )
             return {entry["id"]: dict(entry) for entry in rows}
 
-    def read_csv(self, dataset_id: str) -> bytes | None:
+    def read(self, dataset_id: str) -> dict | None:
         with self.connect() as database:
             record = database.execute(
-                "SELECT csv_data FROM datasets WHERE id = ?", (dataset_id,)
+                "SELECT id, name, observations, filename, csv_data FROM datasets WHERE id = ?", (dataset_id,)
             ).fetchone()
-            return record["csv_data"] if record else None
+            return dict(record) if record else None
 
-    def add_csv(self, content: bytes, filename: str) -> str:
+    def add_csv(self, content: bytes, filename: str, name: str | None = None, observations: str = "") -> str:
         filename = filename.replace("\\", "/").rsplit("/", 1)[-1].strip()[:180] or "Imported rates.csv"
-        name = Path(filename).stem.strip()[:NAME_LIMIT] or "Imported rates"
+        if name is None:
+            name = Path(filename).stem.strip()[:NAME_LIMIT] or "Imported rates"
+        name, observations = clean_details(name, observations)
         dataset_id = secrets.token_urlsafe(12)
         with self.connect() as database:
             database.execute(
-                "INSERT INTO datasets (id, name, filename, csv_data) VALUES (?, ?, ?, ?)",
-                (dataset_id, name, filename, content),
+                "INSERT INTO datasets (id, name, observations, filename, csv_data) VALUES (?, ?, ?, ?, ?)",
+                (dataset_id, name, observations, filename, content),
             )
         return dataset_id
 
-    def save_details(self, dataset_id: str, name: str, observations: str):
-        if not isinstance(name, str) or not name.strip() or len(name.strip()) > NAME_LIMIT:
-            raise ValueError(f"Enter a dataset name up to {NAME_LIMIT} characters.")
-        if not isinstance(observations, str) or len(observations) > OBSERVATIONS_LIMIT:
-            raise ValueError(f"Keep observations to {OBSERVATIONS_LIMIT:,} characters.")
+    def update_csv(self, dataset_id: str, content: bytes, name: str, observations: str, version: str):
+        name, observations = clean_details(name, observations)
         with self.connect() as database:
+            database.execute("BEGIN IMMEDIATE")
+            record = database.execute(
+                "SELECT name, observations, csv_data FROM datasets WHERE id = ?", (dataset_id,)
+            ).fetchone()
+            if record is None or record["csv_data"] is None:
+                raise ValueError("Select a saved dataset first.")
+            if record_version(record) != version:
+                raise ValueError("This dataset changed in another window. Reload it before saving.")
+            database.execute(
+                "UPDATE datasets SET name = ?, observations = ?, csv_data = ? WHERE id = ?",
+                (name, observations, content, dataset_id),
+            )
+
+    def save_details(self, dataset_id: str, name: str, observations: str, previous: dict | None = None):
+        name, observations = clean_details(name, observations)
+        with self.connect() as database:
+            if previous is not None:
+                database.execute("BEGIN IMMEDIATE")
+                current = database.execute(
+                    "SELECT name, observations, csv_data FROM datasets WHERE id = ?", (dataset_id,)
+                ).fetchone()
+                if current is not None and record_version(current) != record_version(previous):
+                    raise ValueError("This dataset changed in another window. Reload it before saving.")
             database.execute("""
                 INSERT INTO datasets (id, name, observations) VALUES (?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     observations = excluded.observations
-            """, (dataset_id, name.strip(), observations.strip()))
+            """, (dataset_id, name, observations))

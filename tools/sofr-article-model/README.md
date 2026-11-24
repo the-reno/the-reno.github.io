@@ -22,19 +22,20 @@ If you are working on a local checkout of the code, run **py -3 app.py --source 
 
 | Screen | What to do |
 | --- | --- |
-| **1. Rates** | Read the rate history beside the latest quotes and full-sample analysis. Open **Rate datasets** in the header to inspect the source observations. |
-| **2. Historical test** | Recalculate the 1,003 complete six-month decisions. Switch between the history and the scatter plot. Select an entry date to see Modified Following maturity, ACT/360 day count, the compounded ON return and the simple locked return. |
-| **3. Cycle replay** | Compare rates-up and rates-down paths from a common 5.50% start. The table shows the article values and two reproducible calculations with their observation counts. |
-| **4. Scenarios** | Compare the five original 36-month paths and annualized regret across pure ON, pure 6M and the ladder. Compare the archived chart values with the calculated table. |
-| **5. Allocation** | Choose a rate path, enter a USD balance and change the mix. Compare interest with rolling ON and check annualized regret across the paths. Download the detailed scenario results. |
+| **1. Rate dataset** | Pick the article dataset, import a CSV or start a new sheet. Edit cells directly and save the dataset with a name and observations. |
+| **2. Rates** | Read the rate history beside the latest quotes and full-sample analysis. |
+| **3. Historical test** | Recalculate the 1,003 complete six-month decisions. Switch between the history and the scatter plot. Select an entry date to see Modified Following maturity, ACT/360 day count, the compounded ON return and the simple locked return. |
+| **4. Cycle replay** | Compare rates-up and rates-down paths from a common 5.50% start. The table shows the article values and two reproducible calculations with their observation counts. |
+| **5. Scenarios** | Compare the five original 36-month paths and annualized regret across pure ON, pure 6M and the ladder. Compare the archived chart values with the calculated table. |
+| **6. Allocation** | Choose a rate path, enter a USD balance and change the mix. Compare interest with rolling ON and check annualized regret across the paths. Download the detailed scenario results. |
 
 ### Use a different curve
 
-Use **Rate datasets** in the header to switch between the July article, the September rerun, and saved imports. The spreadsheet keeps the headers visible while you scroll and displays each annual rate to four decimal places. **Import CSV** updates the spreadsheet, chart, and analysis. The imported curve uses the September scenario method with your latest quotes.
+Open **Rate dataset** to switch between the July article, the September rerun, and saved datasets. Select a cell to type or clear a value. Select a row number or column heading to delete that row or column. The spreadsheet keeps the headers visible while you scroll and displays annual rate quotes to four decimal places.
 
-Enter a **Dataset name** and any **Observations**, then choose **Save details**. Imports, names, and observations are stored on this computer and are available when you reopen the model.
+Use **Import CSV** to load a file or **New dataset** to start with a blank sheet. Enter a **Dataset name** and any **Observations**, then choose **Save changes** to apply your edits to the model. Editing cells in an included dataset saves a separate local copy. Imported and edited curves use the September scenario method with the latest quotes from that sheet.
 
-The CSV header is **Date,ON,1M,3M,6M**. Use UTF-8 and unique dates in ascending order. Use dates such as 2026-09-01 and annual rate decimals such as 0.0366 for 3.66%. Use **Download CSV** for a template. Across calendar-day gaps, the calculation holds the overnight quote until the next observation.
+Calculations use **Date**, **ON**, **1M**, **3M**, and **6M**. You can save an incomplete sheet and finish it later. Use UTF-8 CSV files, unique dates such as 2026-09-01 in ascending order, and rates such as 3.66% or 0.0366. **Download CSV** includes the entire sheet. Across calendar-day gaps, the calculation holds the overnight quote until the next observation.
 
 ## Reconciliation
 

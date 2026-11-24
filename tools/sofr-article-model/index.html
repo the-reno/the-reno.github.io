@@ -7,6 +7,7 @@
   <title>USD Cash Allocation | SOFR Model</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
+  <script src="/dataset.js" defer></script>
   <script src="/walkthrough.js" defer></script>
 </head>
 <body>
@@ -14,26 +15,83 @@
     <div class="shell masthead-content">
       <div class="edition"><span>Treasury · SOFR model</span><span id="asof"></span></div>
       <h1>Where should USD cash sit?</h1>
-      <div class="masthead-actions">
-        <p>Trace the article from its rate data, then test what your own allocation would earn.</p>
-        <button type="button" id="open-datasets" class="dataset-trigger"
-                aria-haspopup="dialog" aria-controls="dataset-dialog" aria-label="Rate datasets" disabled>
-          <span><strong>Rate datasets</strong><small id="active-dataset"></small></span>
-          <i aria-hidden="true"></i>
-        </button>
-      </div>
+      <p>Trace the article from its rate data, then test what your own allocation would earn.</p>
     </div>
   </header>
   <main class="shell">
     <p id="loading" role="status">Loading the cash allocation model.</p>
     <div id="simulator" hidden>
       <nav class="steps" role="tablist" aria-label="Model walkthrough">
-        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="true" data-step="rates"><span>1</span> Rates</button>
-        <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1"><span>2</span> Historical test</button>
-        <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1"><span>3</span> Cycle replay</button>
-        <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1"><span>4</span> Scenarios</button>
-        <button type="button" id="tab-allocation" role="tab" aria-controls="step-allocation" aria-selected="false" data-step="allocation" tabindex="-1"><span>5</span> Allocation</button>
+        <button type="button" id="tab-dataset" role="tab" aria-controls="step-dataset" aria-selected="false" data-step="dataset" tabindex="-1"><span>1</span> Rate dataset</button>
+        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="true" data-step="rates"><span>2</span> Rates</button>
+        <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1"><span>3</span> Historical test</button>
+        <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1"><span>4</span> Cycle replay</button>
+        <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1"><span>5</span> Scenarios</button>
+        <button type="button" id="tab-allocation" role="tab" aria-controls="step-allocation" aria-selected="false" data-step="allocation" tabindex="-1"><span>6</span> Allocation</button>
       </nav>
+
+      <div class="panel model-notice" id="model-unavailable" hidden>
+        <h2>Dataset needs attention</h2>
+        <p id="model-error"></p>
+        <button type="button" id="edit-dataset" class="download">Open Rate dataset</button>
+      </div>
+      <div class="draft-notice" id="dataset-draft-notice" hidden>
+        <span>You’re viewing saved data. The editor has unsaved changes.</span>
+        <button type="button" id="view-dataset-draft" class="download">Open Rate dataset</button>
+      </div>
+
+      <section id="step-dataset" class="panel dataset-panel" role="tabpanel" aria-labelledby="tab-dataset" hidden>
+        <h2>Rate dataset</h2>
+        <div class="dataset-toolbar">
+          <div class="dataset-picker">
+            <label for="dataset">Dataset</label>
+            <select id="dataset"></select>
+          </div>
+          <div class="dataset-actions">
+            <button type="button" id="new-dataset" class="download">New dataset</button>
+            <button type="button" id="import-rates" class="download">Import CSV</button>
+            <button type="button" id="curve-download" class="download">Download CSV</button>
+            <input type="file" id="rate-file" accept=".csv,text/csv" hidden>
+          </div>
+        </div>
+        <form id="dataset-details" class="dataset-details">
+          <div>
+            <label for="dataset-name">Dataset name</label>
+            <input type="text" id="dataset-name" maxlength="80" required>
+          </div>
+          <div>
+            <label for="dataset-observations">Observations</label>
+            <textarea id="dataset-observations" rows="2" maxlength="2000" placeholder="Notes about this dataset"></textarea>
+          </div>
+          <div class="dataset-actions">
+            <button type="button" id="discard-dataset" class="download" disabled>Discard edits</button>
+            <button type="submit" id="save-dataset" class="download" disabled>Save changes</button>
+          </div>
+        </form>
+        <div class="sheet-tools">
+          <div class="dataset-actions">
+            <button type="button" id="add-row" class="download">Add row</button>
+            <button type="button" id="delete-row" class="download" disabled>Delete row</button>
+            <button type="button" id="add-column" class="download">Add column</button>
+            <button type="button" id="delete-column" class="download" disabled>Delete column</button>
+          </div>
+          <p id="dataset-status" class="hint" role="status"></p>
+        </div>
+        <div class="sheet-viewport" id="rate-sheet" role="region" aria-label="Editable rate dataset" tabindex="0">
+          <table id="rate-table" class="rate-sheet">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="sheet-footer">
+          <p class="hint">Rate cells accept percentages or decimals, such as 3.66% or 0.0366.</p>
+          <div id="sheet-pages" class="paging" hidden>
+            <span id="rate-rows" class="hint"></span>
+            <button type="button" id="rates-prev" class="download" aria-label="Previous rows">Previous</button>
+            <button type="button" id="rates-next" class="download" aria-label="Next rows">Next</button>
+          </div>
+        </div>
+      </section>
 
       <section id="step-rates" class="rates-layout" role="tabpanel" aria-labelledby="tab-rates">
         <div class="panel rates-chart">
@@ -205,49 +263,6 @@
       </section>
     </div>
   </main>
-  <dialog id="dataset-dialog" class="dataset-dialog" aria-labelledby="dataset-title">
-    <div class="dataset-heading">
-      <h2 id="dataset-title">Rate datasets</h2>
-      <button type="button" id="close-datasets" class="download">Close</button>
-    </div>
-    <div class="dataset-toolbar">
-      <div class="dataset-picker">
-        <label for="dataset">Active dataset</label>
-        <select id="dataset"></select>
-      </div>
-      <div class="dataset-actions">
-        <button type="button" id="import-rates" class="download">Import CSV</button>
-        <a class="download" id="curve-download" href="/curve.csv">Download CSV</a>
-        <input type="file" id="rate-file" accept=".csv,text/csv" hidden>
-      </div>
-    </div>
-    <form id="dataset-details" class="dataset-details">
-      <div>
-        <label for="dataset-name">Dataset name</label>
-        <input type="text" id="dataset-name" maxlength="80" required>
-      </div>
-      <div>
-        <label for="dataset-observations">Observations</label>
-        <textarea id="dataset-observations" rows="2" maxlength="2000" placeholder="Notes about this dataset"></textarea>
-      </div>
-      <button type="submit" id="save-dataset" class="download">Save details</button>
-    </form>
-    <p id="dataset-status" class="hint" role="status"></p>
-    <div class="sheet-viewport" id="rate-sheet" role="region" aria-label="Rate observations" tabindex="0">
-      <table id="rate-table" class="rate-sheet">
-        <thead><tr><th scope="col">Date</th><th scope="col">ON</th><th scope="col">1M</th><th scope="col">3M</th><th scope="col">6M</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="sheet-footer">
-      <p class="hint">CSV columns <code>Date,ON,1M,3M,6M</code>. Enter 3.66% as 0.0366.</p>
-      <div id="sheet-pages" class="paging" hidden>
-        <span id="rate-rows" class="hint"></span>
-        <button type="button" id="rates-prev" class="download" aria-label="Previous observations">Previous</button>
-        <button type="button" id="rates-next" class="download" aria-label="Next observations">Next</button>
-      </div>
-    </div>
-  </dialog>
   <footer class="shell notes">
     <p>Historical term rates are SOFR OIS par-rate proxies. Scenario interest excludes fees, credit losses and liquidity costs.</p>
     <p>Historical series <a href="https://www.newyorkfed.org/markets/reference-rates/sofr">NY Fed overnight SOFR</a> · <a href="https://files.erisfutures.com/ftp/Eris_Historical_ParCouponCurve_SOFR.csv">Eris SOFR par coupon curve</a></p>

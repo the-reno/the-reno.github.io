@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import json
 import math
@@ -24,12 +25,14 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 import sofr_model as model
-from dataset_store import DatasetStore, default_dataset_dir
+from dataset_store import DatasetStore, NAME_LIMIT, clean_details, default_dataset_dir, record_version
+from rate_sheet import RateSheet
 
 ROOT = Path(__file__).resolve().parent
 MAX_SHIFT_BP = 150
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 MAX_DETAILS_BYTES = 16 * 1024
+MAX_SHEET_BODY = 16 * 1024 * 1024
 OVERNIGHT = (100, 0, 0, 0)
 SIX_MONTH = (0, 0, 0, 100)
 JULY_ARCHIVE = ROOT / "data" / "july-article.json"
@@ -370,32 +373,97 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
         "/": ("index.html", "text/html; charset=utf-8"),
         "/styles.css": ("styles.css", "text/css; charset=utf-8"),
         "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+        "/dataset.js": ("dataset.js", "text/javascript; charset=utf-8"),
         "/walkthrough.js": ("walkthrough.js", "text/javascript; charset=utf-8"),
     }
-    uploads: OrderedDict[str, Simulator] = OrderedDict()
+    uploads: OrderedDict[str, tuple[bytes, Simulator]] = OrderedDict()
     upload_lock = Lock()
 
-    def remember_model(key: str, simulator: Simulator):
-        with upload_lock:
-            uploads[key] = simulator
-            uploads.move_to_end(key)
-            if len(uploads) > 8:
-                uploads.popitem(last=False)
+    def builtin_details(key: str) -> dict:
+        return {"id": key, "name": BUILTIN_DATASETS[key], "observations": "", "filename": None}
 
     def dataset_catalog() -> list[dict]:
         saved = dataset_store.summaries()
-        builtins = [
-            saved.get(key, {"id": key, "name": BUILTIN_DATASETS[key], "observations": "", "filename": None})
-            for key in models
-        ]
+        builtins = [saved.get(key, builtin_details(key)) for key in models]
         return builtins + [entry for entry in saved.values() if entry["filename"]]
 
-    def analysis_payload(key: str, analysis: dict) -> dict:
+    def dataset_record(key: str) -> dict:
+        record = dataset_store.read(key)
+        if key in models:
+            return record or {**builtin_details(key), "csv_data": None}
+        if record is None or record["csv_data"] is None:
+            raise ValueError("Choose a saved dataset or import a CSV.")
+        return record
+
+    def dataset_csv(key: str, record: dict) -> bytes:
+        return models[key].download_rates() if key in models else record["csv_data"]
+
+    def dataset_model(key: str, record: dict, sheet: RateSheet | None = None) -> Simulator:
+        if key in models:
+            return models[key]
+        content = record["csv_data"]
+        signature = hashlib.sha256(content).digest()
+        with upload_lock:
+            cached = uploads.get(key)
+            if cached and cached[0] == signature:
+                uploads.move_to_end(key)
+                return cached[1]
+        if sheet is None:
+            sheet = RateSheet.from_csv(content)
+        simulator = Simulator(sheet.model_csv(), "custom")
+        with upload_lock:
+            uploads[key] = (signature, simulator)
+            uploads.move_to_end(key)
+            if len(uploads) > 8:
+                uploads.popitem(last=False)
+        return simulator
+
+    def analysis_payload(key: str, record: dict) -> dict:
+        sheet = RateSheet.from_csv(dataset_csv(key, record))
         catalog = dataset_catalog()
-        dataset = next(entry for entry in catalog if entry["id"] == key)
-        if dataset["filename"]:
-            analysis["source_name"] = dataset["filename"]
-        return {"model_id": key, **analysis, "datasets": catalog}
+        for entry in catalog:
+            if entry["id"] == key:
+                entry.update(name=record["name"], observations=record["observations"])
+                break
+        payload = {
+            "model_id": key,
+            "datasets": catalog,
+            "sheet": {"columns": sheet.columns, "rows": sheet.rows, "version": record_version(record),
+                      "builtin": key in models},
+        }
+        try:
+            analysis = dataset_model(key, record, sheet).analysis()
+        except (ValueError, OverflowError) as error:
+            payload["model_error"] = str(error)
+        else:
+            if record["filename"]:
+                analysis["source_name"] = record["filename"]
+            payload.update(analysis)
+        return payload
+
+    def save_sheet(key: str, details: dict) -> str:
+        sheet = RateSheet.from_payload(details)
+        name, observations = clean_details(details.get("name"), details.get("observations", ""))
+        content = sheet.to_csv()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise ValueError("Keep the saved CSV to 2 MB or less.")
+        if not key:
+            return dataset_store.add_csv(content, "Saved rates.csv", name, observations)
+        record = dataset_record(key)
+        version = details.get("version")
+        if record_version(record) != version:
+            raise ValueError("This dataset changed in another window. Reload it before saving.")
+        if key in models:
+            original = RateSheet.from_csv(dataset_csv(key, record))
+            if sheet == original:
+                dataset_store.save_details(key, name, observations, previous=record)
+                return key
+            if name == record["name"]:
+                suffix = " (edited)"
+                name = name[:NAME_LIMIT - len(suffix)].rstrip() + suffix
+            return dataset_store.add_csv(content, "Edited rates.csv", name, observations)
+        dataset_store.update_csv(key, content, name, observations, version)
+        return key
 
     class Handler(BaseHTTPRequestHandler):
         def send_body(self, status, mime_type, body, filename=None):
@@ -414,23 +482,6 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
         def send_json(self, status, payload):
             body = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
             self.send_body(status, "application/json; charset=utf-8", body)
-
-        def get_model(self, query: str):
-            fields = parse_qs(query, max_num_fields=8)
-            key = fields.get("model", [default_model])[0]
-            simulator = models.get(key)
-            if simulator is None:
-                with upload_lock:
-                    simulator = uploads.get(key)
-                    if simulator:
-                        uploads.move_to_end(key)
-            if simulator is None:
-                content = dataset_store.read_csv(key)
-                if content is None:
-                    raise ValueError("Choose a saved dataset or import a CSV.")
-                simulator = Simulator(content, "custom")
-                remember_model(key, simulator)
-            return key, simulator
 
         def local_request(self):
             host = self.headers.get("Host", "").lower().split(":", 1)[0]
@@ -460,13 +511,18 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
                 self.send_error(404)
                 return
             try:
-                key, simulator = self.get_model(url.query)
+                fields = parse_qs(url.query, max_num_fields=8)
+                key = fields.get("model", [default_model])[0]
+                record = dataset_record(key)
+                if url.path == "/model":
+                    self.send_json(200, analysis_payload(key, record))
+                    return
+                if url.path == "/curve.csv":
+                    self.send_body(200, "text/csv; charset=utf-8", dataset_csv(key, record), "SOFR_rates.csv")
+                    return
+                simulator = dataset_model(key, record)
                 if url.path == "/defaults":
                     self.send_json(200, {"model_id": key, **simulator.defaults()})
-                elif url.path == "/model":
-                    self.send_json(200, analysis_payload(key, simulator.analysis()))
-                elif url.path == "/curve.csv":
-                    self.send_body(200, "text/csv; charset=utf-8", simulator.download_rates(), "SOFR_rates.csv")
                 elif url.path == "/history.csv":
                     self.send_body(200, "text/csv; charset=utf-8", simulator.download_history(), "SOFR_decisions.csv")
                 else:
@@ -494,7 +550,7 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
             if not self.local_request():
                 return
             url = urlsplit(self.path)
-            if url.path not in ("/model", "/dataset-details"):
+            if url.path not in ("/model", "/dataset-details", "/sheet"):
                 self.send_error(404)
                 return
             try:
@@ -509,13 +565,15 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
                     dataset_store.save_details(key, details.get("name"), details.get("observations", ""))
                     self.send_json(200, {"datasets": dataset_catalog()})
                     return
-                content = self.read_body(MAX_UPLOAD_BYTES, "Choose a CSV file smaller than 2 MB.")
-                simulator = Simulator(content, "custom")
-                analysis = simulator.analysis()
-                filename = fields.get("filename", ["Imported rates.csv"])[0]
-                key = dataset_store.add_csv(content, filename)
-                remember_model(key, simulator)
-                self.send_json(200, analysis_payload(key, analysis))
+                if url.path == "/sheet":
+                    details = json.loads(self.read_body(MAX_SHEET_BODY, "Supply a spreadsheet to save."))
+                    key = save_sheet(fields.get("model", [""])[0], details)
+                else:
+                    content = self.read_body(MAX_UPLOAD_BYTES, "Choose a CSV file up to 2 MB.")
+                    RateSheet.from_csv(content)
+                    filename = fields.get("filename", ["Imported rates.csv"])[0]
+                    key = dataset_store.add_csv(content, filename)
+                self.send_json(200, analysis_payload(key, dataset_record(key)))
             except (ValueError, OverflowError) as error:
                 self.send_json(400, {"error": str(error)})
             except sqlite3.Error:

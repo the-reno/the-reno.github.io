@@ -1,11 +1,9 @@
 "use strict";
 
 const palette = ["#176873", "#4e648e", "#795786", "#a24019", "#906406"];
-const pageSize = 2000;
 const tabs = Array.from(document.querySelectorAll(".steps [role=tab]"));
 let activeStep = "rates";
 let historyView = "timeline";
-let ratePage = 0;
 
 const series = (label, color, points, extra = {}) => ({ label, color, points, ...extra });
 const percentAxis = (value) => value.toFixed(1) + "%";
@@ -117,20 +115,6 @@ function snapshots(id, items) {
     item.append(key, output);
     return item;
   }));
-}
-
-function renderRatePage() {
-  const start = ratePage * pageSize;
-  const datedRows = defaults.rates.slice(start, start + pageSize);
-  const rows = document.createDocumentFragment();
-  for (const [day, ...rates] of datedRows) rows.append(row(day, rates.map(quote)));
-  $("rate-table").tBodies[0].replaceChildren(rows);
-  $("rate-sheet").scrollTop = 0;
-  $("sheet-pages").hidden = defaults.observations <= pageSize;
-  $("rates-prev").disabled = start === 0;
-  $("rates-next").disabled = start + pageSize >= defaults.observations;
-  $("rate-rows").textContent = number.format(start + 1) + "–" + number.format(start + datedRows.length) +
-    " of " + number.format(defaults.observations);
 }
 
 function renderRates() {
@@ -245,7 +229,7 @@ function renderScenarios() {
 }
 
 function drawActiveChart() {
-  if (!defaults) return;
+  if (!defaults || defaults.model_error) return;
   if (activeStep === "rates") {
     const lines = defaults.tenors.map((name, i) =>
       series(name, palette[i], defaults.rates.map((r) => [Date.parse(r[0]), 100 * r[i + 1]]))
@@ -314,12 +298,15 @@ function drawActiveChart() {
 
 function selectStep(step) {
   activeStep = step;
+  const unavailable = Boolean(defaults?.model_error) && step !== "dataset";
   for (const tab of tabs) {
     const selected = tab.dataset.step === step;
     tab.setAttribute("aria-selected", String(selected));
     tab.tabIndex = selected ? 0 : -1;
-    $(tab.getAttribute("aria-controls")).hidden = !selected;
+    $(tab.getAttribute("aria-controls")).hidden = !selected || unavailable;
   }
+  $("model-unavailable").hidden = !unavailable;
+  updateDatasetDraftNotice();
   drawActiveChart();
 }
 
@@ -330,82 +317,32 @@ function setHistoryView(view) {
   drawActiveChart();
 }
 
-function setDatasetBusy(busy) {
-  for (const id of ["dataset", "import-rates", "dataset-name", "dataset-observations", "save-dataset"]) {
-    $(id).disabled = busy;
-  }
-}
-
-function setDatasetStatus(message, isError = false) {
-  const status = $("dataset-status");
-  status.classList.toggle("error", isError);
-  status.textContent = message;
-}
-
-function renderDatasetDetails() {
-  const active = defaults.datasets.find(({ id }) => id === defaults.model_id);
-  const options = defaults.datasets.map(({ id, name }) => new Option(name, id));
-  $("dataset").replaceChildren(...options);
-  $("dataset").value = active.id;
-  $("dataset-name").value = active.name;
-  $("dataset-observations").value = active.observations;
-  $("active-dataset").textContent = active.name;
-}
-
-async function selectDataset(url, options) {
-  setDatasetBusy(true);
-  setDatasetStatus(options ? "Validating the imported CSV…" : "Loading the rate data…");
-  try {
-    const data = await json(url, options);
-    setupCalculator(data);
-    const query = "?model=" + encodeURIComponent(data.model_id);
-    $("curve-download").href = "/curve.csv" + query;
-    $("history-download").href = "/history.csv" + query;
-    renderDatasetDetails();
+function applyDatasetModel(data) {
+  const keepAllocation = defaults && !defaults.model_error && data.model_id === defaults.model_id &&
+    data.anchor_date === defaults.anchor_date && data.last_start_day === defaults.last_start_day;
+  clearTimeout(pending);
+  revision++;
+  latest = null;
+  if (data.model_error) {
+    defaults = data;
+    $("asof").textContent = "";
+    $("model-error").textContent = data.model_error;
+  } else {
+    if (keepAllocation) {
+      defaults = data;
+      scheduleRun();
+    } else {
+      setupCalculator(data);
+    }
+    $("history-download").href = "/history.csv?model=" + encodeURIComponent(data.model_id);
     renderRates();
     renderHistory();
     renderCycle();
     renderScenarios();
-    ratePage = 0;
-    if ($("dataset-dialog").open) renderRatePage();
-    $("loading").hidden = true;
-    $("simulator").hidden = false;
-    $("open-datasets").disabled = false;
-    setDatasetStatus(number.format(data.observations) + " observations loaded");
-    selectStep(activeStep);
-  } catch (error) {
-    if (defaults) {
-      $("dataset").value = defaults.model_id;
-      setDatasetStatus(error.message, true);
-    } else {
-      $("loading").textContent = "The model could not load. " + error.message;
-    }
-  } finally {
-    setDatasetBusy(false);
   }
-}
-
-async function saveDatasetDetails(event) {
-  event.preventDefault();
-  const body = JSON.stringify({
-    name: $("dataset-name").value,
-    observations: $("dataset-observations").value,
-  });
-  setDatasetBusy(true);
-  setDatasetStatus("Saving details…");
-  try {
-    const query = "?model=" + encodeURIComponent(defaults.model_id);
-    const result = await json("/dataset-details" + query, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body,
-    });
-    defaults.datasets = result.datasets;
-    renderDatasetDetails();
-    setDatasetStatus("Details saved · " + number.format(defaults.observations) + " observations");
-  } catch (error) {
-    setDatasetStatus(error.message, true);
-  } finally {
-    setDatasetBusy(false);
-  }
+  $("loading").hidden = true;
+  $("simulator").hidden = false;
+  selectStep(activeStep);
 }
 
 tabs.forEach((tab, index) => {
@@ -419,26 +356,14 @@ tabs.forEach((tab, index) => {
     next.focus();
   });
 });
-$("open-datasets").addEventListener("click", () => {
-  $("dataset-dialog").showModal();
-  renderRatePage();
-});
-$("close-datasets").addEventListener("click", () => $("dataset-dialog").close());
-$("dataset-details").addEventListener("submit", saveDatasetDetails);
-$("rates-prev").addEventListener("click", () => { ratePage--; renderRatePage(); });
-$("rates-next").addEventListener("click", () => { ratePage++; renderRatePage(); });
+for (const id of ["edit-dataset", "view-dataset-draft"]) {
+  $(id).addEventListener("click", () => {
+    selectStep("dataset");
+    $("tab-dataset").focus();
+  });
+}
 $("timeline-view").addEventListener("click", () => setHistoryView("timeline"));
 $("scatter-view").addEventListener("click", () => setHistoryView("scatter"));
 $("decision-date").addEventListener("change", selectDecision);
-$("dataset").addEventListener("change", (event) => selectDataset("/model?model=" + encodeURIComponent(event.target.value)));
-$("import-rates").addEventListener("click", () => $("rate-file").click());
-$("rate-file").addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const query = "?filename=" + encodeURIComponent(file.name);
-    selectDataset("/model" + query, { method: "POST", body: file });
-  }
-  event.target.value = "";
-});
 window.addEventListener("resize", drawActiveChart);
 selectDataset("/model");
