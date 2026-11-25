@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -51,23 +52,23 @@ def default_cache_dir() -> Path:
     return directory / "Ronu" / "SOFR_Article_Model" / "releases"
 
 
-def read_url(url: str, limit: int = MAX_DOWNLOAD) -> bytes:
+def read_url(url: str, limit: int = MAX_DOWNLOAD, *, attempts: int = 2) -> bytes:
     request = Request(url, headers={"User-Agent": "Ronu-SOFR-Launcher"})
-    for attempt in range(2):
+    for attempt in range(attempts):
         try:
             with urlopen(request, timeout=8) as response:
                 return response.read(limit + 1)
         except HTTPError as error:
-            if error.code < 500 or attempt:
+            if error.code < 500 or attempt + 1 == attempts:
                 raise
         except (OSError, HTTPException):
-            if attempt:
+            if attempt + 1 == attempts:
                 raise
 
 
-def read_json(url: str):
-    content = read_url(url)
-    if len(content) > MAX_DOWNLOAD:
+def read_json(url: str, limit: int = MAX_DOWNLOAD):
+    content = read_url(url, limit)
+    if len(content) > limit:
         raise ValueError("The GitHub response was too large.")
     return json.loads(content)
 
@@ -105,8 +106,24 @@ def github_files(revision: str, directory: str = PROJECT) -> list[GitHubFile]:
     return files
 
 
-def download_file(revision: str, file: GitHubFile, target: Path):
-    content = read_url(f"{RAW}/{revision}/{PROJECT}/{quote(file.path)}", file.size)
+def read_blob(file: GitHubFile) -> bytes:
+    blob = read_json(f"{API}/git/blobs/{file.sha}", 2 * file.size + 4096)
+    if not isinstance(blob, dict) or blob.get("sha") != file.sha or blob.get("encoding") != "base64":
+        raise ValueError(f"GitHub returned invalid blob metadata for {file.path}.")
+    encoded = blob.get("content")
+    if not isinstance(encoded, str):
+        raise ValueError(f"GitHub did not return the file content for {file.path}.")
+    return base64.b64decode("".join(encoded.split()), validate=True)
+
+
+def download_file(revision: str, file: GitHubFile, target: Path, *, via_api: bool = False) -> bool:
+    if not via_api:
+        try:
+            content = read_url(f"{RAW}/{revision}/{PROJECT}/{quote(file.path)}", file.size, attempts=1)
+        except (OSError, HTTPException):
+            via_api = True
+    if via_api:
+        content = read_blob(file)
     header = f"blob {len(content)}\0".encode("ascii")
     checksum = hashlib.sha1(header + content).hexdigest()
     if len(content) != file.size or checksum != file.sha:
@@ -114,6 +131,7 @@ def download_file(revision: str, file: GitHubFile, target: Path):
     destination = target / file.path
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(content)
+    return via_api
 
 
 def project_exists(path: Path) -> bool:
@@ -134,8 +152,11 @@ def download_project(revision: str, cache: Path) -> Path:
     print(f"Downloading SOFR project {revision[:7]} from GitHub.", flush=True)
     with TemporaryDirectory(prefix="download-", dir=cache) as temp:
         staging = Path(temp) / "project"
+        via_api = download_file(revision, files[0], staging)
+        if via_api:
+            print("Downloading the remaining files through the GitHub API.", flush=True)
         with ThreadPoolExecutor(max_workers=6) as pool:
-            pending = [pool.submit(download_file, revision, file, staging) for file in files]
+            pending = [pool.submit(download_file, revision, file, staging, via_api=via_api) for file in files[1:]]
             for completed in pending:
                 completed.result()
         try:

@@ -10,7 +10,7 @@ Save [Open_SOFR.py](https://raw.githubusercontent.com/the-reno/the-reno.github.i
 
 On macOS or Linux, run **python3 Open_SOFR.py**. If you already have the project folder on Windows, double-click **Run_SOFR_Model.cmd** to use the same launcher.
 
-The launcher checks GitHub for the current project, downloads its code and data from one commit, and opens the model in your browser at localhost. Keep the command window open while you work. It reuses the last downloaded version when GitHub is unavailable.
+The launcher checks GitHub for the current project, downloads verified files from one commit, and opens the model in your browser at localhost. It can retrieve those files through the GitHub API when the raw file host is unavailable. Keep the command window open while you work. The launcher reuses the last downloaded version when GitHub is unavailable.
 
 ### Data from GitHub
 
