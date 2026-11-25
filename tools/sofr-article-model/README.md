@@ -14,7 +14,7 @@ The launcher checks GitHub for the current project, downloads verified files fro
 
 ### Data from GitHub
 
-**Rates** links to the exact CSV revision used in the open model. Cash amounts, allocations, imported CSVs and notes are processed and stored on this computer.
+**Rates** links to the source revision when you run the bundled article rates. Uploaded rates and allocation inputs are processed on this computer.
 
 If you are working on a local checkout of the code, run **py -3 app.py --source local --port 0** to open its included files. Run **py -3 Open_SOFR.py --check** to verify both baselines in the current GitHub version.
 
@@ -22,20 +22,18 @@ If you are working on a local checkout of the code, run **py -3 app.py --source 
 
 | Screen | What to do |
 | --- | --- |
-| **1. Rate dataset** | Import rates, review the fixed spreadsheet and choose **Confirm rates & run**. |
+| **1. Rate dataset** | Review the preloaded rates, upload a replacement if needed, and choose **Confirm rates & run**. |
 | **2. Rates** | Read the rate history beside the latest quotes and full-sample analysis. |
 | **3. Historical test** | Recalculate the 1,003 complete six-month decisions. Switch between the history and the scatter plot. Select an entry date to see Modified Following maturity, ACT/360 day count, the compounded ON return and the simple locked return. |
 | **4. Cycle replay** | Compare rates-up and rates-down paths from a common 5.50% start. The table shows the article values and two reproducible calculations with their observation counts. |
 | **5. Scenarios** | Compare the five original 36-month paths and annualized regret across pure ON, pure 6M and the ladder. Compare the archived chart values with the calculated table. |
 | **6. Allocation** | Choose a rate path, enter a USD balance and change the mix. Compare interest with rolling ON and check annualized regret across the paths. Download the detailed scenario results. |
 
-### Prepare and confirm the rates
+### Review and run
 
-**Import file** loads a UTF-8 CSV or an Excel .xlsx workbook into one working sheet. Include **Date**, **ON**, **1M**, **3M**, and **6M** headers. The importer maps them by name and keeps the template order. In an Excel workbook, it uses a matching **Historical_Rates** sheet when available or the first worksheet with all five headers. The workbook must contain saved cell values for the rates. Use **CSV template** for a blank starting point or **Article rates** to download and import the exact July series.
+**Rate dataset** preloads the July article history or your last confirmed upload. Scroll the table to review the observations, then choose **Confirm rates & run**. The results tabs open after confirmation.
 
-Click a column heading or row number to select it. Drag to select cells, or extend a selection with Shift and an arrow key. Drag a column edge to adjust its width and double-click the edge to fit the values. Type to replace a cell or double-click it to edit. Copy and paste ranges from Excel, insert or delete rows, and undo sheet edits with Ctrl+Z.
-
-Use unique dates in ascending order and at least two observations. Dates such as 2026-09-01 and rates such as 3.66% or 0.0366 work in the template. **Save draft** keeps the working sheet, name and observations on this computer. **Confirm rates & run** validates the sheet, saves it and opens **Rates**. Import or edit the rates to review and confirm a fresh run. A saved draft also needs confirmation when reopened.
+To replace the rates, choose **Upload rates** and select an Excel .xlsx workbook or UTF-8 CSV containing **Date**, **ON**, **1M**, **3M**, and **6M**. Use at least two unique dates in ascending order and annual rates such as 3.66% or 0.0366. For an Excel workbook, the importer uses a matching **Historical_Rates** sheet when available or the first worksheet with all five headers. Confirm the new file to use it in the model and preload it on future launches.
 
 **Rates analysis** shows the latest observation, maximum, minimum, average and annualized rolling returns in one table. The 6M minus ON column uses the paired daily spreads for the quote statistics. For rolling returns, the 1M and 3M series use observed Modified Following reset dates, with the last term accrued through the same cutoff as ON and 6M. Across gaps, the overnight accrual holds the last quote until the next observation. Confirming the exact July rate history reproduces the July article scenarios. Other curves use the September scenario method.
 

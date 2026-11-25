@@ -25,13 +25,13 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 import sofr_model as model
-from dataset_store import DatasetStore, NAME_LIMIT, clean_details, default_dataset_dir, record_version
+from dataset_store import DatasetStore, default_dataset_dir, record_version
 from rate_sheet import RateSheet, import_workbook
 
 ROOT = Path(__file__).resolve().parent
 MAX_SHIFT_BP = 150
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
-MAX_SHEET_BODY = 16 * 1024 * 1024
+MAX_CONFIRM_BYTES = 4096
 OVERNIGHT = (100, 0, 0, 0)
 SIX_MONTH = (0, 0, 0, 100)
 JULY_ARCHIVE = ROOT / "data" / "july-article.json"
@@ -42,6 +42,7 @@ GITHUB_FOLDER = "tools/sofr-article-model"
 GITHUB_BRANCH = "main"
 GITHUB_INPUTS = ("data/july-curve.csv", "data/july-article.json", "curve.csv")
 GITHUB_TIMEOUT = 5
+
 
 @dataclass(frozen=True)
 class SourceRates:
@@ -378,21 +379,21 @@ def verify_july(simulator: Simulator) -> None:
     print("July workbook matched: first-trade replay -23.66 / +15.82 bp, minimax regret 3.05 bp.")
 
 
-def import_sheet(filename: str, content: bytes) -> dict:
+@dataclass(frozen=True)
+class RateInput:
+    curve: list[model.CurvePoint]
+    filename: str = ""
+
+
+def import_rates(filename: str, content: bytes) -> RateInput:
     suffix = Path(filename).suffix.casefold()
     if suffix == ".xlsx":
-        sheet, worksheet = import_workbook(content)
+        sheet, _ = import_workbook(content)
     elif suffix == ".csv":
-        sheet, worksheet = RateSheet.from_csv(content), ""
+        sheet = RateSheet.from_csv(content)
     else:
         raise ValueError("Choose an .xlsx workbook or a UTF-8 .csv file.")
-    return {
-        "rows": sheet.rows,
-        "filename": filename,
-        "worksheet": worksheet,
-        "name": Path(filename).stem.strip()[:NAME_LIMIT] or "USD rate history",
-        "observations": "",
-    }
+    return RateInput(sheet.to_curve(), filename)
 
 
 def file_basename(value: str) -> str:
@@ -403,7 +404,7 @@ def file_basename(value: str) -> str:
     return name if len(name) <= 180 else Path(name).stem[:180 - len(suffix)] + suffix
 
 
-def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dict | None = None):
+def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: RateInput | None = None):
     assets = {
         "/": ("index.html", "text/html; charset=utf-8"),
         "/styles.css": ("styles.css", "text/css; charset=utf-8"),
@@ -411,54 +412,56 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dic
         "/dataset.js": ("dataset.js", "text/javascript; charset=utf-8"),
         "/walkthrough.js": ("walkthrough.js", "text/javascript; charset=utf-8"),
     }
-    article_curve = model.read_curve(sources.july)
+    article = RateInput(model.read_curve(sources.july))
+    reviews: OrderedDict[str, tuple[RateInput, bool, str | None]] = OrderedDict()
     confirmed: OrderedDict[str, Simulator] = OrderedDict()
     runs_lock = Lock()
 
-    def sheet_state() -> dict:
-        record = dataset_store.load()
-        if record is None:
-            return {"rows": [], "name": "", "observations": "", "filename": "", "version": None}
-        result = {key: record[key] or "" for key in ("name", "observations", "filename")}
-        try:
-            sheet = RateSheet.from_csv(record["csv_data"], allow_missing=True)
-        except ValueError:
-            sheet = RateSheet([])
-            result["load_error"] = "The earlier draft could not fit the rate template. Import a rate file to continue."
-        return {**result, "rows": sheet.rows, "version": record_version(record)}
-
-    def save_or_run(details: dict, run: bool) -> dict:
-        sheet = RateSheet.from_payload(details)
-        name, observations = clean_details(details.get("name") or "USD rate history", details.get("observations", ""))
-        filename = file_basename(details.get("filename", ""))
-        content = sheet.to_csv()
-        if len(content) > MAX_UPLOAD_BYTES:
-            raise ValueError("Keep the saved rates below 2 MB.")
-        record = {"name": name, "observations": observations, "filename": filename, "csv_data": content}
-        if run:
-            curve = sheet.to_curve()
-            from_article = curve == article_curve
-            simulator = Simulator(
-                curve, "july" if from_article else "custom", article=sources.article,
-                source_label=sources.label if from_article else "",
-                source_url=sources.url(GITHUB_INPUTS[0]) if from_article else "",
-            )
-            analysis = simulator.analysis()
-            if filename or not from_article:
-                analysis["source_name"] = name
-        dataset_store.save(record, details.get("version"))
-        state = {
-            "rows": sheet.rows, "name": name, "observations": observations,
-            "filename": filename, "version": record_version(record),
-        }
-        if not run:
-            return state
+    def review(rates: RateInput, *, upload: bool = False, previous_version: str | None = None) -> dict:
         key = secrets.token_urlsafe(16)
         with runs_lock:
+            reviews[key] = (rates, upload, previous_version)
+            if len(reviews) > 8:
+                reviews.popitem(last=False)
+        return {
+            "dataset_id": key,
+            "name": rates.filename or "July article rates",
+            "rows": [[point.day.isoformat(), *point.rates] for point in rates.curve],
+        }
+
+    def current_rates() -> dict:
+        record = dataset_store.load()
+        if initial:
+            return review(initial, upload=True, previous_version=record_version(record))
+        if record:
+            return review(RateInput(model.read_curve(record["csv_data"]), record["filename"]))
+        return review(article)
+
+    def confirm_dataset(key: str) -> bytes:
+        with runs_lock:
+            selected = reviews.get(key)
+        if selected is None:
+            raise ValueError("Reload the page to review the rates again.")
+        rates, upload, previous_version = selected
+        from_article = rates.curve == article.curve
+        simulator = Simulator(
+            rates.curve, "july" if from_article else "custom", article=sources.article,
+            source_label=sources.label if from_article else "",
+            source_url=sources.url(GITHUB_INPUTS[0]) if from_article else "",
+        )
+        analysis = simulator.analysis()
+        if rates.filename:
+            analysis["source_name"] = rates.filename
+        analysis["model_id"] = key
+        body = json.dumps(analysis, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        if upload:
+            dataset_store.save(rates.filename, simulator.download_rates(), previous_version)
+        with runs_lock:
             confirmed[key] = simulator
+            confirmed.move_to_end(key)
             if len(confirmed) > 8:
                 confirmed.popitem(last=False)
-        return {"sheet": state, "analysis": {**analysis, "model_id": key}}
+        return body
 
     def confirmed_model(key: str) -> Simulator:
         with runs_lock:
@@ -508,23 +511,13 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dic
                 self.send_body(200, mime_type, (ROOT / filename).read_bytes())
                 return
             if url.path not in (
-                "/sheet", "/rate-template.csv", "/article-rates.csv",
-                "/defaults", "/simulate", "/results.csv", "/curve.csv", "/history.csv",
+                "/sheet", "/defaults", "/simulate", "/results.csv", "/curve.csv", "/history.csv",
             ):
                 self.send_error(404)
                 return
             try:
                 if url.path == "/sheet":
-                    data = sheet_state()
-                    if initial and parse_qs(url.query, max_num_fields=1).get("initial") == ["1"]:
-                        data["initial"] = initial
-                    self.send_json(200, data)
-                    return
-                if url.path == "/rate-template.csv":
-                    self.send_body(200, "text/csv; charset=utf-8", RateSheet([]).to_csv(), "SOFR_rate_template.csv")
-                    return
-                if url.path == "/article-rates.csv":
-                    self.send_body(200, "text/csv; charset=utf-8", sources.july, "SOFR_article_rates.csv")
+                    self.send_json(200, current_rates())
                     return
                 fields = parse_qs(url.query, max_num_fields=8)
                 key = fields.get("model", [""])[0]
@@ -545,7 +538,7 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dic
             except (ValueError, ArithmeticError) as error:
                 self.send_json(400, {"error": str(error)})
             except sqlite3.Error:
-                self.send_json(500, {"error": "Could not read the saved rate draft."})
+                self.send_json(500, {"error": "Could not read the confirmed rates."})
 
         def read_body(self, limit: int, message: str) -> bytes:
             try:
@@ -554,13 +547,16 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dic
                 length = 0
             if length <= 0 or length > limit:
                 raise ValueError(message)
-            return self.rfile.read(length)
+            body = self.rfile.read(length)
+            if len(body) != length:
+                raise ValueError("The request was incomplete. Try again.")
+            return body
 
         def do_POST(self):
             if not self.local_request():
                 return
             url = urlsplit(self.path)
-            if url.path not in ("/import", "/sheet", "/confirm"):
+            if url.path not in ("/import", "/confirm"):
                 self.send_error(404)
                 return
             try:
@@ -568,15 +564,17 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dic
                     fields = parse_qs(url.query, max_num_fields=1)
                     filename = file_basename(fields.get("filename", [""])[0])
                     content = self.read_body(MAX_UPLOAD_BYTES, "Choose an Excel or CSV file up to 2 MB.")
-                    result = import_sheet(filename, content)
-                else:
-                    details = json.loads(self.read_body(MAX_SHEET_BODY, "Supply the rate sheet to save."))
-                    result = save_or_run(details, run=url.path == "/confirm")
-                self.send_json(200, result)
+                    rates = import_rates(filename, content)
+                    self.send_json(200, review(rates, upload=True, previous_version=record_version(dataset_store.load())))
+                    return
+                details = json.loads(self.read_body(MAX_CONFIRM_BYTES, "Confirm the rates shown in the table."))
+                if not isinstance(details, dict) or set(details) != {"dataset_id"} or not isinstance(details["dataset_id"], str):
+                    raise ValueError("Confirm the rates shown in the table.")
+                self.send_body(200, "application/json; charset=utf-8", confirm_dataset(details["dataset_id"]))
             except (ValueError, ArithmeticError) as error:
                 self.send_json(400, {"error": str(error)})
             except sqlite3.Error:
-                self.send_json(500, {"error": "Could not save the rate draft on this computer."})
+                self.send_json(500, {"error": "Could not save the confirmed rates on this computer."})
 
         def log_message(self, _format, *_args):
             return
@@ -624,6 +622,7 @@ def load_sources(source: str, revision: str | None) -> SourceRates:
             label = "Local rate files · GitHub unavailable"
     return SourceRates(JULY_CURVE.read_bytes(), JULY_ARCHIVE.read_bytes(), SEPTEMBER_CURVE.read_bytes(), label, revision)
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--curve", type=Path, help="Open with a CSV or XLSX to review before running.")
@@ -632,7 +631,7 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="Verify both original model baselines.")
     parser.add_argument("--github-revision", help="Identify the GitHub revision downloaded by the launcher.")
     parser.add_argument("--dataset-dir", type=Path, default=default_dataset_dir(),
-                        help="Directory for the saved rate draft and observations.")
+                        help="Directory for the last confirmed rates.")
     parser.add_argument(
         "--source", choices=("auto", "github", "local"),
         help="Auto uses GitHub first. Choose github to require it or local to use the included files.",
@@ -652,7 +651,7 @@ def main() -> None:
                 content = file.read(MAX_UPLOAD_BYTES + 1)
             if len(content) > MAX_UPLOAD_BYTES:
                 raise ValueError("Choose an Excel or CSV file up to 2 MB.")
-            initial = import_sheet(args.curve.name, content)
+            initial = import_rates(args.curve.name, content)
     except (OSError, ValueError) as error:
         parser.exit(1, f"{error}\n")
     try:

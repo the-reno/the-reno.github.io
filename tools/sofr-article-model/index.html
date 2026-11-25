@@ -19,85 +19,40 @@
     </div>
   </header>
   <main class="shell">
-    <p id="loading" role="status">Opening the rate sheet.</p>
+    <p id="loading" role="status">Loading rates.</p>
     <div id="simulator" hidden>
       <nav class="steps" role="tablist" aria-label="Model walkthrough">
         <button type="button" id="tab-dataset" role="tab" aria-controls="step-dataset" aria-selected="true" data-step="dataset"><span>1</span> Rate dataset</button>
-        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="false" data-step="rates" tabindex="-1"><span>2</span> Rates</button>
-        <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1"><span>3</span> Historical test</button>
-        <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1"><span>4</span> Cycle replay</button>
-        <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1"><span>5</span> Scenarios</button>
-        <button type="button" id="tab-allocation" role="tab" aria-controls="step-allocation" aria-selected="false" data-step="allocation" tabindex="-1"><span>6</span> Allocation</button>
+        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="false" data-step="rates" tabindex="-1" disabled><span>2</span> Rates</button>
+        <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1" disabled><span>3</span> Historical test</button>
+        <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1" disabled><span>4</span> Cycle replay</button>
+        <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1" disabled><span>5</span> Scenarios</button>
+        <button type="button" id="tab-allocation" role="tab" aria-controls="step-allocation" aria-selected="false" data-step="allocation" tabindex="-1" disabled><span>6</span> Allocation</button>
       </nav>
-
-      <div class="panel model-notice" id="model-unavailable" hidden>
-        <h2>Confirm the rates to see results</h2>
-        <p>Open Rate dataset, review the sheet, then choose <strong>Confirm rates &amp; run</strong>.</p>
-        <button type="button" id="edit-dataset" class="download">Review rates</button>
-      </div>
 
       <section id="step-dataset" class="panel dataset-panel" role="tabpanel" aria-labelledby="tab-dataset" aria-busy="true">
         <div class="dataset-heading">
           <div>
-            <h2>Rate dataset</h2>
-            <p class="hint" id="dataset-source">Import an Excel or CSV file, or paste rates into the sheet.</p>
+            <h2 id="dataset-title">Rate dataset</h2>
+            <p class="hint" id="dataset-source"></p>
           </div>
           <div class="dataset-actions">
-            <button type="button" id="save-dataset" class="download" disabled>Save draft</button>
+            <button type="button" id="import-rates" class="download" disabled>Upload rates</button>
             <button type="button" id="confirm-dataset" class="download primary" disabled>Confirm rates &amp; run</button>
-          </div>
-        </div>
-
-        <div class="dataset-toolbar">
-          <div class="dataset-actions">
-            <button type="button" id="import-rates" class="download">Import file</button>
-            <button type="button" id="curve-download" class="download">Export CSV</button>
             <input type="file" id="rate-file" accept=".xlsx,.csv" hidden>
           </div>
-          <div class="dataset-links">
-            <a href="/rate-template.csv">CSV template</a>
-            <a href="/article-rates.csv">Article rates</a>
-          </div>
         </div>
-
-        <div id="dataset-details" class="dataset-details">
-          <div>
-            <label for="dataset-name">Dataset name</label>
-            <input type="text" id="dataset-name" maxlength="80" placeholder="USD rate history">
-          </div>
-          <div>
-            <label for="dataset-observations">Observations</label>
-            <textarea id="dataset-observations" rows="1" maxlength="2000" placeholder="Notes about these rates"></textarea>
-          </div>
-        </div>
-
-        <div class="sheet-tools">
-          <div class="dataset-actions" role="group" aria-label="Edit the rate sheet">
-            <button type="button" id="insert-row" class="download">Insert row</button>
-            <button type="button" id="delete-rows" class="download" disabled>Delete rows</button>
-            <button type="button" id="clear-cells" class="download" disabled>Clear cells</button>
-            <button type="button" id="undo-sheet" class="download" disabled>Undo</button>
-            <button type="button" id="redo-sheet" class="download" disabled>Redo</button>
-          </div>
-          <button type="button" id="revert-draft" class="download" disabled>Reload saved draft</button>
-        </div>
-        <p id="dataset-status" class="hint" role="status"></p>
-        <div class="sheet-viewport" id="rate-sheet" role="region" aria-label="Rate spreadsheet">
-          <table id="rate-table" class="rate-sheet" role="grid" aria-label="Rate inputs" aria-describedby="sheet-hint"
-                 aria-multiselectable="true" aria-colcount="6" tabindex="0">
-            <colgroup><col><col><col><col><col><col></colgroup>
-            <thead></thead>
+        <p id="dataset-status" class="hint" role="status" hidden></p>
+        <div class="sheet-viewport" id="rate-sheet" role="region" aria-labelledby="dataset-title" tabindex="0">
+          <table id="rate-table" class="rate-sheet" aria-label="Rate observations">
+            <thead>
+              <tr>
+                <th scope="col">Date</th><th scope="col">ON</th><th scope="col">1M</th>
+                <th scope="col">3M</th><th scope="col">6M</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
-        </div>
-        <div class="sheet-footer">
-          <span id="sheet-range" class="sheet-range" aria-label="Selected cells"></span>
-          <p id="sheet-hint" class="hint">Select a heading or row number to select it. Drag a column edge to resize. Enter dates as YYYY-MM-DD and rates as 3.66% or 0.0366.</p>
-          <div id="sheet-pages" class="paging" hidden>
-            <span id="rate-rows" class="hint"></span>
-            <button type="button" id="rates-prev" class="download" aria-label="Previous rows">Previous</button>
-            <button type="button" id="rates-next" class="download" aria-label="Next rows">Next</button>
-          </div>
         </div>
       </section>
 

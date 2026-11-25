@@ -299,15 +299,15 @@ function drawActiveChart() {
 }
 
 function selectStep(step) {
+  if (!defaults && step !== "dataset") return;
   activeStep = step;
-  const unavailable = !defaults && step !== "dataset";
   for (const tab of tabs) {
     const selected = tab.dataset.step === step;
+    tab.disabled = !defaults && tab.dataset.step !== "dataset";
     tab.setAttribute("aria-selected", String(selected));
     tab.tabIndex = selected ? 0 : -1;
-    $(tab.getAttribute("aria-controls")).hidden = !selected || unavailable;
+    $(tab.getAttribute("aria-controls")).hidden = !selected;
   }
-  $("model-unavailable").hidden = !unavailable;
   drawActiveChart();
 }
 
@@ -325,7 +325,7 @@ function invalidateDatasetModel() {
   latest = null;
   defaults = null;
   $("asof").textContent = "";
-  selectStep(activeStep);
+  selectStep("dataset");
 }
 
 function applyDatasetModel(data) {
@@ -339,23 +339,21 @@ function applyDatasetModel(data) {
   $("tab-rates").focus({ preventScroll: true });
 }
 
-tabs.forEach((tab, index) => {
+for (const tab of tabs) {
   tab.addEventListener("click", () => selectStep(tab.dataset.step));
   tab.addEventListener("keydown", (event) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
+    const available = tabs.filter((item) => !item.disabled);
+    const index = available.indexOf(tab);
     const offset = event.key === "ArrowLeft" ? -1 : 1;
-    const next = tabs[(index + offset + tabs.length) % tabs.length];
+    const next = available[(index + offset + available.length) % available.length];
     selectStep(next.dataset.step);
     next.focus();
   });
-});
-$("edit-dataset").addEventListener("click", () => {
-  selectStep("dataset");
-  $("tab-dataset").focus({ preventScroll: true });
-});
+}
 $("timeline-view").addEventListener("click", () => setHistoryView("timeline"));
 $("scatter-view").addEventListener("click", () => setHistoryView("scatter"));
 $("decision-date").addEventListener("change", selectDecision);
 window.addEventListener("resize", drawActiveChart);
-openRateDataset(true);
+openRateDataset();

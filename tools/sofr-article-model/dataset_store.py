@@ -1,9 +1,8 @@
-"""Save one working rates sheet and its observations on the local computer."""
+"""Keep the last confirmed rate upload on the local computer."""
 
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import sqlite3
 import sys
@@ -11,23 +10,10 @@ from contextlib import closing, contextmanager
 from pathlib import Path
 
 
-NAME_LIMIT = 80
-OBSERVATIONS_LIMIT = 2000
-
-
-def clean_details(name: str, observations: str) -> tuple[str, str]:
-    if not isinstance(name, str) or not name.strip() or len(name.strip()) > NAME_LIMIT:
-        raise ValueError(f"Enter a dataset name up to {NAME_LIMIT} characters.")
-    if not isinstance(observations, str) or len(observations) > OBSERVATIONS_LIMIT:
-        raise ValueError(f"Keep observations to {OBSERVATIONS_LIMIT:,} characters.")
-    return name.strip(), observations.strip()
-
-
 def record_version(record: dict | None) -> str | None:
     if record is None:
         return None
-    details = json.dumps([record["name"], record["observations"], record["filename"]]).encode("utf-8")
-    return hashlib.sha256(details + b"\0" + record["csv_data"]).hexdigest()
+    return hashlib.sha256(record["filename"].encode("utf-8") + b"\0" + record["csv_data"]).hexdigest()
 
 
 def default_dataset_dir() -> Path:
@@ -62,28 +48,29 @@ class DatasetStore:
             yield database
 
     @staticmethod
-    def working_record(database):
-        # Open the most recent earlier import until a fixed-template draft is saved.
+    def confirmed_record(database):
         row = database.execute("""
-            SELECT name, observations, filename, csv_data FROM datasets
-            WHERE csv_data IS NOT NULL
-            ORDER BY (id = 'working') DESC, rowid DESC LIMIT 1
+            SELECT filename, csv_data FROM datasets
+            WHERE id = 'confirmed_rates' AND csv_data IS NOT NULL
         """).fetchone()
         return dict(row) if row else None
 
     def load(self) -> dict | None:
         with self.connect() as database:
-            return self.working_record(database)
+            return self.confirmed_record(database)
 
-    def save(self, record: dict, previous_version: str | None):
+    def save(self, filename: str, content: bytes, previous_version: str | None):
+        record = {"filename": filename, "csv_data": content}
         with self.connect() as database:
             database.execute("BEGIN IMMEDIATE")
-            if record_version(self.working_record(database)) != previous_version:
-                raise ValueError("This sheet changed in another window. Reload the draft before saving.")
+            current = self.confirmed_record(database)
+            if current == record:
+                return
+            if record_version(current) != previous_version:
+                raise ValueError("Another window confirmed different rates. Reload this page before continuing.")
             database.execute("""
-                INSERT INTO datasets (id, name, observations, filename, csv_data)
-                VALUES ('working', :name, :observations, :filename, :csv_data)
+                INSERT INTO datasets (id, name, filename, csv_data)
+                VALUES ('confirmed_rates', :filename, :filename, :csv_data)
                 ON CONFLICT(id) DO UPDATE SET
-                    name = excluded.name, observations = excluded.observations,
-                    filename = excluded.filename, csv_data = excluded.csv_data
+                    name = excluded.name, filename = excluded.filename, csv_data = excluded.csv_data
             """, record)

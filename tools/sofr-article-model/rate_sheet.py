@@ -1,4 +1,4 @@
-"""Import, edit and validate the fixed rate input sheet."""
+"""Read and validate rate files with the model's five columns."""
 
 from __future__ import annotations
 
@@ -20,19 +20,20 @@ MAX_CELL_LENGTH = 128
 MAX_XML_BYTES = 16 * 1024 * 1024
 
 
-def column_positions(headings: list[str], *, allow_missing: bool = False) -> list[int | None]:
+def column_positions(headings: list[str]) -> list[int]:
     normalized = [heading.strip().casefold() for heading in headings]
     positions = []
     missing = []
     for column in MODEL_COLUMNS:
         indices = [index for index, value in enumerate(normalized) if value == column.casefold()]
-        if len(indices) > 1 and not allow_missing:
+        if len(indices) > 1:
             raise ValueError(f"Keep one {column} column in the imported file.")
         if not indices:
             missing.append(column)
-        positions.append(indices[0] if indices else None)
-    if missing and not allow_missing:
-        raise ValueError("The file is missing " + ", ".join(missing) + ". Use the rate template headers.")
+        else:
+            positions.append(indices[0])
+    if missing:
+        raise ValueError("Missing columns: " + ", ".join(missing) + ". Use Date, ON, 1M, 3M and 6M.")
     return positions
 
 
@@ -51,7 +52,7 @@ class RateSheet:
             self.rows.pop()
 
     @classmethod
-    def from_csv(cls, content: bytes, *, allow_missing: bool = False) -> RateSheet:
+    def from_csv(cls, content: bytes) -> RateSheet:
         try:
             decoded = content.decode("utf-8-sig")
         except UnicodeDecodeError as error:
@@ -61,31 +62,15 @@ class RateSheet:
             headings = next((record for record in reader if any(field.strip() for field in record)), None)
             if headings is None:
                 raise ValueError("Include the header row from the rate template.")
-            positions = column_positions(headings, allow_missing=allow_missing)
+            positions = column_positions(headings)
             rows = []
             for record in reader:
                 if len(rows) == MAX_ROWS:
                     raise ValueError(f"Use up to {MAX_ROWS:,} rows.")
-                rows.append([record[index] if index is not None and index < len(record) else "" for index in positions])
+                rows.append([record[index] if index < len(record) else "" for index in positions])
             return cls(rows)
         except csv.Error as error:
             raise ValueError(f"Check the CSV formatting near line {reader.line_num}.") from error
-
-    @classmethod
-    def from_payload(cls, payload: dict) -> RateSheet:
-        rows = payload.get("rows") if isinstance(payload, dict) else None
-        if not isinstance(rows, list) or not all(
-            isinstance(row, list) and all(isinstance(cell, str) for cell in row) for row in rows
-        ):
-            raise ValueError("Supply the spreadsheet rows to save.")
-        return cls(rows)
-
-    def to_csv(self) -> bytes:
-        output = io.StringIO(newline="")
-        writer = csv.writer(output)
-        writer.writerow(MODEL_COLUMNS)
-        writer.writerows(self.rows)
-        return output.getvalue().encode("utf-8")
 
     def to_curve(self) -> list[CurvePoint]:
         points = []
@@ -103,7 +88,7 @@ class RateSheet:
                 raise ValueError(f"Row {index}, Date. Use unique dates in ascending order.")
             points.append(CurvePoint(day, tuple(rates)))
         if len(points) < 2:
-            raise ValueError("Include at least two dated observations before confirming rates.")
+            raise ValueError("The file needs at least two dated observations.")
         return points
 
 
