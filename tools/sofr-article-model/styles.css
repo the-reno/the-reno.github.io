@@ -186,7 +186,48 @@ tfoot td, tfoot th { font-weight: 650; border-bottom: 0; }
 #rate-summary .latest-rate { background: #e8f0ed; }
 #rate-summary .latest-rate th, #rate-summary .latest-rate td { color: #175c63; font-weight: 700; }
 #rate-summary .latest-rate td { font-size: 1.16rem; }
-#rolling-note { margin-top: 14px; font-size: 0.83rem; }
+.rate-summary-hint { margin-top: 14px; }
+.rate-detail-trigger {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: inherit;
+  text-decoration: underline dotted #829b98;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+.rate-detail-trigger:hover, .rate-detail-trigger[aria-pressed="true"] {
+  color: var(--teal);
+  text-decoration: underline;
+}
+.rate-detail-header { flex-wrap: wrap; gap: 10px 16px; }
+#rate-detail-title { scroll-margin-top: 22px; }
+#rate-detail-source { overflow-wrap: anywhere; }
+#rate-detail-status { margin-top: 12px; }
+#rate-detail-method { margin-block: 10px; }
+#rate-detail-formula {
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 11px;
+  background: #e8f0ed;
+  color: #175c63;
+  font-size: 0.89rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.rate-detail-inputs {
+  max-height: min(480px, 54vh);
+  overflow: auto;
+  border: 1px solid var(--border);
+}
+#rate-detail-table { border-collapse: separate; border-spacing: 0; min-width: 310px; }
+#rate-detail-table.rolling-inputs { min-width: 780px; }
+#rate-detail-table th, #rate-detail-table td { padding: 8px 11px; white-space: nowrap; }
+#rate-detail-table thead th { position: sticky; z-index: 1; top: 0; background: #e7eeeb; }
+#rate-detail-table tbody tr:nth-child(even) { background: #f4f6f3; }
 
 .dataset-heading {
   display: flex;

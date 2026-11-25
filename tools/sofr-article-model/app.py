@@ -89,6 +89,8 @@ class Simulator:
         self.anchor_rates = self.curve[-1].rates
         self.decision_windows = model.historical_windows(self.curve)
         self.history = model.historical_summary(self.decision_windows)
+        self.rate_rolls = model.rolling_returns(self.curve, self.decision_windows)
+        self.rate_stats = model.rate_summary(self.curve, self.decision_windows, rolls=self.rate_rolls)
         self.archived = None
         if profile == "july":
             self.archived = json.loads(JULY_ARCHIVE.read_bytes() if article is None else article)
@@ -177,7 +179,7 @@ class Simulator:
         return {
             **self.defaults(),
             "rates": [[point.day.isoformat(), *point.rates] for point in self.curve],
-            "rate_summary": model.rate_summary(self.curve, self.decision_windows),
+            "rate_summary": self.rate_stats,
             "windows": [
                 {
                     **asdict(window),
@@ -312,6 +314,41 @@ class Simulator:
                 window.best_tenor, result["regret_bp"],
             ])
         return output.getvalue().encode("utf-8-sig")
+
+    def rate_detail(self, measure: str, tenor: str) -> dict:
+        if tenor not in model.TENORS:
+            raise ValueError("Choose a tenor in Rates analysis.")
+        index = model.TENORS.index(tenor)
+        summary = next((row for row in self.rate_stats["rows"] if row[0] == measure), None)
+        if summary is None or summary[index + 1] is None:
+            raise ValueError("This rate measure is unavailable for the selected dataset.")
+        value = summary[index + 1]
+
+        if measure == "Annualized rolling return":
+            roll = self.rate_rolls[index]
+            return {
+                "value": value,
+                "start": roll.start.isoformat(),
+                "end": roll.end.isoformat(),
+                "days": roll.days,
+                "growth_factor": roll.growth_factor,
+                "accrual_basis": model.DAY_COUNT,
+                "annual_basis": model.ANNUAL_DAYS,
+                "accruals": [
+                    [p.start.isoformat(), p.end.isoformat(), p.days, p.rate, p.period_return, p.factor]
+                    for p in roll.accruals
+                ],
+            }
+
+        points = self.curve
+        if measure == "Latest":
+            points = points[-1:]
+        elif measure in {"Maximum", "Minimum"}:
+            points = [point for point in points if point.rates[index] == value]
+        return {
+            "value": value,
+            "observations": [[point.day.isoformat(), point.rates[index]] for point in points],
+        }
 
     def download_rates(self) -> bytes:
         return csv_bytes(("Date", *model.TENORS), ((p.day, *p.rates) for p in self.curve))
@@ -511,7 +548,7 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: Rat
                 self.send_body(200, mime_type, (ROOT / filename).read_bytes())
                 return
             if url.path not in (
-                "/sheet", "/defaults", "/simulate", "/results.csv", "/curve.csv", "/history.csv",
+                "/sheet", "/defaults", "/simulate", "/results.csv", "/curve.csv", "/history.csv", "/rate-detail",
             ):
                 self.send_error(404)
                 return
@@ -528,6 +565,10 @@ def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: Rat
                     self.send_body(200, "text/csv; charset=utf-8", simulator.download_rates(), "SOFR_rates.csv")
                 elif url.path == "/history.csv":
                     self.send_body(200, "text/csv; charset=utf-8", simulator.download_history(), "SOFR_decisions.csv")
+                elif url.path == "/rate-detail":
+                    measure = fields.get("measure", [""])[0]
+                    tenor = fields.get("tenor", [""])[0]
+                    self.send_json(200, simulator.rate_detail(measure, tenor))
                 else:
                     inputs = simulator.parse_inputs(url.query)
                     if url.path == "/results.csv":

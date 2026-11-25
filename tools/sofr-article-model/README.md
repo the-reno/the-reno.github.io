@@ -37,6 +37,8 @@ To replace the rates, choose **Upload rates** and select an Excel .xlsx workbook
 
 **Rates analysis** shows the latest observation, maximum, minimum, average and annualized rolling returns for ON, 1M, 3M and 6M in one table. For rolling returns, the 1M and 3M series use observed Modified Following reset dates, with the last term accrued through the same cutoff as ON and 6M. Across gaps, the overnight accrual holds the last quote until the next observation. Confirming the exact July rate history reproduces the July article scenarios. Other curves use the September scenario method.
 
+Select any figure in **Rates analysis** to see its source data below. The maximum and minimum show every matching date. The average lists all the quotes used in the mean. For an annualized return, the details show the start date, end date, actual days, source decimal and growth factor for each accrual, plus the annualization formula. **Download source rates** exports the exact dated rate inputs used by the model.
+
 ## Reconciliation
 
 | Figure | July article and source workbook | Calculated with the source rates |

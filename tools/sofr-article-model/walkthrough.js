@@ -4,6 +4,8 @@ const palette = ["#176873", "#4e648e", "#795786", "#a24019", "#906406"];
 const tabs = Array.from(document.querySelectorAll(".steps [role=tab]"));
 let activeStep = "dataset";
 let historyView = "timeline";
+let rateDetailRevision = 0;
+let selectedRateButton;
 
 const series = (label, color, points, extra = {}) => ({ label, color, points, ...extra });
 const percentAxis = (value) => value.toFixed(1) + "%";
@@ -134,15 +136,125 @@ function renderRates() {
     source.append(" · " + defaults.source_label);
   }
   const rows = defaults.rate_summary.rows.map(([label, ...values], index) => {
-    const rates = values.slice(0, defaults.tenors.length);
-    const entry = row(label, rates.map((value) => value === null ? "—" : quote(value)));
+    const entry = row(label, []);
+    defaults.tenors.forEach((tenor, column) => {
+      const cell = entry.insertCell();
+      const value = values[column];
+      if (value === null) {
+        cell.textContent = "—";
+        return;
+      }
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "rate-detail-trigger";
+      button.textContent = quote(value);
+      button.dataset.tenor = tenor;
+      button.dataset.measure = label;
+      button.setAttribute("aria-label", tenor + " " + label.toLowerCase() + " " + quote(value));
+      button.setAttribute("aria-controls", "rate-detail-panel");
+      button.setAttribute("aria-pressed", "false");
+      button.addEventListener("click", () => selectRateDetail(button, true));
+      cell.append(button);
+    });
     entry.classList.toggle("latest-rate", index === 0);
     return entry;
   });
   $("rate-summary").tBodies[0].replaceChildren(...rows);
-  $("rolling-note").textContent = defaults.rate_summary.common_maturity ?
-    "Rolling returns are annualized on a 365-day basis through " +
-    prettyDate(defaults.rate_summary.common_maturity) + "." : "";
+  $("rate-detail-source").textContent = defaults.source_name;
+  $("rate-source-download").href = "/curve.csv?model=" + encodeURIComponent(defaults.model_id);
+  selectRateDetail(rows[0].querySelector("button"));
+}
+
+function renderRateDetail(detail, measure, tenor) {
+  const rolling = Boolean(detail.accruals);
+  const table = $("rate-detail-table");
+  const labels = rolling ?
+    ["Start date", "End date", "Actual days", "Source rate", "Source decimal", "Period return", "Growth factor"] :
+    ["Date", "Rate", "Source decimal"];
+  const headings = labels.map((label) => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = label;
+    return th;
+  });
+  table.tHead.rows[0].replaceChildren(...headings);
+  const inputs = document.createDocumentFragment();
+  if (rolling) {
+    for (const [start, end, days, rate, periodReturn, factor] of detail.accruals) {
+      inputs.append(row(start, [end, number.format(days), quote(rate), rate, (periodReturn * 100).toFixed(8) + "%", factor]));
+    }
+  } else {
+    for (const [day, rate] of detail.observations) inputs.append(row(day, [quote(rate), rate]));
+  }
+  table.tBodies[0].replaceChildren(inputs);
+  $("rate-detail-inputs").scrollTop = 0;
+  $("rate-detail-inputs").scrollLeft = 0;
+  table.classList.toggle("rolling-inputs", rolling);
+
+  let metrics = [];
+  let method = "";
+  const formula = $("rate-detail-formula");
+  formula.hidden = !rolling;
+  if (rolling) {
+    metrics = [
+      ["Start date", prettyDate(detail.start)],
+      ["End date", prettyDate(detail.end)],
+      ["Calendar days", number.format(detail.days)],
+      ["Annualized return", quote(detail.value)]
+    ];
+    method = "Period return equals the source decimal × actual days ÷ " + detail.accrual_basis +
+      ". The growth factors compound over the calculation period.";
+    if (tenor === "ON") method += " Each ON quote applies until the next observation.";
+    formula.textContent = detail.growth_factor + " ^ (" + detail.annual_basis + " ÷ " + number.format(detail.days) +
+      ") − 1 = " + quote(detail.value);
+  } else if (measure === "Average") {
+    const observations = detail.observations;
+    metrics = [
+      ["Start date", prettyDate(observations[0][0])],
+      ["End date", prettyDate(observations.at(-1)[0])],
+      ["Observations", number.format(observations.length)],
+      ["Average rate", quote(detail.value)]
+    ];
+    method = "Arithmetic mean of the observations below.";
+  } else if (detail.observations.length > 1) {
+    method = "This rate appears on " + number.format(detail.observations.length) + " observation dates.";
+  }
+  snapshots("rate-detail-metrics", metrics);
+  $("rate-detail-metrics").hidden = !metrics.length;
+  $("rate-detail-method").textContent = method;
+  $("rate-detail-method").hidden = !method;
+  $("rate-detail-results").hidden = false;
+}
+
+async function selectRateDetail(button, reveal = false) {
+  const request = ++rateDetailRevision;
+  const model = defaults.model_id;
+  const { measure, tenor } = button.dataset;
+  selectedRateButton?.setAttribute("aria-pressed", "false");
+  selectedRateButton = button;
+  button.setAttribute("aria-pressed", "true");
+  const title = $("rate-detail-title");
+  title.textContent = tenor + " · " + measure;
+  $("rate-detail-results").hidden = true;
+  const status = $("rate-detail-status");
+  status.hidden = false;
+  status.classList.remove("error");
+  status.textContent = "Loading rate details…";
+  if (reveal) {
+    title.focus({ preventScroll: true });
+    title.scrollIntoView({ block: "start" });
+  }
+  try {
+    const params = new URLSearchParams({ model, measure, tenor });
+    const detail = await json("/rate-detail?" + params);
+    if (request !== rateDetailRevision || defaults?.model_id !== model) return;
+    renderRateDetail(detail, measure, tenor);
+    status.hidden = true;
+  } catch (error) {
+    if (request !== rateDetailRevision || defaults?.model_id !== model) return;
+    status.textContent = error.message;
+    status.classList.add("error");
+  }
 }
 
 function selectDecision() {

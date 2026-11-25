@@ -20,6 +20,7 @@ from statistics import correlation, linear_regression, mean
 TENORS = ("ON", "1M", "3M", "6M")
 RESET_DAYS = (1, 30, 90, 180)
 DAY_COUNT = 360
+ANNUAL_DAYS = 365
 HOLDING_DAYS = 180
 HORIZON_DAYS = 1095
 LAST_START_DAY = HORIZON_DAYS - HOLDING_DAYS
@@ -85,6 +86,44 @@ PRESETS = (
 class CurvePoint:
     day: date
     rates: Rates
+
+
+@dataclass(frozen=True)
+class RateAccrual:
+    start: date
+    end: date
+    rate: float
+    period_return: float
+
+    @property
+    def days(self) -> int:
+        return (self.end - self.start).days
+
+    @property
+    def factor(self) -> float:
+        return 1 + self.period_return
+
+
+@dataclass(frozen=True)
+class RollingReturn:
+    accruals: list[RateAccrual]
+    growth_factor: float
+
+    @property
+    def start(self) -> date:
+        return self.accruals[0].start
+
+    @property
+    def end(self) -> date:
+        return self.accruals[-1].end
+
+    @property
+    def days(self) -> int:
+        return (self.end - self.start).days
+
+    @property
+    def annualized(self) -> float:
+        return self.growth_factor ** (ANNUAL_DAYS / self.days) - 1
 
 
 @dataclass(frozen=True)
@@ -308,8 +347,8 @@ def observed_maturity(dates: list[date], maturity: date) -> int:
     return index
 
 
-def rolling_short_rate(curve: list[CurvePoint], dates: list[date], end: int, tenor: int) -> float | None:
-    factor = 1.0
+def short_term_roll(curve: list[CurvePoint], dates: list[date], end: int, tenor: int) -> RollingReturn | None:
+    accruals = []
     reset = 0
     months = {1: 1, 2: 3}[tenor]
     while reset < end:
@@ -317,38 +356,63 @@ def rolling_short_rate(curve: list[CurvePoint], dates: list[date], end: int, ten
         next_reset = end if maturity > dates[end] else min(end, observed_maturity(dates, maturity))
         if next_reset <= reset:
             return None
-        days = (dates[next_reset] - dates[reset]).days
-        factor *= 1.0 + curve[reset].rates[tenor] * days / DAY_COUNT
+        start, finish = dates[reset], dates[next_reset]
+        rate = curve[reset].rates[tenor]
+        accruals.append(RateAccrual(start, finish, rate, rate * (finish - start).days / DAY_COUNT))
         reset = next_reset
-    return factor ** (365 / (dates[end] - dates[0]).days) - 1
+    return RollingReturn(accruals, math.prod((period.factor for period in accruals), start=1.0))
 
 
-def rate_summary(curve: list[CurvePoint], windows: list[HistoricalWindow]) -> dict:
+def rolling_returns(
+    curve: list[CurvePoint], windows: list[HistoricalWindow],
+) -> tuple[RollingReturn | None, ...]:
+    end = curve[0].day
+    by_start = {window.start: window for window in windows}
+    chain = []
+    while (window := by_start.get(end)) is not None:
+        chain.append(window)
+        end = window.maturity
+    if not chain:
+        return (None,) * len(TENORS)
+
+    dates = [point.day for point in curve]
+    cutoff = bisect_left(dates, end)
+    overnight = [
+        RateAccrual(point.day, following, point.rates[0], point.rates[0] * (following - point.day).days / DAY_COUNT)
+        for point, following in zip(curve[:cutoff], dates[1:cutoff + 1], strict=True)
+    ]
+    six_month = [
+        RateAccrual(window.start, window.maturity, window.start_six_month_rate, window.six_month_return)
+        for window in chain
+    ]
+    return (
+        RollingReturn(overnight, math.prod((1 + window.on_return for window in chain), start=1.0)),
+        short_term_roll(curve, dates, cutoff, 1),
+        short_term_roll(curve, dates, cutoff, 2),
+        RollingReturn(six_month, math.prod((period.factor for period in six_month), start=1.0)),
+    )
+
+
+def rate_summary(
+    curve: list[CurvePoint], windows: list[HistoricalWindow], *,
+    rolls: tuple[RollingReturn | None, ...] | None = None,
+) -> dict:
     quotes = list(zip(*(point.rates for point in curve), strict=True))
     spreads = [(six - on) * BP for on, six in zip(quotes[0], quotes[3], strict=True)]
     rows = [["Latest", *curve[-1].rates, spreads[-1]]]
     for name, function in (("Maximum", max), ("Minimum", min), ("Average", mean)):
         rows.append([name, *(function(column) for column in quotes), function(spreads)])
 
-    end = curve[0].day
-    start = end
-    on_factor = term_factor = 1.0
-    by_start = {window.start: window for window in windows}
-    while (window := by_start.get(end)) is not None:
-        on_factor *= 1 + window.on_return
-        term_factor *= 1 + window.six_month_return
-        end = window.maturity
-    if end == start:
+    if rolls is None:
+        rolls = rolling_returns(curve, windows)
+    overnight, _, _, six_month = rolls
+    if overnight is None or six_month is None:
         return {"rows": rows, "common_maturity": None}
 
-    power = 365 / (end - start).days
-    on_annual = on_factor ** power - 1
-    term_annual = term_factor ** power - 1
-    dates = [point.day for point in curve]
-    cutoff = bisect_left(dates, end)
-    short_returns = [rolling_short_rate(curve, dates, cutoff, tenor) for tenor in (1, 2)]
-    rows.append(["Annualized rolling return", on_annual, *short_returns, term_annual, (term_annual - on_annual) * BP])
-    return {"rows": rows, "common_maturity": end.isoformat()}
+    annualized = [roll.annualized if roll is not None else None for roll in rolls]
+    spread = (six_month.annualized - overnight.annualized) * BP
+    rows.append(["Annualized rolling return", *annualized, spread])
+    return {"rows": rows, "common_maturity": overnight.end.isoformat()}
 
 
 def scenario_rates(curve: Rates, preset: Preset, extra_on_bp: int = 0) -> tuple[Rates, ...]:

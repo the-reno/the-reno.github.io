@@ -57,32 +57,56 @@
         </div>
       </section>
 
-      <section id="step-rates" class="rates-layout" role="tabpanel" aria-labelledby="tab-rates" hidden>
-        <div class="panel rates-chart">
-          <h2>Rate history</h2>
-          <p id="rate-source" class="hint"></p>
-          <figure>
-            <figcaption>ON, 1M, 3M and 6M <span class="chart-unit">% per year</span></figcaption>
-            <canvas id="history-rates-chart" role="img" aria-label="Four historical USD curve rates"></canvas>
-            <div id="rate-legend" class="legend"></div>
-          </figure>
-        </div>
-        <aside class="panel rates-analysis" aria-labelledby="rates-analysis-title">
-          <h2 id="rates-analysis-title">Rates analysis</h2>
-          <p id="rate-date" class="hint"></p>
-          <div class="table-scroll rate-summary-wrap" tabindex="0" role="region" aria-label="Rates summary">
-            <table id="rate-summary">
-              <thead>
-                <tr>
-                  <th scope="col">Measure</th><th scope="col">ON</th><th scope="col">1M</th>
-                  <th scope="col">3M</th><th scope="col">6M</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+      <section id="step-rates" role="tabpanel" aria-labelledby="tab-rates" hidden>
+        <div class="rates-layout">
+          <div class="panel rates-chart">
+            <h2>Rate history</h2>
+            <p id="rate-source" class="hint"></p>
+            <figure>
+              <figcaption>ON, 1M, 3M and 6M <span class="chart-unit">% per year</span></figcaption>
+              <canvas id="history-rates-chart" role="img" aria-label="Four historical USD curve rates"></canvas>
+              <div id="rate-legend" class="legend"></div>
+            </figure>
           </div>
-          <p class="hint" id="rolling-note"></p>
-        </aside>
+          <aside class="panel rates-analysis" aria-labelledby="rates-analysis-title">
+            <h2 id="rates-analysis-title">Rates analysis</h2>
+            <p id="rate-date" class="hint"></p>
+            <div class="table-scroll rate-summary-wrap" tabindex="0" role="region" aria-label="Rates summary">
+              <table id="rate-summary">
+                <thead>
+                  <tr>
+                    <th scope="col">Measure</th><th scope="col">ON</th><th scope="col">1M</th>
+                    <th scope="col">3M</th><th scope="col">6M</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p class="hint rate-summary-hint">Select a figure to see its source data.</p>
+          </aside>
+        </div>
+
+        <section id="rate-detail-panel" class="panel table-panel" aria-labelledby="rate-detail-title">
+          <div class="result-header rate-detail-header">
+            <div>
+              <h2 id="rate-detail-title" tabindex="-1">Rate details</h2>
+              <p id="rate-detail-source" class="hint"></p>
+            </div>
+            <a id="rate-source-download" class="download" href="/curve.csv">Download source rates</a>
+          </div>
+          <p id="rate-detail-status" class="hint" role="status" hidden></p>
+          <div id="rate-detail-results" hidden>
+            <dl id="rate-detail-metrics" class="snapshots" aria-label="Calculation inputs"></dl>
+            <p id="rate-detail-method" class="hint"></p>
+            <p id="rate-detail-formula" hidden></p>
+            <div id="rate-detail-inputs" class="table-scroll rate-detail-inputs" tabindex="0" role="region" aria-label="Source observations and accruals">
+              <table id="rate-detail-table">
+                <thead><tr></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section id="step-history" role="tabpanel" aria-labelledby="tab-history" hidden>
