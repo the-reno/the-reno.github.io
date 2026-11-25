@@ -2,7 +2,7 @@
 
 const palette = ["#176873", "#4e648e", "#795786", "#a24019", "#906406"];
 const tabs = Array.from(document.querySelectorAll(".steps [role=tab]"));
-let activeStep = "rates";
+let activeStep = "dataset";
 let historyView = "timeline";
 
 const series = (label, color, points, extra = {}) => ({ label, color, points, ...extra });
@@ -133,14 +133,16 @@ function renderRates() {
   } else if (defaults.source_label) {
     source.append(" · " + defaults.source_label);
   }
-  const quotes = defaults.tenors.map((tenor) => [tenor, percent(defaults.curve[tenor])]);
-  quotes.push(["6M − ON", signedBp((defaults.curve["6M"] - defaults.curve.ON) * 10000)]);
-  snapshots("rate-snapshot", quotes);
-  $("rate-summary").tBodies[0].replaceChildren(...defaults.rate_summary.rows.slice(1)
-    .map(([label, on, term, spread]) => row(label, [quote(on), quote(term), signedBp(spread)])));
+  const rows = defaults.rate_summary.rows.map(([label, ...values], index) => {
+    const spread = values.pop();
+    const entry = row(label, [...values.map((value) => value === null ? "—" : quote(value)), signedBp(spread)]);
+    entry.classList.toggle("latest-rate", index === 0);
+    return entry;
+  });
+  $("rate-summary").tBodies[0].replaceChildren(...rows);
   $("rolling-note").textContent = defaults.rate_summary.common_maturity ?
-    "Rolling returns annualize on a 365-day basis through " +
-      prettyDate(defaults.rate_summary.common_maturity) + "." : "";
+    "Rolling returns are annualized on a 365-day basis through " +
+    prettyDate(defaults.rate_summary.common_maturity) + "." : "";
 }
 
 function selectDecision() {
@@ -229,7 +231,7 @@ function renderScenarios() {
 }
 
 function drawActiveChart() {
-  if (!defaults || defaults.model_error) return;
+  if (!defaults) return;
   if (activeStep === "rates") {
     const lines = defaults.tenors.map((name, i) =>
       series(name, palette[i], defaults.rates.map((r) => [Date.parse(r[0]), 100 * r[i + 1]]))
@@ -298,7 +300,7 @@ function drawActiveChart() {
 
 function selectStep(step) {
   activeStep = step;
-  const unavailable = Boolean(defaults?.model_error) && step !== "dataset";
+  const unavailable = !defaults && step !== "dataset";
   for (const tab of tabs) {
     const selected = tab.dataset.step === step;
     tab.setAttribute("aria-selected", String(selected));
@@ -306,7 +308,6 @@ function selectStep(step) {
     $(tab.getAttribute("aria-controls")).hidden = !selected || unavailable;
   }
   $("model-unavailable").hidden = !unavailable;
-  updateDatasetDraftNotice();
   drawActiveChart();
 }
 
@@ -317,32 +318,25 @@ function setHistoryView(view) {
   drawActiveChart();
 }
 
-function applyDatasetModel(data) {
-  const keepAllocation = defaults && !defaults.model_error && data.model_id === defaults.model_id &&
-    data.anchor_date === defaults.anchor_date && data.last_start_day === defaults.last_start_day;
+function invalidateDatasetModel() {
+  if (!defaults) return;
   clearTimeout(pending);
   revision++;
   latest = null;
-  if (data.model_error) {
-    defaults = data;
-    $("asof").textContent = "";
-    $("model-error").textContent = data.model_error;
-  } else {
-    if (keepAllocation) {
-      defaults = data;
-      scheduleRun();
-    } else {
-      setupCalculator(data);
-    }
-    $("history-download").href = "/history.csv?model=" + encodeURIComponent(data.model_id);
-    renderRates();
-    renderHistory();
-    renderCycle();
-    renderScenarios();
-  }
-  $("loading").hidden = true;
-  $("simulator").hidden = false;
+  defaults = null;
+  $("asof").textContent = "";
   selectStep(activeStep);
+}
+
+function applyDatasetModel(data) {
+  setupCalculator(data);
+  $("history-download").href = "/history.csv?model=" + encodeURIComponent(data.model_id);
+  renderRates();
+  renderHistory();
+  renderCycle();
+  renderScenarios();
+  selectStep("rates");
+  $("tab-rates").focus({ preventScroll: true });
 }
 
 tabs.forEach((tab, index) => {
@@ -356,14 +350,12 @@ tabs.forEach((tab, index) => {
     next.focus();
   });
 });
-for (const id of ["edit-dataset", "view-dataset-draft"]) {
-  $(id).addEventListener("click", () => {
-    selectStep("dataset");
-    $("tab-dataset").focus();
-  });
-}
+$("edit-dataset").addEventListener("click", () => {
+  selectStep("dataset");
+  $("tab-dataset").focus({ preventScroll: true });
+});
 $("timeline-view").addEventListener("click", () => setHistoryView("timeline"));
 $("scatter-view").addEventListener("click", () => setHistoryView("scatter"));
 $("decision-date").addEventListener("change", selectDecision);
 window.addEventListener("resize", drawActiveChart);
-selectDataset("/model");
+openRateDataset(true);

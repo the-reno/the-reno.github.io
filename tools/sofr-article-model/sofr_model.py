@@ -13,6 +13,7 @@ import math
 from bisect import bisect_left
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from decimal import Decimal, DecimalException
 from pathlib import Path
 from statistics import correlation, linear_regression, mean
 
@@ -154,6 +155,30 @@ def load_curve(path: Path) -> list[CurvePoint]:
     return read_curve(path.read_bytes())
 
 
+def rate_date(value: str) -> date:
+    value = value.strip()
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        for date_format in ("%d-%b-%y", "%m/%d/%Y"):
+            try:
+                return datetime.strptime(value, date_format).date()
+            except ValueError:
+                continue
+    raise ValueError("Use a calendar date such as 2026-07-10.")
+
+
+def annual_rate(value: str) -> float:
+    value = value.strip()
+    try:
+        rate = float(Decimal(value[:-1].strip()) / 100) if value.endswith("%") else float(value)
+    except (ValueError, DecimalException, OverflowError):
+        raise ValueError("Use a rate such as 3.66% or 0.0366.") from None
+    if not math.isfinite(rate) or not -0.1 <= rate <= 0.3:
+        raise ValueError("Enter an annual rate between -10% and 30%, such as 3.66% or 0.0366.")
+    return rate
+
+
 def read_curve(content: bytes) -> list[CurvePoint]:
     try:
         decoded = content.decode("utf-8-sig")
@@ -169,20 +194,12 @@ def read_curve(content: bytes) -> list[CurvePoint]:
                 continue
             if len(record) != 5:
                 raise ValueError(f"Row {reader.line_num} needs a date and four rates.")
-            raw_date, *raw_rates = (field.strip() for field in record)
+            raw_date, *raw_rates = record
             try:
-                try:
-                    day = date.fromisoformat(raw_date)
-                except ValueError:
-                    day = datetime.strptime(raw_date, "%d-%b-%y").date()
-                rates = tuple(float(rate) for rate in raw_rates)
+                day = rate_date(raw_date)
+                rates = tuple(annual_rate(rate) for rate in raw_rates)
             except ValueError as error:
-                raise ValueError(f"Row {reader.line_num} needs a calendar date and annual decimal rates.") from error
-            if not all(math.isfinite(rate) and -0.1 <= rate <= 0.3 for rate in rates):
-                raise ValueError(
-                    f"Enter plausible decimal rates on row {reader.line_num}, "
-                    "such as 0.0366 for 3.66%."
-                )
+                raise ValueError(f"Row {reader.line_num}. {error}") from error
             if points and day <= points[-1].day:
                 raise ValueError(f"Row {reader.line_num} is duplicated or out of order. Use dates oldest first.")
             points.append(CurvePoint(day, rates))
@@ -239,9 +256,7 @@ def historical_windows(curve: list[CurvePoint]) -> list[HistoricalWindow]:
         unadjusted = add_months(start, 6)
         if unadjusted > dates[-1]:
             break
-        maturity_index = bisect_left(dates, unadjusted)
-        if dates[maturity_index].month != unadjusted.month:
-            maturity_index -= 1
+        maturity_index = observed_maturity(dates, unadjusted)
         if maturity_index <= start_index:
             continue
         maturity = dates[maturity_index]
@@ -285,13 +300,35 @@ def historical_summary(windows: list[HistoricalWindow]) -> dict:
     }
 
 
+def observed_maturity(dates: list[date], maturity: date) -> int:
+    """Apply Modified Following to a maturity within the observed date range."""
+    index = bisect_left(dates, maturity)
+    if (dates[index].year, dates[index].month) != (maturity.year, maturity.month):
+        index -= 1
+    return index
+
+
+def rolling_short_rate(curve: list[CurvePoint], dates: list[date], end: int, tenor: int) -> float | None:
+    factor = 1.0
+    reset = 0
+    months = {1: 1, 2: 3}[tenor]
+    while reset < end:
+        maturity = add_months(dates[reset], months)
+        next_reset = end if maturity > dates[end] else min(end, observed_maturity(dates, maturity))
+        if next_reset <= reset:
+            return None
+        days = (dates[next_reset] - dates[reset]).days
+        factor *= 1.0 + curve[reset].rates[tenor] * days / DAY_COUNT
+        reset = next_reset
+    return factor ** (365 / (dates[end] - dates[0]).days) - 1
+
+
 def rate_summary(curve: list[CurvePoint], windows: list[HistoricalWindow]) -> dict:
-    overnight = [point.rates[0] for point in curve]
-    term = [point.rates[3] for point in curve]
-    spreads = [(six - on) * BP for on, six in zip(overnight, term)]
-    rows = [["Latest", overnight[-1], term[-1], spreads[-1]]]
+    quotes = list(zip(*(point.rates for point in curve), strict=True))
+    spreads = [(six - on) * BP for on, six in zip(quotes[0], quotes[3], strict=True)]
+    rows = [["Latest", *curve[-1].rates, spreads[-1]]]
     for name, function in (("Maximum", max), ("Minimum", min), ("Average", mean)):
-        rows.append([name, function(overnight), function(term), function(spreads)])
+        rows.append([name, *(function(column) for column in quotes), function(spreads)])
 
     end = curve[0].day
     start = end
@@ -307,7 +344,10 @@ def rate_summary(curve: list[CurvePoint], windows: list[HistoricalWindow]) -> di
     power = 365 / (end - start).days
     on_annual = on_factor ** power - 1
     term_annual = term_factor ** power - 1
-    rows.append(["Annualized rolling return", on_annual, term_annual, (term_annual - on_annual) * BP])
+    dates = [point.day for point in curve]
+    cutoff = bisect_left(dates, end)
+    short_returns = [rolling_short_rate(curve, dates, cutoff, tenor) for tenor in (1, 2)]
+    rows.append(["Annualized rolling return", on_annual, *short_returns, term_annual, (term_annual - on_annual) * BP])
     return {"rows": rows, "common_maturity": end.isoformat()}
 
 

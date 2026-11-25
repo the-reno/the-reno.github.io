@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import io
 import json
 import math
 import re
+import secrets
 import sqlite3
 import sys
 import webbrowser
@@ -26,12 +26,11 @@ from urllib.request import Request, urlopen
 
 import sofr_model as model
 from dataset_store import DatasetStore, NAME_LIMIT, clean_details, default_dataset_dir, record_version
-from rate_sheet import RateSheet
+from rate_sheet import RateSheet, import_workbook
 
 ROOT = Path(__file__).resolve().parent
 MAX_SHIFT_BP = 150
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
-MAX_DETAILS_BYTES = 16 * 1024
 MAX_SHEET_BODY = 16 * 1024 * 1024
 OVERNIGHT = (100, 0, 0, 0)
 SIX_MONTH = (0, 0, 0, 100)
@@ -43,11 +42,19 @@ GITHUB_FOLDER = "tools/sofr-article-model"
 GITHUB_BRANCH = "main"
 GITHUB_INPUTS = ("data/july-curve.csv", "data/july-article.json", "curve.csv")
 GITHUB_TIMEOUT = 5
-BUILTIN_DATASETS = {
-    "july": "July 10, 2026 · Article",
-    "september": "September 1, 2026 · v10 rerun",
-    "custom": "Custom CSV",
-}
+
+@dataclass(frozen=True)
+class SourceRates:
+    july: bytes
+    article: bytes
+    september: bytes
+    label: str
+    revision: str | None = None
+
+    def url(self, filename: str) -> str:
+        if not self.revision:
+            return ""
+        return f"https://github.com/{GITHUB_REPO}/blob/{self.revision}/{GITHUB_FOLDER}/{filename}"
 
 
 @dataclass(frozen=True)
@@ -62,7 +69,7 @@ class RunInputs:
 class Simulator:
     def __init__(
         self,
-        source: Path | bytes,
+        source: Path | bytes | list[model.CurvePoint],
         profile: str = "september",
         *,
         article: bytes | None = None,
@@ -72,7 +79,10 @@ class Simulator:
         self.profile = profile
         self.source_label = source_label
         self.source_url = source_url
-        self.curve = model.load_curve(source) if isinstance(source, Path) else model.read_curve(source)
+        if isinstance(source, list):
+            self.curve = source
+        else:
+            self.curve = model.load_curve(source) if isinstance(source, Path) else model.read_curve(source)
         self.first_day = self.curve[0].day
         self.anchor_day = self.curve[-1].day
         self.anchor_rates = self.curve[-1].rates
@@ -368,7 +378,32 @@ def verify_july(simulator: Simulator) -> None:
     print("July workbook matched: first-trade replay -23.66 / +15.82 bp, minimax regret 3.05 bp.")
 
 
-def make_handler(models: dict[str, Simulator], default_model: str, dataset_store: DatasetStore):
+def import_sheet(filename: str, content: bytes) -> dict:
+    suffix = Path(filename).suffix.casefold()
+    if suffix == ".xlsx":
+        sheet, worksheet = import_workbook(content)
+    elif suffix == ".csv":
+        sheet, worksheet = RateSheet.from_csv(content), ""
+    else:
+        raise ValueError("Choose an .xlsx workbook or a UTF-8 .csv file.")
+    return {
+        "rows": sheet.rows,
+        "filename": filename,
+        "worksheet": worksheet,
+        "name": Path(filename).stem.strip()[:NAME_LIMIT] or "USD rate history",
+        "observations": "",
+    }
+
+
+def file_basename(value: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError("Enter a valid source filename.")
+    name = value.replace("\\", "/").rsplit("/", 1)[-1].strip()
+    suffix = Path(name).suffix[:12]
+    return name if len(name) <= 180 else Path(name).stem[:180 - len(suffix)] + suffix
+
+
+def make_handler(sources: SourceRates, dataset_store: DatasetStore, initial: dict | None = None):
     assets = {
         "/": ("index.html", "text/html; charset=utf-8"),
         "/styles.css": ("styles.css", "text/css; charset=utf-8"),
@@ -376,94 +411,61 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
         "/dataset.js": ("dataset.js", "text/javascript; charset=utf-8"),
         "/walkthrough.js": ("walkthrough.js", "text/javascript; charset=utf-8"),
     }
-    uploads: OrderedDict[str, tuple[bytes, Simulator]] = OrderedDict()
-    upload_lock = Lock()
+    article_curve = model.read_curve(sources.july)
+    confirmed: OrderedDict[str, Simulator] = OrderedDict()
+    runs_lock = Lock()
 
-    def builtin_details(key: str) -> dict:
-        return {"id": key, "name": BUILTIN_DATASETS[key], "observations": "", "filename": None}
-
-    def dataset_catalog() -> list[dict]:
-        saved = dataset_store.summaries()
-        builtins = [saved.get(key, builtin_details(key)) for key in models]
-        return builtins + [entry for entry in saved.values() if entry["filename"]]
-
-    def dataset_record(key: str) -> dict:
-        record = dataset_store.read(key)
-        if key in models:
-            return record or {**builtin_details(key), "csv_data": None}
-        if record is None or record["csv_data"] is None:
-            raise ValueError("Choose a saved dataset or import a CSV.")
-        return record
-
-    def dataset_csv(key: str, record: dict) -> bytes:
-        return models[key].download_rates() if key in models else record["csv_data"]
-
-    def dataset_model(key: str, record: dict, sheet: RateSheet | None = None) -> Simulator:
-        if key in models:
-            return models[key]
-        content = record["csv_data"]
-        signature = hashlib.sha256(content).digest()
-        with upload_lock:
-            cached = uploads.get(key)
-            if cached and cached[0] == signature:
-                uploads.move_to_end(key)
-                return cached[1]
-        if sheet is None:
-            sheet = RateSheet.from_csv(content)
-        simulator = Simulator(sheet.model_csv(), "custom")
-        with upload_lock:
-            uploads[key] = (signature, simulator)
-            uploads.move_to_end(key)
-            if len(uploads) > 8:
-                uploads.popitem(last=False)
-        return simulator
-
-    def analysis_payload(key: str, record: dict) -> dict:
-        sheet = RateSheet.from_csv(dataset_csv(key, record))
-        catalog = dataset_catalog()
-        for entry in catalog:
-            if entry["id"] == key:
-                entry.update(name=record["name"], observations=record["observations"])
-                break
-        payload = {
-            "model_id": key,
-            "datasets": catalog,
-            "sheet": {"columns": sheet.columns, "rows": sheet.rows, "version": record_version(record),
-                      "builtin": key in models},
-        }
+    def sheet_state() -> dict:
+        record = dataset_store.load()
+        if record is None:
+            return {"rows": [], "name": "", "observations": "", "filename": "", "version": None}
+        result = {key: record[key] or "" for key in ("name", "observations", "filename")}
         try:
-            analysis = dataset_model(key, record, sheet).analysis()
-        except (ValueError, OverflowError) as error:
-            payload["model_error"] = str(error)
-        else:
-            if record["filename"]:
-                analysis["source_name"] = record["filename"]
-            payload.update(analysis)
-        return payload
+            sheet = RateSheet.from_csv(record["csv_data"], allow_missing=True)
+        except ValueError:
+            sheet = RateSheet([])
+            result["load_error"] = "The earlier draft could not fit the rate template. Import a rate file to continue."
+        return {**result, "rows": sheet.rows, "version": record_version(record)}
 
-    def save_sheet(key: str, details: dict) -> str:
+    def save_or_run(details: dict, run: bool) -> dict:
         sheet = RateSheet.from_payload(details)
-        name, observations = clean_details(details.get("name"), details.get("observations", ""))
+        name, observations = clean_details(details.get("name") or "USD rate history", details.get("observations", ""))
+        filename = file_basename(details.get("filename", ""))
         content = sheet.to_csv()
         if len(content) > MAX_UPLOAD_BYTES:
-            raise ValueError("Keep the saved CSV to 2 MB or less.")
-        if not key:
-            return dataset_store.add_csv(content, "Saved rates.csv", name, observations)
-        record = dataset_record(key)
-        version = details.get("version")
-        if record_version(record) != version:
-            raise ValueError("This dataset changed in another window. Reload it before saving.")
-        if key in models:
-            original = RateSheet.from_csv(dataset_csv(key, record))
-            if sheet == original:
-                dataset_store.save_details(key, name, observations, previous=record)
-                return key
-            if name == record["name"]:
-                suffix = " (edited)"
-                name = name[:NAME_LIMIT - len(suffix)].rstrip() + suffix
-            return dataset_store.add_csv(content, "Edited rates.csv", name, observations)
-        dataset_store.update_csv(key, content, name, observations, version)
-        return key
+            raise ValueError("Keep the saved rates below 2 MB.")
+        record = {"name": name, "observations": observations, "filename": filename, "csv_data": content}
+        if run:
+            curve = sheet.to_curve()
+            from_article = curve == article_curve
+            simulator = Simulator(
+                curve, "july" if from_article else "custom", article=sources.article,
+                source_label=sources.label if from_article else "",
+                source_url=sources.url(GITHUB_INPUTS[0]) if from_article else "",
+            )
+            analysis = simulator.analysis()
+            if filename or not from_article:
+                analysis["source_name"] = name
+        dataset_store.save(record, details.get("version"))
+        state = {
+            "rows": sheet.rows, "name": name, "observations": observations,
+            "filename": filename, "version": record_version(record),
+        }
+        if not run:
+            return state
+        key = secrets.token_urlsafe(16)
+        with runs_lock:
+            confirmed[key] = simulator
+            if len(confirmed) > 8:
+                confirmed.popitem(last=False)
+        return {"sheet": state, "analysis": {**analysis, "model_id": key}}
+
+    def confirmed_model(key: str) -> Simulator:
+        with runs_lock:
+            if key in confirmed:
+                confirmed.move_to_end(key)
+                return confirmed[key]
+        raise ValueError("Confirm the rates in the Rate dataset tab to run the model.")
 
     class Handler(BaseHTTPRequestHandler):
         def send_body(self, status, mime_type, body, filename=None):
@@ -506,23 +508,31 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
                 self.send_body(200, mime_type, (ROOT / filename).read_bytes())
                 return
             if url.path not in (
-                "/defaults", "/model", "/simulate", "/results.csv", "/curve.csv", "/history.csv"
+                "/sheet", "/rate-template.csv", "/article-rates.csv",
+                "/defaults", "/simulate", "/results.csv", "/curve.csv", "/history.csv",
             ):
                 self.send_error(404)
                 return
             try:
+                if url.path == "/sheet":
+                    data = sheet_state()
+                    if initial and parse_qs(url.query, max_num_fields=1).get("initial") == ["1"]:
+                        data["initial"] = initial
+                    self.send_json(200, data)
+                    return
+                if url.path == "/rate-template.csv":
+                    self.send_body(200, "text/csv; charset=utf-8", RateSheet([]).to_csv(), "SOFR_rate_template.csv")
+                    return
+                if url.path == "/article-rates.csv":
+                    self.send_body(200, "text/csv; charset=utf-8", sources.july, "SOFR_article_rates.csv")
+                    return
                 fields = parse_qs(url.query, max_num_fields=8)
-                key = fields.get("model", [default_model])[0]
-                record = dataset_record(key)
-                if url.path == "/model":
-                    self.send_json(200, analysis_payload(key, record))
-                    return
-                if url.path == "/curve.csv":
-                    self.send_body(200, "text/csv; charset=utf-8", dataset_csv(key, record), "SOFR_rates.csv")
-                    return
-                simulator = dataset_model(key, record)
+                key = fields.get("model", [""])[0]
+                simulator = confirmed_model(key)
                 if url.path == "/defaults":
                     self.send_json(200, {"model_id": key, **simulator.defaults()})
+                elif url.path == "/curve.csv":
+                    self.send_body(200, "text/csv; charset=utf-8", simulator.download_rates(), "SOFR_rates.csv")
                 elif url.path == "/history.csv":
                     self.send_body(200, "text/csv; charset=utf-8", simulator.download_history(), "SOFR_decisions.csv")
                 else:
@@ -532,10 +542,10 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
                                        "SOFR_scenario_results.csv")
                     else:
                         self.send_json(200, simulator.simulate(inputs))
-            except (ValueError, OverflowError) as error:
+            except (ValueError, ArithmeticError) as error:
                 self.send_json(400, {"error": str(error)})
             except sqlite3.Error:
-                self.send_json(500, {"error": "Could not read the saved local datasets."})
+                self.send_json(500, {"error": "Could not read the saved rate draft."})
 
         def read_body(self, limit: int, message: str) -> bytes:
             try:
@@ -550,34 +560,23 @@ def make_handler(models: dict[str, Simulator], default_model: str, dataset_store
             if not self.local_request():
                 return
             url = urlsplit(self.path)
-            if url.path not in ("/model", "/dataset-details", "/sheet"):
+            if url.path not in ("/import", "/sheet", "/confirm"):
                 self.send_error(404)
                 return
             try:
-                fields = parse_qs(url.query, max_num_fields=8)
-                if url.path == "/dataset-details":
-                    key = fields.get("model", [""])[0]
-                    if key not in models and key not in dataset_store.summaries():
-                        raise ValueError("Select a saved dataset first.")
-                    details = json.loads(self.read_body(MAX_DETAILS_BYTES, "Enter a name and observations."))
-                    if not isinstance(details, dict):
-                        raise ValueError("Enter a name and observations.")
-                    dataset_store.save_details(key, details.get("name"), details.get("observations", ""))
-                    self.send_json(200, {"datasets": dataset_catalog()})
-                    return
-                if url.path == "/sheet":
-                    details = json.loads(self.read_body(MAX_SHEET_BODY, "Supply a spreadsheet to save."))
-                    key = save_sheet(fields.get("model", [""])[0], details)
+                if url.path == "/import":
+                    fields = parse_qs(url.query, max_num_fields=1)
+                    filename = file_basename(fields.get("filename", [""])[0])
+                    content = self.read_body(MAX_UPLOAD_BYTES, "Choose an Excel or CSV file up to 2 MB.")
+                    result = import_sheet(filename, content)
                 else:
-                    content = self.read_body(MAX_UPLOAD_BYTES, "Choose a CSV file up to 2 MB.")
-                    RateSheet.from_csv(content)
-                    filename = fields.get("filename", ["Imported rates.csv"])[0]
-                    key = dataset_store.add_csv(content, filename)
-                self.send_json(200, analysis_payload(key, dataset_record(key)))
-            except (ValueError, OverflowError) as error:
+                    details = json.loads(self.read_body(MAX_SHEET_BODY, "Supply the rate sheet to save."))
+                    result = save_or_run(details, run=url.path == "/confirm")
+                self.send_json(200, result)
+            except (ValueError, ArithmeticError) as error:
                 self.send_json(400, {"error": str(error)})
             except sqlite3.Error:
-                self.send_json(500, {"error": "Could not save the dataset on this computer."})
+                self.send_json(500, {"error": "Could not save the rate draft on this computer."})
 
         def log_message(self, _format, *_args):
             return
@@ -597,61 +596,43 @@ def fetch_github_file(url: str) -> bytes:
     return content
 
 
-def github_models() -> tuple[Simulator, Simulator]:
+def github_sources() -> SourceRates:
     ref_url = f"https://api.github.com/repos/{GITHUB_REPO}/git/ref/heads/{GITHUB_BRANCH}"
     revision = json.loads(fetch_github_file(ref_url))["object"]["sha"]
     if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise ValueError("GitHub returned an invalid commit for the data files.")
     path = f"{GITHUB_REPO}/{revision}/{GITHUB_FOLDER}"
-    july, article, september = [
+    inputs = [
         fetch_github_file(f"https://raw.githubusercontent.com/{path}/{filename}")
         for filename in GITHUB_INPUTS
     ]
-    label = f"GitHub · {revision[:7]}"
-    return (
-        Simulator(
-            july, "july", article=article, source_label=label,
-            source_url=f"https://github.com/{GITHUB_REPO}/blob/{revision}/{GITHUB_FOLDER}/{GITHUB_INPUTS[0]}",
-        ),
-        Simulator(
-            september, source_label=label,
-            source_url=f"https://github.com/{GITHUB_REPO}/blob/{revision}/{GITHUB_FOLDER}/{GITHUB_INPUTS[2]}",
-        ),
-    )
+    return SourceRates(*inputs, f"GitHub · {revision[:7]}", revision)
 
 
-def load_models(source: str) -> tuple[Simulator, Simulator]:
+def load_sources(source: str, revision: str | None) -> SourceRates:
     label = "Local rate files"
-    if source != "local":
+    if revision is not None:
+        if not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise ValueError("Supply a full GitHub commit SHA.")
+        label = f"GitHub · {revision[:7]}"
+    elif source != "local":
         try:
-            return github_models()
+            return github_sources()
         except (OSError, KeyError, TypeError, ValueError) as error:
             if source == "github":
-                raise ValueError(f"Could not load the GitHub datasets: {error}") from error
+                raise ValueError(f"Could not load the GitHub datasets. {error}") from error
             label = "Local rate files · GitHub unavailable"
-            print(f"Could not load the GitHub datasets. Using the local rate files. {error}", file=sys.stderr)
-    return local_models(label)
-
-
-def local_models(label: str, revision: str | None = None) -> tuple[Simulator, Simulator]:
-    source = f"https://github.com/{GITHUB_REPO}/blob/{revision}/{GITHUB_FOLDER}" if revision else ""
-    return (
-        Simulator(JULY_CURVE, "july", source_label=label,
-                  source_url=f"{source}/{GITHUB_INPUTS[0]}" if source else ""),
-        Simulator(SEPTEMBER_CURVE, source_label=label,
-                  source_url=f"{source}/{GITHUB_INPUTS[2]}" if source else ""),
-    )
-
+    return SourceRates(JULY_CURVE.read_bytes(), JULY_ARCHIVE.read_bytes(), SEPTEMBER_CURVE.read_bytes(), label, revision)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--curve", type=Path, help="Open with a custom rates CSV.")
+    parser.add_argument("--curve", type=Path, help="Open with a CSV or XLSX to review before running.")
     parser.add_argument("--port", type=int, default=8765, help="Use 0 to find an available port.")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--check", action="store_true", help="Verify both original model baselines.")
     parser.add_argument("--github-revision", help="Identify the GitHub revision downloaded by the launcher.")
     parser.add_argument("--dataset-dir", type=Path, default=default_dataset_dir(),
-                        help="Directory for imported CSVs and dataset observations.")
+                        help="Directory for the saved rate draft and observations.")
     parser.add_argument(
         "--source", choices=("auto", "github", "local"),
         help="Auto uses GitHub first. Choose github to require it or local to use the included files.",
@@ -660,29 +641,26 @@ def main() -> None:
     if not 0 <= args.port <= 65535:
         parser.error("Choose a port between 0 and 65535.")
     try:
-        if args.github_revision is None:
-            july, september = load_models(args.source or ("local" if args.check else "auto"))
-        else:
-            if not re.fullmatch(r"[0-9a-f]{40}", args.github_revision):
-                raise ValueError("Supply a full GitHub commit SHA.")
-            july, september = local_models(f"GitHub · {args.github_revision[:7]}", args.github_revision)
-    except ValueError as error:
+        sources = load_sources(args.source or ("local" if args.check else "auto"), args.github_revision)
+        if args.check:
+            verify_july(Simulator(sources.july, "july", article=sources.article))
+            verify_v10(Simulator(sources.september))
+            return
+        initial = None
+        if args.curve:
+            with args.curve.open("rb") as file:
+                content = file.read(MAX_UPLOAD_BYTES + 1)
+            if len(content) > MAX_UPLOAD_BYTES:
+                raise ValueError("Choose an Excel or CSV file up to 2 MB.")
+            initial = import_sheet(args.curve.name, content)
+    except (OSError, ValueError) as error:
         parser.exit(1, f"{error}\n")
-    if args.check:
-        verify_july(july)
-        verify_v10(september)
-        return
-    models = {"july": july, "september": september}
-    default_model = "july"
-    if args.curve:
-        models["custom"] = Simulator(args.curve, "custom")
-        default_model = "custom"
     try:
         dataset_store = DatasetStore(args.dataset_dir)
     except (OSError, sqlite3.Error) as error:
         parser.exit(1, f"Could not open the local dataset folder. {error}\n")
     with ThreadingHTTPServer(
-        ("127.0.0.1", args.port), make_handler(models, default_model, dataset_store)
+        ("127.0.0.1", args.port), make_handler(sources, dataset_store, initial)
     ) as server:
         url = f"http://127.0.0.1:{server.server_port}"
         print(f"SOFR simulator running at {url}. Press Ctrl+C to exit.", flush=True)

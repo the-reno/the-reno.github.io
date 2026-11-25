@@ -19,11 +19,11 @@
     </div>
   </header>
   <main class="shell">
-    <p id="loading" role="status">Loading the cash allocation model.</p>
+    <p id="loading" role="status">Opening the rate sheet.</p>
     <div id="simulator" hidden>
       <nav class="steps" role="tablist" aria-label="Model walkthrough">
-        <button type="button" id="tab-dataset" role="tab" aria-controls="step-dataset" aria-selected="false" data-step="dataset" tabindex="-1"><span>1</span> Rate dataset</button>
-        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="true" data-step="rates"><span>2</span> Rates</button>
+        <button type="button" id="tab-dataset" role="tab" aria-controls="step-dataset" aria-selected="true" data-step="dataset"><span>1</span> Rate dataset</button>
+        <button type="button" id="tab-rates" role="tab" aria-controls="step-rates" aria-selected="false" data-step="rates" tabindex="-1"><span>2</span> Rates</button>
         <button type="button" id="tab-history" role="tab" aria-controls="step-history" aria-selected="false" data-step="history" tabindex="-1"><span>3</span> Historical test</button>
         <button type="button" id="tab-cycle" role="tab" aria-controls="step-cycle" aria-selected="false" data-step="cycle" tabindex="-1"><span>4</span> Cycle replay</button>
         <button type="button" id="tab-scenarios" role="tab" aria-controls="step-scenarios" aria-selected="false" data-step="scenarios" tabindex="-1"><span>5</span> Scenarios</button>
@@ -31,60 +31,68 @@
       </nav>
 
       <div class="panel model-notice" id="model-unavailable" hidden>
-        <h2>Dataset needs attention</h2>
-        <p id="model-error"></p>
-        <button type="button" id="edit-dataset" class="download">Open Rate dataset</button>
-      </div>
-      <div class="draft-notice" id="dataset-draft-notice" hidden>
-        <span>You’re viewing saved data. The editor has unsaved changes.</span>
-        <button type="button" id="view-dataset-draft" class="download">Open Rate dataset</button>
+        <h2>Confirm the rates to see results</h2>
+        <p>Open Rate dataset, review the sheet, then choose <strong>Confirm rates &amp; run</strong>.</p>
+        <button type="button" id="edit-dataset" class="download">Review rates</button>
       </div>
 
-      <section id="step-dataset" class="panel dataset-panel" role="tabpanel" aria-labelledby="tab-dataset" hidden>
-        <h2>Rate dataset</h2>
-        <div class="dataset-toolbar">
-          <div class="dataset-picker">
-            <label for="dataset">Dataset</label>
-            <select id="dataset"></select>
+      <section id="step-dataset" class="panel dataset-panel" role="tabpanel" aria-labelledby="tab-dataset" aria-busy="true">
+        <div class="dataset-heading">
+          <div>
+            <h2>Rate dataset</h2>
+            <p class="hint" id="dataset-source">Import an Excel or CSV file, or paste rates into the sheet.</p>
           </div>
           <div class="dataset-actions">
-            <button type="button" id="new-dataset" class="download">New dataset</button>
-            <button type="button" id="import-rates" class="download">Import CSV</button>
-            <button type="button" id="curve-download" class="download">Download CSV</button>
-            <input type="file" id="rate-file" accept=".csv,text/csv" hidden>
+            <button type="button" id="save-dataset" class="download" disabled>Save draft</button>
+            <button type="button" id="confirm-dataset" class="download primary" disabled>Confirm rates &amp; run</button>
           </div>
         </div>
-        <form id="dataset-details" class="dataset-details">
+
+        <div class="dataset-toolbar">
+          <div class="dataset-actions">
+            <button type="button" id="import-rates" class="download">Import file</button>
+            <button type="button" id="curve-download" class="download">Export CSV</button>
+            <input type="file" id="rate-file" accept=".xlsx,.csv" hidden>
+          </div>
+          <div class="dataset-links">
+            <a href="/rate-template.csv">CSV template</a>
+            <a href="/article-rates.csv">Article rates</a>
+          </div>
+        </div>
+
+        <div id="dataset-details" class="dataset-details">
           <div>
             <label for="dataset-name">Dataset name</label>
-            <input type="text" id="dataset-name" maxlength="80" required>
+            <input type="text" id="dataset-name" maxlength="80" placeholder="USD rate history">
           </div>
           <div>
             <label for="dataset-observations">Observations</label>
-            <textarea id="dataset-observations" rows="2" maxlength="2000" placeholder="Notes about this dataset"></textarea>
+            <textarea id="dataset-observations" rows="1" maxlength="2000" placeholder="Notes about these rates"></textarea>
           </div>
-          <div class="dataset-actions">
-            <button type="button" id="discard-dataset" class="download" disabled>Discard edits</button>
-            <button type="submit" id="save-dataset" class="download" disabled>Save changes</button>
-          </div>
-        </form>
-        <div class="sheet-tools">
-          <div class="dataset-actions">
-            <button type="button" id="add-row" class="download">Add row</button>
-            <button type="button" id="delete-row" class="download" disabled>Delete row</button>
-            <button type="button" id="add-column" class="download">Add column</button>
-            <button type="button" id="delete-column" class="download" disabled>Delete column</button>
-          </div>
-          <p id="dataset-status" class="hint" role="status"></p>
         </div>
-        <div class="sheet-viewport" id="rate-sheet" role="region" aria-label="Editable rate dataset" tabindex="0">
-          <table id="rate-table" class="rate-sheet">
+
+        <div class="sheet-tools">
+          <div class="dataset-actions" role="group" aria-label="Edit the rate sheet">
+            <button type="button" id="insert-row" class="download">Insert row</button>
+            <button type="button" id="delete-rows" class="download" disabled>Delete rows</button>
+            <button type="button" id="clear-cells" class="download" disabled>Clear cells</button>
+            <button type="button" id="undo-sheet" class="download" disabled>Undo</button>
+            <button type="button" id="redo-sheet" class="download" disabled>Redo</button>
+          </div>
+          <button type="button" id="revert-draft" class="download" disabled>Reload saved draft</button>
+        </div>
+        <p id="dataset-status" class="hint" role="status"></p>
+        <div class="sheet-viewport" id="rate-sheet" role="region" aria-label="Rate spreadsheet">
+          <table id="rate-table" class="rate-sheet" role="grid" aria-label="Rate inputs" aria-describedby="sheet-hint"
+                 aria-multiselectable="true" aria-colcount="6" tabindex="0">
+            <colgroup><col><col><col><col><col><col></colgroup>
             <thead></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="sheet-footer">
-          <p class="hint">Rate cells accept percentages or decimals, such as 3.66% or 0.0366.</p>
+          <span id="sheet-range" class="sheet-range" aria-label="Selected cells"></span>
+          <p id="sheet-hint" class="hint">Select a heading or row number to select it. Drag a column edge to resize. Enter dates as YYYY-MM-DD and rates as 3.66% or 0.0366.</p>
           <div id="sheet-pages" class="paging" hidden>
             <span id="rate-rows" class="hint"></span>
             <button type="button" id="rates-prev" class="download" aria-label="Previous rows">Previous</button>
@@ -93,7 +101,7 @@
         </div>
       </section>
 
-      <section id="step-rates" class="rates-layout" role="tabpanel" aria-labelledby="tab-rates">
+      <section id="step-rates" class="rates-layout" role="tabpanel" aria-labelledby="tab-rates" hidden>
         <div class="panel rates-chart">
           <h2>Rate history</h2>
           <p id="rate-source" class="hint"></p>
@@ -106,12 +114,17 @@
         <aside class="panel rates-analysis" aria-labelledby="rates-analysis-title">
           <h2 id="rates-analysis-title">Rates analysis</h2>
           <p id="rate-date" class="hint"></p>
-          <dl id="rate-snapshot" class="snapshots rates-snapshot" aria-label="Latest rate observation"></dl>
-          <h3>Full sample</h3>
-          <table id="rate-summary">
-            <thead><tr><th scope="col">Measure</th><th scope="col">ON</th><th scope="col">6M</th><th scope="col">6M − ON</th></tr></thead>
-            <tbody></tbody>
-          </table>
+          <div class="table-scroll rate-summary-wrap" tabindex="0" role="region" aria-label="Rates summary">
+            <table id="rate-summary">
+              <thead>
+                <tr>
+                  <th scope="col">Measure</th><th scope="col">ON</th><th scope="col">1M</th>
+                  <th scope="col">3M</th><th scope="col">6M</th><th scope="col">6M − ON</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
           <p class="hint" id="rolling-note"></p>
         </aside>
       </section>

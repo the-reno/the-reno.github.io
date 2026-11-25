@@ -1,11 +1,10 @@
-"""Store rate datasets and their observations on the local computer."""
+"""Save one working rates sheet and its observations on the local computer."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import os
-import secrets
 import sqlite3
 import sys
 from contextlib import closing, contextmanager
@@ -24,9 +23,11 @@ def clean_details(name: str, observations: str) -> tuple[str, str]:
     return name.strip(), observations.strip()
 
 
-def record_version(record: dict) -> str:
-    details = json.dumps([record["name"], record["observations"]]).encode("utf-8")
-    return hashlib.sha256(details + b"\0" + (record["csv_data"] or b"")).hexdigest()
+def record_version(record: dict | None) -> str | None:
+    if record is None:
+        return None
+    details = json.dumps([record["name"], record["observations"], record["filename"]]).encode("utf-8")
+    return hashlib.sha256(details + b"\0" + record["csv_data"]).hexdigest()
 
 
 def default_dataset_dir() -> Path:
@@ -60,62 +61,29 @@ class DatasetStore:
             database.row_factory = sqlite3.Row
             yield database
 
-    def summaries(self) -> dict[str, dict]:
-        with self.connect() as database:
-            rows = database.execute(
-                "SELECT id, name, observations, filename FROM datasets ORDER BY rowid"
-            )
-            return {entry["id"]: dict(entry) for entry in rows}
+    @staticmethod
+    def working_record(database):
+        # Open the most recent earlier import until a fixed-template draft is saved.
+        row = database.execute("""
+            SELECT name, observations, filename, csv_data FROM datasets
+            WHERE csv_data IS NOT NULL
+            ORDER BY (id = 'working') DESC, rowid DESC LIMIT 1
+        """).fetchone()
+        return dict(row) if row else None
 
-    def read(self, dataset_id: str) -> dict | None:
+    def load(self) -> dict | None:
         with self.connect() as database:
-            record = database.execute(
-                "SELECT id, name, observations, filename, csv_data FROM datasets WHERE id = ?", (dataset_id,)
-            ).fetchone()
-            return dict(record) if record else None
+            return self.working_record(database)
 
-    def add_csv(self, content: bytes, filename: str, name: str | None = None, observations: str = "") -> str:
-        filename = filename.replace("\\", "/").rsplit("/", 1)[-1].strip()[:180] or "Imported rates.csv"
-        if name is None:
-            name = Path(filename).stem.strip()[:NAME_LIMIT] or "Imported rates"
-        name, observations = clean_details(name, observations)
-        dataset_id = secrets.token_urlsafe(12)
-        with self.connect() as database:
-            database.execute(
-                "INSERT INTO datasets (id, name, observations, filename, csv_data) VALUES (?, ?, ?, ?, ?)",
-                (dataset_id, name, observations, filename, content),
-            )
-        return dataset_id
-
-    def update_csv(self, dataset_id: str, content: bytes, name: str, observations: str, version: str):
-        name, observations = clean_details(name, observations)
+    def save(self, record: dict, previous_version: str | None):
         with self.connect() as database:
             database.execute("BEGIN IMMEDIATE")
-            record = database.execute(
-                "SELECT name, observations, csv_data FROM datasets WHERE id = ?", (dataset_id,)
-            ).fetchone()
-            if record is None or record["csv_data"] is None:
-                raise ValueError("Select a saved dataset first.")
-            if record_version(record) != version:
-                raise ValueError("This dataset changed in another window. Reload it before saving.")
-            database.execute(
-                "UPDATE datasets SET name = ?, observations = ?, csv_data = ? WHERE id = ?",
-                (name, observations, content, dataset_id),
-            )
-
-    def save_details(self, dataset_id: str, name: str, observations: str, previous: dict | None = None):
-        name, observations = clean_details(name, observations)
-        with self.connect() as database:
-            if previous is not None:
-                database.execute("BEGIN IMMEDIATE")
-                current = database.execute(
-                    "SELECT name, observations, csv_data FROM datasets WHERE id = ?", (dataset_id,)
-                ).fetchone()
-                if current is not None and record_version(current) != record_version(previous):
-                    raise ValueError("This dataset changed in another window. Reload it before saving.")
+            if record_version(self.working_record(database)) != previous_version:
+                raise ValueError("This sheet changed in another window. Reload the draft before saving.")
             database.execute("""
-                INSERT INTO datasets (id, name, observations) VALUES (?, ?, ?)
+                INSERT INTO datasets (id, name, observations, filename, csv_data)
+                VALUES ('working', :name, :observations, :filename, :csv_data)
                 ON CONFLICT(id) DO UPDATE SET
-                    name = excluded.name,
-                    observations = excluded.observations
-            """, (dataset_id, name, observations))
+                    name = excluded.name, observations = excluded.observations,
+                    filename = excluded.filename, csv_data = excluded.csv_data
+            """, record)
