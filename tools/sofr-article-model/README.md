@@ -31,11 +31,11 @@ If you are working on a local checkout of the code, run **py -3 app.py --source 
 
 ### Review and run
 
-**Rate dataset** preloads the July article history or your last confirmed upload. Scroll the table to review the observations, then choose **Confirm rates & run**. The results tabs open after confirmation.
+**Rate dataset** preloads the July article history or your last confirmed upload. Drag a column edge to adjust its width. When you are ready, choose **Confirm rates & run** to open the results.
 
 To replace the rates, choose **Upload rates** and select an Excel .xlsx workbook or UTF-8 CSV containing **Date**, **ON**, **1M**, **3M**, and **6M**. Use at least two unique dates in ascending order and annual rates such as 3.66% or 0.0366. For an Excel workbook, the importer uses a matching **Historical_Rates** sheet when available or the first worksheet with all five headers. Confirm the new file to use it in the model and preload it on future launches.
 
-**Rates analysis** shows the latest observation, maximum, minimum, average and annualized rolling returns in one table. The 6M minus ON column uses the paired daily spreads for the quote statistics. For rolling returns, the 1M and 3M series use observed Modified Following reset dates, with the last term accrued through the same cutoff as ON and 6M. Across gaps, the overnight accrual holds the last quote until the next observation. Confirming the exact July rate history reproduces the July article scenarios. Other curves use the September scenario method.
+**Rates analysis** shows the latest observation, maximum, minimum, average and annualized rolling returns for ON, 1M, 3M and 6M in one table. For rolling returns, the 1M and 3M series use observed Modified Following reset dates, with the last term accrued through the same cutoff as ON and 6M. Across gaps, the overnight accrual holds the last quote until the next observation. Confirming the exact July rate history reproduces the July article scenarios. Other curves use the September scenario method.
 
 ## Reconciliation
 

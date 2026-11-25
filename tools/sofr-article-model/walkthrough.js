@@ -134,8 +134,8 @@ function renderRates() {
     source.append(" · " + defaults.source_label);
   }
   const rows = defaults.rate_summary.rows.map(([label, ...values], index) => {
-    const spread = values.pop();
-    const entry = row(label, [...values.map((value) => value === null ? "—" : quote(value)), signedBp(spread)]);
+    const rates = values.slice(0, defaults.tenors.length);
+    const entry = row(label, rates.map((value) => value === null ? "—" : quote(value)));
     entry.classList.toggle("latest-rate", index === 0);
     return entry;
   });
