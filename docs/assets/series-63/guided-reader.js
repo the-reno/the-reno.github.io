@@ -6,13 +6,14 @@
   if (!chapters.length || document.getElementById('guided-reader')) return;
 
   const STORAGE_KEY = 'series63.guided-reading.v1';
+  const STORAGE_VERSION = 2;
   const RATES = [0.8, 1, 1.15, 1.3];
   const synth = typeof window.speechSynthesis === 'object' ? window.speechSynthesis : null;
   const canSpeak = Boolean(synth && typeof window.SpeechSynthesisUtterance === 'function');
   const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const textOf = element => (element?.textContent || '').replace(/\s+/g, ' ').trim();
   const chapterName = chapter => textOf($('.chapter-header h2', chapter));
-  const sectionName = section => textOf($('h3', section));
+  const sectionName = section => textOf($(':scope > h3', section));
   const chapterById = id => chapters.find(chapter => chapter.id === id);
 
   // The narration only visits the original, public reading surface. Private
@@ -32,9 +33,8 @@
     add($$('.chapter-header h2, .chapter-opening > p', chapter), 'intro', 'reading', chapterName(chapter));
     $$('.study-section', chapter).forEach(section => {
       const label = sectionName(section);
-      add($$(':scope > h3, :scope > .definition > p, :scope > .narrative > p', section), section.id, 'reading', label);
-      if (withComments) add($$('.guided-commentary-body > p:not(.sources-line)', section), section.id, 'comment', label);
-      add($$('.application-content > p', section), section.id, 'application', label);
+      add($$(':scope > h3, :scope > .narrative > p', section), section.id, 'reading', label);
+      if (withComments) add($$(':scope > .guided-commentary > .guided-commentary-body > p:not(.sources-line)', section), section.id, 'comment', label);
     });
     add($$('.chapter-close > p', chapter), 'closing', 'reading', 'Putting it together');
     return passages;
@@ -68,17 +68,20 @@
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     if (value && typeof value === 'object' && !Array.isArray(value)) saved = value;
   } catch (error) { /* Reading remains available without browser storage. */ }
+  // The case edition changes passage order. Keep voice, pace, chapter and
+  // follow preferences, but do not map an old ordinal to a different passage.
+  const currentEdition = saved.version === STORAGE_VERSION;
   const settings = {
-    comments: saved.comments !== false,
+    comments: currentEdition && saved.comments === true,
     follow: saved.follow !== false,
     rate: RATES.includes(saved.rate) ? saved.rate : 1,
     voice: typeof saved.voice === 'string' && saved.voice.length <= 1000 ? saved.voice : ''
   };
   let chapter = chapterById(saved.chapter) || chapters[0];
   let passages = collectPassages(chapter, settings.comments);
-  let position = Math.max(0, passages.findIndex(passage => passage.key === saved.passage));
+  let position = currentEdition ? Math.max(0, passages.findIndex(passage => passage.key === saved.passage)) : 0;
   let chunks = sentenceChunks(passages[position]?.text || '');
-  let chunkIndex = Number.isSafeInteger(saved.sentence) && saved.sentence >= 0 && saved.sentence < chunks.length ? saved.sentence : 0;
+  let chunkIndex = currentEdition && Number.isSafeInteger(saved.sentence) && saved.sentence >= 0 && saved.sentence < chunks.length ? saved.sentence : 0;
   let open = false;
   let phase = 'idle';
   let voices = [];
@@ -126,7 +129,7 @@
           <label class="guided-field">Voice<select id="guided-voice"></select></label>
         </div>
         <div class="guided-checks">
-          <label class="guided-check"><input type="checkbox" id="guided-comments" checked> Include practical explanations</label>
+          <label class="guided-check"><input type="checkbox" id="guided-comments"> Extra explanations</label>
           <label class="guided-check"><input type="checkbox" id="guided-follow" checked> Follow the highlighted text</label>
         </div>
         <p class="guided-help">Use Next to read silently. Voice availability and sound depend on your browser and device.</p>
@@ -153,7 +156,7 @@
   const save = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: 1, chapter: chapter.id, passage: passages[position]?.key || '', sentence: chunkIndex,
+        version: STORAGE_VERSION, chapter: chapter.id, passage: passages[position]?.key || '', sentence: chunkIndex,
         comments: settings.comments, follow: settings.follow, rate: settings.rate, voice: settings.voice
       }));
     } catch (error) { /* Controls also work with storage disabled. */ }
@@ -535,3 +538,4 @@
   updateSections();
   refreshVoices();
 })();
+

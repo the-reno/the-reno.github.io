@@ -72,3 +72,36 @@
 @media screen and (max-width:820px){.hero{margin-top:16px;padding-top:25px}.hero h1{font-size:48px}.sidebar{background:var(--nav)}}
 @media screen and (max-width:520px){.hero h1{font-size:39px}.chapter h2{font-size:30px}.hero .eyebrow{margin-top:25px}.bank-tools-row{display:block}.bank-buttons{margin-top:12px}.bank-buttons button{width:auto}.bank-tools{padding:14px}.intro-story h3{font-size:24px}}
 @media print{.guide-back,.bank-tools{display:none!important}.brand-dot{color:inherit}.hero h1 span{color:inherit}.footer a{color:#111}}
+
+/* Keep the case in the reading flow and the full study material close at hand. */
+.study-materials{padding:28px 0 34px;border-bottom:1px solid var(--line)}
+.study-materials h2,.intro-story h2{font-size:clamp(23px,2.5vw,29px);line-height:1.3;margin:0 0 18px}
+.material-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.material-list li{padding:14px 0;border-top:1px solid var(--line)}
+.material-list a,.material-list button{color:var(--teal);font-family:inherit;font-size:16px;font-weight:600;line-height:1.5;text-decoration:none;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.material-list button{font-family:inherit;font-size:16px;font-weight:600;line-height:1.5}
+.material-list a:hover,.material-list button:hover,.official-guides a:hover{text-decoration:underline;text-underline-offset:4px}
+.material-list span{display:block;font-size:14px;color:var(--muted);line-height:1.65;margin-top:5px}
+.study-materials h3{font:400 14px/1.5 var(--mono);margin:24px 0 8px;color:var(--ink)}
+.official-guides{margin:0;padding-left:19px;font-size:14px;line-height:1.8}
+.official-guides li+li{margin-top:4px}.official-guides a{color:var(--muted);text-underline-offset:4px}
+.intro-story{padding:30px 0 20px}.intro-story p{max-width:70ch}.case-note{font-size:14px!important;color:var(--muted)}
+.case-outline{border-bottom:1px solid var(--line);padding:0 0 22px;margin:0 0 24px}
+.case-outline>summary,.chapter-reference>summary,.section-reference>summary{cursor:pointer;color:var(--teal);font-size:14px;line-height:1.6;list-style:disclosure-closed}
+.case-outline[open]>summary,.chapter-reference[open]>summary,.section-reference[open]>summary{list-style:disclosure-open}
+.case-outline ol{padding-left:24px;margin:16px 0 0}.case-outline li{padding:5px 0;font-size:16px}
+.case-outline a{color:var(--ink);text-decoration:none}.case-outline a:hover{color:var(--teal)}
+.chapter-reference{margin-top:24px}.chapter-reference .diagram{margin-top:20px}
+.section-reference{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.section-reference>summary span{color:var(--muted);margin-left:12px;font-size:14px;font-weight:400}
+.section-reference[open]>summary{margin-bottom:22px}
+.section-reference>.definition{margin-top:0}
+.study-section>.guided-commentary{margin-top:20px;margin-bottom:0}
+.study-section>.guided-commentary>summary{font-size:14px}
+.study-section>h3{padding-right:90px}.study-section>.guided-section-start{font-size:14px}
+.hero .guided-intro{font-size:14px;line-height:1.65}.hero{padding-bottom:26px}
+.chapter-kicker .index{display:none}.chapter-kicker .eyebrow{font-size:13px}
+.chapter-close{padding:20px 24px}.chapter-close p{font-size:17px}
+.material-list a:focus-visible,.material-list button:focus-visible,.official-guides a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:5px}
+@media(max-width:640px){.material-list{grid-template-columns:1fr;gap:0}.study-materials{padding-top:20px}.section-reference>summary span{display:block;margin-left:16px;font-size:13px}.study-section>h3{padding-right:0}.study-section>.guided-section-start{position:static;float:none;display:block;margin:0 0 12px}.chapter-close{padding:18px}.official-guides{font-size:14px}}
+@media print{.hero .guided-intro{display:none}.study-materials{break-inside:avoid}.material-list a,.material-list button,.official-guides a{color:#111}.case-outline,.chapter-reference,.section-reference{color:#111}.section-reference>summary span{color:#444}}
