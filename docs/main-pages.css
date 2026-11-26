@@ -31,6 +31,14 @@ body[data-page-mode="landing"] .site-footer {padding-bottom:24px}
 /* SHARED COLLECTION — section carousel, article grid or Maker gallery. */
 .page-collection {border-top:1px solid var(--line); padding-top:24px; scroll-margin-top:138px}
 .collection-heading {font:400 19px/1.4 var(--mono); letter-spacing:-.5px; margin:0 0 16px}
+.markets-model {padding:clamp(20px,4vw,32px);margin-bottom:28px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);scroll-margin-top:100px}
+.markets-model h3 {margin:0 0 12px;color:var(--text);font:400 clamp(22px,3vw,30px)/1.25 var(--mono);letter-spacing:-.6px}
+.markets-model p {margin:0 0 12px;max-width:62ch;color:var(--muted);line-height:1.65}
+.markets-model .markets-model-requirement {font-size:14px}
+.markets-model-actions {display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;margin-top:18px}
+.markets-model-actions a {color:var(--text);text-underline-offset:.22em}
+.markets-model-actions .markets-model-download {display:inline-flex;align-items:center;min-height:44px;padding:8px 15px;border:1px solid var(--accent-border);border-radius:var(--radius);background:var(--accent-bg);color:var(--accent);text-decoration:none}
+.markets-model-actions a:is(:hover,:focus-visible) {text-decoration:underline}
 .search-group-title {margin:9px 13px 4px; color:var(--faint); font:9px var(--mono); letter-spacing:.12em; text-transform:uppercase}
 @media(min-width:1450px) {
   body[data-page-mode="landing"] {--title-size:52px; --statement-size:35px; --section-gap:42px}

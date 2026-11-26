@@ -40,7 +40,14 @@ const MAIN_PAGES = {
     name: 'Markets', kind: 'articles', icon: 'markets',
     start: 'Pricing the future ', end: 'before it happens.',
     intro: "Will rates fall? What will the dollar be worth tomorrow? What drives prices? And what happens if the forecast is wrong?\n\nI’m always trying to make the best decision the data can support. But in the end, the market doesn’t care.",
-    articleIds: []
+    articleIds: [],
+    model: {
+      title: 'USD Cash Allocation Model',
+      summary: 'Compare what overnight, one-month, three-month and six-month rates would earn on your cash. Review the historical results and test your own allocation across rate scenarios.',
+      requirement: 'Runs on your computer with Python 3.10 or later.',
+      launcher: '/downloads/sofr/Open_SOFR.py',
+      guide: 'https://github.com/the-reno/the-reno.github.io/tree/main/tools/sofr-article-model#readme'
+    }
   },
   maker: {
     name: 'Maker', kind: 'gallery', icon: 'maker',
