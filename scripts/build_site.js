@@ -48,10 +48,9 @@ for (const route of routes) {
   // point so client-side navigation can reach the new guide from existing pages.
   pageTemplate = pageTemplate.replace(/\/(content\.js|page-content\.js|project\.js)\?v=[^"]+/g,
     (_, asset) => '/' + asset + '?v=20261029-guided-1');
-  // Refresh the Leaf reader when entering through any page of the site.
-  pageTemplate = pageTemplate.replace(/\/content\.js\?v=[^"]+/, '/content.js?v=20261118-leaf2');
-  pageTemplate = pageTemplate.replace(/\/(page-content\.js|main-pages\.(?:js|css))\?v=[^"]+/g,
-    (_, asset) => '/' + asset + '?v=20261126-markets-model1');
+  // Keep the Markets article and shared reader synchronized across entry points.
+  pageTemplate = pageTemplate.replace(/\/(content\.js|page-content\.js|(?:main-pages|narrative)\.(?:js|css))\?v=[^"]+/g,
+    (_, asset) => '/' + asset + '?v=20261126-cash-article1');
   const html = pageTemplate.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!Object.hasOwn(values, key)) throw new Error('Unknown template slot: ' + key);
     return values[key];
@@ -60,8 +59,6 @@ for (const route of routes) {
 }
 outputs.set(path.join(site, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   routes.map(route => route.path).map(route => `  <url><loc>https://ronu.one${route}</loc></url>`).join('\n') + '\n</urlset>\n');
-outputs.set(path.join(site, 'downloads', 'sofr', 'Open_SOFR.py'),
-  fs.readFileSync(path.join(root, 'tools', 'sofr-article-model', 'Open_SOFR.py'), 'utf8'));
 const check = process.argv.includes('--check');
 let stale = false;
 for (const [file, content] of outputs) {

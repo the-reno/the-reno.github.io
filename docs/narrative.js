@@ -25,13 +25,19 @@ function narrativeBlocks(section) {
   if (!blocks.length || blocks.length > 300) throw new Error('Invalid article blocks');
   for (const block of blocks) {
     if (block && projectBlockTypes.has(block.type)) {validateProjectBlock(block); continue;}
-    if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts', 'closing'].includes(block.type)) throw new Error('Invalid block type');
+    if (!block || !['paragraph', 'code', 'table', 'fraction', 'concepts', 'closing', 'figure'].includes(block.type)) throw new Error('Invalid block type');
     if (block.label !== undefined && !text(block.label)) throw new Error('Invalid block label');
     if (block.type === 'table') {
       if (!text(block.label) || !Array.isArray(block.columns) || !block.columns.length || block.columns.length > 8 ||
           !block.columns.every(text) || !Array.isArray(block.rows) || !block.rows.length || block.rows.length > 100 ||
           !block.rows.every(row => Array.isArray(row) && row.length === block.columns.length && row.every(text))) {
         throw new Error('Invalid article table');
+      }
+    } else if (block.type === 'figure') {
+      if (!text(block.label) || !text(block.alt) || typeof block.src !== 'string' ||
+          !/^\/assets\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(block.src) ||
+          ![block.width, block.height].every(size => Number.isInteger(size) && size > 0)) {
+        throw new Error('Invalid article figure');
       }
     } else if (block.type === 'code') {
       if (!text(block.text) || !text(block.label)) throw new Error('Invalid article formula');
@@ -83,6 +89,9 @@ function narrativeBlockMarkup(block) {
   if (block.type === 'paragraph') {
     const content = block.runs ? block.runs.map(run => run.strong ? '<strong>' + lines(run.text) + '</strong>' : lines(run.text)).join('') : lines(block.text);
     return `<p${block.highlight ? ' class="story-highlight"' : ''}>${content}</p>`;
+  }
+  if (block.type === 'figure') {
+    return `<figure class="story-figure"><figcaption>${esc(block.label)}</figcaption><img src="${esc(block.src)}" alt="${esc(block.alt)}" width="${block.width}" height="${block.height}" decoding="async" loading="lazy"></figure>`;
   }
   if (block.type === 'code') {
     return `<pre class="story-code" tabindex="0" role="region" aria-label="${esc(block.label)}"><code>${esc(block.text)}</code></pre>`;

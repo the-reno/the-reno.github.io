@@ -84,15 +84,14 @@ function pageCollection(pageId) {
   }
   const topics = (page.articleIds || []).map(id => TOPICS.find(topic => topic.id === id)).filter(Boolean);
   const model = page.model;
-  const modelSection = model ? `<h2 class="collection-heading" id="collection-title">Models</h2>
+  const collectionId = ' id="collection-title"';
+  const articles = topics.length ? `<h2 class="collection-heading"${collectionId}>${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>` : '';
+  const modelSection = model ? `<h2 class="collection-heading"${topics.length ? '' : collectionId}>Models</h2>
 <article class="markets-model" id="sofr-cash-allocation" aria-labelledby="sofr-cash-allocation-title">
   <h3 id="sofr-cash-allocation-title">${esc(model.title)}</h3>
-  <p>${esc(model.summary)}</p>
-  <p class="markets-model-requirement">${esc(model.requirement)}</p>
-  <div class="markets-model-actions"><a class="markets-model-download" href="${esc(model.launcher)}" download>Download launcher</a><a href="${esc(model.guide)}">Setup and methodology</a></div>
+  <p>${esc(model.status)}</p>
 </article>` : '';
-  const articles = topics.length ? `<h2 class="collection-heading"${model ? '' : ' id="collection-title"'}>${esc(SITE.labels.articles)}</h2><div class="article-grid">${topics.map(topic => articleTile(topic)).join('')}</div>` : '';
-  return modelSection + articles;
+  return articles + modelSection;
 }
 
 

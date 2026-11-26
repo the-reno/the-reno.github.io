@@ -1,0 +1,323 @@
+{
+  "id": "usd-cash-allocation",
+  "sections": [
+    {
+      "id": "historical-rates",
+      "heading": "Historical rates",
+      "blocks": [
+        {
+          "type": "figure",
+          "label": "Historical rates",
+          "src": "/assets/usd-cash-allocation/historical-rates.webp",
+          "alt": "Overnight, one-month, three-month and six-month rates rise from near zero in 2022 to above 5% in 2023, then fall toward 3.5% to 4% by 2026.",
+          "width": 1080,
+          "height": 472
+        },
+        {
+          "type": "paragraph",
+          "text": "A long period of lower rates gave way to high inflation and one of the fastest Fed hiking cycles in 2022."
+        },
+        {
+          "type": "paragraph",
+          "text": "The curve moved from yield pickup to path risk.",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "allocation-dilemma",
+      "heading": "The allocation dilemma",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "From a cash perspective, every decision starts with the same choice."
+        },
+        {
+          "type": "paragraph",
+          "text": "Stay short and keep the overnight rate or extend into term and lock a return for the period ahead.",
+          "highlight": true
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "The objective",
+              "text": "Make cash work harder over the period."
+            },
+            {
+              "term": "The challenge",
+              "text": "Price the future before it happens."
+            }
+          ]
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "Today’s rate",
+              "text": "The overnight rate represents the rate at which cash resets daily and moves closely with the Fed’s policy rate."
+            },
+            {
+              "term": "Spread",
+              "text": "The gap between overnight and term reflects expected rate moves, risk premium and liquidity for the period."
+            },
+            {
+              "term": "Term rate",
+              "text": "Term rates look ahead. OIS, SOFR futures and Term SOFR are built differently, but they broadly reflect the market’s expected path for overnight rates over the period ahead."
+            }
+          ],
+          "label": "The elements"
+        },
+        {
+          "type": "paragraph",
+          "text": "Overnight tells us what cash earns today. Term rates put a price on that uncertainty.",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "premium-payoff",
+      "heading": "Does the premium pay off?",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A higher starting spread can look attractive, but realized return depends on what the Fed does next."
+        },
+        {
+          "type": "figure",
+          "label": "Priced premium vs. realized outcome",
+          "src": "/assets/usd-cash-allocation/priced-premium.webp",
+          "alt": "Time series in basis points. The priced premium swings widely while realized excess returns fluctuate closer to zero.",
+          "width": 1085,
+          "height": 488
+        },
+        {
+          "type": "table",
+          "label": "Realized outcome",
+          "columns": [
+            "6M win rate",
+            "Average realized excess",
+            "Decisions"
+          ],
+          "rows": [
+            [
+              "32%",
+              "−4.7 bp",
+              "1,003"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The premium is visible at the start. The result is only known later.",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "fed-path",
+      "heading": "Outcomes depend on the Fed path",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The initial spread helps frame the trade-off, but it does not determine the result."
+        },
+        {
+          "type": "paragraph",
+          "text": "Daily decisions – choose the term and compare the results."
+        },
+        {
+          "type": "figure",
+          "label": "Priced spread vs. realized excess return",
+          "src": "/assets/usd-cash-allocation/priced-spread.webp",
+          "alt": "Scatter plot of the initial six-month minus overnight spread against realized six-month excess return, both in basis points. Outcomes fall on either side of zero at a range of initial spreads.",
+          "width": 942,
+          "height": 436
+        },
+        {
+          "type": "paragraph",
+          "text": "The starting spread does not guarantee the excess return.",
+          "highlight": true
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "Positive realized excess return",
+              "text": "Locking the six-month rate beat rolling overnight over the same period."
+            },
+            {
+              "term": "Negative realized excess return",
+              "text": "Rolling overnight beat locking the six-month rate over the same period."
+            }
+          ],
+          "label": "What the data says"
+        },
+        {
+          "type": "paragraph",
+          "text": "The initial term premium wasn’t enough. Overnight returns beat the term rate over the period."
+        }
+      ]
+    },
+    {
+      "id": "cycle-flips",
+      "heading": "What if the cycle flips?",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Replay the same cycle upside down and term can switch from drag to protection."
+        },
+        {
+          "type": "figure",
+          "label": "Realized vs. mirrored rate paths",
+          "src": "/assets/usd-cash-allocation/mirrored-paths.webp",
+          "alt": "Two rising rate paths and their falling counterparts diverge from the same starting point.",
+          "width": 1037,
+          "height": 448
+        },
+        {
+          "type": "figure",
+          "label": "Average six-month excess return vs. overnight",
+          "src": "/assets/usd-cash-allocation/mirrored-returns.webp",
+          "alt": "Rates up: −14.5 basis points. Rates down: +16.4 basis points.",
+          "width": 709,
+          "height": 160
+        },
+        {
+          "type": "paragraph",
+          "text": "When the path turns lower, locking term can switch from drag to protection."
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "Policy repricing matters",
+              "text": "Unexpected hikes or delayed cuts can erode the benefit of locking in."
+            },
+            {
+              "term": "Timing drives outcome",
+              "text": "Results improve when the market underprices future easing."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "How should cash be allocated when the path is uncertain?",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "diversified-allocation",
+      "heading": "No single tenor wins in every scenario",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Sticky paths reward term. Fast easing rewards liquidity. A diversified ladder lowers the cost of being wrong."
+        },
+        {
+          "type": "figure",
+          "label": "The scenarios · Rate paths over 36 months",
+          "src": "/assets/usd-cash-allocation/scenario-paths.webp",
+          "alt": "Five rate paths: renewed inflation, higher for longer, gradual normalization, faster normalization, and recession with rapid cuts.",
+          "width": 498,
+          "height": 243
+        },
+        {
+          "type": "figure",
+          "label": "The outcomes · Regret by scenario",
+          "src": "/assets/usd-cash-allocation/scenario-regret.webp",
+          "alt": "Horizontal bars compare regret in basis points for a term ladder, all overnight, and all six-month under five rate scenarios.",
+          "width": 502,
+          "height": 258
+        },
+        {
+          "type": "figure",
+          "label": "The alternatives · Simplified frontier",
+          "src": "/assets/usd-cash-allocation/allocation-frontier.webp",
+          "alt": "The term ladder has the lowest worst-case regret of the three portfolios. All six-month has the lowest average regret.",
+          "width": 512,
+          "height": 302
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "Lowest worst-case regret",
+              "text": "9.8 bp"
+            }
+          ],
+          "label": "The candidate · Diversified term ladder"
+        },
+        {
+          "type": "table",
+          "label": "Diversified term ladder",
+          "columns": [
+            "ON",
+            "1M",
+            "3M",
+            "6M"
+          ],
+          "rows": [
+            [
+              "10%",
+              "15%",
+              "25%",
+              "50%"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "50% stays inside 3M for flexibility. 50% locks 6M carry."
+        },
+        {
+          "type": "paragraph",
+          "text": "Lower regret = lower cost of being wrong.",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "id": "decision",
+      "heading": "The decision",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Set the objective — understand the trade-off.",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "Liquidity, yield and resilience compete for the same allocation. More of one usually means accepting less of another."
+        },
+        {
+          "type": "concepts",
+          "items": [
+            {
+              "term": "Yield · Lock today’s return",
+              "text": "More term increases earnings certainty, but reduces flexibility if rates or liquidity needs change."
+            },
+            {
+              "term": "Liquidity · Preserve access to cash",
+              "text": "More short-term exposure increases flexibility, but leaves more return exposed to future rates."
+            },
+            {
+              "term": "Resilience · Reduce dependence on one rate path",
+              "text": "A broader allocation can lower the cost of being wrong, but may give up some upside if one tenor proves best."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Build the model — capture what matters.",
+          "highlight": true
+        },
+        {
+          "type": "paragraph",
+          "text": "The model has the same trade-off: too simple can miss the risk; too complex can add assumptions, variables and noise. Add complexity where it materially improves the answer and supports the decision with confidence."
+        }
+      ]
+    }
+  ]
+}
